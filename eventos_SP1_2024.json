@@ -1,0 +1,1119 @@
+[
+  {
+    "home_team": "Athletic Club",
+    "away_team": "Getafe",
+    "date": "2024-08-15",
+    "events": [
+      {
+        "minute": 27,
+        "player": "Oihan Sancet",
+        "assist": "Gorka Guruzeta",
+        "extra": null
+      },
+      {
+        "minute": 64,
+        "player": "C. Uche",
+        "assist": "Luis Milla",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Real Betis",
+    "away_team": "Girona",
+    "date": "2024-08-15",
+    "events": [
+      {
+        "minute": 6,
+        "player": "Marc Bartra",
+        "assist": "N. Fekir",
+        "extra": null
+      },
+      {
+        "minute": 72,
+        "player": "G. Misehouy",
+        "assist": "Iker Almena",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Celta Vigo",
+    "away_team": "Alaves",
+    "date": "2024-08-16",
+    "events": [
+      {
+        "minute": 17,
+        "player": "Kike García",
+        "assist": "Antonio Blanco",
+        "extra": null
+      },
+      {
+        "minute": 66,
+        "player": "W. Swedberg",
+        "assist": "Hugo Álvarez",
+        "extra": null
+      },
+      {
+        "minute": 84,
+        "player": "Iago Aspas",
+        "assist": "W. Swedberg",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Las Palmas",
+    "away_team": "Sevilla",
+    "date": "2024-08-16",
+    "events": [
+      {
+        "minute": 25,
+        "player": "Álex Suárez",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 42,
+        "player": "T. Nianzou",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 61,
+        "player": "Juanlu Sánchez",
+        "assist": "Isaac Romero",
+        "extra": null
+      },
+      {
+        "minute": 71,
+        "player": "Sandro Ramírez",
+        "assist": "Javi Muñoz",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Osasuna",
+    "away_team": "Leganes",
+    "date": "2024-08-17",
+    "events": [
+      {
+        "minute": 22,
+        "player": "Juan Cruz",
+        "assist": "Javi Hernández",
+        "extra": null
+      },
+      {
+        "minute": 79,
+        "player": "Juan Soriano",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Valencia",
+    "away_team": "Barcelona",
+    "date": "2024-08-17",
+    "events": [
+      {
+        "minute": 44,
+        "player": "Hugo Duro",
+        "assist": "Diego López",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "R. Lewandowski",
+        "assist": "Lamine Yamal",
+        "extra": null
+      },
+      {
+        "minute": 49,
+        "player": "R. Lewandowski",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Real Sociedad",
+    "away_team": "Rayo Vallecano",
+    "date": "2024-08-18",
+    "events": [
+      {
+        "minute": 67,
+        "player": "Jorge de Frutos",
+        "assist": "A. Mumin",
+        "extra": null
+      },
+      {
+        "minute": 84,
+        "player": "Sergio Camello",
+        "assist": "P. Ciss",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Martín Zubimendi",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Mallorca",
+    "away_team": "Real Madrid",
+    "date": "2024-08-18",
+    "events": [
+      {
+        "minute": 13,
+        "player": "Rodrygo",
+        "assist": "Vinícius Júnior",
+        "extra": null
+      },
+      {
+        "minute": 53,
+        "player": "V. Muriqi",
+        "assist": "Dani Rodríguez",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Valladolid",
+    "away_team": "Espanyol",
+    "date": "2024-08-19",
+    "events": [
+      {
+        "minute": 23,
+        "player": "Raúl Moro",
+        "assist": "A. Ndiaye",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Villarreal",
+    "away_team": "Atletico Madrid",
+    "date": "2024-08-19",
+    "events": [
+      {
+        "minute": 18,
+        "player": "A. Danjuma",
+        "assist": "Diego Conde",
+        "extra": null
+      },
+      {
+        "minute": 20,
+        "player": "Marcos Llorente",
+        "assist": "A. Griezmann",
+        "extra": null
+      },
+      {
+        "minute": 37,
+        "player": "Koke",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "A. Sørloth",
+        "assist": "Pablo Barrios",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Celta Vigo",
+    "away_team": "Valencia",
+    "date": "2024-08-23",
+    "events": [
+      {
+        "minute": 14,
+        "player": "Diego López",
+        "assist": "Rafa Mir",
+        "extra": null
+      },
+      {
+        "minute": 23,
+        "player": "Óscar Mingueza",
+        "assist": "Iago Aspas",
+        "extra": null
+      },
+      {
+        "minute": 28,
+        "player": "Iago Aspas",
+        "assist": "Óscar Mingueza",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "Iago Aspas",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 60,
+        "player": "Fran Beltrán",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Sevilla",
+    "away_team": "Villarreal",
+    "date": "2024-08-23",
+    "events": [
+      {
+        "minute": 2,
+        "player": "A. Danjuma",
+        "assist": "Álex Baena",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "D. Lukébakio",
+        "assist": "L. Ocampos",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Ayoze Pérez",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Osasuna",
+    "away_team": "Mallorca",
+    "date": "2024-08-24",
+    "events": [
+      {
+        "minute": 55,
+        "player": "Rubén García",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Barcelona",
+    "away_team": "Athletic Club",
+    "date": "2024-08-24",
+    "events": [
+      {
+        "minute": 24,
+        "player": "Lamine Yamal",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 42,
+        "player": "Oihan Sancet",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 75,
+        "player": "R. Lewandowski",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Espanyol",
+    "away_team": "Real Sociedad",
+    "date": "2024-08-24",
+    "events": [
+      {
+        "minute": 80,
+        "player": "T. Kubo",
+        "assist": "H. Traoré",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Getafe",
+    "away_team": "Rayo Vallecano",
+    "date": "2024-08-24",
+    "events": []
+  },
+  {
+    "home_team": "Real Madrid",
+    "away_team": "Valladolid",
+    "date": "2024-08-25",
+    "events": [
+      {
+        "minute": 50,
+        "player": "F. Valverde",
+        "assist": "Rodrygo",
+        "extra": null
+      },
+      {
+        "minute": 88,
+        "player": "Brahim Díaz",
+        "assist": "Éder Militão",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Endrick",
+        "assist": "Brahim Díaz",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Leganes",
+    "away_team": "Las Palmas",
+    "date": "2024-08-25",
+    "events": [
+      {
+        "minute": 54,
+        "player": "Dani Raba",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 71,
+        "player": "Juan Cruz",
+        "assist": "Y. Neyou",
+        "extra": null
+      },
+      {
+        "minute": 85,
+        "player": "Enric Franquesa",
+        "assist": "Óscar Rodríguez",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Sandro Ramírez",
+        "assist": "O. McBurnie",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Alaves",
+    "away_team": "Real Betis",
+    "date": "2024-08-25",
+    "events": []
+  },
+  {
+    "home_team": "Atletico Madrid",
+    "away_team": "Girona",
+    "date": "2024-08-25",
+    "events": [
+      {
+        "minute": 39,
+        "player": "A. Griezmann",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 48,
+        "player": "Marcos Llorente",
+        "assist": "A. Griezmann",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Koke",
+        "assist": "Marcos Llorente",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Villarreal",
+    "away_team": "Celta Vigo",
+    "date": "2024-08-26",
+    "events": [
+      {
+        "minute": 12,
+        "player": "Borja Iglesias",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 26,
+        "player": "Sergi Cardona",
+        "assist": "Gerard Moreno",
+        "extra": null
+      },
+      {
+        "minute": 31,
+        "player": "Óscar Mingueza",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 60,
+        "player": "T. Barry",
+        "assist": "Sergi Cardona",
+        "extra": null
+      },
+      {
+        "minute": 64,
+        "player": "Jailson",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 80,
+        "player": "C. Starfelt",
+        "assist": "Óscar Mingueza",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Dani Parejo",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Dani Parejo                                  0",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Mallorca",
+    "away_team": "Sevilla",
+    "date": "2024-08-27",
+    "events": []
+  },
+  {
+    "home_team": "Rayo Vallecano",
+    "away_team": "Barcelona",
+    "date": "2024-08-27",
+    "events": [
+      {
+        "minute": 9,
+        "player": "Unai López",
+        "assist": "Jorge de Frutos",
+        "extra": null
+      },
+      {
+        "minute": 60,
+        "player": "Pedri",
+        "assist": "Raphinha",
+        "extra": null
+      },
+      {
+        "minute": 82,
+        "player": "Dani Olmo",
+        "assist": "Lamine Yamal",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Athletic Club",
+    "away_team": "Valencia",
+    "date": "2024-08-28",
+    "events": [
+      {
+        "minute": 45,
+        "player": "Beñat Prados",
+        "assist": "De Marcos",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Valladolid",
+    "away_team": "Leganes",
+    "date": "2024-08-28",
+    "events": []
+  },
+  {
+    "home_team": "Atletico Madrid",
+    "away_team": "Espanyol",
+    "date": "2024-08-28",
+    "events": []
+  },
+  {
+    "home_team": "Real Sociedad",
+    "away_team": "Alaves",
+    "date": "2024-08-28",
+    "events": [
+      {
+        "minute": 33,
+        "player": "Brais Méndez",
+        "assist": "Sergio Gómez",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "Asier Villalibre",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 77,
+        "player": "Toni Martínez",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Girona",
+    "away_team": "Osasuna",
+    "date": "2024-08-29",
+    "events": [
+      {
+        "minute": 34,
+        "player": "Bryan Gil",
+        "assist": "V. Tsyhankov",
+        "extra": null
+      },
+      {
+        "minute": 53,
+        "player": "V. Tsyhankov",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 56,
+        "player": "Abel Ruiz",
+        "assist": "Y. Herrera",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "C. Stuani",
+        "assist": "D. van de Beek",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Las Palmas",
+    "away_team": "Real Madrid",
+    "date": "2024-08-29",
+    "events": [
+      {
+        "minute": 5,
+        "player": "Alberto Moleiro",
+        "assist": "O. McBurnie",
+        "extra": null
+      },
+      {
+        "minute": 69,
+        "player": "Vinícius Júnior",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Barcelona",
+    "away_team": "Valladolid",
+    "date": "2024-08-31",
+    "events": [
+      {
+        "minute": 20,
+        "player": "Raphinha",
+        "assist": "Pau Cubarsí",
+        "extra": null
+      },
+      {
+        "minute": 24,
+        "player": "R. Lewandowski",
+        "assist": "Lamine Yamal",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "J. Koundé",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 64,
+        "player": "Raphinha",
+        "assist": "R. Lewandowski",
+        "extra": null
+      },
+      {
+        "minute": 72,
+        "player": "Raphinha",
+        "assist": "Lamine Yamal",
+        "extra": null
+      },
+      {
+        "minute": 82,
+        "player": "Dani Olmo",
+        "assist": "Ferran Torres",
+        "extra": null
+      },
+      {
+        "minute": 85,
+        "player": "Ferran Torres",
+        "assist": "Raphinha",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Athletic Club",
+    "away_team": "Atletico Madrid",
+    "date": "2024-08-31",
+    "events": [
+      {
+        "minute": 90,
+        "player": "Á. Correa",
+        "assist": "A. Sørloth",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Espanyol",
+    "away_team": "Rayo Vallecano",
+    "date": "2024-08-31",
+    "events": [
+      {
+        "minute": 4,
+        "player": "Álvaro García",
+        "assist": "Adri Embarba",
+        "extra": null
+      },
+      {
+        "minute": 8,
+        "player": "Carlos Romero",
+        "assist": "Jofre Carreras",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "A. Véliz",
+        "assist": "W. Cheddira",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Valencia",
+    "away_team": "Villarreal",
+    "date": "2024-08-31",
+    "events": [
+      {
+        "minute": 24,
+        "player": "Hugo Duro",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "Ayoze Pérez",
+        "assist": "Santi Comesaña",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Leganes",
+    "away_team": "Mallorca",
+    "date": "2024-08-31",
+    "events": [
+      {
+        "minute": 43,
+        "player": "Dani Rodríguez",
+        "assist": "V. Muriqi",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Alaves",
+    "away_team": "Las Palmas",
+    "date": "2024-09-01",
+    "events": [
+      {
+        "minute": 8,
+        "player": "Carlos Vicente",
+        "assist": "Stoichkov",
+        "extra": null
+      },
+      {
+        "minute": 78,
+        "player": "Toni Martínez",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Luka Romero",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Osasuna",
+    "away_team": "Celta Vigo",
+    "date": "2024-09-01",
+    "events": [
+      {
+        "minute": 21,
+        "player": "E. Boyomo",
+        "assist": "A. Budimir",
+        "extra": null
+      },
+      {
+        "minute": 29,
+        "player": "Borja Iglesias",
+        "assist": "Óscar Mingueza",
+        "extra": null
+      },
+      {
+        "minute": 45,
+        "player": "Carlos Domínguez",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 62,
+        "player": "Abel Bretones",
+        "assist": "Bryan Zaragoza",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Moi Gómez",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Sevilla",
+    "away_team": "Girona",
+    "date": "2024-09-01",
+    "events": [
+      {
+        "minute": 41,
+        "player": "Iván Martín",
+        "assist": "Miguel Gutiérrez",
+        "extra": null
+      },
+      {
+        "minute": 73,
+        "player": "Abel Ruiz",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Getafe",
+    "away_team": "Real Sociedad",
+    "date": "2024-09-01",
+    "events": []
+  },
+  {
+    "home_team": "Real Madrid",
+    "away_team": "Real Betis",
+    "date": "2024-09-01",
+    "events": [
+      {
+        "minute": 67,
+        "player": "K. Mbappé",
+        "assist": "F. Valverde",
+        "extra": null
+      },
+      {
+        "minute": 76,
+        "player": "K. Mbappé",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Real Betis",
+    "away_team": "Leganes",
+    "date": "2024-09-13",
+    "events": [
+      {
+        "minute": 74,
+        "player": "A. Ezzalzouli",
+        "assist": "Héctor Bellerín",
+        "extra": null
+      },
+      {
+        "minute": 86,
+        "player": "Vitor Roque",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Mallorca",
+    "away_team": "Villarreal",
+    "date": "2024-09-14",
+    "events": [
+      {
+        "minute": 27,
+        "player": "Logan Costa",
+        "assist": "Álex Baena",
+        "extra": null
+      },
+      {
+        "minute": 57,
+        "player": "Raúl Albiol",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Ayoze Pérez",
+        "assist": "Yeremy Pino",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Espanyol",
+    "away_team": "Alaves",
+    "date": "2024-09-14",
+    "events": [
+      {
+        "minute": 22,
+        "player": "Javi Puado",
+        "assist": "Álvaro Tejero",
+        "extra": null
+      },
+      {
+        "minute": 35,
+        "player": "T. Conechny",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 56,
+        "player": "Javi Puado",
+        "assist": "Álvaro Tejero",
+        "extra": null
+      },
+      {
+        "minute": 63,
+        "player": "Javi Puado",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 68,
+        "player": "N. Tenaglia",
+        "assist": "Joan Jordán",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Sevilla",
+    "away_team": "Getafe",
+    "date": "2024-09-14",
+    "events": [
+      {
+        "minute": 23,
+        "player": "Jesús Navas",
+        "assist": "Adrià Pedrosa",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Real Sociedad",
+    "away_team": "Real Madrid",
+    "date": "2024-09-14",
+    "events": [
+      {
+        "minute": 58,
+        "player": "Vinícius Júnior",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 75,
+        "player": "K. Mbappé",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Celta Vigo",
+    "away_team": "Valladolid",
+    "date": "2024-09-15",
+    "events": [
+      {
+        "minute": 22,
+        "player": "Hugo Álvarez",
+        "assist": "Pablo Durán",
+        "extra": null
+      },
+      {
+        "minute": 35,
+        "player": "Borja Iglesias",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 50,
+        "player": "Raúl Moro",
+        "assist": "S. Amallah",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "T. Douvikas",
+        "assist": "Iago Aspas",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Girona",
+    "away_team": "Barcelona",
+    "date": "2024-09-15",
+    "events": [
+      {
+        "minute": 30,
+        "player": "Lamine Yamal",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 37,
+        "player": "Lamine Yamal",
+        "assist": "R. Lewandowski",
+        "extra": null
+      },
+      {
+        "minute": 47,
+        "player": "Dani Olmo",
+        "assist": "J. Koundé",
+        "extra": null
+      },
+      {
+        "minute": 64,
+        "player": "Pedri",
+        "assist": "Marc Casadó",
+        "extra": null
+      },
+      {
+        "minute": 80,
+        "player": "C. Stuani",
+        "assist": "Portu",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Las Palmas",
+    "away_team": "Athletic Club",
+    "date": "2024-09-15",
+    "events": [
+      {
+        "minute": 7,
+        "player": "Oihan Sancet",
+        "assist": "I. Williams",
+        "extra": null
+      },
+      {
+        "minute": 30,
+        "player": "Nico Williams",
+        "assist": "I. Williams",
+        "extra": null
+      },
+      {
+        "minute": 58,
+        "player": "Sandro Ramírez",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 76,
+        "player": "Aitor Paredes",
+        "assist": "I. Williams",
+        "extra": null
+      },
+      {
+        "minute": 83,
+        "player": "Álex Muñoz",
+        "assist": "Kirian Rodríguez",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Atletico Madrid",
+    "away_team": "Valencia",
+    "date": "2024-09-15",
+    "events": [
+      {
+        "minute": 39,
+        "player": "C. Gallagher",
+        "assist": "R. De Paul",
+        "extra": null
+      },
+      {
+        "minute": 54,
+        "player": "A. Griezmann",
+        "assist": "Samuel Lino",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "J. Alvarez",
+        "assist": "",
+        "extra": null
+      }
+    ]
+  },
+  {
+    "home_team": "Rayo Vallecano",
+    "away_team": "Osasuna",
+    "date": "2024-09-16",
+    "events": [
+      {
+        "minute": 27,
+        "player": "Raúl García",
+        "assist": "",
+        "extra": null
+      },
+      {
+        "minute": 50,
+        "player": "A. Mumin",
+        "assist": "Gerard Gumbau",
+        "extra": null
+      },
+      {
+        "minute": 66,
+        "player": "A. Rațiu",
+        "assist": "Pep Chavarría",
+        "extra": null
+      },
+      {
+        "minute": 90,
+        "player": "Unai López",
+        "assist": "F. Lejeune",
+        "extra": null
+      }
+    ]
+  }
+]

@@ -1,0 +1,2954 @@
+[
+  {
+    "jornada": 1,
+    "fecha": "2025-08-15",
+    "local": "Girona",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-15",
+    "local": "Villarreal",
+    "visitante": "Real Oviedo",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-16",
+    "local": "Mallorca",
+    "visitante": "Barça",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-16",
+    "local": "Alavés",
+    "visitante": "Levante",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-16",
+    "local": "Valencia",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-17",
+    "local": "Celta",
+    "visitante": "Getafe",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-17",
+    "local": "Athletic",
+    "visitante": "Sevilla FC",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-17",
+    "local": "Espanyol",
+    "visitante": "Atleti",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-18",
+    "local": "Elche",
+    "visitante": "Real Betis",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 1,
+    "fecha": "2025-08-19",
+    "local": "Real Madrid",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-22",
+    "local": "Real Betis",
+    "visitante": "Alavés",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-23",
+    "local": "Mallorca",
+    "visitante": "Celta",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-23",
+    "local": "Atleti",
+    "visitante": "Elche",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-23",
+    "local": "Levante",
+    "visitante": "Barça",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-24",
+    "local": "Osasuna",
+    "visitante": "Valencia",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-24",
+    "local": "Real Sociedad",
+    "visitante": "Espanyol",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-24",
+    "local": "Villarreal",
+    "visitante": "Girona",
+    "resultado": "5-0",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-24",
+    "local": "Real Oviedo",
+    "visitante": "Real Madrid",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-25",
+    "local": "Athletic",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 2,
+    "fecha": "2025-08-25",
+    "local": "Sevilla FC",
+    "visitante": "Getafe",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-08-27",
+    "local": "Celta",
+    "visitante": "Real Betis",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-29",
+    "local": "Elche",
+    "visitante": "Levante",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-29",
+    "local": "Valencia",
+    "visitante": "Getafe",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-30",
+    "local": "Alavés",
+    "visitante": "Atleti",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-30",
+    "local": "Real Oviedo",
+    "visitante": "Real Sociedad",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-30",
+    "local": "Girona",
+    "visitante": "Sevilla FC",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-30",
+    "local": "Real Madrid",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-31",
+    "local": "Celta",
+    "visitante": "Villarreal",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-31",
+    "local": "Real Betis",
+    "visitante": "Athletic",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-31",
+    "local": "Espanyol",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 3,
+    "fecha": "2025-08-31",
+    "local": "Rayo Vallecano",
+    "visitante": "Barça",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-12",
+    "local": "Sevilla FC",
+    "visitante": "Elche",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-13",
+    "local": "Getafe",
+    "visitante": "Real Oviedo",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-13",
+    "local": "Real Sociedad",
+    "visitante": "Real Madrid",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-13",
+    "local": "Athletic",
+    "visitante": "Alavés",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-13",
+    "local": "Atleti",
+    "visitante": "Villarreal",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-14",
+    "local": "Celta",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-14",
+    "local": "Levante",
+    "visitante": "Real Betis",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-14",
+    "local": "Osasuna",
+    "visitante": "Rayo Vallecano",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-14",
+    "local": "Barça",
+    "visitante": "Valencia",
+    "resultado": "6-0",
+    "goles": []
+  },
+  {
+    "jornada": 4,
+    "fecha": "2025-09-15",
+    "local": "Espanyol",
+    "visitante": "Mallorca",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-19",
+    "local": "Real Betis",
+    "visitante": "Real Sociedad",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-20",
+    "local": "Girona",
+    "visitante": "Levante",
+    "resultado": "0-4",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-20",
+    "local": "Real Madrid",
+    "visitante": "Espanyol",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-20",
+    "local": "Villarreal",
+    "visitante": "Osasuna",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-20",
+    "local": "Alavés",
+    "visitante": "Sevilla FC",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-20",
+    "local": "Valencia",
+    "visitante": "Athletic",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-21",
+    "local": "Rayo Vallecano",
+    "visitante": "Celta",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-21",
+    "local": "Mallorca",
+    "visitante": "Atleti",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-21",
+    "local": "Elche",
+    "visitante": "Real Oviedo",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 5,
+    "fecha": "2025-09-21",
+    "local": "Barça",
+    "visitante": "Getafe",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-23",
+    "local": "Athletic",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-23",
+    "local": "Espanyol",
+    "visitante": "Valencia",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-23",
+    "local": "Levante",
+    "visitante": "Real Madrid",
+    "resultado": "1-4",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-23",
+    "local": "Sevilla FC",
+    "visitante": "Villarreal",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-24",
+    "local": "Getafe",
+    "visitante": "Alavés",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-24",
+    "local": "Atleti",
+    "visitante": "Rayo Vallecano",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-24",
+    "local": "Real Sociedad",
+    "visitante": "Mallorca",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-25",
+    "local": "Osasuna",
+    "visitante": "Elche",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 6,
+    "fecha": "2025-09-25",
+    "local": "Real Oviedo",
+    "visitante": "Barça",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-26",
+    "local": "Girona",
+    "visitante": "Espanyol",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-27",
+    "local": "Getafe",
+    "visitante": "Levante",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-27",
+    "local": "Atleti",
+    "visitante": "Real Madrid",
+    "resultado": "5-2",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-27",
+    "local": "Mallorca",
+    "visitante": "Alavés",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-27",
+    "local": "Villarreal",
+    "visitante": "Athletic",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-28",
+    "local": "Rayo Vallecano",
+    "visitante": "Sevilla FC",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-28",
+    "local": "Elche",
+    "visitante": "Celta",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-28",
+    "local": "Barça",
+    "visitante": "Real Sociedad",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-28",
+    "local": "Real Betis",
+    "visitante": "Osasuna",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 7,
+    "fecha": "2025-09-30",
+    "local": "Valencia",
+    "visitante": "Real Oviedo",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-03",
+    "local": "Osasuna",
+    "visitante": "Getafe",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-04",
+    "local": "Real Oviedo",
+    "visitante": "Levante",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-04",
+    "local": "Girona",
+    "visitante": "Valencia",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-04",
+    "local": "Athletic",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-04",
+    "local": "Real Madrid",
+    "visitante": "Villarreal",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-05",
+    "local": "Alavés",
+    "visitante": "Elche",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-05",
+    "local": "Sevilla FC",
+    "visitante": "Barça",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-05",
+    "local": "Espanyol",
+    "visitante": "Real Betis",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-05",
+    "local": "Real Sociedad",
+    "visitante": "Rayo Vallecano",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 8,
+    "fecha": "2025-10-05",
+    "local": "Celta",
+    "visitante": "Atleti",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-17",
+    "local": "Real Oviedo",
+    "visitante": "Espanyol",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-18",
+    "local": "Sevilla FC",
+    "visitante": "Mallorca",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-18",
+    "local": "Barça",
+    "visitante": "Girona",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-18",
+    "local": "Villarreal",
+    "visitante": "Real Betis",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-18",
+    "local": "Atleti",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-19",
+    "local": "Elche",
+    "visitante": "Athletic",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-19",
+    "local": "Celta",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-19",
+    "local": "Levante",
+    "visitante": "Rayo Vallecano",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-19",
+    "local": "Getafe",
+    "visitante": "Real Madrid",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 9,
+    "fecha": "2025-10-20",
+    "local": "Alavés",
+    "visitante": "Valencia",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-24",
+    "local": "Real Sociedad",
+    "visitante": "Sevilla FC",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-25",
+    "local": "Girona",
+    "visitante": "Real Oviedo",
+    "resultado": "3-3",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-25",
+    "local": "Espanyol",
+    "visitante": "Elche",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-25",
+    "local": "Athletic",
+    "visitante": "Getafe",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-25",
+    "local": "Valencia",
+    "visitante": "Villarreal",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-26",
+    "local": "Mallorca",
+    "visitante": "Levante",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-26",
+    "local": "Real Madrid",
+    "visitante": "Barça",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-26",
+    "local": "Osasuna",
+    "visitante": "Celta",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-26",
+    "local": "Rayo Vallecano",
+    "visitante": "Alavés",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 10,
+    "fecha": "2025-10-27",
+    "local": "Real Betis",
+    "visitante": "Atleti",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-10-31",
+    "local": "Getafe",
+    "visitante": "Girona",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-01",
+    "local": "Villarreal",
+    "visitante": "Rayo Vallecano",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-01",
+    "local": "Atleti",
+    "visitante": "Sevilla FC",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-01",
+    "local": "Real Sociedad",
+    "visitante": "Athletic",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-01",
+    "local": "Real Madrid",
+    "visitante": "Valencia",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-02",
+    "local": "Levante",
+    "visitante": "Celta",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-02",
+    "local": "Alavés",
+    "visitante": "Espanyol",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-02",
+    "local": "Barça",
+    "visitante": "Elche",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-02",
+    "local": "Real Betis",
+    "visitante": "Mallorca",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 11,
+    "fecha": "2025-11-03",
+    "local": "Real Oviedo",
+    "visitante": "Osasuna",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-07",
+    "local": "Elche",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-08",
+    "local": "Girona",
+    "visitante": "Alavés",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-08",
+    "local": "Sevilla FC",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-08",
+    "local": "Atleti",
+    "visitante": "Levante",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-08",
+    "local": "Espanyol",
+    "visitante": "Villarreal",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-09",
+    "local": "Athletic",
+    "visitante": "Real Oviedo",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-09",
+    "local": "Rayo Vallecano",
+    "visitante": "Real Madrid",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-09",
+    "local": "Valencia",
+    "visitante": "Real Betis",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-09",
+    "local": "Mallorca",
+    "visitante": "Getafe",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 12,
+    "fecha": "2025-11-09",
+    "local": "Celta",
+    "visitante": "Barça",
+    "resultado": "2-4",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-21",
+    "local": "Valencia",
+    "visitante": "Levante",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-22",
+    "local": "Alavés",
+    "visitante": "Celta",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-22",
+    "local": "Barça",
+    "visitante": "Athletic",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-22",
+    "local": "Osasuna",
+    "visitante": "Real Sociedad",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-22",
+    "local": "Villarreal",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-23",
+    "local": "Real Oviedo",
+    "visitante": "Rayo Vallecano",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-23",
+    "local": "Real Betis",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-23",
+    "local": "Getafe",
+    "visitante": "Atleti",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-23",
+    "local": "Elche",
+    "visitante": "Real Madrid",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 13,
+    "fecha": "2025-11-24",
+    "local": "Espanyol",
+    "visitante": "Sevilla FC",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-28",
+    "local": "Getafe",
+    "visitante": "Elche",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-29",
+    "local": "Mallorca",
+    "visitante": "Osasuna",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-29",
+    "local": "Barça",
+    "visitante": "Alavés",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-29",
+    "local": "Levante",
+    "visitante": "Athletic",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-29",
+    "local": "Atleti",
+    "visitante": "Real Oviedo",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-30",
+    "local": "Real Sociedad",
+    "visitante": "Villarreal",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-30",
+    "local": "Sevilla FC",
+    "visitante": "Real Betis",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-30",
+    "local": "Celta",
+    "visitante": "Espanyol",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-11-30",
+    "local": "Girona",
+    "visitante": "Real Madrid",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 14,
+    "fecha": "2025-12-01",
+    "local": "Rayo Vallecano",
+    "visitante": "Valencia",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2025-12-02",
+    "local": "Barça",
+    "visitante": "Atleti",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2025-12-03",
+    "local": "Athletic",
+    "visitante": "Real Madrid",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-05",
+    "local": "Real Oviedo",
+    "visitante": "Mallorca",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-06",
+    "local": "Villarreal",
+    "visitante": "Getafe",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-06",
+    "local": "Alavés",
+    "visitante": "Real Sociedad",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-06",
+    "local": "Real Betis",
+    "visitante": "Barça",
+    "resultado": "3-5",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-06",
+    "local": "Athletic",
+    "visitante": "Atleti",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-07",
+    "local": "Elche",
+    "visitante": "Girona",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-07",
+    "local": "Valencia",
+    "visitante": "Sevilla FC",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-07",
+    "local": "Espanyol",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-07",
+    "local": "Real Madrid",
+    "visitante": "Celta",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 15,
+    "fecha": "2025-12-08",
+    "local": "Osasuna",
+    "visitante": "Levante",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-12",
+    "local": "Real Sociedad",
+    "visitante": "Girona",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-13",
+    "local": "Atleti",
+    "visitante": "Valencia",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-13",
+    "local": "Mallorca",
+    "visitante": "Elche",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-13",
+    "local": "Barça",
+    "visitante": "Osasuna",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-13",
+    "local": "Getafe",
+    "visitante": "Espanyol",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-14",
+    "local": "Sevilla FC",
+    "visitante": "Real Oviedo",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-14",
+    "local": "Celta",
+    "visitante": "Athletic",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-14",
+    "local": "Alavés",
+    "visitante": "Real Madrid",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2025-12-15",
+    "local": "Rayo Vallecano",
+    "visitante": "Real Betis",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-19",
+    "local": "Valencia",
+    "visitante": "Mallorca",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-20",
+    "local": "Real Oviedo",
+    "visitante": "Celta",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-20",
+    "local": "Levante",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-20",
+    "local": "Osasuna",
+    "visitante": "Alavés",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-20",
+    "local": "Real Madrid",
+    "visitante": "Sevilla FC",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-21",
+    "local": "Girona",
+    "visitante": "Atleti",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-21",
+    "local": "Villarreal",
+    "visitante": "Barça",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-21",
+    "local": "Elche",
+    "visitante": "Rayo Vallecano",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-21",
+    "local": "Real Betis",
+    "visitante": "Getafe",
+    "resultado": "4-0",
+    "goles": []
+  },
+  {
+    "jornada": 17,
+    "fecha": "2025-12-22",
+    "local": "Athletic",
+    "visitante": "Espanyol",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-02",
+    "local": "Rayo Vallecano",
+    "visitante": "Getafe",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-03",
+    "local": "Celta",
+    "visitante": "Valencia",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-03",
+    "local": "Osasuna",
+    "visitante": "Athletic",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-03",
+    "local": "Elche",
+    "visitante": "Villarreal",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-03",
+    "local": "Espanyol",
+    "visitante": "Barça",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-04",
+    "local": "Sevilla FC",
+    "visitante": "Levante",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-04",
+    "local": "Real Madrid",
+    "visitante": "Real Betis",
+    "resultado": "5-1",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-04",
+    "local": "Alavés",
+    "visitante": "Real Oviedo",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-04",
+    "local": "Mallorca",
+    "visitante": "Girona",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 18,
+    "fecha": "2026-01-04",
+    "local": "Real Sociedad",
+    "visitante": "Atleti",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-09",
+    "local": "Getafe",
+    "visitante": "Real Sociedad",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-10",
+    "local": "Real Oviedo",
+    "visitante": "Real Betis",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-10",
+    "local": "Villarreal",
+    "visitante": "Alavés",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-10",
+    "local": "Girona",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-10",
+    "local": "Valencia",
+    "visitante": "Elche",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-11",
+    "local": "Rayo Vallecano",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-11",
+    "local": "Levante",
+    "visitante": "Espanyol",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 19,
+    "fecha": "2026-01-12",
+    "local": "Sevilla FC",
+    "visitante": "Celta",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-16",
+    "local": "Espanyol",
+    "visitante": "Girona",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-17",
+    "local": "Real Madrid",
+    "visitante": "Levante",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-17",
+    "local": "Mallorca",
+    "visitante": "Athletic",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-17",
+    "local": "Osasuna",
+    "visitante": "Real Oviedo",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-17",
+    "local": "Real Betis",
+    "visitante": "Villarreal",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-18",
+    "local": "Getafe",
+    "visitante": "Valencia",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-18",
+    "local": "Atleti",
+    "visitante": "Alavés",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-18",
+    "local": "Celta",
+    "visitante": "Rayo Vallecano",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-18",
+    "local": "Real Sociedad",
+    "visitante": "Barça",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 20,
+    "fecha": "2026-01-19",
+    "local": "Elche",
+    "visitante": "Sevilla FC",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-23",
+    "local": "Levante",
+    "visitante": "Elche",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-24",
+    "local": "Rayo Vallecano",
+    "visitante": "Osasuna",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-24",
+    "local": "Valencia",
+    "visitante": "Espanyol",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-24",
+    "local": "Sevilla FC",
+    "visitante": "Athletic",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-24",
+    "local": "Villarreal",
+    "visitante": "Real Madrid",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-25",
+    "local": "Atleti",
+    "visitante": "Mallorca",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-25",
+    "local": "Barça",
+    "visitante": "Real Oviedo",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-25",
+    "local": "Real Sociedad",
+    "visitante": "Celta",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-25",
+    "local": "Alavés",
+    "visitante": "Real Betis",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 21,
+    "fecha": "2026-01-26",
+    "local": "Girona",
+    "visitante": "Getafe",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-01-30",
+    "local": "Espanyol",
+    "visitante": "Alavés",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-01-31",
+    "local": "Real Oviedo",
+    "visitante": "Girona",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-01-31",
+    "local": "Osasuna",
+    "visitante": "Villarreal",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-01-31",
+    "local": "Levante",
+    "visitante": "Atleti",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-01-31",
+    "local": "Elche",
+    "visitante": "Barça",
+    "resultado": "1-3",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-02-01",
+    "local": "Real Madrid",
+    "visitante": "Rayo Vallecano",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-02-01",
+    "local": "Real Betis",
+    "visitante": "Valencia",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-02-01",
+    "local": "Getafe",
+    "visitante": "Celta",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-02-01",
+    "local": "Athletic",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 22,
+    "fecha": "2026-02-02",
+    "local": "Mallorca",
+    "visitante": "Sevilla FC",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-06",
+    "local": "Celta",
+    "visitante": "Osasuna",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-07",
+    "local": "Barça",
+    "visitante": "Mallorca",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-07",
+    "local": "Real Sociedad",
+    "visitante": "Elche",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-08",
+    "local": "Alavés",
+    "visitante": "Getafe",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-08",
+    "local": "Athletic",
+    "visitante": "Levante",
+    "resultado": "4-2",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-08",
+    "local": "Sevilla FC",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-08",
+    "local": "Atleti",
+    "visitante": "Real Betis",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-08",
+    "local": "Valencia",
+    "visitante": "Real Madrid",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-02-09",
+    "local": "Villarreal",
+    "visitante": "Espanyol",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-13",
+    "local": "Elche",
+    "visitante": "Osasuna",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-14",
+    "local": "Espanyol",
+    "visitante": "Celta",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-14",
+    "local": "Getafe",
+    "visitante": "Villarreal",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-14",
+    "local": "Sevilla FC",
+    "visitante": "Alavés",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-14",
+    "local": "Real Madrid",
+    "visitante": "Real Sociedad",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-15",
+    "local": "Real Oviedo",
+    "visitante": "Athletic",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-15",
+    "local": "Rayo Vallecano",
+    "visitante": "Atleti",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-15",
+    "local": "Levante",
+    "visitante": "Valencia",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-15",
+    "local": "Mallorca",
+    "visitante": "Real Betis",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 24,
+    "fecha": "2026-02-16",
+    "local": "Girona",
+    "visitante": "Barça",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 16,
+    "fecha": "2026-02-18",
+    "local": "Levante",
+    "visitante": "Villarreal",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-20",
+    "local": "Athletic",
+    "visitante": "Elche",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-21",
+    "local": "Real Sociedad",
+    "visitante": "Real Oviedo",
+    "resultado": "3-3",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-21",
+    "local": "Real Betis",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-21",
+    "local": "Osasuna",
+    "visitante": "Real Madrid",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-21",
+    "local": "Atleti",
+    "visitante": "Espanyol",
+    "resultado": "4-2",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-22",
+    "local": "Getafe",
+    "visitante": "Sevilla FC",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-22",
+    "local": "Barça",
+    "visitante": "Levante",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-22",
+    "local": "Celta",
+    "visitante": "Mallorca",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-22",
+    "local": "Villarreal",
+    "visitante": "Valencia",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 25,
+    "fecha": "2026-02-23",
+    "local": "Alavés",
+    "visitante": "Girona",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-02-27",
+    "local": "Levante",
+    "visitante": "Alavés",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-02-28",
+    "local": "Rayo Vallecano",
+    "visitante": "Athletic",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-02-28",
+    "local": "Barça",
+    "visitante": "Villarreal",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-02-28",
+    "local": "Mallorca",
+    "visitante": "Real Sociedad",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-02-28",
+    "local": "Real Oviedo",
+    "visitante": "Atleti",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-03-01",
+    "local": "Elche",
+    "visitante": "Espanyol",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-03-01",
+    "local": "Valencia",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-03-01",
+    "local": "Real Betis",
+    "visitante": "Sevilla FC",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-03-01",
+    "local": "Girona",
+    "visitante": "Celta",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 26,
+    "fecha": "2026-03-02",
+    "local": "Real Madrid",
+    "visitante": "Getafe",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 23,
+    "fecha": "2026-03-04",
+    "local": "Rayo Vallecano",
+    "visitante": "Real Oviedo",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-06",
+    "local": "Celta",
+    "visitante": "Real Madrid",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-07",
+    "local": "Osasuna",
+    "visitante": "Mallorca",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-07",
+    "local": "Levante",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-07",
+    "local": "Atleti",
+    "visitante": "Real Sociedad",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-07",
+    "local": "Athletic",
+    "visitante": "Barça",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-08",
+    "local": "Villarreal",
+    "visitante": "Elche",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-08",
+    "local": "Getafe",
+    "visitante": "Real Betis",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-08",
+    "local": "Sevilla FC",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-08",
+    "local": "Valencia",
+    "visitante": "Alavés",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 27,
+    "fecha": "2026-03-09",
+    "local": "Espanyol",
+    "visitante": "Real Oviedo",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-13",
+    "local": "Alavés",
+    "visitante": "Villarreal",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-14",
+    "local": "Girona",
+    "visitante": "Athletic",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-14",
+    "local": "Atleti",
+    "visitante": "Getafe",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-14",
+    "local": "Real Oviedo",
+    "visitante": "Valencia",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-14",
+    "local": "Real Madrid",
+    "visitante": "Elche",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-15",
+    "local": "Mallorca",
+    "visitante": "Espanyol",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-15",
+    "local": "Barça",
+    "visitante": "Sevilla FC",
+    "resultado": "5-2",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-15",
+    "local": "Real Betis",
+    "visitante": "Celta",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-15",
+    "local": "Real Sociedad",
+    "visitante": "Osasuna",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 28,
+    "fecha": "2026-03-16",
+    "local": "Rayo Vallecano",
+    "visitante": "Levante",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-20",
+    "local": "Villarreal",
+    "visitante": "Real Sociedad",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-21",
+    "local": "Elche",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-21",
+    "local": "Espanyol",
+    "visitante": "Getafe",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-21",
+    "local": "Levante",
+    "visitante": "Real Oviedo",
+    "resultado": "4-2",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-21",
+    "local": "Osasuna",
+    "visitante": "Girona",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-21",
+    "local": "Sevilla FC",
+    "visitante": "Valencia",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-22",
+    "local": "Barça",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-22",
+    "local": "Celta",
+    "visitante": "Alavés",
+    "resultado": "3-4",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-22",
+    "local": "Athletic",
+    "visitante": "Real Betis",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 29,
+    "fecha": "2026-03-22",
+    "local": "Real Madrid",
+    "visitante": "Atleti",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-03",
+    "local": "Rayo Vallecano",
+    "visitante": "Elche",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-04",
+    "local": "Real Sociedad",
+    "visitante": "Levante",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-04",
+    "local": "Mallorca",
+    "visitante": "Real Madrid",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-04",
+    "local": "Real Betis",
+    "visitante": "Espanyol",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-04",
+    "local": "Atleti",
+    "visitante": "Barça",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-05",
+    "local": "Getafe",
+    "visitante": "Athletic",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-05",
+    "local": "Valencia",
+    "visitante": "Celta",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-05",
+    "local": "Real Oviedo",
+    "visitante": "Sevilla FC",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-05",
+    "local": "Alavés",
+    "visitante": "Osasuna",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 30,
+    "fecha": "2026-04-06",
+    "local": "Girona",
+    "visitante": "Villarreal",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-10",
+    "local": "Real Madrid",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-11",
+    "local": "Real Sociedad",
+    "visitante": "Alavés",
+    "resultado": "3-3",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-11",
+    "local": "Elche",
+    "visitante": "Valencia",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-11",
+    "local": "Barça",
+    "visitante": "Espanyol",
+    "resultado": "4-1",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-11",
+    "local": "Sevilla FC",
+    "visitante": "Atleti",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-12",
+    "local": "Osasuna",
+    "visitante": "Real Betis",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-12",
+    "local": "Mallorca",
+    "visitante": "Rayo Vallecano",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-12",
+    "local": "Celta",
+    "visitante": "Real Oviedo",
+    "resultado": "0-3",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-12",
+    "local": "Athletic",
+    "visitante": "Villarreal",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 31,
+    "fecha": "2026-04-13",
+    "local": "Levante",
+    "visitante": "Getafe",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-21",
+    "local": "Athletic",
+    "visitante": "Osasuna",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-21",
+    "local": "Mallorca",
+    "visitante": "Valencia",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-21",
+    "local": "Real Madrid",
+    "visitante": "Alavés",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-21",
+    "local": "Girona",
+    "visitante": "Real Betis",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-22",
+    "local": "Elche",
+    "visitante": "Atleti",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-22",
+    "local": "Real Sociedad",
+    "visitante": "Getafe",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-22",
+    "local": "Barça",
+    "visitante": "Celta",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-23",
+    "local": "Levante",
+    "visitante": "Sevilla FC",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-23",
+    "local": "Rayo Vallecano",
+    "visitante": "Espanyol",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 33,
+    "fecha": "2026-04-23",
+    "local": "Real Oviedo",
+    "visitante": "Villarreal",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-24",
+    "local": "Real Betis",
+    "visitante": "Real Madrid",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-25",
+    "local": "Alavés",
+    "visitante": "Mallorca",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-25",
+    "local": "Getafe",
+    "visitante": "Barça",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-25",
+    "local": "Valencia",
+    "visitante": "Girona",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-25",
+    "local": "Atleti",
+    "visitante": "Athletic",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-26",
+    "local": "Rayo Vallecano",
+    "visitante": "Real Sociedad",
+    "resultado": "3-3",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-26",
+    "local": "Real Oviedo",
+    "visitante": "Elche",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-26",
+    "local": "Osasuna",
+    "visitante": "Sevilla FC",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-26",
+    "local": "Villarreal",
+    "visitante": "Celta",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 32,
+    "fecha": "2026-04-27",
+    "local": "Espanyol",
+    "visitante": "Levante",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-01",
+    "local": "Girona",
+    "visitante": "Mallorca",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-02",
+    "local": "Villarreal",
+    "visitante": "Levante",
+    "resultado": "5-1",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-02",
+    "local": "Valencia",
+    "visitante": "Atleti",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-02",
+    "local": "Alavés",
+    "visitante": "Athletic",
+    "resultado": "2-4",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-02",
+    "local": "Osasuna",
+    "visitante": "Barça",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-03",
+    "local": "Celta",
+    "visitante": "Elche",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-03",
+    "local": "Getafe",
+    "visitante": "Rayo Vallecano",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-03",
+    "local": "Real Betis",
+    "visitante": "Real Oviedo",
+    "resultado": "3-0",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-03",
+    "local": "Espanyol",
+    "visitante": "Real Madrid",
+    "resultado": "0-2",
+    "goles": []
+  },
+  {
+    "jornada": 34,
+    "fecha": "2026-05-04",
+    "local": "Sevilla FC",
+    "visitante": "Real Sociedad",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-08",
+    "local": "Levante",
+    "visitante": "Osasuna",
+    "resultado": "3-2",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-09",
+    "local": "Elche",
+    "visitante": "Alavés",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-09",
+    "local": "Sevilla FC",
+    "visitante": "Espanyol",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-09",
+    "local": "Atleti",
+    "visitante": "Celta",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-09",
+    "local": "Real Sociedad",
+    "visitante": "Real Betis",
+    "resultado": "2-2",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-10",
+    "local": "Mallorca",
+    "visitante": "Villarreal",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-10",
+    "local": "Athletic",
+    "visitante": "Valencia",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-10",
+    "local": "Real Oviedo",
+    "visitante": "Getafe",
+    "resultado": "0-0",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-10",
+    "local": "Barça",
+    "visitante": "Real Madrid",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 35,
+    "fecha": "2026-05-11",
+    "local": "Rayo Vallecano",
+    "visitante": "Girona",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-12",
+    "local": "Celta",
+    "visitante": "Levante",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-12",
+    "local": "Real Betis",
+    "visitante": "Elche",
+    "resultado": "2-1",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-12",
+    "local": "Osasuna",
+    "visitante": "Atleti",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-13",
+    "local": "Espanyol",
+    "visitante": "Athletic",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-13",
+    "local": "Villarreal",
+    "visitante": "Sevilla FC",
+    "resultado": "2-3",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-13",
+    "local": "Alavés",
+    "visitante": "Barça",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-13",
+    "local": "Getafe",
+    "visitante": "Mallorca",
+    "resultado": "3-1",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-14",
+    "local": "Valencia",
+    "visitante": "Rayo Vallecano",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-14",
+    "local": "Girona",
+    "visitante": "Real Sociedad",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 36,
+    "fecha": "2026-05-14",
+    "local": "Real Madrid",
+    "visitante": "Real Oviedo",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Athletic",
+    "visitante": "Celta",
+    "resultado": "1-1",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Atleti",
+    "visitante": "Girona",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Elche",
+    "visitante": "Getafe",
+    "resultado": "1-0",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Levante",
+    "visitante": "Mallorca",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Rayo Vallecano",
+    "visitante": "Villarreal",
+    "resultado": "2-0",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Real Sociedad",
+    "visitante": "Valencia",
+    "resultado": "3-4",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Real Oviedo",
+    "visitante": "Alavés",
+    "resultado": "0-1",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Osasuna",
+    "visitante": "Espanyol",
+    "resultado": "1-2",
+    "goles": []
+  },
+  {
+    "jornada": 37,
+    "fecha": "2026-05-17",
+    "local": "Sevilla FC",
+    "visitante": "Real Madrid",
+    "resultado": "0-1",
+    "goles": []
+  }
+]
