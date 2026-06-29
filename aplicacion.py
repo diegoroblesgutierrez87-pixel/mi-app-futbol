@@ -161,6 +161,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         es_local = (g['HomeTeam']==equipo).iloc[0]
         sufijo = 'c' if es_local else 'f'
         txt = f"J{int(j)}{sufijo}"
+
+        # CAMBIO: añadir. si hay AM en algún partido de esa jornada
+        if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
+            txt += '●'
+
         if len(g) > 1:
             txt += f" - {len(g)}#"
 
@@ -947,6 +952,7 @@ def limpiar_filtros():
     st.session_state.margen_filtro = "Todo"
 df = cargar_csv()
 
+######"Filtros de partidos"
 with st.expander("Filtros de partidos", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
 
@@ -1631,7 +1637,7 @@ with st.expander("Filtros de partidos", expanded=False):
     st.divider()
 
     columnas_mostrar = [
-        'partidos', 
+        'partidos', ""
     ]
 
     columnas_mostrar = [col for col in columnas_mostrar if col in df_final.columns]
@@ -1701,6 +1707,9 @@ with st.expander("Filtros de partidos", expanded=False):
             </div>
             '''
             st.markdown(grid_html, unsafe_allow_html=True)
+
+
+
 ###########################################################
 with st.expander("ℹ Info jornadas", key="exp_info"):
     for liga in liga_sel:
@@ -2083,6 +2092,11 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
             es_loc_j = (g['HomeTeam']==equipo).iloc[0]
             sufijo = 'c' if es_loc_j else 'f'
             txt = f"J{int(j)}{sufijo}"
+
+            # CAMBIO: añadir. si hay AM en algún partido de esa jornada
+            if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
+                txt += '●'
+
             if len(g) > 1:
                 txt += f" - {len(g)}#"
 
@@ -2095,7 +2109,12 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
 
             partes.append(f"<details style='display:inline-block;margin-right:1px'><summary style='color:{color};font-weight:700;cursor:pointer;display:inline;list-style:none'>{txt}</summary><div style='background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:320px'>{resultado}</div></details>")
 
-        linea = f"<b>{equipo.title()}</b>: {total_pj}# — <span style='color:#0f8105;font-weight:700;text-decoration:underline;text-decoration-thickness:2px'>G:{p_g}% #{n_g}</span> f:{p_fx}% c:{p_cx}% |<span style='color:#f31818;font-weight:700;text-decoration:underline;text-decoration-thickness:2px'>P:{p_p}% #{n_p}</span> fp:{p_fpx}% cp:{p_cpx}% |<span style='color:#0A2342;font-weight:700;text-decoration:underline;text-decoration-thickness:2px'>E:{p_e}% #{n_e}</span> fe:{p_fex}% ce:{p_cex}% — " + "|".join(partes)
+        # CAMBIO: nombre en mayúsculas, línea 2 G/P/E con f: y c:, línea 3 jornadas
+        linea = f"""<div style='font-size:11px;line-height:1.4;margin:6px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
+        <b>{equipo.upper()}</b><br>
+        <span style='color:#0f8105;font-weight:700'>G:{p_g}% #{n_g}</span> c:{p_cx}% f:{p_fx}% | <span style='color:#f31818;font-weight:700'>P:{p_p}% #{n_p}</span> c:{p_cpx}% f:{p_fpx}% | <span style='color:#0A2342;font-weight:700'>E:{p_e}% #{n_e}</span> c:{p_cex}% f:{p_fex}%<br>
+        {"|".join(partes)}
+        </div>"""
         lineas.append(linea)
     return lineas
 
