@@ -3,8 +3,8 @@ import re
 import unicodedata
 import streamlit as st
 import pandas as pd
-df_base_clasif: pd.DataFrame
 import numpy as np
+import matplotlib.pyplot as plt  # type: ignore
 import os
 from functools import lru_cache
 import json
@@ -13,6 +13,12 @@ import subprocess
 import sys
 import time
 import streamlit.components.v1 as components  # <-- ESTA ES LA LÍNEA NUEVA
+
+st.set_page_config(
+    page_title="Filtro Jornada", 
+    layout="wide",
+    initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
+)
 
 # CSS LIMPIO - fondo blanco papel
 st.markdown("""
@@ -147,7 +153,15 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         return ""
 
     is_home = df_eq['HomeTeam']==equipo
-    df_eq['res'] = np.where((is_home & (df_eq['FTHG']>df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']>df_eq['FTHG'])), 'win', np.where((is_home & (df_eq['FTHG']<df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']<df_eq['FTHG'])), 'loss', 'draw'))
+    df_eq['res'] = np.where(
+    (is_home & (df_eq['FTHG']>df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']>df_eq['FTHG'])),
+    'win',
+    np.where(
+        (is_home & (df_eq['FTHG']<df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']<df_eq['FTHG'])),
+        'loss',
+        'draw'
+    )
+)
 
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
@@ -193,11 +207,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         partes.append(jx_html)
     return " | ".join(partes)
 
-st.set_page_config(
-    page_title="Filtro Jornada", 
-    layout="wide",
-    initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
-)
+
 
 
 
@@ -982,9 +992,9 @@ with st.expander("Filtros de partidos", expanded=False):
     df_rachas_full = df_base.copy()
     df_final = df_base.copy()
     df_clasificacion = df_clas_base.copy()
-
-    jornadas = sorted(df_final['Jornada'].unique())
-    jornada_sel = col3.multiselect("J", jornadas, format_func=lambda x: f"J{x}")
+    
+    jornadas = sorted(df_final['Jornada'].unique())  # <-- ESTA LÍNEA FALTABA
+    
 
     if len(jornadas) > 0:
         min_j, max_j = int(min(jornadas)), int(max(jornadas))
@@ -1027,13 +1037,9 @@ with st.expander("Filtros de partidos", expanded=False):
     # --- FIN RANGO CUOTAS ---
     rango_minutos = st.slider("Minutos", 0, 120, st.session_state.rango_minutos, 1, key='rango_minutos')
 
-    if len(jornadas) > 0:
-        if not jornada_sel:
-            df_final = df_final[(df_final['Jornada'] >= rango_jornadas[0]) & (df_final['Jornada'] <= rango_jornadas[1])]
-            df_clasificacion = df_clasificacion[(df_clasificacion['Jornada'] >= rango_jornadas[0]) & (df_clasificacion['Jornada'] <= rango_jornadas[1])]
-        else:
-            df_final = df_final[df_final['Jornada'].isin(jornada_sel)]
-            df_clasificacion = df_clasificacion[df_clasificacion['Jornada'].isin(jornada_sel)]
+if len(jornadas) > 0:
+    df_final = df_final[(df_final['Jornada'] >= rango_jornadas[0]) & (df_final['Jornada'] <= rango_jornadas[1])]
+    df_clasificacion = df_clasificacion[(df_clasificacion['Jornada'] >= rango_jornadas[0]) & (df_clasificacion['Jornada'] <= rango_jornadas[1])]
 
     df_base_h2h = df_final.copy()
     st.divider()
@@ -1181,9 +1187,8 @@ with st.expander("Filtros de partidos", expanded=False):
         filtros_activos.append(txt_col2)
 
     # Jornada
-    if jornada_sel:
-        filtros_activos.append(f"J:{','.join(map(str,jornada_sel))}")
-    elif len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
+# Jornada
+    if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
         filtros_activos.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
 
     if filtros_activos:
@@ -2179,11 +2184,19 @@ with st.expander("📅Clasif.", expanded=False):
 
         # --- CAJITAS LIBRES PARA JORNADAS ---
         col_j1, col_j2 = st.columns(2)
+
+        if len(df_base) > 0 and 'Jornada' in df_base.columns:
+            j_min_default = int(df_base['Jornada'].min())
+            j_max_default = int(df_base['Jornada'].max())
+        else:
+            j_min_default = 1
+            j_max_default = 38
+
         j_desde = col_j1.number_input(
             "Jornada De",
             min_value=1,
             max_value=46,
-            value=int(df_base_clasif['Jornada'].min()) if not df_base_clasif.empty else 1,
+            value=j_min_default,
             step=1,
             key='clasf_j_desde_local'
         )
@@ -2191,7 +2204,7 @@ with st.expander("📅Clasif.", expanded=False):
             "Jornada A",
             min_value=1,
             max_value=46,
-            value=int(df_base_clasif['Jornada'].max()) if not df_base_clasif.empty else 38,
+            value=j_max_default,
             step=1,
             key='clasf_j_hasta_local'
         )
@@ -2614,6 +2627,48 @@ with st.expander("📋 Resumen", expanded=False):
                 })
 
            # 2. Ahora pinto comparando con la temporada anterior = la siguiente en la lista
+           # 1.6 MINI RESUMEN + GRÁFICA EVOLUCIÓN PUNTOS
+            if equipo_res and lista_stats:
+                # MINI RESUMEN: 21/22: 4º 7pts | xG xE xP
+                filas = []
+                for temp in temps_ordenadas:
+                    dft = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season']==temp)]
+                    if dft.empty:
+                        filas.append(f"<div style='font-size:12px'>{temp}: sin datos</div>")
+                        continue
+                    
+                    ult_jornada = dft.sort_values('Jornada').iloc[-1]
+                    pos = int(ult_jornada['Pos'])
+                    pts = int(ult_jornada['Pts'])
+                    
+                    g = int(ult_jornada.get('GF', ult_jornada.get('W', ult_jornada.get('PG', 0))))
+                    e = int(ult_jornada.get('GE', ult_jornada.get('D', ult_jornada.get('PE', 0))))
+                    p = int(ult_jornada.get('GP', ult_jornada.get('L', ult_jornada.get('PP', 0))))
+                    
+                    linea = f"<div style='font-size:12px; font-family:monospace'>{temp}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
+                    filas.append(linea)
+
+                st.caption("Resumen final")
+                st.markdown("\n".join(filas), unsafe_allow_html=True)
+
+                # MINI GRÁFICA LINEAS SIN TOOLTIPS
+                import matplotlib.pyplot as plt
+                df_graf = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season'].isin(temps_ordenadas))]
+
+                if not df_graf.empty:
+                    fig = plt.figure(figsize=(6, 1.5), dpi=100)
+                    for temp in temps_ordenadas:
+                        d = df_graf[df_graf['Season']==temp].sort_values('Jornada')
+                        if not d.empty:
+                            plt.plot(d['Jornada'], d['Pts'], linewidth=1)
+
+                    plt.xticks(range(0, 39, 5), fontsize=6)
+                    plt.yticks(range(0, 101, 20), fontsize=6)
+                    plt.tight_layout(pad=0.1)
+                    st.pyplot(fig)
+                    plt.close()
+                                
+            ###########fin grafica
             def diff_str(actual, siguiente, inverso=False, malo_si_sube=False):
                 if siguiente is None:  # <-- Ya no uso stats_prev
                     return ""
