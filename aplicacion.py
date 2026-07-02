@@ -1104,58 +1104,63 @@ if len(jornadas) > 0:
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
+############filtros avanzados    
+    with st.expander("🎛️ Filtros avanzados", expanded=False):
+    
+        f1 = st.columns(4)
+        equipo_filtro = f1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
+        equipo2_filtro = f1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        columna_filtro = f1[2].selectbox("Col1", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro')
+        columna_filtro2 = f1[3].selectbox("Col2", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro2')
 
-    f1 = st.columns(4)
-    equipo_filtro = f1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-    equipo2_filtro = f1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
-    columna_filtro = f1[2].selectbox("Col1", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro')
-    columna_filtro2 = f1[3].selectbox("Col2", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro2')
+        f2 = st.columns(4)
+        operador_filtro = f2[0].selectbox("Op1", ["=", ">", ">=", "<", "<="], key='operador_filtro')
+        operador_filtro2 = f2[1].selectbox("Op2", ["=", ">", ">=", "<", "<="], key='operador_filtro2')
+        valor_filtro = f2[2].selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro')
+        valor_filtro2 = f2[3].selectbox("Vlr2", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro2')
 
-    f2 = st.columns(4)
-    operador_filtro = f2[0].selectbox("Op1", ["=", ">", ">=", "<", "<="], key='operador_filtro')
-    operador_filtro2 = f2[1].selectbox("Op2", ["=", ">", ">=", "<", "<="], key='operador_filtro2')
-    valor_filtro = f2[2].selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro')
-    valor_filtro2 = f2[3].selectbox("Vlr2", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro2')
+        f3 = st.columns(4)
+        alcance_filtro = f3[0].selectbox("Fav/Cntr1", ["Todo","AF","C","AF0","AF1","AF2","AF3","AF4","C0","C1","C2","C3","C4"], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra")
+        alcance_filtro2 = f3[1].selectbox("Fav/Cntr2", ["Todo","AF","C"], key='alcance_filtro2')
+        condicion_filtro = f3[2].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
+        htft_filtro = f3[3].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
 
-    f3 = st.columns(4)
-    alcance_filtro = f3[0].selectbox("Fav/Cntr1", ["Todo","AF","C","AF0","AF1","AF2","AF3","AF4","C0","C1","C2","C3","C4"], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra")
-    alcance_filtro2 = f3[1].selectbox("Fav/Cntr2", ["Todo","AF","C"], key='alcance_filtro2')
-    condicion_filtro = f3[2].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
-    htft_filtro = f3[3].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
+        f4 = st.columns(4)
+        resultado_filtro = f4[0].selectbox("1x2", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro')
+        ambos_marcan = f4[1].selectbox("AM", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan')
+        cuota_tipo = f4[2].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
+        margen_filtro = f4[3].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
 
-    f4 = st.columns(4)
-    resultado_filtro = f4[0].selectbox("1x2", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro')
-    ambos_marcan = f4[1].selectbox("AM", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan')
-    cuota_tipo = f4[2].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
-    margen_filtro = f4[3].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
+        f5 = st.columns([1.2, 0.7, 2.1])
+        marcadores_unicos = sorted(
+            (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
+            key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
+        )
+        marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
+        f5[1].caption("% mínimo")
+        pct_marcador = f5[1].number_input(" ", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
+        f5[2].empty()
 
-    f5 = st.columns([1.2, 0.7, 2.1])
-    marcadores_unicos = sorted(
-        (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
-        key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
-    )
-    marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
-    f5[1].caption("% mínimo")
-    pct_marcador = f5[1].number_input(" ", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
-    f5[2].empty()
+        parte_gol = st.selectbox("Parte", ["Todo","1T","2T"], key='parte_gol')
 
-    parte_gol = st.selectbox("Parte", ["Todo","1T","2T"], key='parte_gol')
+        from collections import defaultdict, Counter
+        player_teams = defaultdict(Counter)
+        for (ht, at, fecha), evs in todos_eventos.items():
+            for ev in evs:
+                if ev.get('missed') or not ev.get('player'):
+                    continue
+                team = ev.get('team')
+                if team:
+                    player_teams[ev['player']][team] += 1
+        player_to_team = {p: max(cnts.items(), key=lambda x: x[1])[0] for p, cnts in player_teams.items()} if player_teams else {}
+        lista_jug = sorted([p for p,t in player_to_team.items() if t==equipo_filtro]) if equipo_filtro!="Ninguno" else sorted(player_to_team.keys())
 
-    from collections import defaultdict, Counter
-    player_teams = defaultdict(Counter)
-    for (ht, at, fecha), evs in todos_eventos.items():
-        for ev in evs:
-            if ev.get('missed') or not ev.get('player'):
-                continue
-            team = ev.get('team')
-            if team:
-                player_teams[ev['player']][team] += 1
-    player_to_team = {p: max(cnts.items(), key=lambda x: x[1])[0] for p, cnts in player_teams.items()} if player_teams else {}
-    lista_jug = sorted([p for p,t in player_to_team.items() if t==equipo_filtro]) if equipo_filtro!="Ninguno" else sorted(player_to_team.keys())
+        jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
-    jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
-
-    st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
+        st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
+    
+       # --- RESUMEN DE FILTROS ACTIVOS ---
+   
     # --- RESUMEN DE FILTROS ACTIVOS ---
     filtros_activos = []
 
@@ -2542,219 +2547,243 @@ mostrar_agenda()
 
 ################# filtro resumen
 with st.expander("📋 Resumen", expanded=False):
-    col_l, col_t, col_eq = st.columns(3)
+    col_izq, col_der = st.columns(2)
 
-    ligas_res = col_l.multiselect("Liga", sorted(df['League'].unique()), default=[liga_sel[0]] if liga_sel else [], key="res_ligas")
-    temps_res = col_t.multiselect("Temporada", sorted(df['Season'].unique()), default=[temp_sel[-1]] if temp_sel else [], key="res_temps")
+    ligas_res = sorted(df['League'].unique())
+    temps_res = sorted(df['Season'].unique())
 
-    df_res_base = df[df['League'].isin(ligas_res) & df['Season'].isin(temps_res)]
-    equipos_res = sorted(pd.unique(df_res_base[['HomeTeam','AwayTeam']].values.ravel()))
-    equipo_res = col_eq.selectbox("Equipo", [""] + equipos_res, key="res_equipo")
+    # FILA 1: Liga1 Liga2 - con multiselect
+    liga1_res = col_izq.multiselect("Liga", ligas_res, default=[liga_sel[0]] if liga_sel else [], key="res_liga1")
+    liga2_res = col_der.multiselect("Liga2", ligas_res, key="res_liga2")
 
-    if st.button("🔍 Buscar resumen", type="primary", use_container_width=True, key="btn_resumen") and equipo_res:
+    # FILA 2: Temp1 Temp2 - con multiselect
+    temp1_res = col_izq.multiselect("Temporada", temps_res, default=[temp_sel[-1]] if temp_sel else [], key="res_temp1")
+    temp2_res = col_der.multiselect("Temp2", temps_res, key="res_temp2")
+
+    # FILA 3: Equipo1 Equipo2
+    df_res_base1 = df[df['League'].isin(liga1_res) & df['Season'].isin(temp1_res)] if liga1_res and temp1_res else pd.DataFrame()
+    equipos_res1 = sorted(pd.unique(df_res_base1[['HomeTeam','AwayTeam']].values.ravel())) if not df_res_base1.empty else []
+    equipo_res = col_izq.selectbox("Equipo", [""] + equipos_res1, key="res_equipo1")
+
+    equipos_res2 = []
+    if liga2_res and temp2_res:
+        df_res_base2 = df[df['League'].isin(liga2_res) & df['Season'].isin(temp2_res)]
+        equipos_res2 = sorted(pd.unique(df_res_base2[['HomeTeam','AwayTeam']].values.ravel()))
+    equipo2_res = col_der.selectbox("Equipo2", [""] + equipos_res2, key="res_equipo2")
+
+    def calcular_stats_equipo(df_res_base, equipo_res, temps_res):
+        if not equipo_res or df_res_base.empty:
+            return None
+
         df_res, df_clas_res = calcular_estado_jornada(df_res_base)
         df_eq_total = df_res[(df_res['HomeTeam']==equipo_res) | (df_res['AwayTeam']==equipo_res)].copy()
 
         if df_eq_total.empty:
-            st.warning(f"{equipo_res} no tiene partidos en esa selección")
-        else:
-            # --- BLOQUE POR CADA TEMPORADA ---
-            # 1. Calculo todas las stats primero
-            stats_actual = {}
-            lista_stats = []
-            temps_ordenadas = sorted(temps_res, reverse=True) # De nueva a vieja
+            return None
 
-            for temp in temps_ordenadas:
-                df_eq = df_eq_total[df_eq_total['Season']==temp].copy()
-                if df_eq.empty:
-                    continue
+        lista_stats = []
+        temps_ordenadas = sorted(temps_res, reverse=True)
 
-                total = len(df_eq)
-                es_local = df_eq['HomeTeam']==equipo_res
+        for temp in temps_ordenadas:
+            df_eq = df_eq_total[df_eq_total['Season']==temp].copy()
+            if df_eq.empty:
+                continue
 
-                gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
-                pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
-                empata = ~(gana | pierde)
+            total = len(df_eq)
+            es_local = df_eq['HomeTeam']==equipo_res
 
-                n_g, n_e, n_p = gana.sum(), empata.sum(), pierde.sum()
-                pct_g, pct_e, pct_p = round(n_g/total*100), round(n_e/total*100), round(n_p/total*100)
+            gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
+            pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
+            empata = ~(gana | pierde)
 
-                gf = np.where(es_local, df_eq['FTHG'], df_eq['FTAG'])
-                gc = np.where(es_local, df_eq['FTAG'], df_eq['FTHG'])
-                gf_tot, gc_tot = gf.sum(), gc.sum()
-                gf_avg, gc_avg = round(gf.mean(),2), round(gc.mean(),2)
+            n_g, n_e, n_p = gana.sum(), empata.sum(), pierde.sum()
+            pct_g, pct_e, pct_p = round(n_g/total*100), round(n_e/total*100), round(n_p/total*100)
 
-                hs = np.where(es_local, df_eq['HS'], df_eq['AS'])
-                hst = np.where(es_local, df_eq['HST'], df_eq['AST'])
-                hf = np.where(es_local, df_eq['HF'], df_eq['AF'])
-                hc = np.where(es_local, df_eq['HC'], df_eq['AC'])
-                hy = np.where(es_local, df_eq['HY'], df_eq['AY'])
-                hr = np.where(es_local, df_eq['HR'], df_eq['AR'])
+            gf = np.where(es_local, df_eq['FTHG'], df_eq['FTAG'])
+            gc = np.where(es_local, df_eq['FTAG'], df_eq['FTHG'])
+            gf_tot, gc_tot = gf.sum(), gc.sum()
+            gf_avg, gc_avg = round(gf.mean(),2), round(gc.mean(),2)
 
-                am = ((gf > 0) & (gc > 0)).sum()
-                over25 = (gf + gc > 2.5).sum()
+            hs = np.where(es_local, df_eq['HS'], df_eq['AS'])
+            hst = np.where(es_local, df_eq['HST'], df_eq['AST'])
+            hf = np.where(es_local, df_eq['HF'], df_eq['AF'])
+            hc = np.where(es_local, df_eq['HC'], df_eq['AC'])
+            hy = np.where(es_local, df_eq['HY'], df_eq['AY'])
+            hr = np.where(es_local, df_eq['HR'], df_eq['AR'])
 
-                racha_actual = 0
-                mejor_racha = 0
-                for res in np.where(gana, 'G', np.where(pierde, 'P', 'E')):
-                    if res == 'G':
-                        racha_actual += 1
-                        mejor_racha = max(mejor_racha, racha_actual)
-                    else:
-                        racha_actual = 0
+            am = ((gf > 0) & (gc > 0)).sum()
+            over25 = (gf + gc > 2.5).sum()
 
-                df_clas_temp = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season']==temp)]
-                if not df_clas_temp.empty:
-                    ult_j = df_clas_temp['Jornada'].max()
-                    fila_final = df_clas_temp[df_clas_temp['Jornada']==ult_j].iloc[0]
-                    pos_final = int(fila_final['Pos'])
-                    pts_final = int(fila_final['Pts'])
+            racha_actual = 0
+            mejor_racha = 0
+            for res in np.where(gana, 'G', np.where(pierde, 'P', 'E')):
+                if res == 'G':
+                    racha_actual += 1
+                    mejor_racha = max(mejor_racha, racha_actual)
                 else:
-                    pos_final = 0
-                    pts_final = 0
+                    racha_actual = 0
 
-                ult5 = ''.join(['G' if g else 'P' if p else 'E' for g,p in zip(gana.tail(5), pierde.tail(5))])
-                jors_html = jornadas_conteo(df_eq['Jornada'], df_eq, equipo_res, None)
+            df_clas_temp = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season']==temp)]
+            if not df_clas_temp.empty:
+                ult_j = df_clas_temp['Jornada'].max()
+                fila_final = df_clas_temp[df_clas_temp['Jornada']==ult_j].iloc[0]
+                pos_final = int(fila_final['Pos'])
+                pts_final = int(fila_final['Pts'])
+            else:
+                pos_final = 0
+                pts_final = 0
 
-                lista_stats.append({
-                    'temp': temp, 'total': total, 'n_g': n_g, 'n_e': n_e, 'n_p': n_p,
-                    'pct_g': pct_g, 'pct_e': pct_e, 'pct_p': pct_p,
-                    'gf_tot': gf_tot, 'gc_tot': gc_tot, 'gf_avg': gf_avg, 'gc_avg': gc_avg,
-                    'am': am, 'over25': over25, 'hs': hs.mean(), 'hst': hst.mean(),
-                    'hf': hf.mean(), 'hc': hc.mean(), 'hy': hy.mean(), 'hr': hr.mean(),
-                    'mejor_racha': mejor_racha, 'ult5': ult5, 'pos_final': pos_final, 
-                    'pts_final': pts_final, 'jors_html': jors_html
-                })
+            ult5 = ''.join(['G' if g else 'P' if p else 'E' for g,p in zip(gana.tail(5), pierde.tail(5))])
+            jors_html = jornadas_conteo(df_eq['Jornada'], df_eq, equipo_res, None)
 
-           # 2. Ahora pinto comparando con la temporada anterior = la siguiente en la lista
-           # 1.6 MINI RESUMEN + GRÁFICA EVOLUCIÓN PUNTOS
-            if equipo_res and lista_stats:
-                # MINI RESUMEN: 21/22: 4º 7pts | xG xE xP
-                filas = []
-                for temp in temps_ordenadas:
-                    dft = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season']==temp)]
-                    if dft.empty:
-                        filas.append(f"<div style='font-size:12px'>{temp}: sin datos</div>")
-                        continue
-                    
-                    ult_jornada = dft.sort_values('Jornada').iloc[-1]
-                    pos = int(ult_jornada['Pos'])
-                    pts = int(ult_jornada['Pts'])
-                    
-                    g = int(ult_jornada.get('GF', ult_jornada.get('W', ult_jornada.get('PG', 0))))
-                    e = int(ult_jornada.get('GE', ult_jornada.get('D', ult_jornada.get('PE', 0))))
-                    p = int(ult_jornada.get('GP', ult_jornada.get('L', ult_jornada.get('PP', 0))))
-                    
-                    linea = f"<div style='font-size:12px; font-family:monospace'>{temp}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
-                    filas.append(linea)
+            lista_stats.append({
+                'temp': temp, 'total': total, 'n_g': n_g, 'n_e': n_e, 'n_p': n_p,
+                'pct_g': pct_g, 'pct_e': pct_e, 'pct_p': pct_p,
+                'gf_tot': gf_tot, 'gc_tot': gc_tot, 'gf_avg': gf_avg, 'gc_avg': gc_avg,
+                'am': am, 'over25': over25, 'hs': hs.mean(), 'hst': hst.mean(),
+                'hf': hf.mean(), 'hc': hc.mean(), 'hy': hy.mean(), 'hr': hr.mean(),
+                'mejor_racha': mejor_racha, 'ult5': ult5, 'pos_final': pos_final,
+                'pts_final': pts_final, 'jors_html': jors_html, 'equipo': equipo_res
+            })
 
-                st.caption("Resumen final")
-                st.markdown("\n".join(filas), unsafe_allow_html=True)
+        return lista_stats, df_clas_res, df_eq_total
 
-                # MINI GRÁFICA LINEAS SIN TOOLTIPS
+    if st.button("🔍 Buscar resumen", type="primary", use_container_width=True, key="btn_resumen"):
+        if not equipo_res:
+            st.warning("Selecciona al menos Equipo")
+        else:
+            # Equipo 1 - ya son listas, no hace falta convertir
+            stats1 = calcular_stats_equipo(df_res_base1, equipo_res, temp1_res)
+
+            # Equipo 2 si existe
+            stats2 = None
+            if equipo2_res and liga2_res and temp2_res:
+                df_res_base2 = df[df['League'].isin(liga2_res) & df['Season'].isin(temp2_res)]
+                stats2 = calcular_stats_equipo(df_res_base2, equipo2_res, temp2_res)
+
+            if not stats1:
+                st.warning(f"{equipo_res} no tiene partidos en esa selección")
+            else:
+                lista_stats1, df_clas_res1, df_eq_total1 = stats1
+
+                # === MINI RESUMEN EQ1 ===
+                if lista_stats1:
+                    filas = []
+                    for s in lista_stats1: # Recorro todas las temps seleccionadas
+                        df_temp = df_eq_total1[(df_eq_total1['Season']==s['temp'])].copy()
+                        if df_temp.empty:
+                            continue
+                        es_local = df_temp['HomeTeam']==equipo_res
+                        gana = ((es_local) & (df_temp['FTHG']>df_temp['FTAG'])) | ((~es_local) & (df_temp['FTAG']>df_temp['FTHG']))
+                        pierde = ((es_local) & (df_temp['FTHG']<df_temp['FTAG'])) | ((~es_local) & (df_temp['FTAG']<df_temp['FTHG']))
+                        empata = ~(gana | pierde)
+
+                        g = int(gana.sum())
+                        e = int(empata.sum())
+                        p = int(pierde.sum())
+                        pts = g*3 + e
+
+                        dft = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season']==s['temp'])]
+                        if not dft.empty:
+                            ult_jornada = dft.sort_values('Jornada').iloc[-1]
+                            pos = int(ult_jornada['Pos'])
+                        else:
+                            pos = 0
+
+                        linea = f"<div style='font-size:12px; font-family:monospace'><b>{equipo_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
+                        filas.append(linea)
+
+                    st.caption(f"Resumen {equipo_res}")
+                    st.markdown("\n".join(filas), unsafe_allow_html=True)
+
+                # === MINI RESUMEN EQ2 SI EXISTE ===
+                if stats2:
+                    lista_stats2, df_clas_res2, df_eq_total2 = stats2
+                    filas2 = []
+                    for s in lista_stats2:
+                        df_temp = df_eq_total2[(df_eq_total2['Season']==s['temp'])].copy()
+                        if df_temp.empty:
+                            continue
+                        es_local = df_temp['HomeTeam']==equipo2_res
+                        gana = ((es_local) & (df_temp['FTHG']>df_temp['FTAG'])) | ((~es_local) & (df_temp['FTAG']>df_temp['FTHG']))
+                        pierde = ((es_local) & (df_temp['FTHG']<df_temp['FTAG'])) | ((~es_local) & (df_temp['FTAG']<df_temp['FTHG']))
+                        empata = ~(gana | pierde)
+
+                        g = int(gana.sum())
+                        e = int(empata.sum())
+                        p = int(pierde.sum())
+                        pts = g*3 + e
+
+                        dft = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season']==s['temp'])]
+                        if not dft.empty:
+                            ult_jornada = dft.sort_values('Jornada').iloc[-1]
+                            pos = int(ult_jornada['Pos'])
+                        else:
+                            pos = 0
+
+                        linea = f"<div style='font-size:12px; font-family:monospace'><b>{equipo2_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
+                        filas2.append(linea)
+
+                    st.caption(f"Resumen {equipo2_res}")
+                    st.markdown("\n".join(filas2), unsafe_allow_html=True)
+
+                # === GRÁFICA PEQUEÑA ===
                 import matplotlib.pyplot as plt
-                df_graf = df_clas_res[(df_clas_res['Equipo']==equipo_res) & (df_clas_res['Season'].isin(temps_ordenadas))]
+                df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
 
-                if not df_graf.empty:
-                    fig = plt.figure(figsize=(6, 1.5), dpi=100)
-                    for temp in temps_ordenadas:
-                        d = df_graf[df_graf['Season']==temp].sort_values('Jornada')
+                fig = plt.figure(figsize=(3, 1), dpi=100)
+
+                # Equipo 1 - todas las temps
+                for temp in temp1_res:
+                    d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
+                    if not d.empty:
+                        plt.plot(d['Jornada'], d['Pts'], linewidth=2, label=f"{equipo_res} {temp}")
+
+                # Equipo 2 si existe
+                if stats2:
+                    df_graf2 = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season'].isin(temp2_res))]
+                    for temp in temp2_res:
+                        d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
                         if not d.empty:
-                            plt.plot(d['Jornada'], d['Pts'], linewidth=1)
+                            plt.plot(d['Jornada'], d['Pts'], linewidth=2, linestyle='--', label=f"{equipo2_res} {temp}")
 
-                    plt.xticks(range(0, 39, 5), fontsize=6)
-                    plt.yticks(range(0, 101, 20), fontsize=6)
-                    plt.tight_layout(pad=0.1)
-                    st.pyplot(fig)
-                    plt.close()
-                                
-            ###########fin grafica
-            def diff_str(actual, siguiente, inverso=False, malo_si_sube=False):
-                if siguiente is None:  # <-- Ya no uso stats_prev
-                    return ""
-                diff = actual - siguiente
-                if diff == 0:
-                    return ""
-                
-                # Para posición: 7º a 1º es +6 bueno
-                if inverso:
-                    diff = -diff
-                
-                # Decido color: verde si es bueno, rojo si es malo
-                es_bueno = diff > 0
-                if malo_si_sube: # Para derrotas y GC
-                    es_bueno = not es_bueno
-                    
-                color = "#0f8105" if es_bueno else "#dc2626"
-                signo = "+" if diff > 0 else ""
-                return f"<span style='color:{color};font-weight:900'> ({signo}{diff})</span>"
+                plt.xticks(range(0, 39, 10), fontsize=6)
+                plt.yticks(fontsize=6)
+                plt.legend(fontsize=5)
+                plt.tight_layout(pad=0.1)
+                st.pyplot(fig, use_container_width=False)
+                plt.close()
 
-            for i, s in enumerate(lista_stats):
-                s_next = lista_stats[i+1] if i+1 < len(lista_stats) else None # La temporada anterior cronológicamente
-                
-                st.markdown(f"""
-                <div style='background:#f8f9fa;padding:10px 12px;border-left:4px solid #0A2342;margin:8px 0;font-family:monospace;font-size:12px;line-height:1.6'>
-                <b style='font-size:14px'>{equipo_res.title()} | {s['temp']}</b><br>
-                <b>{s['total']}PJ</b> → <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span>{diff_str(s['n_g'], s_next['n_g'] if s_next else None)} |
-                <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span>{diff_str(s['n_e'], s_next['n_e'] if s_next else None)} |
-                <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span>{diff_str(s['n_p'], s_next['n_p'] if s_next else None, malo_si_sube=True)}<br>
-                <b>Goles:</b> {s['gf_tot']}GF{diff_str(s['gf_tot'], s_next['gf_tot'] if s_next else None)} {s['gc_tot']}GC{diff_str(s['gc_tot'], s_next['gc_tot'] if s_next else None, malo_si_sube=True)} | Prom: {s['gf_avg']}-{s['gc_avg']} | AM:{s['am']}/{s['total']}{diff_str(s['am'], s_next['am'] if s_next else None)} ({round(s['am']/s['total']*100)}%) | Over2.5:{s['over25']}/{s['total']}{diff_str(s['over25'], s_next['over25'] if s_next else None)} ({round(s['over25']/s['total']*100)}%)<br>
-                <b>Stats:</b> {s['hs']:.1f}T {s['hst']:.1f}TP {s['hf']:.1f}F {s['hc']:.1f}C {s['hy']:.1f}A {s['hr']:.1f}R<br>
-                <b>Racha:</b> Mejor {s['mejor_racha']}G{diff_str(s['mejor_racha'], s_next['mejor_racha'] if s_next else None)} | Últ5: {s['ult5']}<br>
-                <b>Pos final:</b> {s['pos_final']}º{diff_str(s['pos_final'], s_next['pos_final'] if s_next else None, inverso=True)} | <b>Pts final:</b> {s['pts_final']}{diff_str(s['pts_final'], s_next['pts_final'] if s_next else None)}<br>
-                <b>Jornadas:</b> {s['jors_html']}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                stats_prev = stats_actual # <-- NUEVO: actualizo para la siguiente temporada
+                # === TARJETAS DETALLADAS EQ1 ===
+                for i, s in enumerate(lista_stats1):
+                    st.markdown(f"""
+                    <div style='background:#f8f9fa;padding:10px 12px;border-left:4px solid #0A2342;margin:8px 0;font-family:monospace;font-size:12px;line-height:1.6'>
+                    <b style='font-size:14px'>{s['equipo'].title()} | {s['temp']}</b><br>
+                    <b>{s['total']}PJ</b> → <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span> |
+                    <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span> |
+                    <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span><br>
+                    <b>Goles:</b> {s['gf_tot']}GF {s['gc_tot']}GC | Prom: {s['gf_avg']}-{s['gc_avg']} | AM:{s['am']}/{s['total']} ({round(s['am']/s['total']*100)}%) | Over2.5:{s['over25']}/{s['total']} ({round(s['over25']/s['total']*100)}%)<br>
+                    <b>Stats:</b> {s['hs']:.1f}T {s['hst']:.1f}TP {s['hf']:.1f}F {s['hc']:.1f}C {s['hy']:.1f}A {s['hr']:.1f}R<br>
+                    <b>Racha:</b> Mejor {s['mejor_racha']}G | Últ5: {s['ult5']}<br>
+                    <b>Pos final:</b> {s['pos_final']}º | <b>Pts final:</b> {s['pts_final']}<br>
+                    <b>Jornadas:</b> {s['jors_html']}
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            # --- BLOQUE RESUMEN TOTAL ---
-            if len(temps_res) > 1:
-                total = len(df_eq_total)
-                es_local = df_eq_total['HomeTeam']==equipo_res
-
-                gana = ((es_local) & (df_eq_total['FTHG']>df_eq_total['FTAG'])) | ((~es_local) & (df_eq_total['FTAG']>df_eq_total['FTHG']))
-                pierde = ((es_local) & (df_eq_total['FTHG']<df_eq_total['FTAG'])) | ((~es_local) & (df_eq_total['FTAG']<df_eq_total['FTHG']))
-                empata = ~(gana | pierde)
-
-                n_g, n_e, n_p = gana.sum(), empata.sum(), pierde.sum()
-                pct_g, pct_e, pct_p = round(n_g/total*100), round(n_e/total*100), round(n_p/total*100)
-
-                gf = np.where(es_local, df_eq_total['FTHG'], df_eq_total['FTAG'])
-                gc = np.where(es_local, df_eq_total['FTAG'], df_eq_total['FTHG'])
-                gf_tot, gc_tot = gf.sum(), gc.sum()
-                gf_avg, gc_avg = round(gf.mean(),2), round(gc.mean(),2)
-
-                hs = np.where(es_local, df_eq_total['HS'], df_eq_total['AS'])
-                hst = np.where(es_local, df_eq_total['HST'], df_eq_total['AST'])
-                hf = np.where(es_local, df_eq_total['HF'], df_eq_total['AF'])
-                hc = np.where(es_local, df_eq_total['HC'], df_eq_total['AC'])
-                hy = np.where(es_local, df_eq_total['HY'], df_eq_total['AY'])
-                hr = np.where(es_local, df_eq_total['HR'], df_eq_total['AR'])
-
-                am = ((gf > 0) & (gc > 0)).sum()
-                over25 = (gf + gc > 2.5).sum()
-
-                racha_actual = 0
-                mejor_racha = 0
-                for res in np.where(gana, 'G', np.where(pierde, 'P', 'E')):
-                    if res == 'G':
-                        racha_actual += 1
-                        mejor_racha = max(mejor_racha, racha_actual)
-                    else:
-                        racha_actual = 0
-
-                jors_html = jornadas_conteo(df_eq_total['Jornada'], df_eq_total, equipo_res, None)
-
-                st.markdown(f"""
-                <div style='background:#0A2342;color:#fff;padding:10px 12px;border-left:4px solid #fbbf24;margin:12px 0;font-family:monospace;font-size:12px;line-height:1.6'>
-                <b style='font-size:14px'>TOTAL {equipo_res.title()} | {', '.join(temps_res)}</b><br>
-                <b>{total}PJ</b> → <span style='color:#4ade80;font-weight:900'>{n_g}G {pct_g}%</span> |
-                <span style='color:#fbbf24;font-weight:900'>{n_e}E {pct_e}%</span> |
-                <span style='color:#f87171;font-weight:900'>{n_p}P {pct_p}%</span><br>
-                <b>Goles:</b> {gf_tot}GF {gc_tot}GC | Prom: {gf_avg}-{gc_avg} | AM:{am}/{total} ({round(am/total*100)}%) | O2.5:{over25}/{total} ({round(over25/total*100)}%)<br>
-                <b>Stats:</b> {hs.mean():.1f}T {hst.mean():.1f}TP {hf.mean():.1f}F {hc.mean():.1f}C {hy.mean():.1f}A {hr.mean():.1f}R<br>
-                <b>Mejor racha:</b> {mejor_racha}G<br>
-                <b>Jornadas:</b> {jors_html}
-                </div>
-                """, unsafe_allow_html=True)
+                # === TARJETAS DETALLADAS EQ2 SI EXISTE ===
+                if stats2:
+                    lista_stats2, _, _ = stats2
+                    for i, s in enumerate(lista_stats2):
+                        st.markdown(f"""
+                        <div style='background:#e0f2fe;padding:10px 12px;border-left:4px solid #0369a1;margin:8px 0;font-family:monospace;font-size:12px;line-height:1.6'>
+                        <b style='font-size:14px'>{s['equipo'].title()} | {s['temp']}</b><br>
+                        <b>{s['total']}PJ</b> → <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span> |
+                        <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span> |
+                        <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span><br>
+                        <b>Goles:</b> {s['gf_tot']}GF {s['gc_tot']}GC | Prom: {s['gf_avg']}-{s['gc_avg']} | AM:{s['am']}/{s['total']} ({round(s['am']/s['total']*100)}%) | Over2.5:{s['over25']}/{s['total']} ({round(s['over25']/s['total']*100)}%)<br>
+                        <b>Stats:</b> {s['hs']:.1f}T {s['hst']:.1f}TP {s['hf']:.1f}F {s['hc']:.1f}C {s['hy']:.1f}A {s['hr']:.1f}R<br>
+                        <b>Racha:</b> Mejor {s['mejor_racha']}G | Últ5: {s['ult5']}<br>
+                        <b>Pos final:</b> {s['pos_final']}º | <b>Pts final:</b> {s['pts_final']}<br>
+                        <b>Jornadas:</b> {s['jors_html']}
+                        </div>
+                        """, unsafe_allow_html=True)
