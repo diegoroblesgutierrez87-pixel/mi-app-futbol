@@ -211,10 +211,10 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
 
 
-st.write("")
-st.write("")
 
-with st.expander("⚙️ Opciones avanzadas"):
+
+st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
         if st.button("🧪 Borrar cache", use_container_width=True):
@@ -1042,7 +1042,6 @@ if len(jornadas) > 0:
     df_clasificacion = df_clasificacion[(df_clasificacion['Jornada'] >= rango_jornadas[0]) & (df_clasificacion['Jornada'] <= rango_jornadas[1])]
 
     df_base_h2h = df_final.copy()
-    st.divider()
 
     todos_eventos = {}
     for liga in liga_sel:
@@ -1644,7 +1643,7 @@ if len(jornadas) > 0:
 
         
 
-    st.divider()
+    
 
     columnas_mostrar = [
         'partidos', ""
@@ -1652,7 +1651,7 @@ if len(jornadas) > 0:
 
     columnas_mostrar = [col for col in columnas_mostrar if col in df_final.columns]
     
-    st.divider()
+    
 
     # --- CSS para las tablas ---
 
@@ -1731,7 +1730,7 @@ with st.expander("ℹ Info jornadas", key="exp_info"):
                 st.write(f"**{liga} {temp}**: {n_equipos} equipos → {n_equipos//2} partidos por jornada")
 
             elif modo_vista == "Clasificación":
-                st.divider()
+                
 
                 if df_clasificacion.empty:
                     st.warning("No hay datos para ese rango de jornadas")
@@ -1880,7 +1879,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         pct_min_rango = st.number_input("% mín", 0, 100, 50, 5, key="be2_pct_min")
         ultimos_x = None
 
-    st.divider()
+    
 
     # --- RESTO IGUAL: Fav/Cntr1, AM, Vlr1, Parte ---
     colc1, colc2, colc3, colc4 = st.columns(4)
@@ -2150,7 +2149,7 @@ with st.expander("📅Clasif.", expanded=False):
     df_base_clasif = df_base[df_base['League'].isin(ligas_clasif) & df_base['Season'].isin(temps_clasif)]
     df_clas_base_clasif = df_clas_base[df_clas_base['League'].isin(ligas_clasif) & df_clas_base['Season'].isin(temps_clasif)]
 
-    st.divider()
+    
 
     if len(df_base_clasif) > 0:
         col_lv, col_res = st.columns([1, 1])
@@ -2517,7 +2516,6 @@ def mostrar_agenda():
             # CERRAR APUESTAS - FUERA DEL BUCLE
             pend = [a for a in apuestas if a['resultado']=='Pendiente']
             if pend:
-                st.divider()
                 opciones = {a['id']: f"{a['fecha']} | {a['partido']} ({a['marcador']}) - {a['stake']}€ @ {a['cuota']}" for a in pend}
                 sel_id = st.selectbox("Cerrar apuesta", options=list(opciones.keys()),
                                      format_func=lambda x: opciones[x], key="sel_cerrar")
@@ -2727,17 +2725,24 @@ with st.expander("📋 Resumen", expanded=False):
                     st.caption(f"Resumen {equipo2_res}")
                     st.markdown("\n".join(filas2), unsafe_allow_html=True)
 
-                # === GRÁFICA PEQUEÑA ===
+                                # === GRÁFICA PEQUEÑA ===
                 import matplotlib.pyplot as plt
+                import matplotlib.colors as mcolors
+                
                 df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
 
                 fig = plt.figure(figsize=(3, 1), dpi=100)
+                ax = fig.add_subplot(111)
+                
+                leyendas = []
 
                 # Equipo 1 - todas las temps
                 for temp in temp1_res:
                     d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
                     if not d.empty:
-                        plt.plot(d['Jornada'], d['Pts'], linewidth=2, label=f"{equipo_res} {temp}")
+                        line, = ax.plot(d['Jornada'], d['Pts'], linewidth=2)
+                        color_hex = mcolors.to_hex(line.get_color()) # Convierto C0 -> #1f77b4
+                        leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo_res} {temp}")
 
                 # Equipo 2 si existe
                 if stats2:
@@ -2745,15 +2750,19 @@ with st.expander("📋 Resumen", expanded=False):
                     for temp in temp2_res:
                         d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
                         if not d.empty:
-                            plt.plot(d['Jornada'], d['Pts'], linewidth=2, linestyle='--', label=f"{equipo2_res} {temp}")
+                            line, = ax.plot(d['Jornada'], d['Pts'], linewidth=2, linestyle='--')
+                            color_hex = mcolors.to_hex(line.get_color())
+                            leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo2_res} {temp}")
 
-                plt.xticks(range(0, 39, 10), fontsize=6)
-                plt.yticks(fontsize=6)
-                plt.legend(fontsize=5)
+                ax.set_xticks(range(0, 39, 10))
+                ax.tick_params(labelsize=6)
                 plt.tight_layout(pad=0.1)
                 st.pyplot(fig, use_container_width=False)
                 plt.close()
-
+                
+                                # Leyenda en texto debajo de la gráfica
+                if leyendas:
+                    st.markdown("<div style='font-size:10px; line-height:1.3'>" + "<br>".join(leyendas) + "</div>", unsafe_allow_html=True)
                 # === TARJETAS DETALLADAS EQ1 ===
                 for i, s in enumerate(lista_stats1):
                     st.markdown(f"""
@@ -2787,3 +2796,5 @@ with st.expander("📋 Resumen", expanded=False):
                         <b>Jornadas:</b> {s['jors_html']}
                         </div>
                         """, unsafe_allow_html=True)
+                        
+                        ##############
