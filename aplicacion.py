@@ -615,7 +615,13 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         ht_style += ";text-decoration:underline;text-decoration-thickness:2px"
     if eq_norm == at:
         at_style += ";text-decoration:underline;text-decoration-thickness:2px"
-    teams_line = f"<div style='font-size:9px;color:{color_linea}'><span style='{ht_style}'>{ht_disp}</span> {hg_num}-{ag_num} <span style='{at_style}'>{at_disp}</span></div>"
+    
+    # --- NUEVO: calcular goles por parte ---
+    h1, a1 = int(row['HTHG']), int(row['HTAG'])
+    h2, a2 = hg_num - h1, ag_num - a1
+    ht_line = f"<div style='font-size:9px;color:{color_linea}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
+    st_line = f"<div style='font-size:9px;color:{color_linea}'>2ªP: <span style='{ht_style}'>{ht_disp}</span> {h2}-{a2} <span style='{at_style}'>{at_disp}</span></div>"
+    
     pos_line = f"<div style='font-size:9px'>{hpos_txt} vs {apos_txt}</div>"
     pts_line = f"<div style='font-size:9px'>{hpts_txt}-pts {apts_txt}</div>"
     perf_line = f"<div style='font-size:9px'>Perf:{home_perf_txt}-{away_perf_txt}</div>"
@@ -625,18 +631,17 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         if fil: s += f"; {style_subrayado}"
         return f"<span style='{s}'>{v}</span>"
 
-    h1 = f"1p:{wrap(f'{hthg}G', hg_num>ag_num, eq_norm==ht)}"
-    a1 = f"1p:{wrap(f'{htag}G', ag_num>hg_num, eq_norm==at)}"
-    h2 = f"2p:{wrap(f'{h2tg}G', hg_num>ag_num, eq_norm==ht)}"
-    a2 = f"2p:{wrap(f'{a2tg}G', ag_num>hg_num, eq_norm==at)}"
+    h1_g = f"1p:{wrap(f'{hthg}G', hg_num>ag_num, eq_norm==ht)}"
+    a1_g = f"1p:{wrap(f'{htag}G', ag_num>hg_num, eq_norm==at)}"
+    h2_g = f"2p:{wrap(f'{h2tg}G', hg_num>ag_num, eq_norm==ht)}"
+    a2_g = f"2p:{wrap(f'{a2tg}G', ag_num>hg_num, eq_norm==at)}"
     sh = wrap(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R", hg_num>ag_num, eq_norm==ht)
     sa = wrap(f"{as_}T {ast}TP {af}F {ac}C {ay}A {ar}R", ag_num>hg_num, eq_norm==at)
 
-    stats_html = f"<div style='font-size:7.5px'>{h1}</div><div style='font-size:7.5px'>{a1}</div><div style='font-size:7.5px'>{h2}</div><div style='font-size:7.5px'>{a2}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
+    stats_html = f"<div style='font-size:7.5px'>{h1_g}</div><div style='font-size:7.5px'>{a1_g}</div><div style='font-size:7.5px'>{h2_g}</div><div style='font-size:7.5px'>{a2_g}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
 
     goles_html = f"<div style='font-size:9px;color:{NAVY}'>{goles_txt}</div>" if goles_txt else ""
-    return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{teams_line}{pos_line}{pts_line}{perf_line}{stats_html}{goles_html}</div>'
-
+    return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{pos_line}{pts_line}{perf_line}{stats_html}{goles_html}</div>'
 ####def formatear_h2h_compacto
 
 def formatear_h2h_compacto(row, equipo_ref=None):
@@ -653,6 +658,9 @@ def formatear_h2h_compacto(row, equipo_ref=None):
 
     ht = row.get('HomeAbbr', abreviar_equipo(row['HomeTeam'])); at = row.get('AwayAbbr', abreviar_equipo(row['AwayTeam']))
     hg, ag = int(row['FTHG']), int(row['FTAG'])
+    h1, a1 = int(row['HTHG']), int(row['HTAG'])
+    h2, a2 = hg - h1, ag - a1
+    
     eq_norm = normaliza(equipo_ref) if equipo_ref else None
     is_h = eq_norm == row['HomeTeam']
     is_a = eq_norm == row['AwayTeam']
@@ -666,7 +674,10 @@ def formatear_h2h_compacto(row, equipo_ref=None):
         color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
     else:
         color_linea = "#0A2342"
-    teams = f"<span style='color:{color_linea}'>{nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
+    
+    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
+    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
+    
     pos = f"{nv(str(int(row['HomePosPrev']))+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(int(row['AwayPosPrev']))+'º',False,is_a)}"
     pts = f"{nv(int(row['HomePtsPrev']),False,is_h)}-<span style='color:#000'>pts</span> {nv(int(row['AwayPtsPrev']),False,is_a)}"
 
@@ -684,7 +695,8 @@ def formatear_h2h_compacto(row, equipo_ref=None):
         f"{league} {res}",
         f"{fecha} |{jorn}|",
         odds,
-        teams,
+        ht_line,
+        st_line,  # Este ya es el resultado final
         pos,
         pts,
         f"<span style='color:#000'>Perf:</span>{nv(round(float(row.get('HomePerf',0)),1),hg>ag,is_h)}-{nv(round(float(row.get('AwayPerf',0)),1),ag>hg,is_a)}",
