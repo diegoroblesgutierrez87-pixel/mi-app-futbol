@@ -388,6 +388,9 @@ def cargar_csv():
         df['FTR'] = np.where(df['FTHG']>df['FTAG'],'H',np.where(df['FTHG']<df['FTAG'],'A','D'))
     for col in ['B365H','B365D','B365A']:
         df[col] = pd.to_numeric(df.get(col,np.nan), errors='coerce')
+    
+    ##########LOGICA: COLUMNAS CALCULADAS GOLES/STATS
+    
     df['GolesTotales'] = df['FTHG']+df['FTAG']
     df['GolesHT'] = df['HTHG']+df['HTAG']
     df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -487,7 +490,7 @@ def cargar_eventos(league, season):
         eventos_dict[key] = evs
     return eventos_dict
      
-
+##########LOGICA: GOLES POR MINUTO/JUGADOR
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     if pd.isna(row['Date']):
         return ""
@@ -878,7 +881,7 @@ def calcular_estado_jornada(df):
 
 #############filtro rachas
 
-
+##########LOGICA: CALCULO RACHAS G/E/P
 
 @st.cache_data
 def _rachas(df_base, cond, loc, x_max=None):
@@ -1118,9 +1121,11 @@ if len(jornadas) > 0:
         valor_filtro = f2[2].selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro')
         valor_filtro2 = f2[3].selectbox("Vlr2", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro2')
 
+        ##########LOGICA: SELECTOR FAV/CONTRA1 AMPLIADO A 30
         f3 = st.columns(4)
-        alcance_filtro = f3[0].selectbox("Fav/Cntr1", ["Todo","AF","C","AF0","AF1","AF2","AF3","AF4","C0","C1","C2","C3","C4"], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra")
-        alcance_filtro2 = f3[1].selectbox("Fav/Cntr2", ["Todo","AF","C"], key='alcance_filtro2')
+        alcance_filtro = f3[0].selectbox("Fav/Cntr1", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra")
+        ##########LOGICA: SELECTOR FAV/CONTRA2 AMPLIADO A 30
+        alcance_filtro2 = f3[1].selectbox("Fav/Cntr2", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro2')
         condicion_filtro = f3[2].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
         htft_filtro = f3[3].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
 
@@ -1130,11 +1135,12 @@ if len(jornadas) > 0:
         cuota_tipo = f4[2].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
         margen_filtro = f4[3].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
 
-        f5 = st.columns([1.2, 0.7, 2.1])
+        f4 = st.columns(4) # 4 columnas porque luego usas f4[0] hasta f4[3]
         marcadores_unicos = sorted(
             (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
             key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
         )
+        f5 = st.columns(3)
         marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
         f5[1].caption("% mínimo")
         pct_marcador = f5[1].number_input(" ", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
@@ -1222,6 +1228,7 @@ if len(jornadas) > 0:
         elif condicion_filtro == "Visitante":
             df_final = df_final[df_final['AwayTeam'] == eq]
 
+##########LOGICA: FILTRO 1X2 GANA/PIERDE/EMPATA
     # === FILTROS 1X2 / AM / HTFT / CUOTAS / MARGEN / MARCADOR ===
     if resultado_filtro!= "Ninguno" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
         if resultado_filtro == "Gana":
@@ -1236,7 +1243,11 @@ if len(jornadas) > 0:
             df_final = df_final[df_final['FTR']!='D']
         elif resultado_filtro == "Empata/Pierde":
             df_final = df_final[~(((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='H')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='A')))]
-######ambos marcan
+
+
+##########LOGICA: FILTRO AMBOS MARCAN
+
+
     if ambos_marcan!= "Todos":
         # Forzar numérico por si acaso
         for col in ['FTHG','FTAG','HTHG','HTAG']:
@@ -1266,7 +1277,10 @@ if len(jornadas) > 0:
             df_final = df_final[((df_final['FTHG'] - df_final['HTHG']) > 0) & ((df_final['FTAG'] - df_final['HTAG']) > 0)]
         elif ambos_marcan == "No2P":
             df_final = df_final[~(((df_final['FTHG'] - df_final['HTHG']) > 0) & ((df_final['FTAG'] - df_final['HTAG']) > 0))]
+    
     # HT/FT relativo al Eq1
+    ##########LOGICA: FILTRO HT/FT GANA/PIERDE/REMONTA
+    
     if htft_filtro != "Todo" and equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
         es_local = df_final['HomeTeam'] == equipo_filtro
         
@@ -1322,6 +1336,8 @@ if len(jornadas) > 0:
         if col:
             df_final = df_final[(df_final[col] >= rango_cuotas[0]) & (df_final[col] <= rango_cuotas[1])]
 
+##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA
+
     if margen_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
         es_loc = df_final['HomeTeam']==equipo_filtro
         dif = np.where(es_loc, df_final['FTHG']-df_final['FTAG'], df_final['FTAG']-df_final['FTHG'])
@@ -1340,6 +1356,8 @@ if len(jornadas) > 0:
         df_final = df_final[(df_final['FTHG']==gl) & (df_final['FTAG']==gv)]
 
         
+        ##########LOGICA: GOLES A FAVOR/CONTRA POR PARTE
+        
     # === FIX: FILTRO F/C + PARTE ===
     if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro in ["AF", "C"] and parte_gol != "Todo":
         es_local = df_final['HomeTeam'] == equipo_filtro
@@ -1357,10 +1375,13 @@ if len(jornadas) > 0:
             df_final = df_final[goles_contra > 0]
     # === FIN FIX ===
 
+
+##########LOGICA: FILTRO RAPIDO GOLES AF0/C1/C2
         # === FILTRO F/C CON ATAJOS (respeta Parte) ===
-    if equipo_filtro != "Ninguno" and equipo2_filtro=="Ninguno" and alcance_filtro in ["AF0","AF1","AF2","AF3","AF4","C0","C1","C2","C3","C4"]:
+    ##########LOGICA: FILTRO RAPIDO GOLES AF0-AF30/C0-C30
+    if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno" and (alcance_filtro.startswith("AF") or alcance_filtro.startswith("C")) and alcance_filtro not in ["Todo","AF","C"]:  
         es_local = df_final['HomeTeam'] == equipo_filtro
-        valor_atajo = int(alcance_filtro[-1])
+        valor_atajo = int(alcance_filtro[2:]) # coge AF30 -> 30, C12 -> 12
 
         if parte_gol == "1T":
             goles_favor = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
@@ -1377,6 +1398,7 @@ if len(jornadas) > 0:
         else:
             df_final = df_final[goles_contra == valor_atajo]
 
+##########LOGICA: FILTRO COLUMNA1 + FAV/CONTRA + PARTE
     # === FILTRO COLUMNA CON AF / C (respeta Parte) ===
     if columna_filtro in columnas_numericas and valor_filtro != "Ninguno":
         col_usar = columna_filtro
@@ -1478,6 +1500,7 @@ if len(jornadas) > 0:
         if '_val' in df_final.columns:
             df_final = df_final.drop(columns=['_val'])
 
+##########LOGICA: FILTRO COLUMNA2 + FAV/CONTRA + PARTE
     # === FILTRO COLUMNA 2 CON AF / C (respeta Parte) ===
     if columna_filtro2 in columnas_numericas and valor_filtro2 != "Ninguno":
         col_usar2 = columna_filtro2
@@ -2688,7 +2711,7 @@ with st.expander("📋 Resumen", expanded=False):
                         else:
                             pos = 0
 
-                        linea = f"<div style='font-size:12px; font-family:monospace'><b>{equipo_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
+                        linea = f"<div style='font-size:10px; font-family:monospace; line-height:1.2'><b>{equipo_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
                         filas.append(linea)
 
                     st.caption(f"Resumen {equipo_res}")
@@ -2719,7 +2742,7 @@ with st.expander("📋 Resumen", expanded=False):
                         else:
                             pos = 0
 
-                        linea = f"<div style='font-size:12px; font-family:monospace'><b>{equipo2_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
+                        linea = f"<div style='font-size:10px; font-family:monospace; line-height:1.2'><b>{equipo2_res.title()}</b> {s['temp']}: <b>{pos}º</b> {pts}pts | <span style='color:#15803d'>{g}G</span> <span style='color:#000000'>{e}E</span> <span style='color:#b91c1c'>{p}P</span></div>"
                         filas2.append(linea)
 
                     st.caption(f"Resumen {equipo2_res}")
@@ -2766,8 +2789,8 @@ with st.expander("📋 Resumen", expanded=False):
                 # === TARJETAS DETALLADAS EQ1 ===
                 for i, s in enumerate(lista_stats1):
                     st.markdown(f"""
-                    <div style='background:#f8f9fa;padding:10px 12px;border-left:4px solid #0A2342;margin:8px 0;font-family:monospace;font-size:12px;line-height:1.6'>
-                    <b style='font-size:14px'>{s['equipo'].title()} | {s['temp']}</b><br>
+                    <div style='background:#f8f9fa;padding:8px 10px;border-left:4px solid #0A2342;margin:6px 0;font-family:monospace;font-size:10px;line-height:1.4'>
+                    <b style='font-size:12px'>{s['equipo'].title()} | {s['temp']}</b><br>
                     <b>{s['total']}PJ</b> → <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span> |
                     <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span> |
                     <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span><br>
