@@ -532,6 +532,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
     return " | ".join(txt)
 ###################def formatear_partido
+
+
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht, at = row['HomeTeam'], row['AwayTeam']
     ht_disp = row.get('HomeAbbr', abreviar_equipo(ht))
@@ -555,6 +557,8 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
 
     ht_res = ht_disp if hthg > htag else at_disp if hthg < htag else 'E'
     ft_res = ht_disp if hg_num > ag_num else at_disp if hg_num < ag_num else 'E'
+    
+    # Color del top_line según equipo_filtro
     color_res = "#444"
     eq_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!= "Ninguno" else None
     if eq_norm:
@@ -608,7 +612,20 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
             odds_html = f"<div style='font-size:9px'><span style='{h_s}'>{h_o}</span> <span style='{d_s}'>{d_o}</span> <span style='{a_s}'>{a_o}</span></div>"
         except: pass
 
-    color_linea = color_res if eq_norm else "#0A2342"
+    # Colores por parte desde la perspectiva del equipo filtrado
+    if eq_norm == ht:  # Waregem es local
+        color_ht = "#0f8105" if hthg > htag else "#f31818" if hthg < htag else "#f89007"
+        color_st = "#0f8105" if h2tg > a2tg else "#f31818" if h2tg < a2tg else "#f89007"
+        color_ft = "#0f8105" if hg_num > ag_num else "#f31818" if hg_num < ag_num else "#f89007"
+    elif eq_norm == at:  # Waregem es visitante
+        color_ht = "#0f8105" if htag > hthg else "#f31818" if htag < hthg else "#f89007"
+        color_st = "#0f8105" if a2tg > h2tg else "#f31818" if a2tg < h2tg else "#f89007"
+        color_ft = "#0f8105" if ag_num > hg_num else "#f31818" if ag_num < hg_num else "#f89007"
+    else:  # Sin filtro, desde perspectiva del local
+        color_ht = "#0f8105" if hthg > htag else "#f31818" if hthg < htag else "#f89007"
+        color_st = "#0f8105" if h2tg > a2tg else "#f31818" if h2tg < a2tg else "#f89007"
+        color_ft = "#0f8105" if hg_num > ag_num else "#f31818" if hg_num < ag_num else "#f89007"
+    
     ht_style = "font-weight:900" if hg_num > ag_num else "font-weight:600"
     at_style = "font-weight:900" if ag_num > hg_num else "font-weight:600"
     if eq_norm == ht:
@@ -616,12 +633,11 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     if eq_norm == at:
         at_style += ";text-decoration:underline;text-decoration-thickness:2px"
     
-    # --- NUEVO: calcular goles por parte ---
-    h1, a1 = int(row['HTHG']), int(row['HTAG'])
-    h2, a2 = hg_num - h1, ag_num - a1
-    ht_line = f"<div style='font-size:9px;color:{color_linea}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
-    st_line = f"<div style='font-size:9px;color:{color_linea}'>2ªP: <span style='{ht_style}'>{ht_disp}</span> {h2}-{a2} <span style='{at_style}'>{at_disp}</span></div>"
-    
+    h1, a1 = hthg, htag
+    h2, a2 = h2tg, a2tg
+    ht_line = f"<div style='font-size:9px;color:{color_ht}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
+    st_line = f"<div style='font-size:9px;color:{color_st}'>2ªP: <span style='{ht_style}'>{ht_disp}</span> {h2}-{a2} <span style='{at_style}'>{at_disp}</span></div>"
+    ft_line = f"<div style='font-size:12px;color:{color_ft};font-weight:900'>FINAL: <span style='{ht_style}'>{ht_disp}</span> {hg_num}-{ag_num} <span style='{at_style}'>{at_disp}</span></div>"
     pos_line = f"<div style='font-size:9px'>{hpos_txt} vs {apos_txt}</div>"
     pts_line = f"<div style='font-size:9px'>{hpts_txt}-pts {apts_txt}</div>"
     perf_line = f"<div style='font-size:9px'>Perf:{home_perf_txt}-{away_perf_txt}</div>"
@@ -641,7 +657,7 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     stats_html = f"<div style='font-size:7.5px'>{h1_g}</div><div style='font-size:7.5px'>{a1_g}</div><div style='font-size:7.5px'>{h2_g}</div><div style='font-size:7.5px'>{a2_g}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
 
     goles_html = f"<div style='font-size:9px;color:{NAVY}'>{goles_txt}</div>" if goles_txt else ""
-    return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{pos_line}{pts_line}{perf_line}{stats_html}{goles_html}</div>'
+    return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{ft_line}{pos_line}{pts_line}{perf_line}{stats_html}{goles_html}</div>'
 ####def formatear_h2h_compacto
 
 def formatear_h2h_compacto(row, equipo_ref=None):
@@ -672,11 +688,14 @@ def formatear_h2h_compacto(row, equipo_ref=None):
         won = (is_h and hg > ag) or (is_a and ag > hg)
         lost = (is_h and hg < ag) or (is_a and ag < hg)
         color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
+        color_ht = "#0f8105" if h1 > a1 else "#f31818" if h1 < a1 else "#f89007"
+        color_st = "#0f8105" if h2 > a2 else "#f31818" if h2 < a2 else "#f89007"
     else:
         color_linea = "#0A2342"
     
     ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
     st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
+    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
     
     pos = f"{nv(str(int(row['HomePosPrev']))+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(int(row['AwayPosPrev']))+'º',False,is_a)}"
     pts = f"{nv(int(row['HomePtsPrev']),False,is_h)}-<span style='color:#000'>pts</span> {nv(int(row['AwayPtsPrev']),False,is_a)}"
@@ -696,7 +715,8 @@ def formatear_h2h_compacto(row, equipo_ref=None):
         f"{fecha} |{jorn}|",
         odds,
         ht_line,
-        st_line,  # Este ya es el resultado final
+        st_line,
+        ft_line,
         pos,
         pts,
         f"<span style='color:#000'>Perf:</span>{nv(round(float(row.get('HomePerf',0)),1),hg>ag,is_h)}-{nv(round(float(row.get('AwayPerf',0)),1),ag>hg,is_a)}",
