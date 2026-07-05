@@ -632,12 +632,12 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         ht_style += ";text-decoration:underline;text-decoration-thickness:2px"
     if eq_norm == at:
         at_style += ";text-decoration:underline;text-decoration-thickness:2px"
-    
+    ##########lineas cartas partidos
     h1, a1 = hthg, htag
     h2, a2 = h2tg, a2tg
-    ht_line = f"<div style='font-size:9px;color:{color_ht}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
-    st_line = f"<div style='font-size:9px;color:{color_st}'>2ªP: <span style='{ht_style}'>{ht_disp}</span> {h2}-{a2} <span style='{at_style}'>{at_disp}</span></div>"
-    ft_line = f"<div style='font-size:12px;color:{color_ft};font-weight:900'>FINAL: <span style='{ht_style}'>{ht_disp}</span> {hg_num}-{ag_num} <span style='{at_style}'>{at_disp}</span></div>"
+    ht_line = f"<div style='font-size:11px;color:{color_ht}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
+    st_line = f"<div style='font-size:8px;color:{color_st}'>2ªP: <span style='{ht_style}'>{ht_disp}</span> {h2}-{a2} <span style='{at_style}'>{at_disp}</span></div>"
+    ft_line = f"<div style='font-size:11px;color:{color_ft};font-weight:900'>FINAL: <span style='{ht_style}'>{ht_disp}</span> {hg_num}-{ag_num} <span style='{at_style}'>{at_disp}</span></div>"
     pos_line = f"<div style='font-size:9px'>{hpos_txt} vs {apos_txt}</div>"
     pts_line = f"<div style='font-size:9px'>{hpts_txt}-pts {apts_txt}</div>"
     perf_line = f"<div style='font-size:9px'>Perf:{home_perf_txt}-{away_perf_txt}</div>"
@@ -1103,6 +1103,7 @@ if len(jornadas) > 0:
     if 'alcance_filtro' not in st.session_state: st.session_state.alcance_filtro = "Todo"
     if 'equipo2_filtro' not in st.session_state: st.session_state.equipo2_filtro = "Ninguno"
     if 'margen_filtro' not in st.session_state: st.session_state.margen_filtro = "Todo"
+    if 'htft_parcial' not in st.session_state: st.session_state.htft_parcial = "Ninguno"
 
     columnas_numericas = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot','HomePtsPrev','AwayPtsPrev','HomePosPrev','AwayPosPrev','HomePerf','AwayPerf']
     ABREV_COL = {
@@ -1175,6 +1176,12 @@ if len(jornadas) > 0:
         f5 = st.columns(3)
         marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
         f5[1].caption("% mínimo")
+        htft_parcial = st.selectbox(
+        "HT/FT parcial",
+        ["Ninguno", "X/G", "X/E", "X/P", "G/X", "E/X", "P/X"],
+        key='htft_parcial',
+        help="X/G=da igual 1ª/gana | G/X=gana 1ª/da igual"
+    )
         pct_marcador = f5[1].number_input(" ", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
         f5[2].empty()
 
@@ -1208,6 +1215,7 @@ if len(jornadas) > 0:
     if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
     if htft_filtro!= "Todo": filtros_activos.append(f"HT/FT:{htft_filtro}")
     if margen_filtro!= "Todo": filtros_activos.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
+    if htft_parcial!= "Ninguno": filtros_activos.append(f"HT/FT:{htft_parcial}")
     if marcador_filtro!= "Todos": filtros_activos.append(f"Marc:{marcador_filtro}")
     if pct_marcador > 0: filtros_activos.append(f"Min%:{pct_marcador}%")
     if cuota_tipo not in ["Ninguno","Todo"]: filtros_activos.append(f"R1x2:{cuota_tipo}")
@@ -1237,6 +1245,33 @@ if len(jornadas) > 0:
         st.info("**Filtros:** " + " | ".join(filtros_activos))
     else:
         st.caption("**Filtros:** Ninguno")
+   
+   # === FILTRO X/X HT/FT PARCIAL ===
+if htft_parcial!= "Ninguno" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
+    es_local = df_final['HomeTeam'] == equipo_filtro
+
+    ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+    ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+    ht_empata = ~(ht_gana | ht_pierde)
+
+    ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+    ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+    ft_empata = ~(ft_gana | ft_pierde)
+
+    if htft_parcial == "X/G":
+        df_final = df_final[ft_gana]
+    elif htft_parcial == "X/E":
+        df_final = df_final[ft_empata]
+    elif htft_parcial == "X/P":
+        df_final = df_final[ft_pierde]
+    elif htft_parcial == "G/X":
+        df_final = df_final[ht_gana]
+    elif htft_parcial == "E/X":
+        df_final = df_final[ht_empata]
+    elif htft_parcial == "P/X":
+        df_final = df_final[ht_pierde]
+# === FIN FILTRO X/X HT/FT PARCIAL ===
+   
     # --- FIN RESUMEN FILTROS ---
 
    ##########fin desplegable
