@@ -257,7 +257,6 @@ if 'rango_minutos' not in st.session_state:
     st.session_state.rango_minutos = (0, 120)
 if 'pct_marcador' not in st.session_state: 
     st.session_state.pct_marcador = 0
-    
 
 
 # anti-traductor
@@ -413,6 +412,8 @@ def cargar_eventos(league, season):
         df_g = pd.read_parquet('laliga_2425_goles.parquet')
     elif os.path.exists('laliga_2425_goles.csv'):
         df_g = pd.read_csv('laliga_2425_goles.csv', low_memory=False)
+        
+        
     else:
         return {}
 
@@ -977,9 +978,8 @@ def limpiar_filtros():
     st.session_state.alcance_filtro = "Todo"
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
-    
 df = cargar_csv()
-
+df_original = df.copy()  # <- AÑADE ESTA LÍNEA
 ######"Filtros de partidos"
 with st.expander("Filtros de partidos", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
@@ -1143,7 +1143,7 @@ if len(jornadas) > 0:
         alcance_filtro2 = f3[1].selectbox("Fav/Cntr2", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro2')
         condicion_filtro = f3[2].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
         htft_filtro = f3[3].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
-        
+
         f4 = st.columns(4)
         resultado_filtro = f4[0].selectbox("1x2", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro')
         ambos_marcan = f4[1].selectbox("AM", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan')
@@ -1157,22 +1157,6 @@ if len(jornadas) > 0:
         )
         f5 = st.columns(3)
         marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
-        opciones_htft = {
-            "Todos": "Todos",
-            "G/X": "G/X",
-            "E/X": "E/X", 
-            "P/X": "P/X",
-            "X/G": "X/G",
-            "X/E": "X/E",
-            "X/P": "X/P"
-        }
-        filtro_htft_simple = st.selectbox(
-            "XT/XT", 
-            list(opciones_htft.keys()), 
-            format_func=lambda x: opciones_htft[x],
-            key='filtro_htft_simple',
-            help="G:Gana | E:Empata | P:Pierde | X:Da igual | Formato: XT/XT = Descanso/Final"
-        )
         f5[1].caption("% mínimo")
         pct_marcador = f5[1].number_input(" ", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
         f5[2].empty()
@@ -1195,8 +1179,6 @@ if len(jornadas) > 0:
 
         st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
     
-    
-    
        # --- RESUMEN DE FILTROS ACTIVOS ---
    
     # --- RESUMEN DE FILTROS ACTIVOS ---
@@ -1204,7 +1186,6 @@ if len(jornadas) > 0:
 
     if equipo_filtro!= "Ninguno": filtros_activos.append(f"Eq1:{equipo_filtro}")
     if equipo2_filtro!= "Ninguno": filtros_activos.append(f"Eq2:{equipo2_filtro}")
-    if filtro_htft_simple!= "Todos": filtros_activos.append(f"XT/XT:{filtro_htft_simple}")
     if condicion_filtro!= "Todo": filtros_activos.append(f"L/V:{condicion_filtro}")
     if resultado_filtro!= "Ninguno": filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
     if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
@@ -1242,7 +1223,9 @@ if len(jornadas) > 0:
     # --- FIN RESUMEN FILTROS ---
 
    ##########fin desplegable
+    # === FIN FILTRO GOLES ===
 
+    # === FIN FILTRO GOLES ===
 
     # === FILTRO EQUIPOS BASE ===
     if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
@@ -1251,32 +1234,6 @@ if len(jornadas) > 0:
         df_final = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)]
     elif equipo2_filtro!= "Ninguno":
         df_final = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)]
-
-    # === FILTRO HT/FT SIMPLE ===
-    if filtro_htft_simple!= "Todos" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-        es_local = df_final['HomeTeam'] == equipo_filtro
-        
-        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-        ht_empata = ~(ht_gana | ht_pierde)
-        
-        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-        ft_empata = ~(ft_gana | ft_pierde)
-        
-        if filtro_htft_simple == "G/X":
-            df_final = df_final[ht_gana]
-        elif filtro_htft_simple == "E/X":
-            df_final = df_final[ht_empata]
-        elif filtro_htft_simple == "P/X":
-            df_final = df_final[ht_pierde]
-        elif filtro_htft_simple == "X/G":
-            df_final = df_final[ft_gana]
-        elif filtro_htft_simple == "X/E":
-            df_final = df_final[ft_empata]
-        elif filtro_htft_simple == "X/P":
-            df_final = df_final[ft_pierde]
-    # === FIN FILTRO HT/FT SIMPLE ===
 
     # === FILTRO LOCAL/VISITANTE ===
     if condicion_filtro != "Todo" and (equipo_filtro != "Ninguno" or equipo2_filtro != "Ninguno") and not (equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno"):
@@ -2210,27 +2167,30 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
 
 ######"clasif".
 with st.expander("📅Clasif.", expanded=False):
-    # --- FILTROS SOLO PARA ESTE BLOQUE ---
+    # --- FILTROS SOLO PARA ESTE BLOQUE - USANDO DF_ORIGINAL ---
     col_cl1, col_cl2 = st.columns(2)
-
     ligas_clasif = col_cl1.multiselect(
         "Liga",
-        sorted(df_base['League'].unique()),
-        default=[liga_sel[0]] if liga_sel else [],
-        key="clasif_ligas_local"
+        sorted(df_original['League'].unique()),  # <- DF_ORIGINAL
+        default=[],
+        key="clasif_ligas_indep"
     )
     temps_clasif = col_cl2.multiselect(
         "Temporada",
-        sorted(df_base['Season'].unique()),
-        default=[temp_sel[-1]] if temp_sel else [],
-        key="clasif_temps_local"
+        sorted(df_original['Season'].unique()),  # <- DF_ORIGINAL
+        default=[],
+        key="clasif_temps_indep"
     )
 
-    # DataFrame filtrado SOLO para este bloque
-    df_base_clasif = df_base[df_base['League'].isin(ligas_clasif) & df_base['Season'].isin(temps_clasif)]
-    df_clas_base_clasif = df_clas_base[df_clas_base['League'].isin(ligas_clasif) & df_clas_base['Season'].isin(temps_clasif)]
+    if not ligas_clasif or not temps_clasif:
+        st.markdown("<div style='font-size:11px'>Selecciona Liga y Temporada para ver el resumen</div>", unsafe_allow_html=True)
+        st.stop()
 
+    # A partir de aquí ya filtras solo con lo que el usuario eligió en ESTE bloque
+    df_base_clasif = df_original[df_original['League'].isin(ligas_clasif) & df_original['Season'].isin(temps_clasif)].copy()
     
+    # Recalculamos clasificación solo para este subset
+    df_base_clasif, df_clas_base_clasif = calcular_estado_jornada(df_base_clasif)
 
     if len(df_base_clasif) > 0:
         col_lv, col_res = st.columns([1, 1])
@@ -2270,9 +2230,9 @@ with st.expander("📅Clasif.", expanded=False):
         # --- CAJITAS LIBRES PARA JORNADAS ---
         col_j1, col_j2 = st.columns(2)
 
-        if len(df_base) > 0 and 'Jornada' in df_base.columns:
-            j_min_default = int(df_base['Jornada'].min())
-            j_max_default = int(df_base['Jornada'].max())
+        if len(df_base_clasif) > 0 and 'Jornada' in df_base_clasif.columns:
+            j_min_default = int(df_base_clasif['Jornada'].min())
+            j_max_default = int(df_base_clasif['Jornada'].max())
         else:
             j_min_default = 1
             j_max_default = 38
@@ -2338,6 +2298,10 @@ with st.expander("📅Clasif.", expanded=False):
                     st.info(f"No hay datos en J{j_desde}-J{j_hasta} con esos filtros para {liga} {temp}")
     else:
         st.markdown("<div style='font-size:11px'>Selecciona Liga y Temporada para ver el resumen</div>", unsafe_allow_html=True)
+
+
+
+
 
 
 #################generador de apuesta
