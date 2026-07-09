@@ -2166,145 +2166,153 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
     return lineas
 
 ######"clasif".
-with st.expander("📅Clasif.", expanded=False):
-    # --- FILTROS SOLO PARA ESTE BLOQUE - USANDO DF_ORIGINAL ---
-    col_cl1, col_cl2 = st.columns(2)
-    ligas_clasif = col_cl1.multiselect(
-        "Liga",
-        sorted(df_original['League'].unique()),  # <- DF_ORIGINAL
-        default=[],
-        key="clasif_ligas_indep"
-    )
-    temps_clasif = col_cl2.multiselect(
-        "Temporada",
-        sorted(df_original['Season'].unique()),  # <- DF_ORIGINAL
-        default=[],
-        key="clasif_temps_indep"
-    )
 
-    if not ligas_clasif or not temps_clasif:
-        st.markdown("<div style='font-size:11px'>Selecciona Liga y Temporada para ver el resumen</div>", unsafe_allow_html=True)
-        st.stop()
+with st.expander("📅Clasif.G/E/P %", expanded=False):
+    try:
+        col_cl1, col_cl2 = st.columns(2)
 
-    # A partir de aquí ya filtras solo con lo que el usuario eligió en ESTE bloque
-    df_base_clasif = df_original[df_original['League'].isin(ligas_clasif) & df_original['Season'].isin(temps_clasif)].copy()
-    
-    # Recalculamos clasificación solo para este subset
-    df_base_clasif, df_clas_base_clasif = calcular_estado_jornada(df_base_clasif)
-
-    if len(df_base_clasif) > 0:
-        col_lv, col_res = st.columns([1, 1])
-        condicion_lv = col_lv.selectbox(
-            "L/V",
-            ["Todo", "Local", "Visitante"],
-            key="clasf_lv_local"
+        # --- CLAVE: default=[] SIEMPRE, no usa liga_sel ni temp_sel ---
+        ligas_clasif = col_cl1.multiselect(
+            "Liga",
+            sorted(df_original['League'].unique()),
+            default=[], # <-- Vacío fijo, no lee de arriba
+            key="clasif_ligas_indep_v2" # <-- Key único nuevo por si acaso
         )
-        filtro_res = col_res.selectbox(
-            "Res",
-            ["Todo", "G", "E", "P", "GE", "PE", "GP"],
-            key="clasf_res_local"
+        temps_clasif = col_cl2.multiselect(
+            "Temporada",
+            sorted(df_original['Season'].unique()),
+            default=[], # <-- Vacío fijo
+            key="clasif_temps_indep_v2" # <-- Key único nuevo
         )
 
-        # --- CAJITAS % ---
-        col_pct1, col_pct2 = st.columns(2)
-        pct_min = col_pct1.number_input(
-            "% Mín",
-            min_value=0,
-            max_value=100,
-            value=0,
-            step=1,
-            key="clasf_pct_min_local"
-        )
-        pct_max = col_pct2.number_input(
-            "% Máx",
-            min_value=0,
-            max_value=100,
-            value=100,
-            step=1,
-            key="clasf_pct_max_local"
-        )
-        if pct_min > pct_max:
-            st.warning("% Mín no puede ser mayor que % Máx")
-            pct_min = pct_max
-
-        # --- CAJITAS LIBRES PARA JORNADAS ---
-        col_j1, col_j2 = st.columns(2)
-
-        if len(df_base_clasif) > 0 and 'Jornada' in df_base_clasif.columns:
-            j_min_default = int(df_base_clasif['Jornada'].min())
-            j_max_default = int(df_base_clasif['Jornada'].max())
+        if not ligas_clasif or not temps_clasif:
+            st.markdown("<div style='font-size:11px'>Selecciona Liga y Temporada para ver el resumen</div>", unsafe_allow_html=True)
         else:
-            j_min_default = 1
-            j_max_default = 38
+            df_base_clasif = df_original[df_original['League'].isin(ligas_clasif) & df_original['Season'].isin(temps_clasif)].copy()
 
-        j_desde = col_j1.number_input(
-            "Jornada De",
-            min_value=1,
-            max_value=46,
-            value=j_min_default,
-            step=1,
-            key='clasf_j_desde_local'
-        )
-        j_hasta = col_j2.number_input(
-            "Jornada A",
-            min_value=1,
-            max_value=46,
-            value=j_max_default,
-            step=1,
-            key='clasf_j_hasta_local'
-        )
-        if j_desde > j_hasta:
-            st.warning("Jornada 'De' no puede ser mayor que 'A'")
-            j_desde = j_hasta
+            if df_base_clasif.empty:
+                st.warning("No hay datos para esa combinación Liga/Temporada")
+            else:
+                df_base_clasif, df_clas_base_clasif = calcular_estado_jornada(df_base_clasif)
 
-        # --- GENERAR RESULTADOS CON DF_BASE_CLASIF ---
-        for liga in ligas_clasif:
-            for temp in temps_clasif:
-                lineas = resumen_jornadas_visual(
-                    df_base_clasif, df_clas_base_clasif, liga, temp,
-                    j_desde, j_hasta, condicion_lv, filtro_res
-                )
+                #... resto del código igual...
 
-                # Filtrar por %
-                if pct_min > 0 or pct_max < 100:
-                    lineas_filtradas = []
-                    for linea in lineas:
-                        pct_match = None
-                        if filtro_res == "G":
-                            m = re.search(r'G:(\d+)%', linea)
-                            if m: pct_match = int(m.group(1))
-                        elif filtro_res == "E":
-                            m = re.search(r'E:(\d+)%', linea)
-                            if m: pct_match = int(m.group(1))
-                        elif filtro_res == "P":
-                            m = re.search(r'P:(\d+)%', linea)
-                            if m: pct_match = int(m.group(1))
-                        else:
-                            m = re.search(r'G:(\d+)%', linea)
-                            if m: pct_match = int(m.group(1))
-
-                        if pct_match is not None and pct_min <= pct_match <= pct_max:
-                            lineas_filtradas.append(linea)
-                    lineas = lineas_filtradas
-
-                if lineas:
-                    st.markdown(
-                        f"<div style='background:#f8f9fa;padding:8px 10px;border-left:3px solid #0A2342;margin:6px 0 10px 0;font-size:11px'>"
-                        f"<b style='font-size:11px'>Filtro J{j_desde}-J{j_hasta} {condicion_lv} {filtro_res} %:{pct_min}-{pct_max} ({len(lineas)} equipos)</b><br>"
-                        + "<br>".join(lineas) + "</div>",
-                        unsafe_allow_html=True
+                if len(df_base_clasif) > 0:
+                    col_lv, col_res = st.columns([1, 1])
+                    condicion_lv = col_lv.selectbox(
+                        "L/V",
+                        ["Todo", "Local", "Visitante"],
+                        key="clasf_lv_local"
                     )
+                    filtro_res = col_res.selectbox(
+                        "Res",
+                        ["Todo", "G", "E", "P", "GE", "PE", "GP"],
+                        key="clasf_res_local"
+                    )
+
+                    # --- CAJITAS % ---
+                    col_pct1, col_pct2 = st.columns(2)
+                    pct_min = col_pct1.number_input(
+                        "% Mín",
+                        min_value=0,
+                        max_value=100,
+                        value=0,
+                        step=1,
+                        key="clasf_pct_min_local"
+                    )
+                    pct_max = col_pct2.number_input(
+                        "% Máx",
+                        min_value=0,
+                        max_value=100,
+                        value=100,
+                        step=1,
+                        key="clasf_pct_max_local"
+                    )
+                    if pct_min > pct_max:
+                        st.warning("% Mín no puede ser mayor que % Máx")
+                        pct_min = pct_max
+
+                    # --- CAJITAS LIBRES PARA JORNADAS ---
+                    col_j1, col_j2 = st.columns(2)
+
+                    if 'Jornada' in df_base_clasif.columns and not df_base_clasif.empty:
+                        j_min_default = int(df_base_clasif['Jornada'].min())
+                        j_max_default = int(df_base_clasif['Jornada'].max())
+                    else:
+                        j_min_default = 1
+                        j_max_default = 38
+
+                    j_desde = col_j1.number_input(
+                        "Jornada De",
+                        min_value=1,
+                        max_value=46,
+                        value=j_min_default,
+                        step=1,
+                        key='clasf_j_desde_local'
+                    )
+                    j_hasta = col_j2.number_input(
+                        "Jornada A",
+                        min_value=1,
+                        max_value=46,
+                        value=j_max_default,
+                        step=1,
+                        key='clasf_j_hasta_local'
+                    )
+                    if j_desde > j_hasta:
+                        st.warning("Jornada 'De' no puede ser mayor que 'A'")
+                        j_desde = j_hasta
+
+                    # --- GENERAR RESULTADOS CON DF_BASE_CLASIF ---
+                    for liga in ligas_clasif:
+                        for temp in temps_clasif:
+                            lineas = resumen_jornadas_visual(
+                                df_base_clasif, df_clas_base_clasif, liga, temp,
+                                j_desde, j_hasta, condicion_lv, filtro_res
+                            )
+
+                            # Filtrar por %
+                            if pct_min > 0 or pct_max < 100:
+                                lineas_filtradas = []
+                                for linea in lineas:
+                                    pct_match = None
+                                    if filtro_res == "G":
+                                        m = re.search(r'G:(\d+)%', linea)
+                                        if m: pct_match = int(m.group(1))
+                                    elif filtro_res == "E":
+                                        m = re.search(r'E:(\d+)%', linea)
+                                        if m: pct_match = int(m.group(1))
+                                    elif filtro_res == "P":
+                                        m = re.search(r'P:(\d+)%', linea)
+                                        if m: pct_match = int(m.group(1))
+                                    else:
+                                        m = re.search(r'G:(\d+)%', linea)
+                                        if m: pct_match = int(m.group(1))
+
+                                    if pct_match is not None and pct_min <= pct_match <= pct_max:
+                                        lineas_filtradas.append(linea)
+                                lineas = lineas_filtradas
+
+                            if lineas:
+                                st.markdown(
+                                    f"<div style='background:#f8f9fa;padding:8px 10px;border-left:3px solid #0A2342;margin:6px 0 10px 0;font-size:11px'>"
+                                    f"<b style='font-size:11px'>Filtro J{j_desde}-J{j_hasta} {condicion_lv} {filtro_res} %:{pct_min}-{pct_max} ({len(lineas)} equipos)</b><br>"
+                                    + "<br>".join(lineas) + "</div>",
+                                    unsafe_allow_html=True
+                                )
+                            else:
+                                st.info(f"No hay datos en J{j_desde}-J{j_hasta} con esos filtros para {liga} {temp}")
                 else:
-                    st.info(f"No hay datos en J{j_desde}-J{j_hasta} con esos filtros para {liga} {temp}")
-    else:
-        st.markdown("<div style='font-size:11px'>Selecciona Liga y Temporada para ver el resumen</div>", unsafe_allow_html=True)
+                    st.warning("No hay partidos con los filtros actuales")
 
-
+    except Exception as e:
+        st.error(f"Error en Clasif: {str(e)}")
+        st.caption("Si persiste, borra cache o revisa que el parquet tenga columnas Jornada/Date")
 
 
 
 
 #################generador de apuesta
+
 with st.expander("🎯 Creador Apuestas", expanded=False):
     st.caption("Predicción universal - misma tarjeta")
 
