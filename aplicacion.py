@@ -2157,10 +2157,19 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
             partes.append(f"<details style='display:inline-block;margin-right:1px'><summary style='color:{color};font-weight:700;cursor:pointer;display:inline;list-style:none'>{txt}</summary><div style='background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:320px'>{resultado}</div></details>")
 
         # CAMBIO: nombre en mayúsculas, línea 2 G/P/E con f: y c:, línea 3 jornadas
-        linea = f"""<div style='font-size:11px;line-height:1.4;margin:6px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
+        gana_c = int((es_local & gana_base).sum())
+        gana_f = int((~es_local & gana_base).sum())
+        pierde_c = int((es_local & pierde_base).sum())
+        pierde_f = int((~es_local & pierde_base).sum())
+        empata_c = int((es_local & empata_base).sum())
+        empata_f = int((~es_local & empata_base).sum())
+
+        linea = f"""<div style='font-size:11px;line-height:1.4;margin:6px 0;padding-bottom:6px;border-bottom:1px solid #eee'>
         <b>{equipo.upper()}</b><br>
-        <span style='color:#0f8105;font-weight:700'>G:{p_g}% #{n_g}</span> c:{p_cx}% f:{p_fx}% | <span style='color:#f31818;font-weight:700'>P:{p_p}% #{n_p}</span> c:{p_cpx}% f:{p_fpx}% | <span style='color:#0A2342;font-weight:700'>E:{p_e}% #{n_e}</span> c:{p_cex}% f:{p_fex}%<br>
-        {"|".join(partes)}
+        <span style='color:#0f8105;font-weight:700'>G:{p_g}% {n_g}/{total_pj}</span> &nbsp; Casa:{p_cx}% {gana_c}/{pj_casa} &nbsp; Fuera:{p_fx}% {gana_f}/{pj_fuera}<br>
+        <span style='color:#f31818;font-weight:700'>P:{p_p}% {n_p}/{total_pj}</span> &nbsp; Casa:{p_cpx}% {pierde_c}/{pj_casa} &nbsp; Fuera:{p_fpx}% {pierde_f}/{pj_fuera}<br>
+        <span style='color:#0A2342;font-weight:700'>E:{p_e}% {n_e}/{total_pj}</span> &nbsp; Casa:{p_cex}% {empata_c}/{pj_casa} &nbsp; Fuera:{p_fex}% {empata_f}/{pj_fuera}<br>
+        {"".join(partes)}
         </div>"""
         lineas.append(linea)
     return lineas
