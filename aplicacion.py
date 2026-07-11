@@ -265,57 +265,10 @@ const doc = window.parent.document;
 doc.documentElement.setAttribute('translate','no');
 </script>""", height=0)
 
-# CSS LIMPIO - sin divs que rompan
-# CSS LIMPIO - fondo blanco papel
-st.markdown("""
-<style>
-html, body, [data-testid="stAppViewContainer"],
-[data-testid="stHeader"], [data-testid="stToolbar"],
-section[data-testid="stSidebar"] > div:first-child,
-.block-container {
-    background-color: #FFFFFF!important;
-    color-scheme: light!important;
-}
-html, body { background: #FFFFFF!important; }
-
-[data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:.5rem!important; background:#FFFFFF!important}
-
-/* --- FILTROS 4x4 en móvil --- */
-div[data-testid="stHorizontalBlock"]{
-    display:flex!important;
-    flex-wrap:wrap!important;
-    gap:6px!important;
-    padding-bottom:6px!important;
-    overflow-x:hidden!important;
-}
-div[data-testid="stHorizontalBlock"]>div{
-    flex:1 1 22%!important;
-    min-width:80px!important;
-    max-width:24%!important;
-}
-@media (min-width:769px){
-  div[data-testid="stHorizontalBlock"]{
-    flex-wrap:nowrap!important;
-    overflow-x:auto!important;
-  }
-  div[data-testid="stHorizontalBlock"]>div{
-    flex:0 0 auto!important;
-    max-width:none!important;
-  }
-}
-
-[data-testid="stWidgetLabel"] p{font-size:10px!important;margin:0!important;white-space:nowrap}
-table{border-collapse:collapse;width:100%;font-size:9px;font-family:'Source Code Pro',monospace;table-layout:fixed;margin:0; background:#FFFFFF}
-thead{display:none}
-td{padding:3px 5px!important;border-bottom:2px solid #000!important;border-left:1px solid #d1d5db;border-right:1px solid #d1d5db;vertical-align:middle;line-height:1.15; background:#FFFFFF}
-tr:nth-child(even){background:#FFFFFF}tr:hover{background:#f5f5f5}
-</style>
-""", unsafe_allow_html=True)
 
 
 @st.cache_data
-def cargar_csv():
+def cargar_todo():
     import os, re
     # 1. Carga base
     if os.path.exists('ligas_2122_a_2526.parquet'):
@@ -388,9 +341,9 @@ def cargar_csv():
         df['FTR'] = np.where(df['FTHG']>df['FTAG'],'H',np.where(df['FTHG']<df['FTAG'],'A','D'))
     for col in ['B365H','B365D','B365A']:
         df[col] = pd.to_numeric(df.get(col,np.nan), errors='coerce')
-    
+
     ##########LOGICA: COLUMNAS CALCULADAS GOLES/STATS
-    
+
     df['GolesTotales'] = df['FTHG']+df['FTAG']
     df['GolesHT'] = df['HTHG']+df['HTAG']
     df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -403,6 +356,8 @@ def cargar_csv():
     df['faltasTot'] = df['HF']+df['AF']
     df['TargRojTot'] = df['HR']+df['AR']
     return df.copy()
+
+df = cargar_todo()
 
 
 @st.cache_data
@@ -891,8 +846,14 @@ def calcular_estado_jornada(df):
     return df, df_clasificacion
 
    
+#######################nuevo bloque: def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
 
-
+@st.cache_data
+def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
+    df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].isin(temps_tuple)]
+    return calcular_estado_jornada(df_fil)
+ 
+ #######################nuevo bloque
 
 #############filtro rachas
 
@@ -978,9 +939,16 @@ def limpiar_filtros():
     st.session_state.alcance_filtro = "Todo"
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
-df = cargar_csv()
+df = cargar_todo()
 df_original = df.copy()  # <- AÑADE ESTA LÍNEA
+
+
+
+
 ######"Filtros de partidos"
+
+
+
 with st.expander("Filtros de partidos", expanded=False):
     col1, col2, col3, col4 = st.columns(4)
 
@@ -1004,8 +972,9 @@ with st.expander("Filtros de partidos", expanded=False):
         df_fil = df[df['League'].isin(ligas) & df['Season'].isin(temporadas)]
         return calcular_estado_jornada(df_fil)
 
+
     with st.spinner('Calculando clasificación...'):
-        df_base, df_clas_base = calcular_estado_jornada_rapido(df, temp_sel, liga_sel)
+        df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
 
     df_rachas_full = df_base.copy()
     df_final = df_base.copy()
