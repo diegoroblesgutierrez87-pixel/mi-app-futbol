@@ -146,7 +146,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     from collections import Counter
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
-        return " | ".join([f"J{int(j)} - {c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
+        return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
 
     df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)].copy()
     if df_eq.empty:
@@ -154,14 +154,14 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
     is_home = df_eq['HomeTeam']==equipo
     df_eq['res'] = np.where(
-    (is_home & (df_eq['FTHG']>df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']>df_eq['FTHG'])),
-    'win',
-    np.where(
-        (is_home & (df_eq['FTHG']<df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']<df_eq['FTHG'])),
-        'loss',
-        'draw'
+        (is_home & (df_eq['FTHG']>df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']>df_eq['FTHG'])),
+        'win',
+        np.where(
+            (is_home & (df_eq['FTHG']<df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']<df_eq['FTHG'])),
+            'loss',
+            'draw'
+        )
     )
-)
 
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
@@ -174,14 +174,17 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
         es_local = (g['HomeTeam']==equipo).iloc[0]
         sufijo = 'c' if es_local else 'f'
-        txt = f"J{int(j)}{sufijo}"
 
-        # CAMBIO: añadir. si hay AM en algún partido de esa jornada
+        gf_j = g['FTHG'].iloc[0] if es_local else g['FTAG'].iloc[0]
+        gc_j = g['FTAG'].iloc[0] if es_local else g['FTHG'].iloc[0]
+
+        txt = f"J{int(j)}{sufijo} {int(gf_j)}-{int(gc_j)}"
+
         if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
             txt += '●'
 
         if len(g) > 1:
-            txt += f" - {len(g)}#"
+            txt += f"-{len(g)}#"
 
         es_h2h = False
         if rival:
@@ -201,19 +204,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
         jx_html = f"""<details style="display:inline-block">
             <summary style="{';'.join(estilos)};cursor:pointer;list-style:none;display:inline">{txt}</summary>
-            <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:6px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0.3);max-width:280px">{viñeta}</div>
+            <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:6px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:280px">{viñeta}</div>
         </details>"""
 
         partes.append(jx_html)
-    return " | ".join(partes)
-
-
-
-
-
-
-
-st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    return "|".join(partes) # <-- AQUÍ EL CAMBIO: sin espaciosst.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
