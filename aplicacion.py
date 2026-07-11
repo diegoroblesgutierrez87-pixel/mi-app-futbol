@@ -217,7 +217,7 @@ st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
-        if st.button("🧪 Borrar cache", use_container_width=True):
+        if st.button("🧪 Borrar cache", width='stretch'):
             for f in ['ligas_2122_a_2526.parquet', 'ligas_2122_a_2526.parquet.lock']:
                 if os.path.exists(f):
                     os.remove(f)
@@ -225,7 +225,7 @@ with st.expander("⚙ Opciones avanzadas"):
             st.rerun()
 
     with col_b:
-        if st.button("🔄 Actualizar 25/26", type="primary", use_container_width=True):
+        if st.button("🔄 Actualizar 25/26", type="primary", width='stretch'):
             with st.spinner("Descargando jornadas nuevas..."):
                 try:
                     result = subprocess.run(
@@ -1777,7 +1777,7 @@ with st.expander("ℹ Info jornadas", key="exp_info"):
                         st.dataframe(
                             styled,
                             hide_index=True,
-                            use_container_width=True,
+                            width='stretch',
                             height=600
                         )
 
@@ -1814,7 +1814,7 @@ with st.expander("🔥 Filtro Rachas", expanded=False, key="exp_rachas"):
         st.caption(f"Rachas calculadas en J{rj1} a J{rj2} — {len(res)} equipos")
         st.dataframe(
             res[['Equipo']],
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             height=500,
             key="tabla_rachas_estable",
@@ -1919,7 +1919,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     min_2t = col_2t.number_input("2ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_2t")
     min_ext = col_ext.number_input("+", min_value=0, max_value=30, value=10, step=1, key="be2_min_ext", help="Añadido/Prórroga")
 
-    if st.button("🔎 Buscar equipos", type="primary", use_container_width=True, key="be2_buscar"):
+    if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
         equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
         resultados = []
 
@@ -2364,7 +2364,7 @@ with st.expander("🎯 Creador Apuestas", expanded=False):
     eq1 = col_eq1.selectbox("Eq1 (local)", [""] + equipos, key="ca_eq1")
     eq2 = col_eq2.selectbox("Eq2 (visitante)", [""] + [e for e in equipos if e != eq1], key="ca_eq2")
 
-    if st.button("Generar partido", key="ca_gen", use_container_width=True) and eq1 and eq2:
+    if st.button("Generar partido", key="ca_gen", width='stretch') and eq1 and eq2:
         df_r = df_creador[(df_creador['Jornada']>=j1) & (df_creador['Jornada']<=j2)].copy()
         m1 = df_r[(df_r['HomeTeam']==eq1)|(df_r['AwayTeam']==eq1)].sort_values('Date').tail(20)
         m2 = df_r[(df_r['HomeTeam']==eq2)|(df_r['AwayTeam']==eq2)].sort_values('Date').tail(20)
@@ -2573,17 +2573,17 @@ def mostrar_agenda():
                         liga_stats = df_analisis.groupby('liga').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),L=('resultado', lambda x: (x=='Perdida').sum()),Stake=('stake','sum'),Benef=('beneficio','sum')).reset_index()
                         liga_stats['Win%'] = (liga_stats['W']/liga_stats['Ap']*100).round(0).astype(int)
                         liga_stats['ROI%'] = (liga_stats['Benef']/liga_stats['Stake']*100).round(1)
-                        st.dataframe(liga_stats.sort_values('ROI%', ascending=False), hide_index=True, use_container_width=True, column_config={"liga":"Liga","Ap":"Ap","W":"✅","L":"❌","Win%":"%W","ROI%":"ROI","Benef":"€"})
+                        st.dataframe(liga_stats.sort_values('ROI%', ascending=False), hide_index=True, width='stretch', column_config={"liga":"Liga","Ap":"Ap","W":"✅","L":"❌","Win%":"%W","ROI%":"ROI","Benef":"€"})
                     with tab2:
                         tipo_stats = df_analisis.groupby('tipo').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),Benef=('beneficio','sum'),Stake=('stake','sum')).reset_index()
                         tipo_stats['ROI%'] = (tipo_stats['Benef']/tipo_stats['Stake']*100).round(1)
-                        st.dataframe(tipo_stats.sort_values('ROI%', ascending=False), hide_index=True, use_container_width=True)
+                        st.dataframe(tipo_stats.sort_values('ROI%', ascending=False), hide_index=True, width='stretch')
                     with tab3:
                         df_analisis['equipo'] = df_analisis['partido'].str.split(' vs ').str[0]
                         equipo_stats = df_analisis.groupby('equipo').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),Benef=('beneficio','sum')).reset_index()
                         equipo_stats = equipo_stats[equipo_stats['Ap']>=2]
                         equipo_stats['Win%'] = (equipo_stats['W']/equipo_stats['Ap']*100).round(0).astype(int)
-                        st.dataframe(equipo_stats.sort_values('Benef', ascending=False).head(10), hide_index=True, use_container_width=True, column_config={"equipo":"Equipo","Ap":"Ap","W":"✅","Win%":"%W","Benef":"€"})
+                        st.dataframe(equipo_stats.sort_values('Benef', ascending=False).head(10), hide_index=True, width='stretch', column_config={"equipo":"Equipo","Ap":"Ap","W":"✅","Win%":"%W","Benef":"€"})
                 else:
                     st.info("Cierra apuestas para ver stats")
 
@@ -2609,7 +2609,7 @@ def mostrar_agenda():
                 col_r1, col_r2 = st.columns([1,2])
                 res = col_r1.radio("Resultado", ["Ganada","Perdida","Nula"], horizontal=True, key="res_radio")
 
-                if col_r2.button("💾 Guardar resultado", use_container_width=True, key="btn_guardar"):
+                if col_r2.button("💾 Guardar resultado", width='stretch', key="btn_guardar"):
                     for a in apuestas:
                         if a['id'] == sel_id:
                             a['resultado'] = res
@@ -2732,7 +2732,7 @@ with st.expander("📋 Resumen", expanded=False):
 
         return lista_stats, df_clas_res, df_eq_total
 
-    if st.button("🔍 Buscar resumen", type="primary", use_container_width=True, key="btn_resumen"):
+    if st.button("🔍 Buscar resumen", type="primary", width='stretch', key="btn_resumen"):
         if not equipo_res:
             st.warning("Selecciona al menos Equipo")
         else:
