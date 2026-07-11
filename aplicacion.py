@@ -2039,7 +2039,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
 
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
-def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta, condicion_lv="Todo", filtro_res="Todo"):
+def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta, condicion_lv="Todo", filtro_res="Todo", ambos_marcan_clasif="Todos", goles_clasif="Todo", operador_goles_clasif="Todo", valor_goles_clasif="Todo"):
     df_liga = df_partidos[(df_partidos['League']==liga) & (df_partidos['Season']==season) &
                           (df_partidos['Jornada']>=j_desde) & (df_partidos['Jornada']<=j_hasta)].copy()
     if df_liga.empty: return []
@@ -2097,6 +2097,47 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
             elif filtro_res == "GP":
                 df_eq_filtro = df_eq_filtro[gana_base | pierde_base]
 
+        # === FILTRO AMBOS MARCAN PARA CLASIF ===
+        if ambos_marcan_clasif!= "Todos":
+            for col in ['FTHG','FTAG','HTHG','HTAG']:
+                df_eq_filtro[col] = pd.to_numeric(df_eq_filtro[col], errors='coerce').fillna(0)
+
+            if ambos_marcan_clasif == "Si":
+                df_eq_filtro = df_eq_filtro[(df_eq_filtro['FTHG'] > 0) & (df_eq_filtro['FTAG'] > 0)]
+            elif ambos_marcan_clasif == "No":
+                df_eq_filtro = df_eq_filtro[~((df_eq_filtro['FTHG'] > 0) & (df_eq_filtro['FTAG'] > 0))]
+            elif ambos_marcan_clasif == "Si1P":
+                df_eq_filtro = df_eq_filtro[(df_eq_filtro['HTHG'] > 0) & (df_eq_filtro['HTAG'] > 0)]
+            elif ambos_marcan_clasif == "No1P":
+                df_eq_filtro = df_eq_filtro[~((df_eq_filtro['HTHG'] > 0) & (df_eq_filtro['HTAG'] > 0))]
+            elif ambos_marcan_clasif == "Si2P":
+                df_eq_filtro = df_eq_filtro[((df_eq_filtro['FTHG'] - df_eq_filtro['HTHG']) > 0) & ((df_eq_filtro['FTAG'] - df_eq_filtro['HTAG']) > 0)]
+            elif ambos_marcan_clasif == "No2P":
+                df_eq_filtro = df_eq_filtro[~(((df_eq_filtro['FTHG'] - df_eq_filtro['HTHG']) > 0) & ((df_eq_filtro['FTAG'] - df_eq_filtro['HTAG']) > 0))]
+        # === FIN FILTRO AM ===
+
+        # === FILTRO GOLES PARA CLASIF ===
+        if goles_clasif!= "Todo" and operador_goles_clasif!= "Todo" and valor_goles_clasif!= "Todo":
+            es_local = df_eq_filtro['HomeTeam']==equipo
+            val = float(valor_goles_clasif)
+
+            if goles_clasif == "GT":
+                goles_equipo = np.where(es_local, df_eq_filtro['FTHG'], df_eq_filtro['FTAG'])
+            elif goles_clasif == "G1P":
+                goles_equipo = np.where(es_local, df_eq_filtro['HTHG'], df_eq_filtro['HTAG'])
+            elif goles_clasif == "G2P":
+                goles_equipo = np.where(es_local, df_eq_filtro['FTHG'] - df_eq_filtro['HTHG'], df_eq_filtro['FTAG'] - df_eq_filtro['HTAG'])
+            else:
+                goles_equipo = np.zeros(len(df_eq_filtro))
+
+            if operador_goles_clasif == ">":
+                df_eq_filtro = df_eq_filtro[goles_equipo > val]
+            elif operador_goles_clasif == "<":
+                df_eq_filtro = df_eq_filtro[goles_equipo < val]
+            elif operador_goles_clasif == "=":
+                df_eq_filtro = df_eq_filtro[goles_equipo == val]
+        # === FIN FILTRO GOLES ===
+
         if df_eq_filtro.empty: continue
 
         df_eq_filtro['res'] = np.where(gana_base[df_eq_filtro.index], 'win', np.where(pierde_base[df_eq_filtro.index], 'loss', 'draw'))
@@ -2107,7 +2148,13 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
             color = g['color'].iloc[0]
             es_loc_j = (g['HomeTeam']==equipo).iloc[0]
             sufijo = 'c' if es_loc_j else 'f'
-            txt = f"J{int(j)}{sufijo}"
+
+            # NUEVO: calculo resultado del equipo en esa jornada
+            gf_j = g['FTHG'].iloc[0] if es_loc_j else g['FTAG'].iloc[0]
+            gc_j = g['FTAG'].iloc[0] if es_loc_j else g['FTHG'].iloc[0]
+            res_j = f"{int(gf_j)}-{int(gc_j)}"
+
+            txt = f"J{int(j)}{sufijo} {res_j}"
 
             # CAMBIO: añadir. si hay AM en algún partido de esa jornada
             if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
@@ -2142,7 +2189,6 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
         </div>"""
         lineas.append(linea)
     return lineas
-
 ######"clasif".
 
 with st.expander("📅Clasif.G/E/P %", expanded=False):
@@ -2173,10 +2219,9 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
             else:
                 df_base_clasif, df_clas_base_clasif = calcular_estado_jornada(df_base_clasif)
 
-                #... resto del código igual...
-
                 if len(df_base_clasif) > 0:
-                    col_lv, col_res = st.columns([1, 1])
+                    # CAMBIO: 3 columnas ahora para meter AM
+                    col_lv, col_res, col_am = st.columns([1, 1, 1])
                     condicion_lv = col_lv.selectbox(
                         "L/V",
                         ["Todo", "Local", "Visitante"],
@@ -2187,6 +2232,18 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
                         ["Todo", "G", "E", "P", "GE", "PE", "GP"],
                         key="clasf_res_local"
                     )
+                    # NUEVO: Filtro Ambos Marcan
+                    ambos_marcan_clasif = col_am.selectbox(
+                        "AM",
+                        ["Todos","Si","No","Si1P","No1P","Si2P","No2P"],
+                        key="clasf_am_local"
+                    )
+
+                    # NUEVO: 3 columnas para filtro de Goles
+                    col_g1, col_g2, col_g3 = st.columns([1, 1, 1])
+                    goles_clasif = col_g1.selectbox("Goles", ["Todo","GT","G1P","G2P"], key="clasf_goles_local")
+                    operador_goles_clasif = col_g2.selectbox("Op", ["Todo", ">", "<", "="], key="clasf_op_goles_local")
+                    valor_goles_clasif = col_g3.selectbox("Vlr", ["Todo"] + [i/2 for i in range(1, 51)], key="clasf_valor_goles_local") # 0.5 a 25
 
                     # --- CAJITAS % ---
                     col_pct1, col_pct2 = st.columns(2)
@@ -2243,9 +2300,11 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
                     # --- GENERAR RESULTADOS CON DF_BASE_CLASIF ---
                     for liga in ligas_clasif:
                         for temp in temps_clasif:
+                            # CAMBIO: paso ambos_marcan_clasif + los 3 nuevos de goles
                             lineas = resumen_jornadas_visual(
                                 df_base_clasif, df_clas_base_clasif, liga, temp,
-                                j_desde, j_hasta, condicion_lv, filtro_res
+                                j_desde, j_hasta, condicion_lv, filtro_res, ambos_marcan_clasif,
+                                goles_clasif, operador_goles_clasif, valor_goles_clasif
                             )
 
                             # Filtrar por %
@@ -2273,7 +2332,7 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
                             if lineas:
                                 st.markdown(
                                     f"<div style='background:#f8f9fa;padding:8px 10px;border-left:3px solid #0A2342;margin:6px 0 10px 0;font-size:11px'>"
-                                    f"<b style='font-size:11px'>Filtro J{j_desde}-J{j_hasta} {condicion_lv} {filtro_res} %:{pct_min}-{pct_max} ({len(lineas)} equipos)</b><br>"
+                                    f"<b style='font-size:11px'>Filtro J{j_desde}-J{j_hasta} {condicion_lv} {filtro_res} AM:{ambos_marcan_clasif} {goles_clasif}:{operador_goles_clasif}:{valor_goles_clasif} %:{pct_min}-{pct_max} ({len(lineas)} equipos)</b><br>"
                                     + "<br>".join(lineas) + "</div>",
                                     unsafe_allow_html=True
                                 )
@@ -2285,10 +2344,6 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
     except Exception as e:
         st.error(f"Error en Clasif: {str(e)}")
         st.caption("Si persiste, borra cache o revisa que el parquet tenga columnas Jornada/Date")
-
-
-
-
 #################generador de apuesta
 
 with st.expander("🎯 Creador Apuestas", expanded=False):
