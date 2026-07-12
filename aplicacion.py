@@ -1628,17 +1628,47 @@ if len(jornadas) > 0:
         df_final['Tarjetas/Corners/goles'] = pd.Series(dtype='object')
 
     st.caption(f"Mostrando {len(df_final)} partidos")
-       # --- CONTADOR GLOBAL POR JORNADA (independiente de equipos) ---
-    if len(df_final) > 0:
-        conteo_j = df_final['Jornada'].value_counts().reset_index()
-        conteo_j.columns = ['Jornada', 'Veces']
-        # ordenar por jornada de la última a la primera
-        conteo_j = conteo_j.sort_values('Jornada', ascending=False)
-        
-        with st.expander(f"📊 Repeticiones por jornada ({len(conteo_j)} jornadas)", expanded=False):
-            for _, row in conteo_j.iterrows():
-                st.markdown(f"<div style='font-size:11px;padding:2px 0;font-family:monospace'>J{int(row['Jornada'])} - {int(row['Veces'])}#</div>", unsafe_allow_html=True)
-    
+  
+  
+  #################
+  # --- CONTADOR GLOBAL POR JORNADA DIVIDIDO POR TEMPORADA + % ---
+if len(df_final) > 0:
+    conteo_j = df_final.groupby(['Season', 'Jornada']).size().reset_index(name='Veces')
+
+    # Partidos por jornada: equipos únicos / 2
+    partidos_por_jornada = df_final.groupby('Season').apply(
+        lambda x: len(pd.unique(x[['HomeTeam','AwayTeam']].values.ravel())) // 2
+    ).reset_index(name='PartidosXJornada')
+
+    conteo_j = conteo_j.merge(partidos_por_jornada, on='Season')
+    conteo_j['Pct'] = (conteo_j['Veces'] / conteo_j['PartidosXJornada'] * 100).round(1)
+
+    # Calculamos % total de aparición de esa temporada
+    total_por_temp = df_final.groupby('Season').size().reset_index(name='TotalFiltro')
+    max_jornadas = 38 # LaLiga tiene 38 jornadas
+    total_por_temp['TotalPosible'] = total_por_temp['Season'].map(
+        lambda s: partidos_por_jornada.loc[partidos_por_jornada['Season'] == s, 'PartidosXJornada'].iloc[0] * max_jornadas
+    )
+    total_por_temp['PctTotal'] = (total_por_temp['TotalFiltro'] / total_por_temp['TotalPosible'] * 100).round(1)
+
+    conteo_j = conteo_j.merge(total_por_temp[['Season', 'TotalFiltro', 'TotalPosible', 'PctTotal']], on='Season')
+    conteo_j = conteo_j.sort_values(['Season', 'Jornada'], ascending=[False, False])
+
+    total_jornadas = conteo_j['Jornada'].nunique()
+    with st.expander(f"📊 Repeticiones por jornada ({total_jornadas} jornadas)", expanded=False):
+        for season, grupo in conteo_j.groupby('Season', sort=False):
+            partidos_xj = grupo['PartidosXJornada'].iloc[0]
+            pct_total = grupo['PctTotal'].iloc[0]
+            st.markdown(f"<div style='font-size:12px;font-weight:700;padding:4px 0 2px 0;color:#0A2342'>{season} | {partidos_xj} partidos/jornada | {pct_total}% del total</div>", unsafe_allow_html=True)
+            for _, row in grupo.iterrows():
+                pct = row['Pct']
+                veces = int(row['Veces'])
+                partidos_xj = int(row['PartidosXJornada'])
+                st.markdown(f"<div style='font-size:11px;padding:1px 0 1px 8px;font-family:monospace'>J{int(row['Jornada'])} - {veces}# | <b>{pct}%</b> aprox {veces}/{partidos_xj}</div>", unsafe_allow_html=True)
+   
+   
+   ####################
+   
     # --- RESUMEN CON % QUE RESPETA Eq1/Eq2 ---
     with st.expander(f"📊 Filtro actual ≥{pct_marcador}%", expanded=False):
         if len(df_final) > 0:
@@ -2266,8 +2296,8 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
         pierde_f = int((~es_local & pierde_base).sum())
         empata_c = int((es_local & empata_base).sum())
         empata_f = int((~es_local & empata_base).sum())
-
-        linea = f"""<div style='font-size:11px;line-height:1.4;margin:6px 0;padding-bottom:6px;border-bottom:1px solid #eee'>
+#######aqui se hace las jornadas de "clasif."" parte visual
+        linea = f"""<div style='font-size:9px;line-height:1.4;margin:6px 0;padding-bottom:6px;border-bottom:1px solid #eee'>
         <b>{equipo.upper()}</b><br>
         <span style='color:#0f8105;font-weight:700'>G:{p_g}% {n_g}/{total_pj}</span> &nbsp; Casa:{p_cx}% {gana_c}/{pj_casa} &nbsp; Fuera:{p_fx}% {gana_f}/{pj_fuera}<br>
         <span style='color:#f31818;font-weight:700'>P:{p_p}% {n_p}/{total_pj}</span> &nbsp; Casa:{p_cpx}% {pierde_c}/{pj_casa} &nbsp; Fuera:{p_fpx}% {pierde_f}/{pj_fuera}<br>
