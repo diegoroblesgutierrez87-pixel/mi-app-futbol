@@ -178,6 +178,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         gf_j = g['FTHG'].iloc[0] if es_local else g['FTAG'].iloc[0]
         gc_j = g['FTAG'].iloc[0] if es_local else g['FTHG'].iloc[0]
 
+        # AQUÍ EL CAMBIO: ahora siempre meto el resultado
         txt = f"J{int(j)}{sufijo} {int(gf_j)}-{int(gc_j)}"
 
         if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
@@ -208,7 +209,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         </details>"""
 
         partes.append(jx_html)
-    return "|".join(partes) # <-- AQUÍ EL CAMBIO: sin espaciosst.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    return "|".join(partes)
+############fin jornadas conteo
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
@@ -1603,7 +1605,7 @@ if len(jornadas) > 0:
                         rival = None
                         if len(equipos_mostrar) == 2:
                             rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0] 
-                        jors = jornadas_conteo(df_jors['Jornada'], df_jors, eq, rival)
+                        jors = jornadas_conteo(df_jors['Jornada'], df_base_h2h, eq, rival)
                         html = f"<div style='font-size:11px;line-height:1.3;margin:2px 0'><b>{eq.title()}:</b> {hits}# {pct:.1f}% — {jors}</div>"
                         datos.append((pct, hits, eq, html))
             else:
@@ -1824,24 +1826,24 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     <style>
     /* Ancho completo para selects en este expander */
     div[data-testid="stExpander"] [data-testid="stSelectbox"] {
-        width: 100% !important;
+        width: 100%!important;
     }
     div[data-testid="stExpander"] [data-testid="stSelectbox"] > div {
-        width: 100% !important;
-        min-width: unset !important;
+        width: 100%!important;
+        min-width: unset!important;
     }
     div[data-testid="stExpander"] [data-testid="stSelectbox"] > div > div {
-        width: 100% !important;
-        min-width: 100% !important;
+        width: 100%!important;
+        min-width: 100%!important;
     }
     /* Evita que las columnas compriman el contenido en móvil */
     div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div {
-        min-width: 45% !important;
-        flex-shrink: 0 !important;
+        min-width: 45%!important;
+        flex-shrink: 0!important;
     }
     </style>
     """, unsafe_allow_html=True)
-    
+
     st.caption("Busca equipos que cumplan condiciones en cualquier liga/temporada")
 
     df_busca = df.copy()
@@ -1873,15 +1875,16 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     # --- NIVEL 3: MODO en línea completa ---
     modo_busca = st.radio("Modo búsqueda", ["Últimos X partidos", "% en rango jornadas"], horizontal=True, key="be2_modo")
 
-    # --- NIVEL 4: CAJITA DINÁMICA según modo ---
+    # --- NIVEL 4: CAJITA DINÁMICA + L/V EN MISMA LÍNEA ---
+    col_pct_lv1, col_pct_lv2 = st.columns(2)
     if modo_busca == "Últimos X partidos":
-        ultimos_x = st.number_input("Últimos", 1, 38, 5, key="be2_ultimos")
+        ultimos_x = col_pct_lv1.number_input("Últimos", 1, 38, 5, key="be2_ultimos")
         pct_min_rango = None
     else:
-        pct_min_rango = st.number_input("% mín", 0, 100, 50, 5, key="be2_pct_min")
+        pct_min_rango = col_pct_lv1.number_input("% mín", 0, 100, 50, 5, key="be2_pct_min")
         ultimos_x = None
 
-    
+    lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
 
     # --- RESTO IGUAL: Fav/Cntr1, AM, Vlr1, Parte ---
     colc1, colc2, colc3, colc4 = st.columns(4)
@@ -1890,7 +1893,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     vlr1_busca = colc3.selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(21)], key="be2_vlr1")
     parte_busca = colc4.selectbox("Parte", ["Todo","1T","2T"], key="be2_parte")
 
-    # --- Col1, Op1, L/V, Minutos ---
+    # --- Col1, Op1, Minutos ---
     columnas_numericas_be = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot']
     ABREV_COL_BE = {
         'FTHG': 'GL','FTAG': 'GV','HTHG': 'G1L','HTAG': 'G1V',
@@ -1906,8 +1909,6 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     col1_busca = colc5.selectbox("Col1", ["Ninguno"] + columnas_numericas_be, format_func=lambda x: ABREV_COL_BE.get(x, x), key="be2_col1")
     op1_busca = colc6.selectbox("Op1", ["=", ">", ">=", "<", "<="], key="be2_op1")
 
-    colc7, colc8 = st.columns(2)
-    lv_busca = colc7.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
     st.caption("Minutos por parte")
     col_1t, col_2t, col_ext = st.columns(3)
     min_1t = col_1t.number_input("1ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_1t")
@@ -1958,7 +1959,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                 else:
                     cumple = cumple & ((gf + gc) > float(vlr1_busca))
 
-            if col1_busca!= "Ninguno" and vlr1_busca != "Ninguno":
+            if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
                 mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC',
                             'HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
                 if fav_c1 == "AF":
@@ -2031,6 +2032,8 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:500px; overflow-y:auto; padding:4px'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
         else:
             st.warning("Ningún equipo cumple esas condiciones")
+
+
 
 
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
