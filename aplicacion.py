@@ -1567,35 +1567,35 @@ if len(jornadas) > 0:
         )
         if not (rango_minutos[0] == 0 and rango_minutos[1] >= 120):
             df_final = df_final[df_final['Goles'].str.len() > 0]
-# === FILTRO NUEVO X/X ===
-if xx_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-    es_local = df_final['HomeTeam'] == equipo_filtro
+    # === FILTRO NUEVO X/X ===
+    if xx_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
+        es_local = df_final['HomeTeam'] == equipo_filtro
 
-    # Resultado al descanso
-    ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-    ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-    ht_empata = ~(ht_gana | ht_pierde)
+        # Resultado al descanso
+        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+        ht_empata = ~(ht_gana | ht_pierde)
 
-    # Resultado final
-    ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-    ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-    ft_empata = ~(ft_gana | ft_pierde)
+        # Resultado final
+        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+        ft_empata = ~(ft_gana | ft_pierde)
 
-    if xx_filtro == "G/X":
-        df_final = df_final[ht_gana]
-    elif xx_filtro == "E/X":
-        df_final = df_final[ht_empata]
-    elif xx_filtro == "P/X":
-        df_final = df_final[ht_pierde]
-    elif xx_filtro == "X/G":
-        df_final = df_final[ft_gana]
-    elif xx_filtro == "X/E":
-        df_final = df_final[ft_empata]
-    elif xx_filtro == "X/P":
-        df_final = df_final[ft_pierde]
-    # --- FILTRO JUGADOR ---
-    if jugador_filtro!= "TODOS":
-        df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
+        if xx_filtro == "G/X":
+            df_final = df_final[ht_gana]
+        elif xx_filtro == "E/X":
+            df_final = df_final[ht_empata]
+        elif xx_filtro == "P/X":
+            df_final = df_final[ht_pierde]
+        elif xx_filtro == "X/G":
+            df_final = df_final[ft_gana]
+        elif xx_filtro == "X/E":
+            df_final = df_final[ft_empata]
+        elif xx_filtro == "X/P":
+            df_final = df_final[ft_pierde]
+        # --- FILTRO JUGADOR ---
+        if jugador_filtro!= "TODOS":
+            df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
 ######################################################################################
     if len(df_final) > 0:
         df_final['partidos'] = ''
