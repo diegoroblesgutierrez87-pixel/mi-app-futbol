@@ -256,7 +256,7 @@ if 'rango_minutos' not in st.session_state:
     st.session_state.rango_minutos = (0, 120)
 if 'pct_marcador' not in st.session_state: 
     st.session_state.pct_marcador = 0
-
+if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 
 # anti-traductor
 components.html("""<script>
@@ -1118,11 +1118,24 @@ if len(jornadas) > 0:
         cuota_tipo = f4[2].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
         margen_filtro = f4[3].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
 
+        
+        #NUEVA FILA PARA EL FILTRO X/X
+        f5 = st.columns(4)
+        xx_filtro = f5[0].selectbox("X/X", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro',
+                                    help="G/X:Gana al descanso | X/G:Gana al final")
+        f5[1].empty()
+        f5[2].empty()
+        f5[3].empty()
+        
+        
+        
         f4 = st.columns(4) # 4 columnas porque luego usas f4[0] hasta f4[3]
         marcadores_unicos = sorted(
             (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
             key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
         )
+        
+        
         f5 = st.columns(3)
         marcador_filtro = f5[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
         f5[1].caption("% mínimo")
@@ -1158,6 +1171,7 @@ if len(jornadas) > 0:
     if resultado_filtro!= "Ninguno": filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
     if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
     if htft_filtro!= "Todo": filtros_activos.append(f"HT/FT:{htft_filtro}")
+    if xx_filtro!= "Todo": filtros_activos.append(f"X/X:{xx_filtro}")
     if margen_filtro!= "Todo": filtros_activos.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
     if marcador_filtro!= "Todos": filtros_activos.append(f"Marc:{marcador_filtro}")
     if pct_marcador > 0: filtros_activos.append(f"Min%:{pct_marcador}%")
@@ -1553,7 +1567,32 @@ if len(jornadas) > 0:
         )
         if not (rango_minutos[0] == 0 and rango_minutos[1] >= 120):
             df_final = df_final[df_final['Goles'].str.len() > 0]
+# === FILTRO NUEVO X/X ===
+if xx_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
+    es_local = df_final['HomeTeam'] == equipo_filtro
 
+    # Resultado al descanso
+    ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+    ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+    ht_empata = ~(ht_gana | ht_pierde)
+
+    # Resultado final
+    ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+    ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+    ft_empata = ~(ft_gana | ft_pierde)
+
+    if xx_filtro == "G/X":
+        df_final = df_final[ht_gana]
+    elif xx_filtro == "E/X":
+        df_final = df_final[ht_empata]
+    elif xx_filtro == "P/X":
+        df_final = df_final[ht_pierde]
+    elif xx_filtro == "X/G":
+        df_final = df_final[ft_gana]
+    elif xx_filtro == "X/E":
+        df_final = df_final[ft_empata]
+    elif xx_filtro == "X/P":
+        df_final = df_final[ft_pierde]
     # --- FILTRO JUGADOR ---
     if jugador_filtro!= "TODOS":
         df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
@@ -2013,10 +2052,10 @@ if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_bu
         st.success(f"Encontrados {len(df_res)} equipos")
         lineas_html = []
         for _, r in df_res.iterrows():
-            # ESTE ES EL SEGUNDO CAMBIO CLAVE: formato con # y —
-            linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:2px 0; border-bottom:1px solid #eee; white-space:nowrap; overflow:hidden; text-overflow:ellipsis'>
-                <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
-                <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span> |
+            # ESTE ES EL SEGUNDO CAMBIO CLAVE: formato con # y — donde se ordenan las lineas de datos y colocan
+            linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:4px 0; border-bottom:1px solid #eee;'>
+                <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> | 
+                <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
                 <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
             </div>"""
             lineas_html.append(linea)
