@@ -144,6 +144,8 @@ def abreviar_equipo(nombre):
 #####################jornadas conteo
 def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     from collections import Counter
+
+    # Caso simple: solo contar jornadas sin detalle
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
         return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
@@ -165,32 +167,43 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
+        if g.empty:
+            continue
+
+        # Color según resultado global de la jornada
         if (g['res']=='win').all():
-            color = '#0f8105'
+            color = '#0f8105' # verde gana
         elif (g['res']=='loss').all():
-            color = '#f31818'
+            color = '#f31818' # rojo pierde
         else:
-            color = '#0A2342'
+            color = '#0A2342' # azul empate/mixto
 
-        es_local = (g['HomeTeam']==equipo).iloc[0]
-        sufijo = 'c' if es_local else 'f'
+        # Iterar TODOS los partidos de la jornada
+        resultados_jornada = []
+        sufijos = []
+        for _, partido in g.iterrows():
+            es_local_partido = partido['HomeTeam'] == equipo
+            sufijo_partido = 'c' if es_local_partido else 'f'
+            local_g = int(partido['FTHG'])
+            visit_g = int(partido['FTAG'])
+            resultados_jornada.append(f"{local_g}-{visit_g}")
+            sufijos.append(sufijo_partido)
 
-        gf_j = g['FTHG'].iloc[0] if es_local else g['FTAG'].iloc[0]
-        gc_j = g['FTAG'].iloc[0] if es_local else g['FTHG'].iloc[0]
+        # Si todos son casa/fuera usa 'c'/'f', si mezcla usa 'cf'
+        sufijo_final = sufijos[0] if len(set(sufijos)) == 1 else 'cf'
+        txt = f"J{int(j)}{sufijo_final} {' | '.join(resultados_jornada)}"
 
-        txt = f"J{int(j)}{sufijo} {int(gf_j)}-{int(gc_j)}"
-
+        # ● si hubo AM en algún partido de la jornada
         if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
             txt += '●'
 
-        if len(g) > 1:
-            txt += f"-{len(g)}#"
-
+        # Marcar si es H2H directo
         es_h2h = False
         if rival:
             es_h2h = (((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)) |
                       ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo))).any()
 
+        # Popup con detalle de partidos - OJO: esto es lento si hay muchas jornadas
         partidos_html = []
         for _, r in g.iterrows():
             partido_completo = formatear_partido(r, equipo, None, "")
@@ -199,16 +212,19 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         viñeta = "".join(partidos_html)
 
         estilos = []
-        if color: estilos.append(f"color:{color};font-weight:700")
-        if es_h2h: estilos.append("text-decoration:underline;text-decoration-thickness:2px")
+        if color:
+            estilos.append(f"color:{color};font-weight:700")
+        if es_h2h:
+            estilos.append("text-decoration:underline;text-decoration-thickness:2px")
 
         jx_html = f"""<details style="display:inline-block">
-            <summary style="{';'.join(estilos)};cursor:pointer;list-style:none;display:inline">{txt}</summary>
-            <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:6px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:280px">{viñeta}</div>
-        </details>"""
+        <summary style="{';'.join(estilos)};cursor:pointer;list-style:none;display:inline">{txt}</summary>
+        <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:6px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:280px">{viñeta}</div>
+    </details>"""
 
         partes.append(jx_html)
-    return "|".join(partes) # <-- AQUÍ EL CAMBIO: sin espaciosst.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+
+    return "<span style='padding:0 4px;color:#000;font-weight:900'>|</span>".join(partes)
 
 
 
@@ -357,7 +373,7 @@ def cargar_todo():
     return df.copy()
 
 df = cargar_todo()
-
+df_original = df.copy()  # <-- AÑADE ESTA LÍNEA
 
 @st.cache_data
 def cargar_eventos(league, season):
@@ -600,6 +616,8 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{ft_line}{pos_line}{pts_line}{perf_line}{stats_html}{goles_html}</div>'
 ####def formatear_h2h_compacto
 
+
+######################def formatear_h2h_compacto clasif. bloque coge aqui sus cartas de partidos
 def formatear_h2h_compacto(row, equipo_ref=None):
     NAVY = "#0A2342"
     league = str(row.get('League',''))[:3].upper()
@@ -647,13 +665,15 @@ def formatear_h2h_compacto(row, equipo_ref=None):
     else:
         color = "#444"
     res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
-
+################lineas de bloque clasif. en las cartas
     lineas = [
         f"{league} {res}",
         f"{fecha} |{jorn}|",
         odds,
         ht_line,
-        st_line,  # Este ya es el resultado final
+        st_line,
+        ft_line,  # <-- AÑADIDO
+        pos,
         pos,
         pts,
         f"<span style='color:#000'>Perf:</span>{nv(round(float(row.get('HomePerf',0)),1),hg>ag,is_h)}-{nv(round(float(row.get('AwayPerf',0)),1),ag>hg,is_a)}",
@@ -667,6 +687,9 @@ def formatear_h2h_compacto(row, equipo_ref=None):
 
     return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
 ####def def calcular_htft
+
+
+
 
 def calcular_htft(row, equipo):
     if equipo == row['HomeTeam']:
@@ -2249,8 +2272,8 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
         <span style='color:#0f8105;font-weight:700'>G:{p_g}% {n_g}/{total_pj}</span> &nbsp; Casa:{p_cx}% {gana_c}/{pj_casa} &nbsp; Fuera:{p_fx}% {gana_f}/{pj_fuera}<br>
         <span style='color:#f31818;font-weight:700'>P:{p_p}% {n_p}/{total_pj}</span> &nbsp; Casa:{p_cpx}% {pierde_c}/{pj_casa} &nbsp; Fuera:{p_fpx}% {pierde_f}/{pj_fuera}<br>
         <span style='color:#0A2342;font-weight:700'>E:{p_e}% {n_e}/{total_pj}</span> &nbsp; Casa:{p_cex}% {empata_c}/{pj_casa} &nbsp; Fuera:{p_fex}% {empata_f}/{pj_fuera}<br>
-        {"".join(partes)}
-        </div>"""
+        {" <span style='color:#999;font-weight:900'>|</span> ".join(partes)}
+        </div>"""       
         lineas.append(linea)
     return lineas
 ######"clasif".
@@ -2408,7 +2431,13 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
     except Exception as e:
         st.error(f"Error en Clasif: {str(e)}")
         st.caption("Si persiste, borra cache o revisa que el parquet tenga columnas Jornada/Date")
+
+
+
+
+
 #################generador de apuesta
+
 
 with st.expander("🎯 Creador Apuestas", expanded=False):
     st.caption("Predicción universal - misma tarjeta")
