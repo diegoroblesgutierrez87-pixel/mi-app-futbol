@@ -1647,7 +1647,11 @@ if len(jornadas) > 0:
                         if len(equipos_mostrar) == 2:
                             rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0] 
                         jors = jornadas_conteo(df_jors['Jornada'], df_base_h2h, eq, rival)
-                        html = f"<div style='font-size:11px;line-height:1.3;margin:2px 0'><b>{eq.title()}:</b> {hits}# {pct:.1f}% — {jors}</div>"
+                        html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
+<b style='font-size:12px'>{eq.title()}</b><br>
+<span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
+{jors}
+</div>"""
                         datos.append((pct, hits, eq, html))
             else:
                 titulo = "Filtro actual"
@@ -1662,7 +1666,11 @@ if len(jornadas) > 0:
                         if len(equipos_mostrar) == 2:
                             rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0]
                         jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival)
-                        html = f"<div style='font-size:11px;line-height:1.3;margin:2px 0'><b>{eq.title()}:</b> {hits}# {pct:.1f}% — {jors}</div>"
+                        html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
+<b style='font-size:12px'>{eq.title()}</b><br>
+<span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
+{jors}
+</div>"""
                         datos.append((pct, hits, eq, html))
 
             # ORDENAR DE MAYOR A MENOR POR % Y LUEGO POR # ACIERTOS
@@ -1927,6 +1935,11 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
     lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
 
+    # --- NUEVO: FILTRO RESULTADO G/E/P/GE/GP/EP ---
+    col_res_be = st.columns(1)[0]
+    res_busca = col_res_be.selectbox("Res", ["Todo","G","E","P","GE","GP","EP"], key="be2_res",
+                                     help="G:Gana | E:Empata | P:Pierde | GE:Gana/Empata | GP:Gana/Pierde | EP:Empata/Pierde")
+
     # --- RESTO IGUAL: Fav/Cntr1, AM, Vlr1, Parte ---
     colc1, colc2, colc3, colc4 = st.columns(4)
     fav_c1 = colc1.selectbox("Fav/Cntr1", ["Todo","AF","C"], key="be2_favc1", help="AF=a favor del equipo | C=en contra")
@@ -1956,116 +1969,139 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     min_2t = col_2t.number_input("2ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_2t")
     min_ext = col_ext.number_input("+", min_value=0, max_value=30, value=10, step=1, key="be2_min_ext", help="Añadido/Prórroga")
 
+    #########boton buscar equipos, aqui tb esta la logica de verlo "J30f 0-1
 
-#########boton buscar equipos , aqui tb esta la logica de verlo "J30f 0-1
+    if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
+        equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
+        resultados = []
 
-if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
-    equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
-    resultados = []
+        for eq in equipos:
+            df_eq = df_be[(df_be['HomeTeam']==eq) | (df_be['AwayTeam']==eq)].copy()
+            if df_eq.empty: continue
 
-    for eq in equipos:
-        df_eq = df_be[(df_be['HomeTeam']==eq) | (df_be['AwayTeam']==eq)].copy()
-        if df_eq.empty: continue
+            if lv_busca == "Local":
+                df_eq = df_eq[df_eq['HomeTeam']==eq]
+            elif lv_busca == "Visitante":
+                df_eq = df_eq[df_eq['AwayTeam']==eq]
+            if df_eq.empty: continue
 
-        if lv_busca == "Local":
-            df_eq = df_eq[df_eq['HomeTeam']==eq]
-        elif lv_busca == "Visitante":
-            df_eq = df_eq[df_eq['AwayTeam']==eq]
-        if df_eq.empty: continue
+            df_eq = df_eq[(df_eq['Jornada']>=j_rango[0]) & (df_eq['Jornada']<=j_rango[1])]
 
-        df_eq = df_eq[(df_eq['Jornada']>=j_rango[0]) & (df_eq['Jornada']<=j_rango[1])]
+            if modo_busca == "Últimos X partidos":
+                df_eq = df_eq.sort_values('Date').tail(ultimos_x)
 
-        if modo_busca == "Últimos X partidos":
-            df_eq = df_eq.sort_values('Date').tail(ultimos_x)
+            if df_eq.empty: continue
 
-        if df_eq.empty: continue
+            total = len(df_eq)
+            es_local = df_eq['HomeTeam']==eq
 
-        total = len(df_eq)
-        es_local = df_eq['HomeTeam']==eq
-
-        if parte_busca == "1T":
-            gf = np.where(es_local, df_eq['HTHG'], df_eq['HTAG'])
-            gc = np.where(es_local, df_eq['HTAG'], df_eq['HTHG'])
-        elif parte_busca == "2T":
-            gf = np.where(es_local, df_eq['FTHG']-df_eq['HTHG'], df_eq['FTAG']-df_eq['HTAG'])
-            gc = np.where(es_local, df_eq['FTAG']-df_eq['HTAG'], df_eq['FTHG']-df_eq['HTHG'])
-        else:
-            gf = np.where(es_local, df_eq['FTHG'], df_eq['FTAG'])
-            gc = np.where(es_local, df_eq['FTAG'], df_eq['FTHG'])
-
-        cumple = np.ones(len(df_eq), dtype=bool)
-
-        if vlr1_busca!= "Ninguno":
-            if fav_c1 == "AF":
-                cumple = cumple & (gf > float(vlr1_busca))
-            elif fav_c1 == "C":
-                cumple = cumple & (gc > float(vlr1_busca))
-            else:
-                cumple = cumple & ((gf + gc) > float(vlr1_busca))
-
-        if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
-            mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC',
-                        'HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
-            if fav_c1 == "AF":
-                val_col = np.where(es_local, df_eq[col1_busca], df_eq.get(mapa_col.get(col1_busca, col1_busca), df_eq[col1_busca]))
-            elif fav_c1 == "C":
-                val_col = np.where(es_local, df_eq.get(mapa_col.get(col1_busca, col1_busca), 0), df_eq.get(col1_busca, 0))
-            else:
-                val_col = df_eq[col1_busca]
-
-            val = float(vlr1_busca)
-            if op1_busca == "=": cumple = cumple & (val_col == val)
-            elif op1_busca == ">": cumple = cumple & (val_col > val)
-            elif op1_busca == ">=": cumple = cumple & (val_col >= val)
-            elif op1_busca == "<": cumple = cumple & (val_col < val)
-            elif op1_busca == "<=": cumple = cumple & (val_col <= val)
-
-        if am_busca == "Si":
-            cumple = cumple & (gf > 0) & (gc > 0)
-        elif am_busca == "No":
-            cumple = cumple & ~((gf > 0) & (gc > 0))
-
-        hits = cumple.sum()
-        pct = hits / total * 100 if total else 0
-
-        if modo_busca == "% en rango jornadas" and pct < pct_min_rango:
-            continue
-
-        if hits > 0:
+            # Cálculo de resultado para el equipo
             gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
             pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
+            empata = ~(gana | pierde)
 
-            df_cumple = df_eq[cumple].copy()
+            # === FILTRO RES G/E/P/GE/GP/EP ===
+            if res_busca == "G":
+                df_eq = df_eq[gana]
+            elif res_busca == "E":
+                df_eq = df_eq[empata]
+            elif res_busca == "P":
+                df_eq = df_eq[pierde]
+            elif res_busca == "GE":
+                df_eq = df_eq[gana | empata]
+            elif res_busca == "GP":
+                df_eq = df_eq[gana | pierde]
+            elif res_busca == "EP":
+                df_eq = df_eq[empata | pierde]
 
-            # ESTE ES EL CAMBIO CLAVE: jornadas_conteo ya genera J1c 5-2● |J2f 2-0
-            jors_html = jornadas_conteo(df_cumple['Jornada'], df_cumple, eq, None)
+            if df_eq.empty: continue
 
-            resultados.append({
-                'Equipo': eq, 'Liga': df_eq.iloc[0]['League'], 'PJ': total,
-                'Cumple': hits, '%': round(pct,1), 'G': gana.sum(),
-                'E': (total - gana.sum() - pierde.sum()), 'P': pierde.sum(),
-                'Jornadas': jors_html
-            })
+            total = len(df_eq) # recalculamos total tras filtro Res
+            es_local = df_eq['HomeTeam']==eq # recalcular para el df filtrado
 
-    if resultados:
-        df_res = pd.DataFrame(resultados).sort_values(['%','Cumple'], ascending=False)
-        st.success(f"Encontrados {len(df_res)} equipos")
-        lineas_html = []
-        for _, r in df_res.iterrows():
-            # ESTE ES EL SEGUNDO CAMBIO CLAVE: formato con # y — donde se ordenan las lineas de datos y colocan
-            linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:4px 0; border-bottom:1px solid #eee;'>
-                <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> | 
-                <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
-                <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
-            </div>"""
-            lineas_html.append(linea)
-        st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:500px; overflow-y:auto; padding:4px'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
-    else:
-        st.warning("Ningún equipo cumple esas condiciones")
+            if parte_busca == "1T":
+                gf = np.where(es_local, df_eq['HTHG'], df_eq['HTAG'])
+                gc = np.where(es_local, df_eq['HTAG'], df_eq['HTHG'])
+            elif parte_busca == "2T":
+                gf = np.where(es_local, df_eq['FTHG']-df_eq['HTHG'], df_eq['FTAG']-df_eq['HTAG'])
+                gc = np.where(es_local, df_eq['FTAG']-df_eq['HTAG'], df_eq['FTHG']-df_eq['HTHG'])
+            else:
+                gf = np.where(es_local, df_eq['FTHG'], df_eq['FTAG'])
+                gc = np.where(es_local, df_eq['FTAG'], df_eq['FTHG'])
 
-#########boton buscar equipos , aqui tb esta la logica de verlo "J30f 0-1
+            cumple = np.ones(len(df_eq), dtype=bool)
+
+            if vlr1_busca!= "Ninguno":
+                if fav_c1 == "AF":
+                    cumple = cumple & (gf > float(vlr1_busca))
+                elif fav_c1 == "C":
+                    cumple = cumple & (gc > float(vlr1_busca))
+                else:
+                    cumple = cumple & ((gf + gc) > float(vlr1_busca))
+
+            if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
+                mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC',
+                            'HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
+                if fav_c1 == "AF":
+                    val_col = np.where(es_local, df_eq[col1_busca], df_eq.get(mapa_col.get(col1_busca, col1_busca), df_eq[col1_busca]))
+                elif fav_c1 == "C":
+                    val_col = np.where(es_local, df_eq.get(mapa_col.get(col1_busca, col1_busca), 0), df_eq.get(col1_busca, 0))
+                else:
+                    val_col = df_eq[col1_busca]
+
+                val = float(vlr1_busca)
+                if op1_busca == "=": cumple = cumple & (val_col == val)
+                elif op1_busca == ">": cumple = cumple & (val_col > val)
+                elif op1_busca == ">=": cumple = cumple & (val_col >= val)
+                elif op1_busca == "<": cumple = cumple & (val_col < val)
+                elif op1_busca == "<=": cumple = cumple & (val_col <= val)
+
+            if am_busca == "Si":
+                cumple = cumple & (gf > 0) & (gc > 0)
+            elif am_busca == "No":
+                cumple = cumple & ~((gf > 0) & (gc > 0))
+
+            hits = cumple.sum()
+            pct = hits / total * 100 if total else 0
+
+            if modo_busca == "% en rango jornadas" and pct < pct_min_rango:
+                continue
+
+            if hits > 0:
+                # Recalcular gana/pierde sobre df_eq filtrado
+                gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
+                pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
+
+                df_cumple = df_eq[cumple].copy()
+
+                # ESTE ES EL CAMBIO CLAVE: jornadas_conteo ya genera J1c 5-2● |J2f 2-0
+                jors_html = jornadas_conteo(df_cumple['Jornada'], df_cumple, eq, None)
+
+                resultados.append({
+                    'Equipo': eq, 'Liga': df_eq.iloc[0]['League'], 'PJ': total,
+                    'Cumple': hits, '%': round(pct,1), 'G': gana.sum(),
+                    'E': (total - gana.sum() - pierde.sum()), 'P': pierde.sum(),
+                    'Jornadas': jors_html
+                })
+
+        if resultados:
+            df_res = pd.DataFrame(resultados).sort_values(['%','Cumple'], ascending=False)
+            st.success(f"Encontrados {len(df_res)} equipos")
+            lineas_html = []
+            for _, r in df_res.iterrows():
+                # ESTE ES EL SEGUNDO CAMBIO CLAVE: formato con # y — donde se ordenan las lineas de datos y colocan
+                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:4px 0; border-bottom:1px solid #eee;'>
+                    <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
+                    <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
+                    <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
+                </div>"""
+                lineas_html.append(linea)
+            st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:500px; overflow-y:auto; padding:4px'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+        else:
+            st.warning("Ningún equipo cumple esas condiciones")
+
+#########boton buscar equipos, aqui tb esta la logica de verlo "J30f 0-1
 #####FIN
-
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
 def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta, condicion_lv="Todo", filtro_res="Todo", ambos_marcan_clasif="Todos", goles_clasif="Todo", operador_goles_clasif="Todo", valor_goles_clasif="Todo"):
     df_liga = df_partidos[(df_partidos['League']==liga) & (df_partidos['Season']==season) &
