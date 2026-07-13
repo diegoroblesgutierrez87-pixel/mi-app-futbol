@@ -1670,9 +1670,11 @@ if len(df_final) > 0:
    ####################
    
     # --- RESUMEN CON % QUE RESPETA Eq1/Eq2 ---
+# --- RESUMEN CON % QUE RESPETA Eq1/Eq2 + MARCADOR ---
     with st.expander(f"📊 Filtro actual ≥{pct_marcador}%", expanded=False):
         if len(df_final) > 0:
-            base = df_base_h2h.copy()
+            # CAMBIO 1: base = df_final para que respete TODOS los filtros incluido marcador
+            base = df_final.copy()
 
             # 1) Muestra Eq1 y/o Eq2 si están elegidos
             equipos_mostrar = []
@@ -1692,14 +1694,15 @@ if len(df_final) > 0:
                     part = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
                     tot = len(part)
                     if tot == 0: continue
-                    hits = len(part[(part['FTHG']==gl) & (part['FTAG']==gv)])
+                    # hits ya están en part porque base=df_final ya está filtrado por marcador
+                    hits = len(part) # CAMBIO 2: todos los de part ya son 0-0 si filtraste 0-0
                     pct = hits / tot * 100
                     if pct >= pct_marcador:
-                        df_jors = part[(part['FTHG']==gl) & (part['FTAG']==gv)]
+                        df_jors = part
                         rival = None
                         if len(equipos_mostrar) == 2:
-                            rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0] 
-                        jors = jornadas_conteo(df_jors['Jornada'], df_base_h2h, eq, rival)
+                            rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0]
+                        jors = jornadas_conteo(df_jors['Jornada'], df_jors, eq, rival) # CAMBIO 3: paso df_jors en vez de df_base_h2h
                         html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
 <b style='font-size:12px'>{eq.title()}</b><br>
 <span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
@@ -1708,9 +1711,21 @@ if len(df_final) > 0:
                         datos.append((pct, hits, eq, html))
             else:
                 titulo = "Filtro actual"
+                # CAMBIO 4: para calcular % real necesito el total SIN filtros de marcador
+                # pero SÍ con filtros de equipo/liga/temporada
+                base_total = df_base_h2h.copy()
+                if equipo_filtro!= "Ninguno" or equipo2_filtro!= "Ninguno":
+                    if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
+                        base_total = base_total[((base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)) |
+                                               ((base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro))]
+                    elif equipo_filtro!= "Ninguno":
+                        base_total = base_total[(base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)]
+                    elif equipo2_filtro!= "Ninguno":
+                        base_total = base_total[(base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro)]
+
                 for eq in equipos_mostrar:
-                    part_tot = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
-                    part_ok = df_final[(df_final['HomeTeam']==eq) | (df_final['AwayTeam']==eq)]
+                    part_tot = base_total[(base_total['HomeTeam']==eq) | (base_total['AwayTeam']==eq)]
+                    part_ok = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
                     tot = len(part_tot)
                     hits = len(part_ok)
                     pct = hits / tot * 100 if tot else 0
@@ -1736,6 +1751,7 @@ if len(df_final) > 0:
                 st.warning(f"Ningún equipo llega al {pct_marcador}%")
         else:
             st.info("No hay partidos con los filtros actuales")
+        #############################################
         if equipo_filtro!= "Ninguno" and len(df_final) > 0:
             total = len(df_final)
             gana = len(df_final[((df_final['HomeTeam'] == equipo_filtro) & (df_final['FTR'] == 'H')) |
