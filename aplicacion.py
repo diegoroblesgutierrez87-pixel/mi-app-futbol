@@ -987,22 +987,16 @@ with st.expander("Filtros de partidos", expanded=False):
     df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
 
     if df_fil.empty:
-        st.warning("No hay datos para esa Liga/Temporada - cambia filtros")
-        df_base = pd.DataFrame()
-        df_clas_base = pd.DataFrame()
-        df_final = pd.DataFrame()
-        df_clasificacion = pd.DataFrame()
-        jornadas = []
-    else:
+        st.stop()
 
-        @st.cache_data
-        def calcular_estado_jornada_rapido(df, temporadas, ligas):
-            df_fil = df[df['League'].isin(ligas) & df['Season'].isin(temporadas)]
-            return calcular_estado_jornada(df_fil)
+    @st.cache_data
+    def calcular_estado_jornada_rapido(df, temporadas, ligas):
+        df_fil = df[df['League'].isin(ligas) & df['Season'].isin(temporadas)]
+        return calcular_estado_jornada(df_fil)
 
 
-        with st.spinner('Calculando clasificación...'):
-            df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
+    with st.spinner('Calculando clasificación...'):
+        df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
 
     df_rachas_full = df_base.copy()
     df_final = df_base.copy()
@@ -1187,33 +1181,6 @@ if len(jornadas) > 0:
 
         jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
-
-    st.divider()
-    st.caption("➕ Cruce extra Col1.2 (solo Eq1) - no toca nada de arriba")
-
-    # Solo se activa si hay solo Eq1
-    if equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-        cA, cB, cC, cD = st.columns(4)
-        with cA:
-            st.markdown("**Col1.2**")
-            st.selectbox("Col1.2", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro3', label_visibility="collapsed")
-        with cB:
-            st.markdown("**Fav1.2**")
-            st.selectbox("Fav1.2", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro3', label_visibility="collapsed")
-        with cC:
-            st.markdown("**Op1.2**")
-            st.selectbox("Op1.2", ["=", ">", ">=", "<", "<="], key='operador_filtro3', label_visibility="collapsed")
-        with cD:
-            st.markdown("**Vlr1.2**")
-            st.selectbox("Vlr1.2", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro3', label_visibility="collapsed")
-                
-        # Muestra como queda apilado visualmente
-        st.caption(f"Quedará: Col1={columna_filtro} {operador_filtro}{valor_filtro} + Col1.2={st.session_state.columna_filtro3} {st.session_state.operador_filtro3}{st.session_state.valor_filtro3}")
-    else:
-        st.caption("Selecciona solo Eq1 para activar Col1.2")
-
-
-
         st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
     
        # --- RESUMEN DE FILTROS ACTIVOS ---
@@ -1248,7 +1215,7 @@ if len(jornadas) > 0:
         txt_col2 = f"{ABREV_COL.get(columna_filtro2, columna_filtro2)}{operador_filtro2}{valor_filtro2}"
         if alcance_filtro2!= "Todo": txt_col2 = f"{alcance_filtro2}:{txt_col2}"
         filtros_activos.append(txt_col2)
-    
+
     # Jornada
 # Jornada
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
@@ -1331,7 +1298,9 @@ if len(jornadas) > 0:
         elif ambos_marcan == "No2P":
             df_final = df_final[~(((df_final['FTHG'] - df_final['HTHG']) > 0) & ((df_final['FTAG'] - df_final['HTAG']) > 0))]
     
-        # HT/FT relativo al Eq1 - VERSIÓN LIMPIA
+    # HT/FT relativo al Eq1
+    ##########LOGICA: FILTRO HT/FT GANA/PIERDE/REMONTA
+    
     if htft_filtro != "Todo" and equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
         es_local = df_final['HomeTeam'] == equipo_filtro
         
@@ -1345,13 +1314,31 @@ if len(jornadas) > 0:
         
         combo = ht_res + '/' + ft_res
         
-        if htft_filtro == "RE":  # Remonta: E o P al descanso -> G al final
+        if htft_filtro == "RE":  # Remonta
             df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
-        elif htft_filtro == "FAIL":  # Se deja remontar: G->no G, o E->P
+        elif htft_filtro == "FAIL":  # Se deja remontar
             df_final = df_final[((ht_res == 'G') & (ft_res != 'G')) | ((ht_res == 'E') & (ft_res == 'P'))]
         else:
             df_final = df_final[combo == htft_filtro]
-
+        # HT/FT relativo al Eq1
+        es_local = df_final['HomeTeam'] == equipo_filtro
+        
+        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+        ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
+        
+        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+        ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
+        
+        combo = ht_res + '/' + ft_res
+        
+        if htft_filtro == "RE":  # Remonta: no iba ganando y acaba ganando
+            df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
+        elif htft_filtro == "FAIL":  # Se deja remontar: iba ganando o empatando y acaba perdiendo
+            df_final = df_final[((ht_res == 'G') & (ft_res != 'G')) | ((ht_res == 'E') & (ft_res == 'P'))]
+        else:
+            df_final = df_final[combo == htft_filtro]
 
     if cuota_tipo not in ["Ninguno","Todo"]:
         if cuota_tipo == "1":
@@ -1389,50 +1376,52 @@ if len(jornadas) > 0:
         df_final = df_final[(df_final['FTHG']==gl) & (df_final['FTAG']==gv)]
 
         
-    # === FILTRO AF / C UNIFICADO (AF, C, AF0-AF30, C0-C30) + respeta Parte ===
-    if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro != "Todo" and columna_filtro == "Ninguno":
+        ##########LOGICA: GOLES A FAVOR/CONTRA POR PARTE
+        
+    # === FIX: FILTRO F/C + PARTE ===
+    if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro in ["AF", "C"] and parte_gol != "Todo":
         es_local = df_final['HomeTeam'] == equipo_filtro
         
-        # ¿Es AF o C con número?
-        if alcance_filtro in ["AF", "C"]:
-            objetivo = None  # significa >0
-        else:
-            try:
-                objetivo = int(alcance_filtro[2:])  # AF2 -> 2
-            except:
-                objetivo = None
+        if parte_gol == "1T":
+            goles_favor = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
+            goles_contra = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
+        else:  # 2T
+            goles_favor = np.where(es_local, df_final['FTHG'] - df_final['HTHG'], df_final['FTAG'] - df_final['HTAG'])
+            goles_contra = np.where(es_local, df_final['FTAG'] - df_final['HTAG'], df_final['FTHG'] - df_final['HTHG'])
+        
+        if alcance_filtro == "AF":
+            df_final = df_final[goles_favor > 0]
+        else:  # C
+            df_final = df_final[goles_contra > 0]
+    # === FIN FIX ===
+
+
+##########LOGICA: FILTRO RAPIDO GOLES AF0/C1/C2
+        # === FILTRO F/C CON ATAJOS (respeta Parte) ===
+    ##########LOGICA: FILTRO RAPIDO GOLES AF0-AF30/C0-C30
+    if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno" and (alcance_filtro.startswith("AF") or alcance_filtro.startswith("C")) and alcance_filtro not in ["Todo","AF","C"]:  
+        es_local = df_final['HomeTeam'] == equipo_filtro
+        valor_atajo = int(alcance_filtro[2:]) # coge AF30 -> 30, C12 -> 12
 
         if parte_gol == "1T":
-            gf = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
-            gc = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
+            goles_favor = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
+            goles_contra = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
         elif parte_gol == "2T":
-            gf = np.where(es_local, df_final['FTHG']-df_final['HTHG'], df_final['FTAG']-df_final['HTAG'])
-            gc = np.where(es_local, df_final['FTAG']-df_final['HTAG'], df_final['FTHG']-df_final['HTHG'])
+            goles_favor = np.where(es_local, df_final['FTHG'] - df_final['HTHG'], df_final['FTAG'] - df_final['HTAG'])
+            goles_contra = np.where(es_local, df_final['FTAG'] - df_final['HTAG'], df_final['FTHG'] - df_final['HTHG'])
         else:
-            gf = np.where(es_local, df_final['FTHG'], df_final['FTAG'])
-            gc = np.where(es_local, df_final['FTAG'], df_final['FTHG'])
+            goles_favor = np.where(es_local, df_final['FTHG'], df_final['FTAG'])
+            goles_contra = np.where(es_local, df_final['FTAG'], df_final['FTHG'])
 
         if alcance_filtro.startswith("AF"):
-            if objetivo is None:
-                df_final = df_final[gf > 0]
-            else:
-                df_final = df_final[gf == objetivo]
-        elif alcance_filtro.startswith("C"):
-            if objetivo is None:
-                df_final = df_final[gc > 0]
-            else:
-                df_final = df_final[gc == objetivo]
+            df_final = df_final[goles_favor == valor_atajo]
+        else:
+            df_final = df_final[goles_contra == valor_atajo]
 
-    # === FILTRO COLUMNA CON AF / C (respeta Parte) - FIX 1T/2T ===
+##########LOGICA: FILTRO COLUMNA1 + FAV/CONTRA + PARTE
+    # === FILTRO COLUMNA CON AF / C (respeta Parte) ===
     if columna_filtro in columnas_numericas and valor_filtro != "Ninguno":
         col_usar = columna_filtro
-
-        # FIX: Si pide GT + 1T/2T con Todo, cambiamos a GolesHT/Goles2T
-        if alcance_filtro == "Todo":
-            if columna_filtro == "GolesTotales" and parte_gol == "1T":
-                col_usar = "GolesHT"
-            elif columna_filtro == "GolesTotales" and parte_gol == "2T":
-                col_usar = "Goles2T"
 
         if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro in ["AF","C"]:
             es_local = df_final['HomeTeam'] == equipo_filtro
