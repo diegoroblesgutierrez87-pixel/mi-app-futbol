@@ -1378,45 +1378,39 @@ if len(jornadas) > 0:
         
         ##########LOGICA: GOLES A FAVOR/CONTRA POR PARTE
         
-    # === FIX: FILTRO F/C + PARTE ===
-    if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro in ["AF", "C"] and parte_gol != "Todo":
+        ##########LOGICA: GOLES A FAVOR/CONTRA POR PARTE - FIX
+    import re
+    if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno" and alcance_filtro != "Todo":
         es_local = df_final['HomeTeam'] == equipo_filtro
         
         if parte_gol == "1T":
-            goles_favor = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
-            goles_contra = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
-        else:  # 2T
-            goles_favor = np.where(es_local, df_final['FTHG'] - df_final['HTHG'], df_final['FTAG'] - df_final['HTAG'])
-            goles_contra = np.where(es_local, df_final['FTAG'] - df_final['HTAG'], df_final['FTHG'] - df_final['HTHG'])
-        
-        if alcance_filtro == "AF":
-            df_final = df_final[goles_favor > 0]
-        else:  # C
-            df_final = df_final[goles_contra > 0]
-    # === FIN FIX ===
-
-
-##########LOGICA: FILTRO RAPIDO GOLES AF0/C1/C2
-        # === FILTRO F/C CON ATAJOS (respeta Parte) ===
-    ##########LOGICA: FILTRO RAPIDO GOLES AF0-AF30/C0-C30
-    if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno" and (alcance_filtro.startswith("AF") or alcance_filtro.startswith("C")) and alcance_filtro not in ["Todo","AF","C"]:  
-        es_local = df_final['HomeTeam'] == equipo_filtro
-        valor_atajo = int(alcance_filtro[2:]) # coge AF30 -> 30, C12 -> 12
-
-        if parte_gol == "1T":
-            goles_favor = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
-            goles_contra = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
+            gf = np.where(es_local, df_final['HTHG'], df_final['HTAG'])
+            gc = np.where(es_local, df_final['HTAG'], df_final['HTHG'])
         elif parte_gol == "2T":
-            goles_favor = np.where(es_local, df_final['FTHG'] - df_final['HTHG'], df_final['FTAG'] - df_final['HTAG'])
-            goles_contra = np.where(es_local, df_final['FTAG'] - df_final['HTAG'], df_final['FTHG'] - df_final['HTHG'])
+            gf = np.where(es_local, df_final['FTHG'] - df_final['HTHG'], df_final['FTAG'] - df_final['HTAG'])
+            gc = np.where(es_local, df_final['FTAG'] - df_final['HTAG'], df_final['FTHG'] - df_final['HTHG'])
         else:
-            goles_favor = np.where(es_local, df_final['FTHG'], df_final['FTAG'])
-            goles_contra = np.where(es_local, df_final['FTAG'], df_final['FTHG'])
+            gf = np.where(es_local, df_final['FTHG'], df_final['FTAG'])
+            gc = np.where(es_local, df_final['FTAG'], df_final['FTHG'])
 
-        if alcance_filtro.startswith("AF"):
-            df_final = df_final[goles_favor == valor_atajo]
+        tipo = None
+        valor = None
+        if alcance_filtro in ("AF", "C"):
+            tipo = alcance_filtro
         else:
-            df_final = df_final[goles_contra == valor_atajo]
+            m_af = re.match(r'^AF(\d+)$', alcance_filtro)
+            m_c = re.match(r'^C(\d+)$', alcance_filtro)
+            if m_af:
+                tipo = "AF"
+                valor = int(m_af.group(1))
+            elif m_c:
+                tipo = "C"
+                valor = int(m_c.group(1))
+
+        if tipo == "AF":
+            df_final = df_final[gf > 0] if valor is None else df_final[gf == valor]
+        elif tipo == "C":
+            df_final = df_final[gc > 0] if valor is None else df_final[gc == valor]
 
 ##########LOGICA: FILTRO COLUMNA1 + FAV/CONTRA + PARTE
     # === FILTRO COLUMNA CON AF / C (respeta Parte) ===
