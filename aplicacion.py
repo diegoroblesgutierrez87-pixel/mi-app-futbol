@@ -1266,19 +1266,34 @@ if len(jornadas) > 0:
 
 ##########LOGICA: FILTRO 1X2 GANA/PIERDE/EMPATA
     # === FILTROS 1X2 / AM / HTFT / CUOTAS / MARGEN / MARCADOR ===
-    if resultado_filtro!= "Ninguno" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
-        if resultado_filtro == "Gana":
-            df_final = df_final[((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='H')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='A'))]
-        elif resultado_filtro == "Pierde":
-            df_final = df_final[((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='A')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='H'))]
-        elif resultado_filtro == "Empata":
-            df_final = df_final[df_final['FTR']=='D']
-        elif resultado_filtro == "Gana/Empata":
-            df_final = df_final[~(((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='A')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='H')))]
-        elif resultado_filtro == "Gana/Pierde":
-            df_final = df_final[df_final['FTR']!='D']
-        elif resultado_filtro == "Empata/Pierde":
-            df_final = df_final[~(((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='H')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='A')))]
+    if resultado_filtro!= "Ninguno":
+        if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
+            if resultado_filtro == "Gana":
+                df_final = df_final[((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='H')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='A'))]
+            elif resultado_filtro == "Pierde":
+                df_final = df_final[((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='A')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='H'))]
+            elif resultado_filtro == "Empata":
+                df_final = df_final[df_final['FTR']=='D']
+            elif resultado_filtro == "Gana/Empata":
+                df_final = df_final[~(((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='A')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='H')))]
+            elif resultado_filtro == "Gana/Pierde":
+                df_final = df_final[df_final['FTR']!='D']
+            elif resultado_filtro == "Empata/Pierde":
+                df_final = df_final[~(((df_final['HomeTeam']==equipo_filtro) & (df_final['FTR']=='H')) | ((df_final['AwayTeam']==equipo_filtro) & (df_final['FTR']=='A')))]
+        elif equipo_filtro=="Ninguno" and equipo2_filtro=="Ninguno":
+            # Sin equipo: Gana=H local, Pierde=A visitante
+            if resultado_filtro == "Gana":
+                df_final = df_final[df_final['FTR']=='H']
+            elif resultado_filtro == "Pierde":
+                df_final = df_final[df_final['FTR']=='A']
+            elif resultado_filtro == "Empata":
+                df_final = df_final[df_final['FTR']=='D']
+            elif resultado_filtro == "Gana/Empata":
+                df_final = df_final[df_final['FTR']!='A']
+            elif resultado_filtro == "Gana/Pierde":
+                df_final = df_final[df_final['FTR']!='D']
+            elif resultado_filtro == "Empata/Pierde":
+                df_final = df_final[df_final['FTR']!='H']
 
 
 ##########LOGICA: FILTRO AMBOS MARCAN
@@ -1314,45 +1329,56 @@ if len(jornadas) > 0:
         elif ambos_marcan == "No2P":
             df_final = df_final[~(((df_final['FTHG'] - df_final['HTHG']) > 0) & ((df_final['FTAG'] - df_final['HTAG']) > 0))]
     
-    # HT/FT relativo al Eq1
-    ##########LOGICA: FILTRO HT/FT GANA/PIERDE/REMONTA
-    
-    if htft_filtro != "Todo" and equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
-        es_local = df_final['HomeTeam'] == equipo_filtro
-        
-        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-        ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-        
-        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-        ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
-        
-        combo = ht_res + '/' + ft_res
-        
-        if htft_filtro == "RE":  # Remonta
-            df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
-        elif htft_filtro == "FAIL":  # Se deja remontar
-            df_final = df_final[((ht_res == 'G') & (ft_res != 'G')) | ((ht_res == 'E') & (ft_res == 'P'))]
+    # === FILTRO NUEVO X/X - con y sin equipo ===
+    if xx_filtro!= "Todo":
+        if equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
+            es_local = df_final['HomeTeam'] == equipo_filtro
+            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+            ht_empata = ~(ht_gana | ht_pierde)
+            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+            ft_empata = ~(ft_gana | ft_pierde)
         else:
-            df_final = df_final[combo == htft_filtro]
-        #    
-# HT/FT relativo al Eq1
-    ##########LOGICA: FILTRO HT/FT GANA/PIERDE/REMONTA
-    
-    if htft_filtro != "Todo" and equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
-        es_local = df_final['HomeTeam'] == equipo_filtro
-        
-        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-        ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-        
-        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-        ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
-        
+            ht_gana = df_final['HTHG'] > df_final['HTAG']
+            ht_pierde = df_final['HTHG'] < df_final['HTAG']
+            ht_empata = ~(ht_gana | ht_pierde)
+            ft_gana = df_final['FTHG'] > df_final['FTAG']
+            ft_pierde = df_final['FTHG'] < df_final['FTAG']
+            ft_empata = ~(ft_gana | ft_pierde)
+
+        if xx_filtro == "G/X":
+            df_final = df_final[ht_gana]
+        elif xx_filtro == "E/X":
+            df_final = df_final[ht_empata]
+        elif xx_filtro == "P/X":
+            df_final = df_final[ht_pierde]
+        elif xx_filtro == "X/G":
+            df_final = df_final[ft_gana]
+        elif xx_filtro == "X/E":
+            df_final = df_final[ft_empata]
+        elif xx_filtro == "X/P":
+            df_final = df_final[ft_pierde]
+
+    # === FILTRO HT/FT - con y sin equipo ===
+    if htft_filtro != "Todo":
+        if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
+            es_local = df_final['HomeTeam'] == equipo_filtro
+            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
+            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
+            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
+            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
+            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
+            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
+        else:
+            ht_gana = df_final['HTHG'] > df_final['HTAG']
+            ht_pierde = df_final['HTHG'] < df_final['HTAG']
+            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
+            ft_gana = df_final['FTHG'] > df_final['FTAG']
+            ft_pierde = df_final['FTHG'] < df_final['FTAG']
+            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
+
         combo = ht_res + '/' + ft_res
-        
         if htft_filtro == "RE":
             df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
         elif htft_filtro == "FAIL":
@@ -1722,6 +1748,58 @@ if len(df_final) > 0:
                     except:
                         return pd.Series([True]*len(df_in), index=df_in.index)
 
+                def _check_1x2_team(df_in, eq_local):
+                    if resultado_filtro=="Ninguno":
+                        return pd.Series([True]*len(df_in), index=df_in.index)
+                    es_loc = df_in['HomeTeam']==eq_local
+                    gana = (es_loc & (df_in['FTHG']>df_in['FTAG'])) | (~es_loc & (df_in['FTAG']>df_in['FTHG']))
+                    pierde = (es_loc & (df_in['FTHG']<df_in['FTAG'])) | (~es_loc & (df_in['FTAG']<df_in['FTHG']))
+                    emp = ~(gana | pierde)
+                    if resultado_filtro=="Gana": return gana
+                    if resultado_filtro=="Pierde": return pierde
+                    if resultado_filtro=="Empata": return emp
+                    if resultado_filtro=="Gana/Empata": return gana | emp
+                    if resultado_filtro=="Gana/Pierde": return gana | pierde
+                    if resultado_filtro=="Empata/Pierde": return emp | pierde
+                    return pd.Series([True]*len(df_in), index=df_in.index)
+
+                def _check_xx_htft_team(df_in, eq_local):
+                    masks = []
+                    if xx_filtro!="Todo":
+                        es_loc = df_in['HomeTeam']==eq_local
+                        ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+                        ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+                        ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+                        ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
+                        ht_e = ~(ht_g | ht_p)
+                        ft_e = ~(ft_g | ft_p)
+                        if xx_filtro=="G/X": masks.append(pd.Series(ht_g, index=df_in.index))
+                        elif xx_filtro=="E/X": masks.append(pd.Series(ht_e, index=df_in.index))
+                        elif xx_filtro=="P/X": masks.append(pd.Series(ht_p, index=df_in.index))
+                        elif xx_filtro=="X/G": masks.append(pd.Series(ft_g, index=df_in.index))
+                        elif xx_filtro=="X/E": masks.append(pd.Series(ft_e, index=df_in.index))
+                        elif xx_filtro=="X/P": masks.append(pd.Series(ft_p, index=df_in.index))
+                    if htft_filtro!="Todo":
+                        es_loc = df_in['HomeTeam']==eq_local
+                        ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+                        ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+                        ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+                        ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
+                        ht_r = np.where(ht_g,'G',np.where(ht_p,'P','E'))
+                        ft_r = np.where(ft_g,'G',np.where(ft_p,'P','E'))
+                        combo = pd.Series([f"{a}/{b}" for a,b in zip(ht_r, ft_r)], index=df_in.index)
+                        if htft_filtro=="RE":
+                            masks.append(pd.Series((ht_r!='G') & (ft_r=='G'), index=df_in.index))
+                        elif htft_filtro=="FAIL":
+                            masks.append(pd.Series(((ht_r=='G') & (ft_r!='G')) | ((ht_r=='E') & (ft_r=='P')), index=df_in.index))
+                        else:
+                            masks.append(combo==htft_filtro)
+                    if not masks:
+                        return pd.Series([True]*len(df_in), index=df_in.index)
+                    m = masks[0]
+                    for x in masks[1:]: m = m & x
+                    return m
+
                 for eq in equipos_mostrar:
                     if condicion_filtro == "Local":
                         base_total_team = base_total[base_total['HomeTeam']==eq]
@@ -1740,7 +1818,9 @@ if len(df_final) > 0:
                         mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
                         mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
                         mask3 = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-                        mask_total = mask1 & mask2 & mask3
+                        mask_1x2 = _check_1x2_team(base_team_global, eq)
+                        mask_xx_htft = _check_xx_htft_team(base_team_global, eq)
+                        mask_total = mask1 & mask2 & mask3 & mask_1x2 & mask_xx_htft
                         part_ok = base_team_global[mask_total]
                         part_tot = base_total_team
 
