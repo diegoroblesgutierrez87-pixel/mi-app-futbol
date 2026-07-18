@@ -1402,11 +1402,15 @@ if len(jornadas) > 0:
         if col:
             df_final = df_final[(df_final[col] >= rango_cuotas[0]) & (df_final[col] <= rango_cuotas[1])]
 
-##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA
+##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA - con y sin equipo
+    if margen_filtro!= "Todo":
+        if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
+            es_loc = df_final['HomeTeam']==equipo_filtro
+            dif = np.where(es_loc, df_final['FTHG']-df_final['FTAG'], df_final['FTAG']-df_final['FTHG'])
+        else:
+            # Sin equipo: margen del local (Gana = gana local)
+            dif = df_final['FTHG']-df_final['FTAG']
 
-    if margen_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
-        es_loc = df_final['HomeTeam']==equipo_filtro
-        dif = np.where(es_loc, df_final['FTHG']-df_final['FTAG'], df_final['FTAG']-df_final['FTHG'])
         if margen_filtro == "Empate": df_final = df_final[dif==0]
         elif margen_filtro == "Gana 1": df_final = df_final[dif==1]
         elif margen_filtro == "Gana 2": df_final = df_final[dif==2]
@@ -1762,8 +1766,8 @@ if len(df_final) > 0:
                     if resultado_filtro=="Gana/Pierde": return gana | pierde
                     if resultado_filtro=="Empata/Pierde": return emp | pierde
                     return pd.Series([True]*len(df_in), index=df_in.index)
-
-                def _check_xx_htft_team(df_in, eq_local):
+                #
+                def _check_xx_htft_margen_team(df_in, eq_local):
                     masks = []
                     if xx_filtro!="Todo":
                         es_loc = df_in['HomeTeam']==eq_local
@@ -1794,12 +1798,24 @@ if len(df_final) > 0:
                             masks.append(pd.Series(((ht_r=='G') & (ft_r!='G')) | ((ht_r=='E') & (ft_r=='P')), index=df_in.index))
                         else:
                             masks.append(combo==htft_filtro)
+                    if margen_filtro!="Todo":
+                        es_loc = df_in['HomeTeam']==eq_local
+                        dif = np.where(es_loc, df_in['FTHG']-df_in['FTAG'], df_in['FTAG']-df_in['FTHG'])
+                        if margen_filtro=="Empate": masks.append(pd.Series(dif==0, index=df_in.index))
+                        elif margen_filtro=="Gana 1": masks.append(pd.Series(dif==1, index=df_in.index))
+                        elif margen_filtro=="Gana 2": masks.append(pd.Series(dif==2, index=df_in.index))
+                        elif margen_filtro=="Gana 3+": masks.append(pd.Series(dif>=3, index=df_in.index))
+                        elif margen_filtro=="Pierde 1": masks.append(pd.Series(dif==-1, index=df_in.index))
+                        elif margen_filtro=="Pierde 2": masks.append(pd.Series(dif==-2, index=df_in.index))
+                        elif margen_filtro=="Pierde 3+": masks.append(pd.Series(dif<=-3, index=df_in.index))
+                        elif margen_filtro=="Gana ≥2": masks.append(pd.Series(dif>=2, index=df_in.index))
+                        elif margen_filtro=="Pierde ≥2": masks.append(pd.Series(dif<=-2, index=df_in.index))
                     if not masks:
                         return pd.Series([True]*len(df_in), index=df_in.index)
                     m = masks[0]
                     for x in masks[1:]: m = m & x
                     return m
-
+                    #
                 for eq in equipos_mostrar:
                     if condicion_filtro == "Local":
                         base_total_team = base_total[base_total['HomeTeam']==eq]
@@ -1819,8 +1835,8 @@ if len(df_final) > 0:
                         mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
                         mask3 = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
                         mask_1x2 = _check_1x2_team(base_team_global, eq)
-                        mask_xx_htft = _check_xx_htft_team(base_team_global, eq)
-                        mask_total = mask1 & mask2 & mask3 & mask_1x2 & mask_xx_htft
+                        mask_xx_htft_margen = _check_xx_htft_margen_team(base_team_global, eq)
+                        mask_total = mask1 & mask2 & mask3 & mask_1x2 & mask_xx_htft_margen
                         part_ok = base_team_global[mask_total]
                         part_tot = base_total_team
 
