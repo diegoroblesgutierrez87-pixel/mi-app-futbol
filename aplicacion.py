@@ -983,16 +983,17 @@ df_original = df.copy()  # <- AÑADE ESTA LÍNEA
 
 
 with st.expander("Filtros de partidos", expanded=False):
-    col1, col2, col3, col4 = st.columns(4)
-
     ligas_disponibles = sorted(df['League'].unique())
     temporadas_disponibles = sorted(df['Season'].unique())
 
     st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)}")
 
-    liga_sel = col1.multiselect("Liga", ligas_disponibles, default=[ligas_disponibles[0]] if ligas_disponibles else [],
-        format_func=lambda x: '\u2060'.join(x))
-    temp_sel = col2.multiselect("Temporada", temporadas_disponibles, default=[temporadas_disponibles[-1]] if temporadas_disponibles else [])
+    st.markdown("**Liga**")
+    liga_sel = st.multiselect("Liga", ligas_disponibles, default=[ligas_disponibles[0]] if ligas_disponibles else [],
+        format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main")
+
+    st.markdown("**Temporada**")
+    temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=[temporadas_disponibles[-1]] if temporadas_disponibles else [], label_visibility="collapsed", key="filtro_temp_main")
     modo_vista = "Jornadas"
 
     df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
