@@ -1353,7 +1353,7 @@ if len(jornadas) > 0:
 ##########LOGICA: FILTRO AMBOS MARCAN
 
 
-    if ambos_marcan!= "Todos":
+    if ambos_marcan!= "Todos" and equipo2_filtro=="Ninguno":
         # Forzar numérico por si acaso
         for col in ['FTHG','FTAG','HTHG','HTAG']:
             df_final[col] = pd.to_numeric(df_final[col], errors='coerce').fillna(0)
@@ -1597,65 +1597,7 @@ if len(jornadas) > 0:
                 else: ok_h = base_home <= val; ok_a = base_away <= val
                 return ok_h, ok_a
 
-     # --- H2H FINAL CORREGIDO: Col1+Col2=Eq1, Col3=Eq2 ---
-    def _eval_team(df_in, team, col, op, val_str, alc):
-        if team=="Ninguno" or col in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] or val_str=="Ninguno":
-            return np.ones(len(df_in), dtype=bool)
-        import re
-        m = re.match(r'^(AF|C)(\d+(\.\d+)?)$', str(alc))
-        if m:
-            tipo = m.group(1); val = float(m.group(2))
-        else:
-            tipo = "AF" if str(alc).startswith("AF") else "C" if str(alc).startswith("C") else "Todo"
-            val = float(val_str)
-
-        if col == 'GolesHT': vh, va = df_in['HTHG'].values, df_in['HTAG'].values
-        elif col == 'GolesTotales': vh, va = df_in['FTHG'].values, df_in['FTAG'].values
-        elif col == 'Goles2T': vh, va = (df_in['FTHG']-df_in['HTHG']).values, (df_in['FTAG']-df_in['HTAG']).values
-        elif col == 'corneTot': vh, va = df_in['HC'].values, df_in['AC'].values
-        elif col == 'tirosTot': vh, va = df_in['HS'].values, df_in['AS'].values
-        elif col == 'tirosPuertaTot': vh, va = df_in['HST'].values, df_in['AST'].values
-        elif col == 'faltasTot': vh, va = df_in['HF'].values, df_in['AF'].values
-        elif col == 'TargAmTot': vh, va = df_in['HY'].values, df_in['AY'].values
-        elif col == 'TargRojTot': vh, va = df_in['HR'].values, df_in['AR'].values
-        else:
-            mapa = {'HC':'AC','AC':'HC','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
-            contra = mapa.get(col, col)
-            v1 = df_in[col].values if col in df_in.columns else np.zeros(len(df_in))
-            v2 = df_in[contra].values if contra in df_in.columns else v1
-            vh, va = v1, v2
-
-        es_loc = df_in['HomeTeam'] == team
-        es_team = es_loc | (df_in['AwayTeam'] == team)
-
-        if tipo == "Todo":
-            if col in ['GolesHT','GolesTotales','Goles2T','corneTot','tirosTot','tirosPuertaTot','faltasTot','TargAmTot','TargRojTot']:
-                base = vh + va
-            else:
-                base = np.where(es_loc, vh, va)
-        elif tipo == "AF":
-            base = np.where(es_loc, vh, va)
-        else:
-            base = np.where(es_loc, va, vh)
-
-        if op == "=": ok = base == val
-        elif op == ">": ok = base > val
-        elif op == ">=": ok = base >= val
-        elif op == "<": ok = base < val
-        else: ok = base <= val
-
-        # Si no es de este equipo, no lo bloqueo
-        return np.where(es_team, ok, True)
-
-    m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-    m2 = _eval_team(df_final, equipo_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-    m3 = _eval_team(df_final, equipo2_filtro, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-
-    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
-        mask_final = m1 & m2 & m3
-    elif equipo_filtro!="Ninguno":
-        mask_final = m1 & m2
-    # --- H2H INDEPENDIENTE: Eq1 cumple lo suyo, Eq2 cumple lo suyo, se ven los dos ---
+# --- H2H FINAL INDEPENDIENTE: Col1+Col2=Eq1, Col3=Eq2 ---
     def _eval_team(df_in, team, col, op, val_str, alc):
         if team=="Ninguno" or col in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] or val_str=="Ninguno":
             return np.ones(len(df_in), dtype=bool)
@@ -1694,7 +1636,6 @@ if len(jornadas) > 0:
         elif op==">=": ok=base>=val
         elif op=="<": ok=base<val
         else: ok=base<=val
-        # si no es de este equipo, no lo bloqueo para el otro
         return np.where(es_team, ok, True)
 
     m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
@@ -1704,7 +1645,6 @@ if len(jornadas) > 0:
     if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
         is_eq1 = (df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)
         is_eq2 = (df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)
-        # INDEPENDIENTE: Eq1 si cumple lo suyo, Eq2 si cumple lo suyo
         mask_final = (is_eq1 & m1 & m2) | (is_eq2 & m3)
     elif equipo_filtro!="Ninguno":
         mask_final = m1 & m2
@@ -1717,8 +1657,6 @@ if len(jornadas) > 0:
         mask_final = (h1 & h2 & h3) | (a1 & a2 & a3)
 
     df_final = df_final[mask_final]
-    
-    # === FILTRO POR PARTE - solo si NO hay filtro de goles activo Y hay equipo ===
     if parte_gol!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
         if parte_gol == "1T":
             df_final = df_final[((df_final['HomeTeam']==equipo_filtro)&(df_final['HTHG']>0))|((df_final['AwayTeam']==equipo_filtro)&(df_final['HTAG']>0))]
