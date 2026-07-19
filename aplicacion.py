@@ -890,53 +890,65 @@ def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
 
 @st.cache_data
 def _rachas(df_base, cond, loc, x_max=None):
-    df = df_base[['Date','Season','Jornada','HomeTeam','AwayTeam','FTR']].copy()
-    df = df.sort_values('Date')
+    df = df_base.copy()
+    if 'Jornada' not in df.columns:
+        df['Jornada'] = 0
 
-    # vista por equipo, vectorizada
-    h = df.assign(Equipo=df['HomeTeam'], Res=df['FTR'].map({'H':'G','A':'P','D':'E'}), Loc='Local')
-    a = df.assign(Equipo=df['AwayTeam'], Res=df['FTR'].map({'A':'G','H':'P','D':'E'}), Loc='Visitante')
-    d = pd.concat([h[['Date','Season','Jornada','Equipo','Res','Loc']],
-        a[['Date','Season','Jornada','Equipo','Res','Loc']]], ignore_index=True)
+    h = df[['Date','Jornada','HomeTeam','AwayTeam','FTR']].copy()
+    h['Equipo'] = h['HomeTeam']
+    h['Res'] = h['FTR'].map({'H':'G','A':'P','D':'E'})
+    h['Loc'] = 'Local'
 
-    if loc!= 'Todo':
-        d = d[d['Loc']==loc]
+    a = df[['Date','Jornada','HomeTeam','AwayTeam','FTR']].copy()
+    a['Equipo'] = a['AwayTeam']
+    a['Res'] = a['FTR'].map({'A':'G','H':'P','D':'E'})
+    a['Loc'] = 'Visitante'
+
+    d = pd.concat([h, a], ignore_index=True)
+    if loc in ['Local','Visitante']:
+        d = d[d['Loc'] == loc]
 
     d = d.sort_values(['Equipo','Date'])
-    mapa = {"G":{'G'},"P":{'P'},"E":{'E'},"G/E":{'G','E'},"E/P":{'E','P'},"G/P":{'G','P'}}
-    cs = {'G','P','E'} if cond=="Todo" else mapa[cond]
-    d['ok'] = d['Res'].isin(cs)
+    d['Jornada'] = pd.to_numeric(d['Jornada'], errors='coerce').fillna(0).astype(int)
+
+    mapa = {"G": {'G'}, "P": {'P'}, "E": {'E'}, "G/E": {'G','E'}, "E/P": {'E','P'}, "G/P": {'G','P'}}
+    cs = {'G','P','E'} if cond == "Todo" else mapa[cond]
 
     out = []
-    for eq, g in d.groupby('Equipo', sort=False):
-        g = g.copy()
-        g['new_season'] = g['Season']!= g['Season'].shift()
-        g['run'] = (g['ok']!= g['ok'].shift()) | g['new_season']
-        g['run_id'] = g['run'].cumsum()
+    for eq, g in d.groupby('Equipo'):
+        s = g['Res'].tolist()
+        js = g['Jornada'].tolist()
+        runs = []
+        run = []
+        for r, j in zip(s, js):
+            if r in cs:
+                run.append(int(j))
+            else:
+                if run:
+                    runs.append(run)
+                    run = []
+        if run:
+            runs.append(run)
 
-        rachas_ok = g[g['ok']].groupby('run_id')
-        lens = rachas_ok.size().tolist()
-        max_seg = max(lens) if lens else 0
-        total_ok = g['ok'].sum()
-        pct = round(100*total_ok/len(g),1) if len(g) else 0
-        ult5 = ''.join(g['Res'].tail(5).tolist())
+        max_seg = max((len(r) for r in runs), default=0)
+        total = sum(1 for r in s if r in cs)
+        pct = round(100 * total / len(s), 1) if s else 0
+        ult5 = ''.join(s[-5:])
 
         if x_max:
-            runs_x = [r for _, r in rachas_ok if len(r) >= x_max]
+            runs_x = [r for r in runs if len(r) >= x_max]
             count_x = len(runs_x)
-            jornadas_x = [f"J{int(r['Jornada'].iloc[0])}-J{int(r['Jornada'].iloc[-1])} ({len(r)})" for r in runs_x]
-            jornadas_str = ' | '.join(jornadas_x) if jornadas_x else "-"
-            texto = f"{eq} | {len(g)}PJ | {max_seg} max | {count_x}# | {pct}% | {ult5} ↳ {jornadas_str}"
-            out.append({'Equipo':texto,'PJ':len(g),'Max':max_seg,'CountX':count_x,'%':pct})
+            jornadas_x = sorted(set(j for r in runs_x for j in r))
+            jornadas_str = ', '.join(f"J{j}" for j in jornadas_x) if jornadas_x else "-"
+            texto = f"{eq} | {len(s)}J | {max_seg} max | {count_x}# | {pct}% | {ult5}\n↳ {jornadas_str}"
+            out.append({'Equipo': texto, 'PJ': len(s), 'Max': max_seg, 'CountX': count_x, '%': pct})
         else:
-            jornadas_ok = [f"J{int(r['Jornada'].iloc[0])}-J{int(r['Jornada'].iloc[-1])}" for _, r in rachas_ok]
-            jornadas_str = ', '.join(jornadas_ok)
-            texto = f"{eq} | {len(g)}PJ | {max_seg} max | {pct}% | {ult5} ↳ {jornadas_str}"
-            out.append({'Equipo':texto,'PJ':len(g),'Max':max_seg,'%':pct})
+            jornadas_ok = sorted(set(int(j) for r, j in zip(s, js) if r in cs))
+            jornadas_str = ', '.join(f"J{j}" for j in jornadas_ok)
+            texto = f"{eq} | {len(s)}J | {max_seg} max | {pct}% | {ult5}\n↳ {jornadas_str}"
+            out.append({'Equipo': texto, 'PJ': len(s), 'Max': max_seg, '%': pct})
 
     return pd.DataFrame(out)
-
-
 ############fin filtro racchas
 
     
@@ -962,6 +974,7 @@ def limpiar_filtros():
     st.session_state.equipo_clasificacion = "Ninguno"
     st.session_state.equipos_grafica = []
     st.session_state.condicion_filtro = "Todo"
+    st.session_state.condicion_filtro3 = "Todo" # <-- AÑADE ESTA
     st.session_state.htft_filtro = "Todo"
     st.session_state.cuota_tipo = "Todo"
     st.session_state.cuota_operador = "Mayor o igual"
@@ -972,8 +985,7 @@ def limpiar_filtros():
     st.session_state.alcance_filtro = "Todo"
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
-df = cargar_todo()
-df_original = df.copy()  # <- AÑADE ESTA LÍNEA
+
 
 
 
@@ -1086,6 +1098,7 @@ if len(jornadas) > 0:
     if 'resultado_filtro' not in st.session_state: st.session_state.resultado_filtro = "Ninguno"
     if 'ambos_marcan' not in st.session_state: st.session_state.ambos_marcan = "Todos"
     if 'condicion_filtro' not in st.session_state: st.session_state.condicion_filtro = "Todo"
+    if 'condicion_filtro3' not in st.session_state: st.session_state.condicion_filtro3 = "Todo" # <-- AÑADE ESTA
     if 'htft_filtro' not in st.session_state: st.session_state.htft_filtro = "Todo"
     if 'jugador_filtro' not in st.session_state: st.session_state.jugador_filtro = "TODOS"
     if 'cuota_tipo' not in st.session_state: st.session_state.cuota_tipo = "Todo"
@@ -1130,11 +1143,15 @@ if len(jornadas) > 0:
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
 ############filtros avanzados    
     with st.expander("🎛 Filtros avanzados", expanded=False):
-        # --- LINEA 1: Eq1 Eq2 L/V ---
-        l1 = st.columns(3)
+        # --- LINEA 1: Eq1 Eq2 ---
+        l1 = st.columns(2)
         equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
         equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
-        condicion_filtro = l1[2].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
+
+        # --- LINEA 1b: L/V L/V3 ---
+        l1b = st.columns(2)
+        condicion_filtro = l1b[0].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
+        condicion_filtro3 = l1b[1].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
 
         # --- LINEA 2: Col1 Col2 Col3 ---
         l2 = st.columns(3)
@@ -1207,6 +1224,7 @@ if len(jornadas) > 0:
     if equipo_filtro!= "Ninguno": filtros_activos.append(f"Eq1:{equipo_filtro}")
     if equipo2_filtro!= "Ninguno": filtros_activos.append(f"Eq2:{equipo2_filtro}")
     if condicion_filtro!= "Todo": filtros_activos.append(f"L/V:{condicion_filtro}")
+    if condicion_filtro3!= "Todo": filtros_activos.append(f"L/V3:{condicion_filtro3}") # <-- AÑADE
     if resultado_filtro!= "Ninguno": filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
     if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
     if htft_filtro!= "Todo": filtros_activos.append(f"HT/FT:{htft_filtro}")
@@ -1237,10 +1255,49 @@ if len(jornadas) > 0:
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
         filtros_activos.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
 
-    if filtros_activos:
-        st.info("**Filtros:** " + " | ".join(filtros_activos))
+    # --- RESUMEN FILTROS SIMPLE 2 LINEAS ---
+    eq1_list = []
+    eq2_list = []
+
+    if equipo_filtro!="Ninguno": eq1_list.append(f"Eq1:{equipo_filtro}")
+    if condicion_filtro!="Todo": eq1_list.append(f"L/V:{condicion_filtro}")
+    if c1: eq1_list.append(c1)
+    if c2: eq1_list.append(c2)
+    # generales van en eq1
+    if resultado_filtro!="Ninguno": eq1_list.append(f"1x2:{mapa_1x2[resultado_filtro]}")
+    if ambos_marcan!="Todos": eq1_list.append(f"AM:{ambos_marcan}")
+    if htft_filtro!="Todo": eq1_list.append(f"HT/FT:{htft_filtro}")
+    if xx_filtro!="Todo": eq1_list.append(f"X/X:{xx_filtro}")
+    if margen_filtro!="Todo": eq1_list.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
+
+    if equipo2_filtro!="Ninguno": eq2_list.append(f"Eq2:{equipo2_filtro}")
+    if condicion_filtro3!="Todo": eq2_list.append(f"L/V3:{condicion_filtro3}")
+    if c3: eq2_list.append(c3)
+
+    comunes = []
+    if marcador_filtro!="Todos": comunes.append(f"Marc:{marcador_filtro}")
+    if pct_marcador>0: comunes.append(f"Min%:{pct_marcador}%")
+    if cuota_tipo not in ["Ninguno","Todo"]: comunes.append(f"R1x2:{cuota_tipo}")
+    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
+    if parte_gol!="Todo": comunes.append(f"Parte:{parte_gol}")
+    if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
+    if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j): comunes.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
+
+    if eq1_list or eq2_list or comunes:
+        txt = "<div style='font-size:10px; line-height:1.2; font-family:monospace; padding:2px 0'>"
+        txt += "filtros:<br>"
+        if eq1_list:
+            txt += "eq1: " + " | ".join(eq1_list + comunes) + "<br>"
+        if eq2_list:
+            txt += "eq2: " + " | ".join(eq2_list)
+            if not eq1_list and comunes:
+                txt += " | " + " | ".join(comunes)
+        if not eq1_list and not eq2_list and comunes:
+            txt += " | ".join(comunes)
+        txt += "</div>"
+        st.markdown(txt, unsafe_allow_html=True)
     else:
-        st.caption("**Filtros:** Ninguno")
+        st.caption("filtros: ninguno")
     # --- FIN RESUMEN FILTROS ---
 
    ##########fin desplegable
@@ -1256,13 +1313,10 @@ if len(jornadas) > 0:
     elif equipo2_filtro!= "Ninguno":
         df_final = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)]
 
-    # === FILTRO LOCAL/VISITANTE ===
-    if condicion_filtro != "Todo" and (equipo_filtro != "Ninguno" or equipo2_filtro != "Ninguno") and not (equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno"):
-        eq = equipo_filtro if equipo_filtro != "Ninguno" else equipo2_filtro
-        if condicion_filtro == "Local":
-            df_final = df_final[df_final['HomeTeam'] == eq]
-        elif condicion_filtro == "Visitante":
-            df_final = df_final[df_final['AwayTeam'] == eq]
+    # === FILTRO LOCAL/VISITANTE H2H - UNION INDEPENDIENTE ===
+    df_base_h2h_lv = df_final.copy() # guardamos base antes de L/V
+    # No filtramos aquí, el filtrado L/V lo haremos dentro de cada Eq
+    df_final = df_base_h2h_lv.copy()
 
 ##########LOGICA: FILTRO 1X2 GANA/PIERDE/EMPATA
     # === FILTROS 1X2 / AM / HTFT / CUOTAS / MARGEN / MARCADOR ===
@@ -1360,6 +1414,11 @@ if len(jornadas) > 0:
         elif xx_filtro == "X/P":
             df_final = df_final[ft_pierde]
 
+    
+    
+    
+    
+    #######################################
     # === FILTRO HT/FT - con y sin equipo ===
     if htft_filtro != "Todo":
         if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
@@ -1538,12 +1597,125 @@ if len(jornadas) > 0:
                 else: ok_h = base_home <= val; ok_a = base_away <= val
                 return ok_h, ok_a
 
-    # Calcula las 3 columnas a la vez, mismo equipo
-    h1, a1 = _cumple_una_col(df_final, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-    h2, a2 = _cumple_una_col(df_final, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-    h3, a3 = _cumple_una_col(df_final, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+     # --- H2H FINAL CORREGIDO: Col1+Col2=Eq1, Col3=Eq2 ---
+    def _eval_team(df_in, team, col, op, val_str, alc):
+        if team=="Ninguno" or col in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] or val_str=="Ninguno":
+            return np.ones(len(df_in), dtype=bool)
+        import re
+        m = re.match(r'^(AF|C)(\d+(\.\d+)?)$', str(alc))
+        if m:
+            tipo = m.group(1); val = float(m.group(2))
+        else:
+            tipo = "AF" if str(alc).startswith("AF") else "C" if str(alc).startswith("C") else "Todo"
+            val = float(val_str)
 
-    mask_final = (h1 & h2 & h3) | (a1 & a2 & a3)
+        if col == 'GolesHT': vh, va = df_in['HTHG'].values, df_in['HTAG'].values
+        elif col == 'GolesTotales': vh, va = df_in['FTHG'].values, df_in['FTAG'].values
+        elif col == 'Goles2T': vh, va = (df_in['FTHG']-df_in['HTHG']).values, (df_in['FTAG']-df_in['HTAG']).values
+        elif col == 'corneTot': vh, va = df_in['HC'].values, df_in['AC'].values
+        elif col == 'tirosTot': vh, va = df_in['HS'].values, df_in['AS'].values
+        elif col == 'tirosPuertaTot': vh, va = df_in['HST'].values, df_in['AST'].values
+        elif col == 'faltasTot': vh, va = df_in['HF'].values, df_in['AF'].values
+        elif col == 'TargAmTot': vh, va = df_in['HY'].values, df_in['AY'].values
+        elif col == 'TargRojTot': vh, va = df_in['HR'].values, df_in['AR'].values
+        else:
+            mapa = {'HC':'AC','AC':'HC','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
+            contra = mapa.get(col, col)
+            v1 = df_in[col].values if col in df_in.columns else np.zeros(len(df_in))
+            v2 = df_in[contra].values if contra in df_in.columns else v1
+            vh, va = v1, v2
+
+        es_loc = df_in['HomeTeam'] == team
+        es_team = es_loc | (df_in['AwayTeam'] == team)
+
+        if tipo == "Todo":
+            if col in ['GolesHT','GolesTotales','Goles2T','corneTot','tirosTot','tirosPuertaTot','faltasTot','TargAmTot','TargRojTot']:
+                base = vh + va
+            else:
+                base = np.where(es_loc, vh, va)
+        elif tipo == "AF":
+            base = np.where(es_loc, vh, va)
+        else:
+            base = np.where(es_loc, va, vh)
+
+        if op == "=": ok = base == val
+        elif op == ">": ok = base > val
+        elif op == ">=": ok = base >= val
+        elif op == "<": ok = base < val
+        else: ok = base <= val
+
+        # Si no es de este equipo, no lo bloqueo
+        return np.where(es_team, ok, True)
+
+    m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+    m2 = _eval_team(df_final, equipo_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+    m3 = _eval_team(df_final, equipo2_filtro, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+
+    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+        mask_final = m1 & m2 & m3
+    elif equipo_filtro!="Ninguno":
+        mask_final = m1 & m2
+    # --- H2H INDEPENDIENTE: Eq1 cumple lo suyo, Eq2 cumple lo suyo, se ven los dos ---
+    def _eval_team(df_in, team, col, op, val_str, alc):
+        if team=="Ninguno" or col in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] or val_str=="Ninguno":
+            return np.ones(len(df_in), dtype=bool)
+        import re
+        m = re.match(r'^(AF|C)(\d+(\.\d+)?)$', str(alc))
+        if m:
+            tipo=m.group(1); val=float(m.group(2))
+        else:
+            tipo="AF" if str(alc).startswith("AF") else "C" if str(alc).startswith("C") else "Todo"
+            val=float(val_str)
+        if col=='GolesHT': vh,va = df_in['HTHG'].values, df_in['HTAG'].values
+        elif col=='GolesTotales': vh,va = df_in['FTHG'].values, df_in['FTAG'].values
+        elif col=='Goles2T': vh,va = (df_in['FTHG']-df_in['HTHG']).values, (df_in['FTAG']-df_in['HTAG']).values
+        elif col=='corneTot': vh,va = df_in['HC'].values, df_in['AC'].values
+        elif col=='tirosTot': vh,va = df_in['HS'].values, df_in['AS'].values
+        elif col=='tirosPuertaTot': vh,va = df_in['HST'].values, df_in['AST'].values
+        elif col=='faltasTot': vh,va = df_in['HF'].values, df_in['AF'].values
+        elif col=='TargAmTot': vh,va = df_in['HY'].values, df_in['AY'].values
+        elif col=='TargRojTot': vh,va = df_in['HR'].values, df_in['AR'].values
+        else:
+            mapa={'HC':'AC','AC':'HC','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
+            contra=mapa.get(col,col)
+            v1=df_in[col].values if col in df_in.columns else np.zeros(len(df_in))
+            v2=df_in[contra].values if contra in df_in.columns else v1
+            vh,va=v1,v2
+        es_loc=df_in['HomeTeam']==team
+        es_team=es_loc | (df_in['AwayTeam']==team)
+        if tipo=="Todo":
+            base=vh+va if col in ['GolesHT','GolesTotales','Goles2T','corneTot','tirosTot','tirosPuertaTot','faltasTot','TargAmTot','TargRojTot'] else np.where(es_loc,vh,va)
+        elif tipo=="AF":
+            base=np.where(es_loc,vh,va)
+        else:
+            base=np.where(es_loc,va,vh)
+        if op=="=": ok=base==val
+        elif op==">": ok=base>val
+        elif op==">=": ok=base>=val
+        elif op=="<": ok=base<val
+        else: ok=base<=val
+        # si no es de este equipo, no lo bloqueo para el otro
+        return np.where(es_team, ok, True)
+
+    m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+    m2 = _eval_team(df_final, equipo_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+    m3 = _eval_team(df_final, equipo2_filtro, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+
+    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+        is_eq1 = (df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)
+        is_eq2 = (df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)
+        # INDEPENDIENTE: Eq1 si cumple lo suyo, Eq2 si cumple lo suyo
+        mask_final = (is_eq1 & m1 & m2) | (is_eq2 & m3)
+    elif equipo_filtro!="Ninguno":
+        mask_final = m1 & m2
+    elif equipo2_filtro!="Ninguno":
+        mask_final = m3
+    else:
+        h1,a1 = _cumple_una_col(df_final, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+        h2,a2 = _cumple_una_col(df_final, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+        h3,a3 = _cumple_una_col(df_final, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+        mask_final = (h1 & h2 & h3) | (a1 & a2 & a3)
+
     df_final = df_final[mask_final]
     
     # === FILTRO POR PARTE - solo si NO hay filtro de goles activo Y hay equipo ===
@@ -1562,35 +1734,10 @@ if len(jornadas) > 0:
         )
         if not (rango_minutos[0] == 0 and rango_minutos[1] >= 120):
             df_final = df_final[df_final['Goles'].str.len() > 0]
-    # === FILTRO NUEVO X/X ===
-    if xx_filtro!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-        es_local = df_final['HomeTeam'] == equipo_filtro
+      # --- FILTRO JUGADOR ---
+    if jugador_filtro!= "TODOS":
+        df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
 
-        # Resultado al descanso
-        ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-        ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-        ht_empata = ~(ht_gana | ht_pierde)
-
-        # Resultado final
-        ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-        ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-        ft_empata = ~(ft_gana | ft_pierde)
-
-        if xx_filtro == "G/X":
-            df_final = df_final[ht_gana]
-        elif xx_filtro == "E/X":
-            df_final = df_final[ht_empata]
-        elif xx_filtro == "P/X":
-            df_final = df_final[ht_pierde]
-        elif xx_filtro == "X/G":
-            df_final = df_final[ft_gana]
-        elif xx_filtro == "X/E":
-            df_final = df_final[ft_empata]
-        elif xx_filtro == "X/P":
-            df_final = df_final[ft_pierde]
-        # --- FILTRO JUGADOR ---
-        if jugador_filtro!= "TODOS":
-            df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
 ######################################################################################
     if len(df_final) > 0:
         df_final['partidos'] = ''
@@ -1817,10 +1964,12 @@ if len(df_final) > 0:
                     return m
                     #
                 for eq in equipos_mostrar:
-                    if condicion_filtro == "Local":
+                    # L/V para Eq1, L/V3 para Eq2
+                    lv = condicion_filtro3 if eq==equipo2_filtro else condicion_filtro
+                    if lv == "Local":
                         base_total_team = base_total[base_total['HomeTeam']==eq]
                         base_team_global = base[base['HomeTeam']==eq]
-                    elif condicion_filtro == "Visitante":
+                    elif lv == "Visitante":
                         base_total_team = base_total[base_total['AwayTeam']==eq]
                         base_team_global = base[base['AwayTeam']==eq]
                     else:
