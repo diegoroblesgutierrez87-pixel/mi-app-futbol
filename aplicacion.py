@@ -1980,12 +1980,21 @@ if len(df_final) > 0:
                         part_tot = base_total_team
                         part_ok = base_team_global
                     else:
-                        mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-                        mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-                        mask3 = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+                        if eq == equipo_filtro:
+                            mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+                            mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+                            mask_col = mask1 & mask2
+                        elif eq == equipo2_filtro:
+                            mask_col = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+                        else:
+                            mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+                            mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+                            mask3 = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+                            mask_col = mask1 & mask2 & mask3
+
                         mask_1x2 = _check_1x2_team(base_team_global, eq)
                         mask_xx_htft_margen = _check_xx_htft_margen_team(base_team_global, eq)
-                        mask_total = mask1 & mask2 & mask3 & mask_1x2 & mask_xx_htft_margen
+                        mask_total = mask_col & mask_1x2 & mask_xx_htft_margen
                         part_ok = base_team_global[mask_total]
                         part_tot = base_total_team
 
