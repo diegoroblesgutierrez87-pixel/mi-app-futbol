@@ -232,7 +232,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
 
         partes.append(jx_html)
 
-    return "<span style='padding:0 4px;color:#000;font-weight:900'>|</span>".join(partes)
+    return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%'>{''.join(partes)}</div>"
 
 
 
@@ -1259,7 +1259,7 @@ if len(jornadas) > 0:
     eq1_list = []
     eq2_list = []
 
-    if equipo_filtro!="Ninguno": eq1_list.append(f"Eq1:{equipo_filtro}")
+    if equipo_filtro!="Ninguno": eq1_list.append(f"{equipo_filtro}")
     if condicion_filtro!="Todo": eq1_list.append(f"L/V:{condicion_filtro}")
     if c1: eq1_list.append(c1)
     if c2: eq1_list.append(c2)
@@ -1270,7 +1270,7 @@ if len(jornadas) > 0:
     if xx_filtro!="Todo": eq1_list.append(f"X/X:{xx_filtro}")
     if margen_filtro!="Todo": eq1_list.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
 
-    if equipo2_filtro!="Ninguno": eq2_list.append(f"Eq2:{equipo2_filtro}")
+    if equipo2_filtro!="Ninguno": eq2_list.append(f"{equipo2_filtro}")
     if condicion_filtro3!="Todo": eq2_list.append(f"L/V3:{condicion_filtro3}")
     if c3: eq2_list.append(c3)
 
@@ -1638,25 +1638,38 @@ if len(jornadas) > 0:
         else: ok=base<=val
         return np.where(es_team, ok, True)
 
-    m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-    m2 = _eval_team(df_final, equipo_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-    m3 = _eval_team(df_final, equipo2_filtro, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+# --- LV1 y LV2 SIEMPRE DEFINIDOS PARA QUE NO DE AMARILLO ---
+if condicion_filtro == "Local":
+    lv1 = df_final['HomeTeam']==equipo_filtro
+elif condicion_filtro == "Visitante":
+    lv1 = df_final['AwayTeam']==equipo_filtro
+else:
+    lv1 = pd.Series(True, index=df_final.index)
 
-    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
-        is_eq1 = (df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)
-        is_eq2 = (df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)
-        mask_final = (is_eq1 & m1 & m2) | (is_eq2 & m3)
-    elif equipo_filtro!="Ninguno":
-        mask_final = m1 & m2
-    elif equipo2_filtro!="Ninguno":
-        mask_final = m3
-    else:
-        h1,a1 = _cumple_una_col(df_final, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-        h2,a2 = _cumple_una_col(df_final, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-        h3,a3 = _cumple_una_col(df_final, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-        mask_final = (h1 & h2 & h3) | (a1 & a2 & a3)
+if condicion_filtro3 == "Local":
+    lv2 = df_final['HomeTeam']==equipo2_filtro
+elif condicion_filtro3 == "Visitante":
+    lv2 = df_final['AwayTeam']==equipo2_filtro
+else:
+    lv2 = pd.Series(True, index=df_final.index)
 
-    df_final = df_final[mask_final]
+m1 = _eval_team(df_final, equipo_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
+m2 = _eval_team(df_final, equipo_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
+m3 = _eval_team(df_final, equipo2_filtro, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
+
+if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+    is_eq1 = (df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)
+    is_eq2 = (df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)
+    # filtra cada equipo por separado y luego une
+    part1 = df_final[is_eq1 & lv1 & m1 & m2]
+    part2 = df_final[is_eq2 & lv2 & m3]
+    df_final = pd.concat([part1, part2]).drop_duplicates()
+elif equipo_filtro!="Ninguno":
+    df_final = df_final[lv1 & m1 & m2]
+elif equipo2_filtro!="Ninguno":
+    df_final = df_final[lv2 & m3]
+else:
+    df_final = df_final[m1 & m2 & m3]
     if parte_gol!= "Todo" and equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
         if parte_gol == "1T":
             df_final = df_final[((df_final['HomeTeam']==equipo_filtro)&(df_final['HTHG']>0))|((df_final['AwayTeam']==equipo_filtro)&(df_final['HTAG']>0))]
@@ -2509,14 +2522,12 @@ def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta
             if len(g) > 1:
                 txt += f" - {len(g)}#"
 
-            # --- CAMBIO CLAVE: partido entero en vez de solo resultado ---
             partidos_html = []
             for _, r in g.iterrows():
                 partidos_html.append(formatear_h2h_compacto(r, equipo))
             resultado = "".join(partidos_html)
-            # --- FIN CAMBIO ---
 
-            partes.append(f"<details style='display:inline-block;margin-right:1px'><summary style='color:{color};font-weight:700;cursor:pointer;display:inline;list-style:none'>{txt}</summary><div style='background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:320px'>{resultado}</div></details>")
+            partes.append(f"<details style='display:inline-flex;margin:2px'><summary style='color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-flex;padding:3px 8px;border:1px solid #ccc;border-radius:12px;background:#fff;white-space:nowrap;font-size:11px'>{txt}</summary><div style='background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:340px'>{resultado}</div></details>")
 
         # CAMBIO: nombre en mayúsculas, línea 2 G/P/E con f: y c:, línea 3 jornadas
         gana_c = int((es_local & gana_base).sum())
