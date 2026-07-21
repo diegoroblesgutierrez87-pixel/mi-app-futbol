@@ -3176,54 +3176,53 @@ with st.expander("📋 Resumen", expanded=False):
                     st.caption(f"Resumen {equipo2_res}")
                     st.markdown("\n".join(filas2), unsafe_allow_html=True)
 
-                                # === GRÁFICA POSICIÓN vs JORNADA - CORREGIDA ===
+                # === GRÁFICA POSICIÓN vs JORNADA - ESTILO FINO ===
                 import matplotlib.pyplot as plt
                 import matplotlib.colors as mcolors
                 
                 df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
 
-                fig = plt.figure(figsize=(4, 2.2), dpi=120)
+                fig = plt.figure(figsize=(5, 2.5), dpi=150)
                 ax = fig.add_subplot(111)
                 
                 leyendas = []
                 max_pos = 0
 
-                # Equipo 1 - todas las temps
+                # Equipo 1 - linea azul fina lisa
                 for temp in temp1_res:
                     d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
                     if not d.empty:
-                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=2.5, marker='o', markersize=3)
+                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.2, linestyle='-', color='#1f77b4', alpha=0.9)
                         max_pos = max(max_pos, d['Pos'].max())
                         color_hex = mcolors.to_hex(line.get_color())
-                        leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo_res} {temp}")
+                        leyendas.append(f"<span style='color:{color_hex}; font-size:14px'>—</span> {equipo_res} {temp}")
 
-                # Equipo 2 si existe
+                # Equipo 2 - linea naranja fina lisa (ANTES ERA -- AHORA -)
                 if stats2:
                     df_graf2 = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season'].isin(temp2_res))]
                     for temp in temp2_res:
                         d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
                         if not d.empty:
-                            line, = ax.plot(d['Jornada'], d['Pos'], linewidth=2.5, linestyle='--', marker='s', markersize=3)
+                            line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.2, linestyle='-', color='#ff7f0e', alpha=0.9)
                             max_pos = max(max_pos, d['Pos'].max())
                             color_hex = mcolors.to_hex(line.get_color())
-                            leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo2_res} {temp}")
+                            leyendas.append(f"<span style='color:{color_hex}; font-size:14px'>—</span> {equipo2_res} {temp}")
 
-                # INVERTIR EJE Y - 1º ARRIBA
+                # Eje invertido 1º arriba
                 ax.invert_yaxis()
                 ax.set_ylim(max_pos + 1, 0.5)
-                ax.set_xlabel("Jornada", fontsize=7)
-                ax.set_ylabel("Posición", fontsize=7)
-                ax.set_xticks(range(0, 39, 5))
+                ax.set_xlabel("Jornada", fontsize=8)
+                ax.set_ylabel("Posición", fontsize=8)
+                ax.set_xticks(range(1, 39, 2))
                 ax.set_yticks(range(1, int(max_pos)+2))
-                ax.grid(True, alpha=0.3, linestyle='--')
-                ax.tick_params(labelsize=6)
-                plt.tight_layout(pad=0.2)
+                ax.grid(True, alpha=0.25, linestyle=':', linewidth=0.5)
+                ax.tick_params(labelsize=7)
+                plt.tight_layout(pad=0.3)
                 st.pyplot(fig, use_container_width=True)
                 plt.close()
                 
-                # Leyenda en texto debajo de la gráfica
                 if leyendas:
-                    st.markdown("<div style='font-size:10px; line-height:1.3'>" + "<br>".join(leyendas) + "</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size:10px; line-height:1.4; margin-top:4px'>" + " &nbsp; ".join(leyendas) + "</div>", unsafe_allow_html=True)
                 # === TARJETAS DETALLADAS EQ1 ===
                 for i, s in enumerate(lista_stats1):
                     st.markdown(f"""
