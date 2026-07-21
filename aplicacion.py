@@ -1141,17 +1141,17 @@ if len(jornadas) > 0:
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
-############filtros avanzados    
+############filtros avanzados
     with st.expander("🎛 Filtros avanzados", expanded=False):
-        # --- LINEA 1: Eq1 Eq2 ---
-        l1 = st.columns(2)
+        # --- LINEA 1: Eq1 Eq2 (Eq2 en col 3 para caer encima de L/V3) ---
+        l1 = st.columns(3)
         equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-        equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        equipo2_filtro = l1[2].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
 
-        # --- LINEA 1b: L/V L/V3 ---
-        l1b = st.columns(2)
+        # --- LINEA 1b: L/V... L/V3 ---
+        l1b = st.columns(3)
         condicion_filtro = l1b[0].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
-        condicion_filtro3 = l1b[1].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
+        condicion_filtro3 = l1b[2].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
 
         # --- LINEA 2: Col1 Col2 Col3 ---
         l2 = st.columns(3)
@@ -1197,7 +1197,6 @@ if len(jornadas) > 0:
         l8 = st.columns(3)
         marcador_filtro = l8[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
         parte_gol = l8[1].selectbox("Parte", ["Todo","1T","2T"], key='parte_gol')
-        # % mínimo con cajita +- como pediste
         l8[2].caption("% mínimo")
         pct_marcador = l8[2].number_input("pct", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
 
@@ -1217,6 +1216,9 @@ if len(jornadas) > 0:
         jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
         st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
+    
+    
+    
     
     # --- RESUMEN DE FILTROS ACTIVOS - FIX COL2 Y COL3 ---
     filtros_activos = []
@@ -3174,23 +3176,25 @@ with st.expander("📋 Resumen", expanded=False):
                     st.caption(f"Resumen {equipo2_res}")
                     st.markdown("\n".join(filas2), unsafe_allow_html=True)
 
-                                # === GRÁFICA PEQUEÑA ===
+                                # === GRÁFICA POSICIÓN vs JORNADA - CORREGIDA ===
                 import matplotlib.pyplot as plt
                 import matplotlib.colors as mcolors
                 
                 df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
 
-                fig = plt.figure(figsize=(3, 1), dpi=100)
+                fig = plt.figure(figsize=(4, 2.2), dpi=120)
                 ax = fig.add_subplot(111)
                 
                 leyendas = []
+                max_pos = 0
 
                 # Equipo 1 - todas las temps
                 for temp in temp1_res:
                     d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
                     if not d.empty:
-                        line, = ax.plot(d['Jornada'], d['Pts'], linewidth=2)
-                        color_hex = mcolors.to_hex(line.get_color()) # Convierto C0 -> #1f77b4
+                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=2.5, marker='o', markersize=3)
+                        max_pos = max(max_pos, d['Pos'].max())
+                        color_hex = mcolors.to_hex(line.get_color())
                         leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo_res} {temp}")
 
                 # Equipo 2 si existe
@@ -3199,17 +3203,25 @@ with st.expander("📋 Resumen", expanded=False):
                     for temp in temp2_res:
                         d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
                         if not d.empty:
-                            line, = ax.plot(d['Jornada'], d['Pts'], linewidth=2, linestyle='--')
+                            line, = ax.plot(d['Jornada'], d['Pos'], linewidth=2.5, linestyle='--', marker='s', markersize=3)
+                            max_pos = max(max_pos, d['Pos'].max())
                             color_hex = mcolors.to_hex(line.get_color())
                             leyendas.append(f"<span style='color:{color_hex}; font-size:16px'>●</span> {equipo2_res} {temp}")
 
-                ax.set_xticks(range(0, 39, 10))
+                # INVERTIR EJE Y - 1º ARRIBA
+                ax.invert_yaxis()
+                ax.set_ylim(max_pos + 1, 0.5)
+                ax.set_xlabel("Jornada", fontsize=7)
+                ax.set_ylabel("Posición", fontsize=7)
+                ax.set_xticks(range(0, 39, 5))
+                ax.set_yticks(range(1, int(max_pos)+2))
+                ax.grid(True, alpha=0.3, linestyle='--')
                 ax.tick_params(labelsize=6)
-                plt.tight_layout(pad=0.1)
-                st.pyplot(fig, use_container_width=False)
+                plt.tight_layout(pad=0.2)
+                st.pyplot(fig, use_container_width=True)
                 plt.close()
                 
-                                # Leyenda en texto debajo de la gráfica
+                # Leyenda en texto debajo de la gráfica
                 if leyendas:
                     st.markdown("<div style='font-size:10px; line-height:1.3'>" + "<br>".join(leyendas) + "</div>", unsafe_allow_html=True)
                 # === TARJETAS DETALLADAS EQ1 ===
