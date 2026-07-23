@@ -987,6 +987,7 @@ def limpiar_filtros():
     st.session_state.alcance_filtro = "Todo"
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
+    st.session_state.margen_filtro_eq2 = "Todo"
 
 
 
@@ -1110,6 +1111,7 @@ if len(jornadas) > 0:
     if 'alcance_filtro' not in st.session_state: st.session_state.alcance_filtro = "Todo"
     if 'equipo2_filtro' not in st.session_state: st.session_state.equipo2_filtro = "Ninguno"
     if 'margen_filtro' not in st.session_state: st.session_state.margen_filtro = "Todo"
+    if 'margen_filtro_eq2' not in st.session_state: st.session_state.margen_filtro_eq2 = "Todo"
 
     columnas_numericas = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot','HomePtsPrev','AwayPtsPrev','HomePosPrev','AwayPosPrev','HomePerf','AwayPerf']
     ABREV_COL = {
@@ -1193,10 +1195,11 @@ if len(jornadas) > 0:
         cuota_tipo = l7[1].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
         resultado_filtro_eq2 = l7[2].selectbox("1x2 (Eq2)", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro_eq2')
 
-        # --- LINEA 7b: MARGEN + HT/FT ---
+        # --- LINEA 7b: MARGEN + HT/FT + MARGEN EQ2 ---
         l7b = st.columns(3)
         margen_filtro = l7b[0].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
         htft_filtro = l7b[1].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
+        margen_filtro_eq2 = l7b[2].selectbox("Margen Eq2", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro_eq2')
 
         # --- LINEA 8: Marcador Parte %minimo ---
         marcadores_unicos = sorted(
@@ -1499,24 +1502,40 @@ if len(jornadas) > 0:
         if col:
             df_final = df_final[(df_final[col] >= rango_cuotas[0]) & (df_final[col] <= rango_cuotas[1])]
 
-##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA - con y sin equipo
-    if margen_filtro!= "Todo":
-        if equipo_filtro!= "Ninguno" and equipo2_filtro=="Ninguno":
-            es_loc = df_final['HomeTeam']==equipo_filtro
-            dif = np.where(es_loc, df_final['FTHG']-df_final['FTAG'], df_final['FTAG']-df_final['FTHG'])
+##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA - Eq1 y Eq2 separados
+    def _aplica_margen(df_in, equipo_ref, margen_tipo):
+        if margen_tipo == "Todo" or df_in.empty:
+            return df_in
+        if equipo_ref!= "Ninguno":
+            es_loc = df_in['HomeTeam'] == equipo_ref
+            dif = np.where(es_loc, df_in['FTHG']-df_in['FTAG'], df_in['FTAG']-df_in['FTHG'])
         else:
-            # Sin equipo: margen del local (Gana = gana local)
-            dif = df_final['FTHG']-df_final['FTAG']
+            dif = df_in['FTHG']-df_in['FTAG']
+        if margen_tipo == "Empate": return df_in[dif==0]
+        elif margen_tipo == "Gana 1": return df_in[dif==1]
+        elif margen_tipo == "Gana 2": return df_in[dif==2]
+        elif margen_tipo == "Gana 3+": return df_in[dif>=3]
+        elif margen_tipo == "Pierde 1": return df_in[dif==-1]
+        elif margen_tipo == "Pierde 2": return df_in[dif==-2]
+        elif margen_tipo == "Pierde 3+": return df_in[dif<=-3]
+        elif margen_tipo == "Gana ≥2": return df_in[dif>=2]
+        elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
+        return df_in
 
-        if margen_filtro == "Empate": df_final = df_final[dif==0]
-        elif margen_filtro == "Gana 1": df_final = df_final[dif==1]
-        elif margen_filtro == "Gana 2": df_final = df_final[dif==2]
-        elif margen_filtro == "Gana 3+": df_final = df_final[dif>=3]
-        elif margen_filtro == "Pierde 1": df_final = df_final[dif==-1]
-        elif margen_filtro == "Pierde 2": df_final = df_final[dif==-2]
-        elif margen_filtro == "Pierde 3+": df_final = df_final[dif<=-3]
-        elif margen_filtro == "Gana \u22652": df_final = df_final[dif>=2]
-        elif margen_filtro == "Pierde \u22652": df_final = df_final[dif<=-2]
+    if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
+        df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
+        df_eq2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].copy()
+        if margen_filtro!= "Todo":
+            df_eq1 = _aplica_margen(df_eq1, equipo_filtro, margen_filtro)
+        if margen_filtro_eq2!= "Todo":
+            df_eq2 = _aplica_margen(df_eq2, equipo2_filtro, margen_filtro_eq2)
+        df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
+    elif equipo2_filtro!= "Ninguno":
+        mf = margen_filtro_eq2 if margen_filtro_eq2!= "Todo" else margen_filtro
+        df_final = _aplica_margen(df_final, equipo2_filtro, mf)
+    else:
+        if margen_filtro!= "Todo":
+            df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro)
 
     if marcador_filtro!= "Todos":
         gl, gv = map(int, marcador_filtro.split('-'))
