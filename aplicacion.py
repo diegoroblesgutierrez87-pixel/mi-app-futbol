@@ -153,7 +153,6 @@ def abreviar_equipo(nombre):
 def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     from collections import Counter
 
-    # Caso simple: solo contar jornadas sin detalle
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
         return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
@@ -178,61 +177,58 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         if g.empty:
             continue
 
-        # Color según resultado global de la jornada
         if (g['res']=='win').all():
-            color = '#0f8105' # verde gana
+            color = '#0f8105'
         elif (g['res']=='loss').all():
-            color = '#f31818' # rojo pierde
+            color = '#f31818'
         else:
-            color = '#0A2342' # azul empate/mixto
+            color = '#0A2342'
 
-        # Iterar TODOS los partidos de la jornada
+        # Calculamos resultado de esa jornada para el equipo
         resultados_jornada = []
         sufijos = []
         for _, partido in g.iterrows():
-            es_local_partido = partido['HomeTeam'] == equipo
-            sufijo_partido = 'c' if es_local_partido else 'f'
-            local_g = int(partido['FTHG'])
-            visit_g = int(partido['FTAG'])
-            resultados_jornada.append(f"{local_g}-{visit_g}")
-            sufijos.append(sufijo_partido)
+            es_local = partido['HomeTeam'] == equipo
+            sufijo = 'c' if es_local else 'f'
+            sufijos.append(sufijo)
+            # resultado tipo 1-0 desde la vista del equipo
+            gf = int(partido['FTHG']) if es_local else int(partido['FTAG'])
+            gc = int(partido['FTAG']) if es_local else int(partido['FTHG'])
+            resultados_jornada.append(f"{gf}-{gc}")
 
-        # Si todos son casa/fuera usa 'c'/'f', si mezcla usa 'cf'
         sufijo_final = sufijos[0] if len(set(sufijos)) == 1 else 'cf'
-        txt = f"J{int(j)}{sufijo_final} {' | '.join(resultados_jornada)}"
+        # Si hay varios partidos misma jornada (no debería), mostramos el primero
+        res_txt = resultados_jornada[0] if resultados_jornada else ""
+        txt = f"J{int(j)}{sufijo_final} {res_txt}"
 
-        # ● si hubo AM en algún partido de la jornada
         if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
             txt += '●'
 
-        # Marcar si es H2H directo
         es_h2h = False
         if rival:
             es_h2h = (((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)) |
                       ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo))).any()
 
-        # Popup con detalle de partidos - OJO: esto es lento si hay muchas jornadas
         partidos_html = []
         for _, r in g.iterrows():
-            partido_completo = formatear_partido(r, equipo, None, "")
-            partidos_html.append(f"<div style='margin-bottom:6px'>{partido_completo}</div>")
-
+            partidos_html.append(formatear_h2h_compacto(r, equipo))
         viñeta = "".join(partidos_html)
 
-        estilos = []
-        if color:
-            estilos.append(f"color:{color};font-weight:700")
+        # --- ESTILO PASTILLA IGUAL QUE CLASIF ---
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-flex;padding:3px 8px;border:1px solid #ccc;border-radius:12px;background:#fff;white-space:nowrap;font-size:11px"
         if es_h2h:
-            estilos.append("text-decoration:underline;text-decoration-thickness:2px")
+            estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
-        jx_html = f"""<details style="display:inline-block">
-        <summary style="{';'.join(estilos)};cursor:pointer;list-style:none;display:inline">{txt}</summary>
-        <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:6px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:280px">{viñeta}</div>
+        jx_html = f"""<details style="display:inline-flex;margin:2px">
+        <summary style="{estilos_summary}">{txt}</summary>
+        <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:340px">{viñeta}</div>
     </details>"""
 
         partes.append(jx_html)
 
-    return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%'>{''.join(partes)}</div>"
+    return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%'> {''.join(partes)} </div>"
+
+
 
 
 
@@ -3251,23 +3247,43 @@ with st.expander("📋 Resumen", expanded=False):
                     st.caption(f"Resumen {equipo2_res}")
                     st.markdown("\n".join(filas2), unsafe_allow_html=True)
 
-                # === GRÁFICA POSICIÓN vs JORNADA - ESTILO FINO ===
+                # === GRÁFICA POSICIÓN vs JORNADA - COLORES POR TEMPORADA ===
                 import matplotlib.pyplot as plt
                 import matplotlib.colors as mcolors
                 
+                # Paleta con contraste bueno
+                PALETA = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#e377c2', '#17becf', '#bcbd22', '#8c564b', '#000000']
+                
                 df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
 
-                fig = plt.figure(figsize=(5, 2.5), dpi=150)
+                fig = plt.figure(figsize=(5, 2.8), dpi=150)
                 ax = fig.add_subplot(111)
                 
                 leyendas = []
                 max_pos = 0
 
-                # Equipo 1 - linea azul fina lisa
-                for temp in temp1_res:
+                # Equipo 1 - un color distinto por temporada
+                for idx, temp in enumerate(temp1_res):
                     d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
                     if not d.empty:
-                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.2, linestyle='-', color='#1f77b4', alpha=0.9)
+                        color = PALETA[idx % len(PALETA)]
+                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, linestyle='-', color=color, alpha=0.95)
+                        max_pos = max(max_pos, d['Pos'].max())
+                        color_hex = mcolors.to_hex(line.get_color())
+                        leyendas.append(f"<span style='color:{color_hex}; font-size:14px'>—</span> {equipo_res} {temp}")
+
+                # Equipo 2 - sigue la paleta para no repetir colores
+                if stats2:
+                    df_graf2 = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season'].isin(temp2_res))]
+                    for idx, temp in enumerate(temp2_res):
+                        d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
+                        if not d.empty:
+                            color = PALETA[(len(temp1_res) + idx) % len(PALETA)]
+                            # Eq2 con linea discontinua para diferenciar equipos
+                            line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, linestyle='--', color=color, alpha=0.95)
+                            max_pos = max(max_pos, d['Pos'].max())
+                            color_hex = mcolors.to_hex(line.get_color())
+                            leyendas.append(f"<span style='color:{color_hex}; font-size:14px'>--</span> {equipo2_res} {temp}")
                         max_pos = max(max_pos, d['Pos'].max())
                         color_hex = mcolors.to_hex(line.get_color())
                         leyendas.append(f"<span style='color:{color_hex}; font-size:14px'>—</span> {equipo_res} {temp}")
