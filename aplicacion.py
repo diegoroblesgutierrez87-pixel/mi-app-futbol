@@ -1362,8 +1362,23 @@ if len(jornadas) > 0:
         parte_gol = l8[2].selectbox("Parte Eq1", ["Todo","1T","2T"], key='parte_gol')
         parte_gol_eq2 = l8[3].selectbox("Parte Eq2", ["Todo","1T","2T"], key='parte_gol_eq2')
         with l8[4]:
-            st.caption("% mínimo")
-            pct_marcador = st.number_input("pct", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
+            st.caption("% De - A")
+            c_p1, c_p2 = st.columns(2)
+            # por defecto 1% a 100%
+            if 'pct_min' not in st.session_state: st.session_state.pct_min = 1
+            if 'pct_max' not in st.session_state: st.session_state.pct_max = 100
+
+            pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=st.session_state.pct_min, step=5, key='pct_min', label_visibility="collapsed")
+            pct_max = c_p2.number_input("max", min_value=0, max_value=100, value=st.session_state.pct_max, step=5, key='pct_max', label_visibility="collapsed")
+
+            if pct_min > pct_max:
+                st.warning("Min no puede ser mayor que Max")
+                pct_min = pct_max
+
+            # compatibilidad con tu código viejo
+            st.session_state.pct_marcador = pct_min
+            pct_marcador = pct_min
+            rango_pct = (pct_min, pct_max)
 
         # --- LINEA 9: Jugador ---
         from collections import defaultdict, Counter
@@ -1495,8 +1510,15 @@ if len(jornadas) > 0:
     def _aplica_1x2(df_in, equipo_ref, modo_1x2):
         if modo_1x2 == "Ninguno":
             return df_in
-        # FIX: Si no hay equipo en "nombre", no filtro solo locales -> paso TODO (local+visitante)
+
+        # FIX DEFINITIVO: Sin equipo, Gana/Pierde = que haya ganador (FTR!='D'), Empata = empate
         if equipo_ref=="Ninguno" or equipo_ref is None or equipo_ref=="":
+            if modo_1x2 == "Gana": return df_in[df_in['FTR']!='D']
+            if modo_1x2 == "Pierde": return df_in[df_in['FTR']!='D']
+            if modo_1x2 == "Empata": return df_in[df_in['FTR']=='D']
+            if modo_1x2 == "Gana/Empata": return df_in[df_in['FTR']!='A']
+            if modo_1x2 == "Gana/Pierde": return df_in[df_in['FTR']!='D']
+            if modo_1x2 == "Empata/Pierde": return df_in[df_in['FTR']!='H']
             return df_in
 
         if modo_1x2 == "Gana":
@@ -1665,11 +1687,39 @@ if len(jornadas) > 0:
         else:
             gh = df_in['FTHG'].to_numpy(); ga = df_in['FTAG'].to_numpy()
 
+        # CON EQUIPO
         if equipo_ref!= "Ninguno":
             es_loc = (df_in['HomeTeam'] == equipo_ref).to_numpy()
             dif = np.where(es_loc, gh - ga, ga - gh)
         else:
-            dif = gh - ga
+            # SIN EQUIPO
+            if condicion_filtro == "Local":
+                dif = gh - ga
+            elif condicion_filtro == "Visitante":
+                dif = ga - gh
+            else:
+                # Sin equipo y sin L/V -> margen absoluto
+                dif = gh - ga
+                abs_dif = np.abs(dif)
+
+                if margen_tipo == "Empate": return df_in[abs_dif==0]
+                elif margen_tipo in ("Gana 1","Pierde 1"): return df_in[abs_dif==1]
+                elif margen_tipo in ("Gana 2","Pierde 2"): return df_in[abs_dif==2]
+                elif margen_tipo in ("Gana 3+","Pierde 3+"): return df_in[abs_dif>=3]
+                elif margen_tipo in ("Gana ≥2","Pierde ≥2"): return df_in[abs_dif>=2]
+                else: return df_in
+
+        # CON EQUIPO o CON L/V ya tenemos dif con signo
+        if margen_tipo == "Empate": return df_in[dif==0]
+        elif margen_tipo == "Gana 1": return df_in[dif==1]
+        elif margen_tipo == "Gana 2": return df_in[dif==2]
+        elif margen_tipo == "Gana 3+": return df_in[dif>=3]
+        elif margen_tipo == "Pierde 1": return df_in[dif==-1]
+        elif margen_tipo == "Pierde 2": return df_in[dif==-2]
+        elif margen_tipo == "Pierde 3+": return df_in[dif<=-3]
+        elif margen_tipo == "Gana ≥2": return df_in[dif>=2]
+        elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
+        return df_in
 
         if margen_tipo == "Empate": return df_in[dif==0]
         elif margen_tipo == "Gana 1": return df_in[dif==1]
@@ -2004,7 +2054,10 @@ if len(df_final) > 0:
             if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
             if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
 
-            base_total = df_base_h2h.copy()
+            base_total = df_original.copy()
+            base_total = base_total[base_total['League'].isin(liga_sel) & base_total['Season'].isin(temp_sel)]
+            base_total, _ = calcular_estado_jornada(base_total)
+            base_total = base_total[(base_total['Jornada']>=rango_jornadas[0]) & (base_total['Jornada']<=rango_jornadas[1])]
             if equipo_filtro!= "Ninguno" or equipo2_filtro!= "Ninguno":
                 if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
                     base_total = base_total[((base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)) | ((base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro))]
@@ -2156,26 +2209,14 @@ if len(df_final) > 0:
                     part_ok = base_team_global[mask_total]; part_tot = base_total_team
 
                 tot = len(part_tot) # total partidos del equipo en la temporada (38)
-                hits = len(part_ok) # partidos que cumplen AF:GT>1 + 1x2:G
+                hits = len(part_ok)
 
-                # % sobre total de jornadas
-                pct_total = hits / tot * 100 if tot else 0
-
-                # % sobre victorias reales del equipo (para tu caso GT>1 + G)
-                es_victoria_total = ((base_total_team['HomeTeam']==eq) & (base_total_team['FTHG']>base_total_team['FTAG'])) | ((base_total_team['AwayTeam']==eq) & (base_total_team['FTAG']>base_total_team['FTHG']))
-                tot_vict = int(es_victoria_total.sum())
-                pct_vict = (hits / tot_vict * 100) if tot_vict else 0
-
-                # Si hay filtro 1x2:G, filtramos por % sobre victorias, si no por % total
-                if resultado_filtro!="Ninguno" or resultado_filtro_eq2!="Ninguno":
-                    pct = pct_vict
-                    pct_label = f"{pct_vict:.1f}% sobre {tot_vict} vict ({pct_total:.1f}% total)"
-                else:
-                    pct = pct_total
-                    pct_label = f"{pct_total:.1f}%"
+                # FIX %: siempre sobre total de partidos, no sobre victorias
+                pct = (hits / tot * 100) if tot else 0
+                pct_label = f"{pct:.1f}%"
 
                 marc_eq = marcador_filtro_eq2 if eq==equipo2_filtro else marcador_filtro
-                if pct < pct_marcador and marc_eq=="Todos":
+                if not (rango_pct[0] <= pct <= rango_pct[1]) and marc_eq=="Todos":
                     continue
                 if marc_eq!="Todos" and hits==0:
                     continue
@@ -2185,15 +2226,10 @@ if len(df_final) > 0:
 
                 titulo_eq = marc_eq if marc_eq!="Todos" else "Filtro actual"
 
+                # NUEVO VISUAL: 7/19 36.8%  y 31/38 81.6%
                 html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;'>
 <b style='font-size:12px'>{eq.title()}</b> - {titulo_eq}<br>
-<span style='font-weight:900'>{hits}# {pct_label}</span><br>
-{jors}
-</div>"""
-
-                html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;'>
-<b style='font-size:12px'>{eq.title()}</b> - {titulo_eq}<br>
-<span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
+<span style='font-weight:900'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
 {jors}
 </div>"""
 
