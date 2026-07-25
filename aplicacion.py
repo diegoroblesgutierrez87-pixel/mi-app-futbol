@@ -150,71 +150,225 @@ def abreviar_equipo(nombre):
 
 
 #####################jornadas conteo
+##################### jornadas conteo - OPTIMIZADO #####################
+@lru_cache(maxsize=8192)
+def _formatear_h2h_compacto_cached(key_tuple):
+    # key hasheable para que no se recalcule nunca el mismo partido
+    (lg3, fecha, jorn, ht, at, hg, ag, h1, a1, hpos, apos, hpts, apts, hperf, aperf,
+     hs,hst,hf,hc,hy,hr, as_,ast2,af,ac,ay,ar, b365h,b365d,b365a, ftr, eq_norm, home_team, away_team) = key_tuple
+
+    h2, a2 = hg - h1, ag - a1
+    is_h = eq_norm == home_team if eq_norm else False
+    is_a = eq_norm == away_team if eq_norm else False
+
+    def nv(t,b=False,u=False):
+        return f"<span style='font-weight:{900 if b else 600}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
+
+    if eq_norm:
+        won = (is_h and hg > ag) or (is_a and ag > hg)
+        lost = (is_h and hg < ag) or (is_a and ag < hg)
+        color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
+        color = color_linea
+    else:
+        color_linea = "#0A2342"
+        color = "#444"
+
+    try:
+        s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
+        odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{b365h:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{b365d:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{b365a:.2f}</span>"
+    except:
+        odds = ""
+
+    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
+    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
+    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
+
+    pos = f"{nv(str(hpos)+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(apos)+'º',False,is_a)}"
+    pts = f"{nv(hpts,False,is_h)}-<span style='color:#000'>pts</span> {nv(apts,False,is_a)}"
+
+    ht_res = ht if h1>a1 else at if a1>h1 else 'E'
+    ft_res = ht if hg>ag else at if ag>hg else 'E'
+    res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
+
+    lineas = [
+        f"{lg3} {res}",
+        f"{fecha} |{jorn}|",
+        odds,
+        ht_line,
+        st_line,
+        ft_line,
+        pos,
+        pts,
+        f"<span style='color:#000'>Perf:</span>{nv(hperf,hg>ag,is_h)}-{nv(aperf,ag>hg,is_a)}",
+        f"1p:{nv(str(h1)+'G',False,is_h)}",
+        f"1p:{nv(str(a1)+'G',False,is_a)}",
+        f"2p:{nv(str(h2)+'G',False,is_h)}",
+        f"2p:{nv(str(a2)+'G',False,is_a)}",
+        nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R",hg>ag,is_h),
+        nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R",ag>hg,is_a)
+    ]
+    return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
+
+def formatear_h2h_compacto(row, equipo_ref=None):
+    # Wrapper compatible con tu código actual
+    try:
+        eq_norm = normaliza(equipo_ref) if equipo_ref else ""
+        lg3 = str(row.get('League',''))[:3].upper()
+        fecha = row['Date'].strftime('%d/%m/%y') if pd.notna(row['Date']) else ''
+        jorn = f"J{int(row['Jornada'])}"
+        ht = row.get('HomeAbbr', abreviar_equipo(row['HomeTeam']))
+        at = row.get('AwayAbbr', abreviar_equipo(row['AwayTeam']))
+        key = (
+            lg3, fecha, jorn, ht, at,
+            int(row['FTHG']), int(row['FTAG']), int(row['HTHG']), int(row['HTAG']),
+            int(row.get('HomePosPrev',0)), int(row.get('AwayPosPrev',0)),
+            int(row.get('HomePtsPrev',0)), int(row.get('AwayPtsPrev',0)),
+            round(float(row.get('HomePerf',0)),1), round(float(row.get('AwayPerf',0)),1),
+            int(row.get('HS',0)), int(row.get('HST',0)), int(row.get('HF',0)), int(row.get('HC',0)), int(row.get('HY',0)), int(row.get('HR',0)),
+            int(row.get('AS',0)), int(row.get('AST',0)), int(row.get('AF',0)), int(row.get('AC',0)), int(row.get('AY',0)), int(row.get('AR',0)),
+            float(row.get('B365H',0) or 0), float(row.get('B365D',0) or 0), float(row.get('B365A',0) or 0),
+            str(row.get('FTR','')),
+            eq_norm, str(row.get('HomeTeam','')), str(row.get('AwayTeam',''))
+        )
+        return _formatear_h2h_compacto_cached(key)
+    except Exception:
+        return "<div style='font-size:10px'>-</div>"
+
+##################### jornadas conteo - OPTIMIZADO FIX INDEX #####################
+@lru_cache(maxsize=8192)
+def _formatear_h2h_compacto_cached(key_tuple):
+    (lg3, fecha, jorn, ht, at, hg, ag, h1, a1, hpos, apos, hpts, apts, hperf, aperf,
+     hs,hst,hf,hc,hy,hr, as_,ast2,af,ac,ay,ar, b365h,b365d,b365a, ftr, eq_norm, home_team, away_team) = key_tuple
+
+    h2, a2 = hg - h1, ag - a1
+    is_h = eq_norm == home_team if eq_norm else False
+    is_a = eq_norm == away_team if eq_norm else False
+
+    def nv(t,b=False,u=False):
+        return f"<span style='font-weight:{900 if b else 600}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
+
+    if eq_norm:
+        won = (is_h and hg > ag) or (is_a and ag > hg)
+        lost = (is_h and hg < ag) or (is_a and ag < hg)
+        color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
+        color = color_linea
+    else:
+        color_linea = "#0A2342"
+        color = "#444"
+
+    try:
+        s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
+        odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{b365h:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{b365d:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{b365a:.2f}</span>"
+    except:
+        odds = ""
+
+    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
+    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
+    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
+
+    pos = f"{nv(str(hpos)+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(apos)+'º',False,is_a)}"
+    pts = f"{nv(hpts,False,is_h)}-<span style='color:#000'>pts</span> {nv(apts,False,is_a)}"
+
+    ht_res = ht if h1>a1 else at if a1>h1 else 'E'
+    ft_res = ht if hg>ag else at if ag>hg else 'E'
+    res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
+
+    lineas = [
+        f"{lg3} {res}",
+        f"{fecha} |{jorn}|",
+        odds,
+        ht_line,
+        st_line,
+        ft_line,
+        pos,
+        pts,
+        f"<span style='color:#000'>Perf:</span>{nv(hperf,hg>ag,is_h)}-{nv(aperf,ag>hg,is_a)}",
+        f"1p:{nv(str(h1)+'G',False,is_h)}",
+        f"1p:{nv(str(a1)+'G',False,is_a)}",
+        f"2p:{nv(str(h2)+'G',False,is_h)}",
+        f"2p:{nv(str(a2)+'G',False,is_a)}",
+        nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R",hg>ag,is_h),
+        nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R",ag>hg,is_a)
+    ]
+    return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
+
+def formatear_h2h_compacto(row, equipo_ref=None):
+    try:
+        eq_norm = normaliza(equipo_ref) if equipo_ref else ""
+        lg3 = str(row.get('League',''))[:3].upper()
+        fecha = row['Date'].strftime('%d/%m/%y') if pd.notna(row['Date']) else ''
+        jorn = f"J{int(row['Jornada'])}"
+        ht = row.get('HomeAbbr', abreviar_equipo(row['HomeTeam']))
+        at = row.get('AwayAbbr', abreviar_equipo(row['AwayTeam']))
+        key = (
+            lg3, fecha, jorn, ht, at,
+            int(row['FTHG']), int(row['FTAG']), int(row['HTHG']), int(row['HTAG']),
+            int(row.get('HomePosPrev',0)), int(row.get('AwayPosPrev',0)),
+            int(row.get('HomePtsPrev',0)), int(row.get('AwayPtsPrev',0)),
+            round(float(row.get('HomePerf',0)),1), round(float(row.get('AwayPerf',0)),1),
+            int(row.get('HS',0)), int(row.get('HST',0)), int(row.get('HF',0)), int(row.get('HC',0)), int(row.get('HY',0)), int(row.get('HR',0)),
+            int(row.get('AS',0)), int(row.get('AST',0)), int(row.get('AF',0)), int(row.get('AC',0)), int(row.get('AY',0)), int(row.get('AR',0)),
+            float(row.get('B365H',0) or 0), float(row.get('B365D',0) or 0), float(row.get('B365A',0) or 0),
+            str(row.get('FTR','')),
+            eq_norm, str(row.get('HomeTeam','')), str(row.get('AwayTeam',''))
+        )
+        return _formatear_h2h_compacto_cached(key)
+    except Exception:
+        return "<div style='font-size:10px'>-</div>"
+
 def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     from collections import Counter
-
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
         return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
 
-    df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)].copy()
+    df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)] if len(df_ref) > 300 else df_ref
     if df_eq.empty:
         return ""
 
-    is_home = df_eq['HomeTeam']==equipo
-    df_eq['res'] = np.where(
-        (is_home & (df_eq['FTHG']>df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']>df_eq['FTHG'])),
-        'win',
-        np.where(
-            (is_home & (df_eq['FTHG']<df_eq['FTAG'])) | (~is_home & (df_eq['FTAG']<df_eq['FTHG'])),
-            'loss',
-            'draw'
-        )
-    )
+    # Series con índice real
+    is_home_s = (df_eq['HomeTeam']==equipo)
+    fthg_s = df_eq['FTHG']
+    ftag_s = df_eq['FTAG']
+    btts_s = (fthg_s>0) & (ftag_s>0)
+    gf_team_s = pd.Series(np.where(is_home_s, fthg_s, ftag_s), index=df_eq.index)
+    gc_team_s = pd.Series(np.where(is_home_s, ftag_s, fthg_s), index=df_eq.index)
+    win_s = gf_team_s > gc_team_s
+    loss_s = gf_team_s < gc_team_s
 
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
-        if g.empty:
-            continue
+        if g.empty: continue
 
-        if (g['res']=='win').all():
+        if win_s.loc[g.index].all():
             color = '#0f8105'
-        elif (g['res']=='loss').all():
+        elif loss_s.loc[g.index].all():
             color = '#f31818'
         else:
             color = '#0A2342'
 
-        # Calculamos resultado de esa jornada para el equipo
-        resultados_jornada = []
-        sufijos = []
-        for _, partido in g.iterrows():
-            es_local = partido['HomeTeam'] == equipo
-            sufijo = 'c' if es_local else 'f'
-            sufijos.append(sufijo)
-            # resultado tipo 1-0 desde la vista del equipo
-            gf = int(partido['FTHG']) if es_local else int(partido['FTAG'])
-            gc = int(partido['FTAG']) if es_local else int(partido['FTHG'])
-            resultados_jornada.append(f"{gf}-{gc}")
+        first_row = g.iloc[0]
+        is_h_first = first_row['HomeTeam']==equipo
+        if len(g)==1:
+            sufijo_final = 'c' if is_h_first else 'f'
+        else:
+            all_home = (g['HomeTeam']==equipo).all()
+            all_away = (g['AwayTeam']==equipo).all()
+            sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
 
-        sufijo_final = sufijos[0] if len(set(sufijos)) == 1 else 'cf'
-        # Si hay varios partidos misma jornada (no debería), mostramos el primero
-        res_txt = resultados_jornada[0] if resultados_jornada else ""
-        txt = f"J{int(j)}{sufijo_final} {res_txt}"
-
-        if ((g['FTHG'] > 0) & (g['FTAG'] > 0)).any():
+        # FIX: siempre formato real Local-Visitante
+        hg_real = int(first_row['FTHG'])
+        ag_real = int(first_row['FTAG'])
+        txt = f"J{int(j)}{sufijo_final} {hg_real}-{ag_real}"
+        if btts_s.loc[g.index].any():
             txt += '●'
 
         es_h2h = False
         if rival:
-            es_h2h = (((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)) |
-                      ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo))).any()
+            es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
 
-        partidos_html = []
-        for _, r in g.iterrows():
-            partidos_html.append(formatear_h2h_compacto(r, equipo))
-        viñeta = "".join(partidos_html)
+        viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
 
-        # --- ESTILO PASTILLA IGUAL QUE CLASIF ---
         estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-flex;padding:3px 8px;border:1px solid #ccc;border-radius:12px;background:#fff;white-space:nowrap;font-size:11px"
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
@@ -223,16 +377,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         <summary style="{estilos_summary}">{txt}</summary>
         <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:340px">{viñeta}</div>
     </details>"""
-
         partes.append(jx_html)
 
     return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%'> {''.join(partes)} </div>"
+############ fin jornadas conteo - OPTIMIZADO FIX INDEX
 
-
-
-
-
-############fin jornadas conteo
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
@@ -984,7 +1133,11 @@ def limpiar_filtros():
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
     st.session_state.margen_filtro_eq2 = "Todo"
-
+    st.session_state.xx_filtro_eq2 = "Todo"
+    st.session_state.htft_filtro_eq2 = "Todo"
+    st.session_state.marcador_filtro_eq2 = "Todos"
+    st.session_state.pct_marcador_eq2 = 1
+    
 
 
 
@@ -1081,7 +1234,9 @@ if len(jornadas) > 0:
             todos_eventos.update(cargar_eventos(liga, temp))
 
     if 'marcador_filtro' not in st.session_state: st.session_state.marcador_filtro = "Todos"
+    if 'marcador_filtro_eq2' not in st.session_state: st.session_state.marcador_filtro_eq2 = "Todos"
     if 'pct_marcador' not in st.session_state: st.session_state.pct_marcador = 0
+    if 'pct_marcador_eq2' not in st.session_state: st.session_state.pct_marcador_eq2 = 0
     if 'columna_filtro' not in st.session_state: st.session_state.columna_filtro = "Ninguno"
     if 'operador_filtro' not in st.session_state: st.session_state.operador_filtro = "="
     if 'valor_filtro' not in st.session_state: st.session_state.valor_filtro = "Ninguno"
@@ -1099,7 +1254,7 @@ if len(jornadas) > 0:
     if 'ambos_marcan' not in st.session_state: st.session_state.ambos_marcan = "Todos"
     if 'ambos_marcan_eq2' not in st.session_state: st.session_state.ambos_marcan_eq2 = "Todos"
     if 'condicion_filtro' not in st.session_state: st.session_state.condicion_filtro = "Todo"
-    if 'condicion_filtro3' not in st.session_state: st.session_state.condicion_filtro3 = "Todo" # <-- AÑADE ESTA
+    if 'condicion_filtro3' not in st.session_state: st.session_state.condicion_filtro3 = "Todo"
     if 'htft_filtro' not in st.session_state: st.session_state.htft_filtro = "Todo"
     if 'jugador_filtro' not in st.session_state: st.session_state.jugador_filtro = "TODOS"
     if 'cuota_tipo' not in st.session_state: st.session_state.cuota_tipo = "Todo"
@@ -1108,6 +1263,9 @@ if len(jornadas) > 0:
     if 'equipo2_filtro' not in st.session_state: st.session_state.equipo2_filtro = "Ninguno"
     if 'margen_filtro' not in st.session_state: st.session_state.margen_filtro = "Todo"
     if 'margen_filtro_eq2' not in st.session_state: st.session_state.margen_filtro_eq2 = "Todo"
+    if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
+    if 'xx_filtro_eq2' not in st.session_state: st.session_state.xx_filtro_eq2 = "Todo"
+    if 'htft_filtro_eq2' not in st.session_state: st.session_state.htft_filtro_eq2 = "Todo"
 
     columnas_numericas = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot','HomePtsPrev','AwayPtsPrev','HomePosPrev','AwayPosPrev','HomePerf','AwayPerf']
     ABREV_COL = {
@@ -1143,70 +1301,139 @@ if len(jornadas) > 0:
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
-############filtros avanzados
+############filtros avanzados - VISUAL Eq1/Eq2
     with st.expander("🎛 Filtros avanzados", expanded=False):
-        # --- LINEA 1: Eq1 Eq2 (Eq2 en col 3 para caer encima de L/V3) ---
+        # --- LINEA 1: Eq1 - Marcador Eq1 - Eq2 ---
         l1 = st.columns(3)
-        equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-        equipo2_filtro = l1[2].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        with l1[0]:
+            st.markdown("**Eq1(Eq1)**")
+            equipo_filtro = st.selectbox("Eq1(Eq1)", ["Ninguno"] + equipos_disponibles, key='equipo_filtro', label_visibility="collapsed")
+        with l1[1]:
+            st.markdown("**Marcador(Eq1)**")
+            marcador_filtro = st.selectbox("Marcador(Eq1)", ["Todos"] + sorted((df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(), key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))), key='marcador_filtro', label_visibility="collapsed")
+        with l1[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Eq2(Eq2)</span>", unsafe_allow_html=True)
+            equipo2_filtro = st.selectbox("Eq2(Eq2)", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro', label_visibility="collapsed")
 
-        # --- LINEA 1b: L/V... L/V3 ---
+        # --- LINEA 1b: L/V - Marcador Eq2 - L/V3 ---
         l1b = st.columns(3)
-        condicion_filtro = l1b[0].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
-        condicion_filtro3 = l1b[2].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
+        with l1b[0]:
+            st.markdown("**L/V(Eq1)**")
+            condicion_filtro = st.selectbox("L/V(Eq1)", ["Todo", "Local", "Visitante"], key='condicion_filtro', label_visibility="collapsed")
+        with l1b[1]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Marcador(Eq2)</span>", unsafe_allow_html=True)
+            marcador_filtro_eq2 = st.selectbox("Marcador(Eq2)", ["Todos"] + sorted((df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(), key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))), key='marcador_filtro_eq2', label_visibility="collapsed")
+        with l1b[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>L/V3(Eq2)</span>", unsafe_allow_html=True)
+            condicion_filtro3 = st.selectbox("L/V3(Eq2)", ["Todo", "Local", "Visitante"], key='condicion_filtro3', label_visibility="collapsed")
 
         # --- LINEA 2: Col1 Col2 Col3 ---
         l2 = st.columns(3)
-        columna_filtro = l2[0].selectbox("Col1", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro')
-        columna_filtro2 = l2[1].selectbox("Col2", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro2')
-        columna_filtro3 = l2[2].selectbox("Col3", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro3')
+        with l2[0]:
+            st.markdown("**Col1(Eq1)**")
+            columna_filtro = st.selectbox("Col1(Eq1)", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro', label_visibility="collapsed")
+        with l2[1]:
+            st.markdown("**Col2(Eq1)**")
+            columna_filtro2 = st.selectbox("Col2(Eq1)", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro2', label_visibility="collapsed")
+        with l2[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Col3(Eq2)</span>", unsafe_allow_html=True)
+            columna_filtro3 = st.selectbox("Col3(Eq2)", opciones_col, format_func=lambda x: ABREV_COL.get(x, x), key='columna_filtro3', label_visibility="collapsed")
 
         # --- LINEA 3: Op1 Op2 Op3 ---
         l3 = st.columns(3)
-        operador_filtro = l3[0].selectbox("Op1", ["=", ">", ">=", "<", "<="], key='operador_filtro')
-        operador_filtro2 = l3[1].selectbox("Op2", ["=", ">", ">=", "<", "<="], key='operador_filtro2')
-        operador_filtro3 = l3[2].selectbox("Op3", ["=", ">", ">=", "<", "<="], key='operador_filtro3')
+        with l3[0]:
+            st.markdown("**Op1(Eq1)**")
+            operador_filtro = st.selectbox("Op1(Eq1)", ["=", ">", ">=", "<", "<="], key='operador_filtro', label_visibility="collapsed")
+        with l3[1]:
+            st.markdown("**Op2(Eq1)**")
+            operador_filtro2 = st.selectbox("Op2(Eq1)", ["=", ">", ">=", "<", "<="], key='operador_filtro2', label_visibility="collapsed")
+        with l3[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Op3(Eq2)</span>", unsafe_allow_html=True)
+            operador_filtro3 = st.selectbox("Op3(Eq2)", ["=", ">", ">=", "<", "<="], key='operador_filtro3', label_visibility="collapsed")
 
         # --- LINEA 4: Vlr1 Vlr2 Vlr3 ---
         l4 = st.columns(3)
-        valor_filtro = l4[0].selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro')
-        valor_filtro2 = l4[1].selectbox("Vlr2", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro2')
-        valor_filtro3 = l4[2].selectbox("Vlr3", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro3')
+        with l4[0]:
+            st.markdown("**Vlr1(Eq1)**")
+            valor_filtro = st.selectbox("Vlr1(Eq1)", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro', label_visibility="collapsed")
+        with l4[1]:
+            st.markdown("**Vlr2(Eq1)**")
+            valor_filtro2 = st.selectbox("Vlr2(Eq1)", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro2', label_visibility="collapsed")
+        with l4[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Vlr3(Eq2)</span>", unsafe_allow_html=True)
+            valor_filtro3 = st.selectbox("Vlr3(Eq2)", ["Ninguno"] + [i/2 for i in range(81)], key='valor_filtro3', label_visibility="collapsed")
 
         # --- LINEA 5: Fav/Cntr1 Fav/Cntr2 Fav/Cntr3 ---
         l5 = st.columns(3)
-        alcance_filtro = l5[0].selectbox("Fav/Cntr1", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra")
-        alcance_filtro2 = l5[1].selectbox("Fav/Cntr2", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro2')
-        alcance_filtro3 = l5[2].selectbox("Fav/Cntr3", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro3')
+        with l5[0]:
+            st.markdown("**Fav/Cntr1(Eq1)**")
+            alcance_filtro = st.selectbox("Fav/Cntr1(Eq1)", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro', help="Todo=total | AF=a favor | C=en contra", label_visibility="collapsed")
+        with l5[1]:
+            st.markdown("**Fav/Cntr2(Eq1)**")
+            alcance_filtro2 = st.selectbox("Fav/Cntr2(Eq1)", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro2', label_visibility="collapsed")
+        with l5[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Fav/Cntr3(Eq2)</span>", unsafe_allow_html=True)
+            alcance_filtro3 = st.selectbox("Fav/Cntr3(Eq2)", ["Todo","AF","C"] + [f"AF{i}" for i in range(31)] + [f"C{i}" for i in range(31)], key='alcance_filtro3', label_visibility="collapsed")
 
-        # --- LINEA 6: AM(Eq1) X/X AM3(Eq2) ---
+        # --- LINEA 6: AM + %Min Eq1 + AM3 ---
         l6 = st.columns(3)
-        ambos_marcan = l6[0].selectbox("AM (Eq1)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan')
-        xx_filtro = l6[1].selectbox("X/X", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro', help="G/X:Gana al descanso | X/G:Gana al final")
-        ambos_marcan_eq2 = l6[2].selectbox("AM3 (Eq2)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan_eq2')
+        with l6[0]:
+            st.markdown("**AM(Eq1)**")
+            ambos_marcan = st.selectbox("AM(Eq1)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan', label_visibility="collapsed")
+        with l6[1]:
+            st.markdown("**%Min(Eq1)**")
+            pct_marcador = st.number_input("%Min(Eq1)", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
+        with l6[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>AM3(Eq2)</span>", unsafe_allow_html=True)
+            ambos_marcan_eq2 = st.selectbox("AM3(Eq2)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan_eq2', label_visibility="collapsed")
 
-        # --- LINEA 7: 1x2 Eq1 R1x2 1x2 Eq2 --- (ORDEN FINAL)
+        # --- LINEA 6b: X/X + %Min Eq2 + X/X Eq2 - 1 POR HUECO ---
+        l6b = st.columns(3)
+        with l6b[0]:
+            st.markdown("**X/X(Eq1)**")
+            xx_filtro = st.selectbox("X/X(Eq1)", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro', help="G/X:Gana al descanso | X/G:Gana al final", label_visibility="collapsed")
+        with l6b[1]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>%Min(Eq2)</span>", unsafe_allow_html=True)
+            pct_marcador_eq2 = st.number_input("%Min(Eq2)", min_value=0, max_value=100, value=st.session_state.pct_marcador_eq2, step=5, key='pct_marcador_eq2', label_visibility="collapsed")
+        with l6b[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>X/X(Eq2)</span>", unsafe_allow_html=True)
+            xx_filtro_eq2 = st.selectbox("X/X(Eq2)", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro_eq2', help="Para Eq2", label_visibility="collapsed")
+
+        # --- LINEA 7: 1x2 Eq1 R1x2 1x2 Eq2 ---
         l7 = st.columns(3)
-        resultado_filtro = l7[0].selectbox("1x2 (Eq1)", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro')
-        cuota_tipo = l7[1].selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo')
-        resultado_filtro_eq2 = l7[2].selectbox("1x2 (Eq2)", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro_eq2')
+        with l7[0]:
+            st.markdown("**1x2(Eq1)**")
+            resultado_filtro = st.selectbox("1x2(Eq1)", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro', label_visibility="collapsed")
+        with l7[1]:
+            st.markdown("**R1x2**")
+            cuota_tipo = st.selectbox("R1x2", ["Ninguno","Todo","1","X","2"], key='cuota_tipo', label_visibility="collapsed")
+        with l7[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>1x2(Eq2)</span>", unsafe_allow_html=True)
+            resultado_filtro_eq2 = st.selectbox("1x2(Eq2)", opciones_1x2, format_func=lambda x: mapa_1x2[x], key='resultado_filtro_eq2', label_visibility="collapsed")
 
-        # --- LINEA 7b: MARGEN + HT/FT + MARGEN EQ2 ---
+        # --- LINEA 7b: Margen Eq1 y Margen Eq2 arriba ---
         l7b = st.columns(3)
-        margen_filtro = l7b[0].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
-        htft_filtro = l7b[1].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
-        margen_filtro_eq2 = l7b[2].selectbox("Margen Eq2", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro_eq2')
+        with l7b[0]:
+            st.markdown("**Margen(Eq1)**")
+            margen_filtro = st.selectbox("Margen(Eq1)", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro', label_visibility="collapsed")
+        with l7b[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>Margen Eq2(Eq2)</span>", unsafe_allow_html=True)
+            margen_filtro_eq2 = st.selectbox("Margen Eq2(Eq2)", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro_eq2', label_visibility="collapsed")
 
-        # --- LINEA 8: Marcador Parte %minimo ---
-        marcadores_unicos = sorted(
-            (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
-            key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
-        )
+        # --- LINEA 7c: R=HT/FT(Eq1) DEBAJO de Margen(Eq1) y R=HT/FT(Eq2) debajo de Margen Eq2 ---
+        l7c = st.columns(3)
+        with l7c[0]:
+            st.markdown("**R=HT/FT(Eq1)**")
+            htft_filtro = st.selectbox("R=HT/FT(Eq1)", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro', label_visibility="collapsed")
+        with l7c[2]:
+            st.markdown("<span style='color:#0A2342;font-weight:800'>R=HT/FT(Eq2)</span>", unsafe_allow_html=True)
+            htft_filtro_eq2 = st.selectbox("R=HT/FT(Eq2)", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro_eq2', label_visibility="collapsed")
+
+        # --- LINEA 8: Solo Parte ---
         l8 = st.columns(3)
-        marcador_filtro = l8[0].selectbox("Marcador", ["Todos"] + marcadores_unicos, key='marcador_filtro')
-        parte_gol = l8[1].selectbox("Parte", ["Todo","1T","2T"], key='parte_gol')
-        l8[2].caption("% mínimo")
-        pct_marcador = l8[2].number_input("pct", min_value=0, max_value=100, value=st.session_state.pct_marcador, step=5, key='pct_marcador', label_visibility="collapsed")
+        with l8[0]:
+            st.markdown("**Parte**")
+            parte_gol = st.selectbox("Parte", ["Todo","1T","2T"], key='parte_gol', label_visibility="collapsed")
 
         # --- LINEA 9: Jugador ---
         from collections import defaultdict, Counter
@@ -1224,94 +1451,55 @@ if len(jornadas) > 0:
         jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
         st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
-    
-    
-    
-    
-    # --- RESUMEN DE FILTROS ACTIVOS - FIX COL2 Y COL3 ---
-    filtros_activos = []
 
-    if equipo_filtro!= "Ninguno": filtros_activos.append(f"Eq1:{equipo_filtro}")
-    if equipo2_filtro!= "Ninguno": filtros_activos.append(f"Eq2:{equipo2_filtro}")
-    if condicion_filtro!= "Todo": filtros_activos.append(f"L/V:{condicion_filtro}")
-    if condicion_filtro3!= "Todo": filtros_activos.append(f"L/V3:{condicion_filtro3}")
-    if resultado_filtro!= "Ninguno": filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
-    if resultado_filtro_eq2!= "Ninguno": filtros_activos.append(f"1x2 Eq2:{mapa_1x2[resultado_filtro_eq2]}")
-    if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
-    if ambos_marcan_eq2!= "Todos": filtros_activos.append(f"AM3:{ambos_marcan_eq2}")
-    if htft_filtro!= "Todo": filtros_activos.append(f"HT/FT:{htft_filtro}")
-    if xx_filtro!= "Todo": filtros_activos.append(f"X/X:{xx_filtro}")
-    if margen_filtro!= "Todo": filtros_activos.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
-    if marcador_filtro!= "Todos": filtros_activos.append(f"Marc:{marcador_filtro}")
-    if pct_marcador > 0: filtros_activos.append(f"Min%:{pct_marcador}%")
-    if cuota_tipo not in ["Ninguno","Todo"]: filtros_activos.append(f"R1x2:{cuota_tipo}")
-    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): filtros_activos.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
-    if parte_gol!= "Todo": filtros_activos.append(f"Parte:{parte_gol}")
-    if jugador_filtro!= "TODOS": filtros_activos.append(f"Jug:{jugador_filtro}")
-    if not (rango_minutos[0]==0 and rango_minutos[1]>=120): filtros_activos.append(f"Min:{rango_minutos[0]}-{rango_minutos[1]}")
-
+    # --- MINI TEXTO RESTAURADO EQ1/EQ2 ---
     def fmt_col(col, op, val, alc):
         if col=="Ninguno" or val=="Ninguno": return None
         txt = f"{ABREV_COL.get(col, col)}{op}{val}"
         if alc!= "Todo": txt = f"{alc}:{txt}"
         return txt
-
     c1 = fmt_col(columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
     c2 = fmt_col(columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
     c3 = fmt_col(columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-
-    if c1: filtros_activos.append(c1)
-    if c2: filtros_activos.append(c2)
-    if c3: filtros_activos.append(c3)
-
-    if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
-        filtros_activos.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
-
-    # --- RESUMEN FILTROS SIMPLE 2 LINEAS ---
     eq1_list = []
     eq2_list = []
-
     if equipo_filtro!="Ninguno": eq1_list.append(f"{equipo_filtro}")
     if condicion_filtro!="Todo": eq1_list.append(f"L/V:{condicion_filtro}")
     if c1: eq1_list.append(c1)
     if c2: eq1_list.append(c2)
-    # generales van en eq1
     if resultado_filtro!="Ninguno": eq1_list.append(f"1x2:{mapa_1x2[resultado_filtro]}")
     if ambos_marcan!="Todos": eq1_list.append(f"AM:{ambos_marcan}")
-    if ambos_marcan_eq2!="Todos": eq2_list.append(f"AM3:{ambos_marcan_eq2}")
     if htft_filtro!="Todo": eq1_list.append(f"HT/FT:{htft_filtro}")
     if xx_filtro!="Todo": eq1_list.append(f"X/X:{xx_filtro}")
     if margen_filtro!="Todo": eq1_list.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
-
+    if marcador_filtro!="Todos": eq1_list.append(f"Marc:{marcador_filtro}")
+    if pct_marcador>0: eq1_list.append(f"Min%:{pct_marcador}%")
     if equipo2_filtro!="Ninguno": eq2_list.append(f"{equipo2_filtro}")
     if condicion_filtro3!="Todo": eq2_list.append(f"L/V3:{condicion_filtro3}")
     if c3: eq2_list.append(c3)
-
+    if resultado_filtro_eq2!="Ninguno": eq2_list.append(f"1x2:{mapa_1x2[resultado_filtro_eq2]}")
+    if ambos_marcan_eq2!="Todos": eq2_list.append(f"AM3:{ambos_marcan_eq2}")
+    if htft_filtro_eq2!="Todo": eq2_list.append(f"HT/FT3:{htft_filtro_eq2}")
+    if xx_filtro_eq2!="Todo": eq2_list.append(f"X/X3:{xx_filtro_eq2}")
+    if margen_filtro_eq2!="Todo": eq2_list.append(f"Margen3:{ABREV_MARGEN[margen_filtro_eq2]}")
+    if marcador_filtro_eq2!="Todos": eq2_list.append(f"Marc3:{marcador_filtro_eq2}")
+    if pct_marcador_eq2>0: eq2_list.append(f"Min2%:{pct_marcador_eq2}%")
     comunes = []
-    if marcador_filtro!="Todos": comunes.append(f"Marc:{marcador_filtro}")
-    if pct_marcador>0: comunes.append(f"Min%:{pct_marcador}%")
     if cuota_tipo not in ["Ninguno","Todo"]: comunes.append(f"R1x2:{cuota_tipo}")
-    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if parte_gol!="Todo": comunes.append(f"Parte:{parte_gol}")
     if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
-    if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j): comunes.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
-
     if eq1_list or eq2_list or comunes:
-        txt = "<div style='font-size:10px; line-height:1.2; font-family:monospace; padding:2px 0'>"
-        txt += "filtros:<br>"
-        if eq1_list:
-            txt += "eq1: " + " | ".join(eq1_list + comunes) + "<br>"
-        if eq2_list:
-            txt += "eq2: " + " | ".join(eq2_list)
-            if not eq1_list and comunes:
-                txt += " | " + " | ".join(comunes)
-        if not eq1_list and not eq2_list and comunes:
-            txt += " | ".join(comunes)
+        txt = "<div style='font-size:10px; line-height:1.2; font-family:monospace; padding:4px 0'>filtros:<br>"
+        if eq1_list: txt += "eq1: " + " | ".join(eq1_list + comunes) + "<br>"
+        if eq2_list: txt += "eq2: " + " | ".join(eq2_list + comunes)
+        if not eq1_list and not eq2_list and comunes: txt += " | ".join(comunes)
         txt += "</div>"
         st.markdown(txt, unsafe_allow_html=True)
     else:
         st.caption("filtros: ninguno")
-    # --- FIN RESUMEN FILTROS ---
+
+    # --- FILTRO ACTUAL MOVIDO ABAJO - NO BORRAR ESTA LINEA ---
+    pass
 
    ##########fin desplegable
     # === FIN FILTRO GOLES ===
@@ -1420,67 +1608,83 @@ if len(jornadas) > 0:
         elif ambos_marcan_eq2!= "Todos":
             df_final = _filtro_am(df_final, ambos_marcan_eq2, parte_gol)
     
-    # === FILTRO NUEVO X/X - con y sin equipo ===
-    if xx_filtro!= "Todo":
-        if equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-            es_local = df_final['HomeTeam'] == equipo_filtro
-            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-            ht_empata = ~(ht_gana | ht_pierde)
-            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-            ft_empata = ~(ft_gana | ft_pierde)
+    # === FILTRO X/X - Eq1 y Eq2 separados ===
+    def _aplica_xx(df_in, equipo_ref, modo_xx):
+        if modo_xx=="Todo" or df_in.empty:
+            return df_in
+        if equipo_ref!="Ninguno":
+            es_local = df_in['HomeTeam']==equipo_ref
+            ht_g = np.where(es_local, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+            ht_p = np.where(es_local, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+            ft_g = np.where(es_local, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+            ft_p = np.where(es_local, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
         else:
-            ht_gana = df_final['HTHG'] > df_final['HTAG']
-            ht_pierde = df_final['HTHG'] < df_final['HTAG']
-            ht_empata = ~(ht_gana | ht_pierde)
-            ft_gana = df_final['FTHG'] > df_final['FTAG']
-            ft_pierde = df_final['FTHG'] < df_final['FTAG']
-            ft_empata = ~(ft_gana | ft_pierde)
+            ht_g = df_in['HTHG']>df_in['HTAG']
+            ht_p = df_in['HTHG']<df_in['HTAG']
+            ft_g = df_in['FTHG']>df_in['FTAG']
+            ft_p = df_in['FTHG']<df_in['FTAG']
+        ht_e = ~(ht_g | ht_p)
+        ft_e = ~(ft_g | ft_p)
+        if modo_xx=="G/X": return df_in[ht_g]
+        elif modo_xx=="E/X": return df_in[ht_e]
+        elif modo_xx=="P/X": return df_in[ht_p]
+        elif modo_xx=="X/G": return df_in[ft_g]
+        elif modo_xx=="X/E": return df_in[ft_e]
+        elif modo_xx=="X/P": return df_in[ft_p]
+        return df_in
 
-        if xx_filtro == "G/X":
-            df_final = df_final[ht_gana]
-        elif xx_filtro == "E/X":
-            df_final = df_final[ht_empata]
-        elif xx_filtro == "P/X":
-            df_final = df_final[ht_pierde]
-        elif xx_filtro == "X/G":
-            df_final = df_final[ft_gana]
-        elif xx_filtro == "X/E":
-            df_final = df_final[ft_empata]
-        elif xx_filtro == "X/P":
-            df_final = df_final[ft_pierde]
+    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+        df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
+        df_eq2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].copy()
+        if xx_filtro!="Todo":
+            df_eq1 = _aplica_xx(df_eq1, equipo_filtro, xx_filtro)
+        if xx_filtro_eq2!="Todo":
+            df_eq2 = _aplica_xx(df_eq2, equipo2_filtro, xx_filtro_eq2)
+        df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
+    else:
+        if equipo2_filtro!="Ninguno" and xx_filtro_eq2!="Todo":
+            df_final = _aplica_xx(df_final, equipo2_filtro, xx_filtro_eq2)
+        elif xx_filtro!="Todo":
+            df_final = _aplica_xx(df_final, equipo_filtro, xx_filtro)
 
-    
-    
-    
-    
-    #######################################
-    # === FILTRO HT/FT - con y sin equipo ===
-    if htft_filtro != "Todo":
-        if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
-            es_local = df_final['HomeTeam'] == equipo_filtro
-            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
+    # === FILTRO HT/FT - Eq1 y Eq2 separados ===
+    def _aplica_htft(df_in, equipo_ref, modo_htft):
+        if modo_htft=="Todo" or df_in.empty:
+            return df_in
+        if equipo_ref!="Ninguno":
+            es_local = df_in['HomeTeam']==equipo_ref
+            ht_g = np.where(es_local, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+            ht_p = np.where(es_local, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+            ft_g = np.where(es_local, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+            ft_p = np.where(es_local, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
         else:
-            ht_gana = df_final['HTHG'] > df_final['HTAG']
-            ht_pierde = df_final['HTHG'] < df_final['HTAG']
-            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-            ft_gana = df_final['FTHG'] > df_final['FTAG']
-            ft_pierde = df_final['FTHG'] < df_final['FTAG']
-            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
-
-        combo = ht_res + '/' + ft_res
-        if htft_filtro == "RE":
-            df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
-        elif htft_filtro == "FAIL":
-            df_final = df_final[((ht_res == 'G') & (ft_res != 'G')) | ((ht_res == 'E') & (ft_res == 'P'))]
+            ht_g = df_in['HTHG']>df_in['HTAG']
+            ht_p = df_in['HTHG']<df_in['HTAG']
+            ft_g = df_in['FTHG']>df_in['FTAG']
+            ft_p = df_in['FTHG']<df_in['FTAG']
+        ht_r = np.where(ht_g,'G',np.where(ht_p,'P','E'))
+        ft_r = np.where(ft_g,'G',np.where(ft_p,'P','E'))
+        combo = ht_r + '/' + ft_r
+        if modo_htft=="RE":
+            return df_in[(ht_r!='G') & (ft_r=='G')]
+        elif modo_htft=="FAIL":
+            return df_in[((ht_r=='G') & (ft_r!='G')) | ((ht_r=='E') & (ft_r=='P'))]
         else:
-            df_final = df_final[combo == htft_filtro]
+            return df_in[combo==modo_htft]
+
+    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+        df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
+        df_eq2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].copy()
+        if htft_filtro!="Todo":
+            df_eq1 = _aplica_htft(df_eq1, equipo_filtro, htft_filtro)
+        if htft_filtro_eq2!="Todo":
+            df_eq2 = _aplica_htft(df_eq2, equipo2_filtro, htft_filtro_eq2)
+        df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
+    else:
+        if equipo2_filtro!="Ninguno" and htft_filtro_eq2!="Todo":
+            df_final = _aplica_htft(df_final, equipo2_filtro, htft_filtro_eq2)
+        elif htft_filtro!="Todo":
+            df_final = _aplica_htft(df_final, equipo_filtro, htft_filtro)
 
     if cuota_tipo not in ["Ninguno","Todo"]:
         if cuota_tipo == "1":
@@ -1533,9 +1737,33 @@ if len(jornadas) > 0:
         if margen_filtro!= "Todo":
             df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro)
 
-    if marcador_filtro!= "Todos":
-        gl, gv = map(int, marcador_filtro.split('-'))
-        df_final = df_final[(df_final['FTHG']==gl) & (df_final['FTAG']==gv)]
+    # === FILTRO MARCADOR Eq1 y Eq2 separados ===
+    def _aplica_marcador_score(df_in, equipo_ref, modo_marc):
+        if modo_marc=="Todos" or df_in.empty:
+            return df_in
+        gl, gv = map(int, modo_marc.split('-'))
+        if equipo_ref!="Ninguno":
+            es_loc = df_in['HomeTeam']==equipo_ref
+            # Si Eq1 es local, tiene que ser FTHG=gl y FTAG=gv, si es visitante al revés
+            mask = ((es_loc & (df_in['FTHG']==gl) & (df_in['FTAG']==gv)) |
+                    (~es_loc & (df_in['FTHG']==gv) & (df_in['FTAG']==gl)))
+            return df_in[mask]
+        else:
+            return df_in[(df_in['FTHG']==gl) & (df_in['FTAG']==gv)]
+
+    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+        df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
+        df_eq2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].copy()
+        if marcador_filtro!="Todos":
+            df_eq1 = _aplica_marcador_score(df_eq1, equipo_filtro, marcador_filtro)
+        if marcador_filtro_eq2!="Todos":
+            df_eq2 = _aplica_marcador_score(df_eq2, equipo2_filtro, marcador_filtro_eq2)
+        df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
+    else:
+        if equipo2_filtro!="Ninguno" and marcador_filtro_eq2!="Todos":
+            df_final = _aplica_marcador_score(df_final, equipo2_filtro, marcador_filtro_eq2)
+        elif marcador_filtro!="Todos":
+            df_final = _aplica_marcador_score(df_final, equipo_filtro, marcador_filtro)
 
 # --- FILTRO COLUMNAS CRUZADO SOLO Eq1 ---
     def _aplica_filtro_col(df_in, col, op, val_str, alcance_str, eq1):
@@ -1749,7 +1977,66 @@ else:
     else:
         df_final['partidos'] = pd.Series(dtype='object')
         df_final['Tarjetas/Corners/goles'] = pd.Series(dtype='object')
+    # --- FILTRO ACTUAL + FILTRA REAL POR %Min Eq1/Eq2 - FIX DEFINITIVO ABAJO ---
+    base_total_final = df_base_h2h.copy()
+    base_filtrada = df_final.copy()
+    titulo_exp = f"≥{pct_marcador}% Eq1 / ≥{pct_marcador_eq2}% Eq2"
 
+    with st.expander(f"📊 Filtro actual {titulo_exp}", expanded=False):
+        if len(base_filtrada) > 0 and len(base_total_final) > 0:
+            if equipo_filtro=="Ninguno" and equipo2_filtro=="Ninguno":
+                todos_eq = pd.unique(base_total_final[['HomeTeam','AwayTeam']].values.ravel())
+                datos_eq1 = []
+                datos_eq2 = []
+                set_eq1 = set()
+                set_eq2 = set()
+                for eq in todos_eq:
+                    if condicion_filtro == "Local": bt1 = base_total_final[base_total_final['HomeTeam']==eq]
+                    elif condicion_filtro == "Visitante": bt1 = base_total_final[base_total_final['AwayTeam']==eq]
+                    else: bt1 = base_total_final[(base_total_final['HomeTeam']==eq)|(base_total_final['AwayTeam']==eq)]
+                    if condicion_filtro3 == "Local": bt2 = base_total_final[base_total_final['HomeTeam']==eq]
+                    elif condicion_filtro3 == "Visitante": bt2 = base_total_final[base_total_final['AwayTeam']==eq]
+                    else: bt2 = base_total_final[(base_total_final['HomeTeam']==eq)|(base_total_final['AwayTeam']==eq)]
+                    if condicion_filtro == "Local": bg1 = base_filtrada[base_filtrada['HomeTeam']==eq]
+                    elif condicion_filtro == "Visitante": bg1 = base_filtrada[base_filtrada['AwayTeam']==eq]
+                    else: bg1 = base_filtrada[(base_filtrada['HomeTeam']==eq)|(base_filtrada['AwayTeam']==eq)]
+                    if condicion_filtro3 == "Local": bg2 = base_filtrada[base_filtrada['HomeTeam']==eq]
+                    elif condicion_filtro3 == "Visitante": bg2 = base_filtrada[base_filtrada['AwayTeam']==eq]
+                    else: bg2 = base_filtrada[(base_filtrada['HomeTeam']==eq)|(base_filtrada['AwayTeam']==eq)]
+                    if not bt1.empty:
+                        tot1=len(bt1); hits1=len(bg1); pct1=hits1/tot1*100 if tot1 else 0
+                        if pct1 >= pct_marcador:
+                            jors=jornadas_conteo(bg1['Jornada'], bg1, eq, None)
+                            html=f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'><b style='font-size:12px'>{eq.title()}</b><br><span style='font-weight:900'>{hits1}# {pct1:.1f}% ≥{pct_marcador}%</span><br>{jors}</div>"""
+                            datos_eq1.append((pct1,hits1,eq,html)); set_eq1.add(eq)
+                    if not bt2.empty:
+                        tot2=len(bt2); hits2=len(bg2); pct2=hits2/tot2*100 if tot2 else 0
+                        if pct2 >= pct_marcador_eq2:
+                            jors=jornadas_conteo(bg2['Jornada'], bg2, eq, None)
+                            html=f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'><b style='font-size:12px'>{eq.title()}</b><br><span style='font-weight:900'>{hits2}# {pct2:.1f}% ≥{pct_marcador_eq2}%</span><br>{jors}</div>"""
+                            datos_eq2.append((pct2,hits2,eq,html)); set_eq2.add(eq)
+                datos_eq1.sort(key=lambda x: (-x[0], -x[1], x[2]))
+                datos_eq2.sort(key=lambda x: (-x[0], -x[1], x[2]))
+                html_final = f"<div style='background:#f8f9fa;padding:8px 10px;border-left:3px solid #0A2342;margin:6px 0 10px 0'><b>Filtro actual {titulo_exp}</b><br>"
+                html_final += f"<div style='margin-top:10px;padding:4px 8px;background:#0A2342;color:#fff;font-size:11px;font-weight:900;border-radius:4px'>EQ1 ≥{pct_marcador}% L/V:{condicion_filtro} AM:{ambos_marcan} ({len(datos_eq1)} equipos)</div>"
+                html_final += "".join([d[3] for d in datos_eq1]) if datos_eq1 else "<div style='font-size:10px;padding:4px'>Ninguno llega</div>"
+                html_final += f"<div style='margin-top:14px;padding:4px 8px;background:#0369a1;color:#fff;font-size:11px;font-weight:900;border-radius:4px'>EQ2 ≥{pct_marcador_eq2}% L/V3:{condicion_filtro3} AM3:{ambos_marcan_eq2} ({len(datos_eq2)} equipos)</div>"
+                html_final += "".join([d[3] for d in datos_eq2]) if datos_eq2 else "<div style='font-size:10px;padding:4px'>Ninguno llega</div>"
+                html_final += "</div>"
+                st.markdown(html_final, unsafe_allow_html=True)
+                st.session_state['_valid_eq1_final'] = set_eq1
+                st.session_state['_valid_eq2_final'] = set_eq2
+            else:
+                st.session_state['_valid_eq1_final'] = set()
+                st.session_state['_valid_eq2_final'] = set()
+        else:
+            st.info("No hay partidos con los filtros actuales")
+
+    if '_valid_eq1_final' in st.session_state and '_valid_eq2_final' in st.session_state:
+        if equipo_filtro=="Ninguno" and equipo2_filtro=="Ninguno":
+            if pct_marcador>0 or pct_marcador_eq2>0:
+                valid_total = st.session_state['_valid_eq1_final'].union(st.session_state['_valid_eq2_final'])
+                df_final = df_final[(df_final['HomeTeam'].isin(valid_total)) | (df_final['AwayTeam'].isin(valid_total))]
     st.caption(f"Mostrando {len(df_final)} partidos")
   
   
@@ -1790,266 +2077,7 @@ if len(df_final) > 0:
                 st.markdown(f"<div style='font-size:11px;padding:1px 0 1px 8px;font-family:monospace'>J{int(row['Jornada'])} - {veces}# | <b>{pct}%</b> aprox {veces}/{partidos_xj}</div>", unsafe_allow_html=True)
    
    
-   ####################
-   
-    # --- RESUMEN CON % QUE RESPETA Eq1/Eq2 ---
-# --- RESUMEN CON % QUE RESPETA Eq1/Eq2 + MARCADOR ---
-    with st.expander(f"📊 Filtro actual ≥{pct_marcador}%", expanded=False):
-        if len(df_final) > 0:
-            # CAMBIO 1: base = df_final para que respete TODOS los filtros incluido marcador
-            base = df_final.copy()
 
-            # 1) Muestra Eq1 y/o Eq2 si están elegidos
-            equipos_mostrar = []
-            if equipo_filtro!= "Ninguno":
-                equipos_mostrar.append(equipo_filtro)
-            if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar:
-                equipos_mostrar.append(equipo2_filtro)
-            if not equipos_mostrar:
-                equipos_mostrar = pd.unique(base[['HomeTeam','AwayTeam']].values.ravel())
-
-            datos = []
-
-            if marcador_filtro!= "Todos":
-                gl, gv = map(int, marcador_filtro.split('-'))
-                titulo = f"{marcador_filtro}"
-                for eq in equipos_mostrar:
-                    part = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
-                    tot = len(part)
-                    if tot == 0: continue
-                    # hits ya están en part porque base=df_final ya está filtrado por marcador
-                    hits = len(part) # CAMBIO 2: todos los de part ya son 0-0 si filtraste 0-0
-                    pct = hits / tot * 100
-                    if pct >= pct_marcador:
-                        df_jors = part
-                        rival = None
-                        if len(equipos_mostrar) == 2:
-                            rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0]
-                        jors = jornadas_conteo(df_jors['Jornada'], df_jors, eq, rival) # CAMBIO 3: paso df_jors en vez de df_base_h2h
-                        html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
-<b style='font-size:12px'>{eq.title()}</b><br>
-<span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
-{jors}
-</div>"""
-                        datos.append((pct, hits, eq, html))
-            else:
-                titulo = "Filtro actual"
-                # CAMBIO 4: para calcular % real necesito el total SIN filtros de marcador
-                # pero SÍ con filtros de equipo/liga/temporada
-                base_total = df_base_h2h.copy()
-                if equipo_filtro!= "Ninguno" or equipo2_filtro!= "Ninguno":
-                    if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
-                        base_total = base_total[((base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)) |
-                                               ((base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro))]
-                    elif equipo_filtro!= "Ninguno":
-                        base_total = base_total[(base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)]
-                    elif equipo2_filtro!= "Ninguno":
-                        base_total = base_total[(base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro)]
-#####af contra toda la logica
-                def _vals_por_col(df_input, eq_local, col, alc):
-                    col_u = str(col).upper()
-                    if col_u in ['GT','GOLESTOTALES','GOLTOTAL','GOL','FTHG','FTAG','GTOTAL']:
-                        vh, va = df_input['FTHG'].values, df_input['FTAG'].values
-                    elif col_u in ['GHT','GOLESHT','GOLHT','G1T','HT','HTHG','HTAG']:
-                        vh, va = df_input['HTHG'].values, df_input['HTAG'].values
-                    elif col_u in ['G2T','GOL2T']:
-                        vh = (df_input['FTHG']-df_input['HTHG']).values
-                        va = (df_input['FTAG']-df_input['HTAG']).values
-                    elif col_u in ['TAM','TARGAMTOT','AM','HY','AY']:
-                        vh, va = df_input['HY'].values, df_input['AY'].values
-                    elif col_u in ['TRT','TARGROJTOT','RJ','HR','AR']:
-                        vh, va = df_input['HR'].values, df_input['AR'].values
-                    elif col_u in ['COR','CORN','CORNETOT','CT','HC','AC']:
-                        vh, va = df_input['HC'].values, df_input['AC'].values
-                    elif col_u in ['TT','TIROSTOT','HS','AS','T']:
-                        vh, va = df_input['HS'].values, df_input['AS'].values
-                    elif col_u in ['TPT','TIROSPUERTATOT','TP','HST','AST']:
-                        vh, va = df_input['HST'].values, df_input['AST'].values
-                    elif col_u in ['FAL','FALTASTOT','FT','HF','AF']:
-                        vh, va = df_input['HF'].values, df_input['AF'].values
-                    else:
-                        vh = df_input[col].values if col in df_input.columns else np.zeros(len(df_input))
-                        va = vh
-
-                    if alc == "Todo":
-                        o = vh + va
-                        return pd.Series(o, index=df_input.index), pd.Series(o, index=df_input.index)
-
-                    own_list = []
-                    opp_list = []
-                    for idx, r in df_input.iterrows():
-                        pos = df_input.index.get_loc(idx)
-                        es_loc = r['HomeTeam'] == eq_local
-                        if es_loc:
-                            own_list.append(vh[pos])
-                            opp_list.append(va[pos])
-                        else:
-                            own_list.append(va[pos])
-                            opp_list.append(vh[pos])
-                    return pd.Series(own_list, index=df_input.index), pd.Series(opp_list, index=df_input.index)
-
-                def _check_col_team(df_in, eq_local, col, op, val, alc):
-                    if col=="Ninguno" or val=="Ninguno" or col in ["_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"]:
-                        return pd.Series([True]*len(df_in), index=df_in.index)
-                    try:
-                        thr = float(val)
-                        own_vals, opp_vals = _vals_por_col(df_in, eq_local, col, alc)
-                        vals = own_vals if alc == "AF" else opp_vals if alc == "C" else own_vals
-                        if op == ">": return vals > thr
-                        elif op == ">=": return vals >= thr
-                        elif op == "<": return vals < thr
-                        elif op == "<=": return vals <= thr
-                        else: return vals == thr
-                    except:
-                        return pd.Series([True]*len(df_in), index=df_in.index)
-
-                def _check_1x2_team(df_in, eq_local):
-                    modo = resultado_filtro if eq_local == equipo_filtro else resultado_filtro_eq2 if eq_local == equipo2_filtro else (resultado_filtro if resultado_filtro!="Ninguno" else resultado_filtro_eq2)
-                    if modo=="Ninguno":
-                        return pd.Series([True]*len(df_in), index=df_in.index)
-                    es_loc = df_in['HomeTeam']==eq_local
-                    gana = (es_loc & (df_in['FTHG']>df_in['FTAG'])) | (~es_loc & (df_in['FTAG']>df_in['FTHG']))
-                    pierde = (es_loc & (df_in['FTHG']<df_in['FTAG'])) | (~es_loc & (df_in['FTAG']<df_in['FTHG']))
-                    emp = ~(gana | pierde)
-                    if modo=="Gana": return gana
-                    if modo=="Pierde": return pierde
-                    if modo=="Empata": return emp
-                    if modo=="Gana/Empata": return gana | emp
-                    if modo=="Gana/Pierde": return gana | pierde
-                    if modo=="Empata/Pierde": return emp | pierde
-                    return pd.Series([True]*len(df_in), index=df_in.index)
-
-                def _check_am_team(df_in, eq_local):
-                    modo = ambos_marcan if eq_local == equipo_filtro else ambos_marcan_eq2 if eq_local == equipo2_filtro else (ambos_marcan if ambos_marcan!="Todos" else ambos_marcan_eq2)
-                    if modo=="Todos":
-                        return pd.Series([True]*len(df_in), index=df_in.index)
-                    if modo=="Si":
-                        if parte_gol=="1T": return (df_in['HTHG']>0) & (df_in['HTAG']>0)
-                        elif parte_gol=="2T": return ((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0)
-                        else: return (df_in['FTHG']>0) & (df_in['FTAG']>0)
-                    elif modo=="No":
-                        if parte_gol=="1T": return ~((df_in['HTHG']>0) & (df_in['HTAG']>0))
-                        elif parte_gol=="2T": return ~(((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0))
-                        else: return ~((df_in['FTHG']>0) & (df_in['FTAG']>0))
-                    elif modo=="Si1P": return (df_in['HTHG']>0) & (df_in['HTAG']>0)
-                    elif modo=="No1P": return ~((df_in['HTHG']>0) & (df_in['HTAG']>0))
-                    elif modo=="Si2P": return ((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0)
-                    elif modo=="No2P": return ~(((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0))
-                    return pd.Series([True]*len(df_in), index=df_in.index)
-                #
-                def _check_xx_htft_margen_team(df_in, eq_local):
-                    masks = []
-                    if xx_filtro!="Todo":
-                        es_loc = df_in['HomeTeam']==eq_local
-                        ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
-                        ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
-                        ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
-                        ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
-                        ht_e = ~(ht_g | ht_p)
-                        ft_e = ~(ft_g | ft_p)
-                        if xx_filtro=="G/X": masks.append(pd.Series(ht_g, index=df_in.index))
-                        elif xx_filtro=="E/X": masks.append(pd.Series(ht_e, index=df_in.index))
-                        elif xx_filtro=="P/X": masks.append(pd.Series(ht_p, index=df_in.index))
-                        elif xx_filtro=="X/G": masks.append(pd.Series(ft_g, index=df_in.index))
-                        elif xx_filtro=="X/E": masks.append(pd.Series(ft_e, index=df_in.index))
-                        elif xx_filtro=="X/P": masks.append(pd.Series(ft_p, index=df_in.index))
-                    if htft_filtro!="Todo":
-                        es_loc = df_in['HomeTeam']==eq_local
-                        ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
-                        ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
-                        ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
-                        ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
-                        ht_r = np.where(ht_g,'G',np.where(ht_p,'P','E'))
-                        ft_r = np.where(ft_g,'G',np.where(ft_p,'P','E'))
-                        combo = pd.Series([f"{a}/{b}" for a,b in zip(ht_r, ft_r)], index=df_in.index)
-                        if htft_filtro=="RE":
-                            masks.append(pd.Series((ht_r!='G') & (ft_r=='G'), index=df_in.index))
-                        elif htft_filtro=="FAIL":
-                            masks.append(pd.Series(((ht_r=='G') & (ft_r!='G')) | ((ht_r=='E') & (ft_r=='P')), index=df_in.index))
-                        else:
-                            masks.append(combo==htft_filtro)
-                    if margen_filtro!="Todo":
-                        es_loc = df_in['HomeTeam']==eq_local
-                        dif = np.where(es_loc, df_in['FTHG']-df_in['FTAG'], df_in['FTAG']-df_in['FTHG'])
-                        if margen_filtro=="Empate": masks.append(pd.Series(dif==0, index=df_in.index))
-                        elif margen_filtro=="Gana 1": masks.append(pd.Series(dif==1, index=df_in.index))
-                        elif margen_filtro=="Gana 2": masks.append(pd.Series(dif==2, index=df_in.index))
-                        elif margen_filtro=="Gana 3+": masks.append(pd.Series(dif>=3, index=df_in.index))
-                        elif margen_filtro=="Pierde 1": masks.append(pd.Series(dif==-1, index=df_in.index))
-                        elif margen_filtro=="Pierde 2": masks.append(pd.Series(dif==-2, index=df_in.index))
-                        elif margen_filtro=="Pierde 3+": masks.append(pd.Series(dif<=-3, index=df_in.index))
-                        elif margen_filtro=="Gana ≥2": masks.append(pd.Series(dif>=2, index=df_in.index))
-                        elif margen_filtro=="Pierde ≥2": masks.append(pd.Series(dif<=-2, index=df_in.index))
-                    if not masks:
-                        return pd.Series([True]*len(df_in), index=df_in.index)
-                    m = masks[0]
-                    for x in masks[1:]: m = m & x
-                    return m
-                    #
-                for eq in equipos_mostrar:
-                    # L/V para Eq1, L/V3 para Eq2
-                    lv = condicion_filtro3 if eq==equipo2_filtro else condicion_filtro
-                    if lv == "Local":
-                        base_total_team = base_total[base_total['HomeTeam']==eq]
-                        base_team_global = base[base['HomeTeam']==eq]
-                    elif lv == "Visitante":
-                        base_total_team = base_total[base_total['AwayTeam']==eq]
-                        base_team_global = base[base['AwayTeam']==eq]
-                    else:
-                        base_total_team = base_total[(base_total['HomeTeam']==eq) | (base_total['AwayTeam']==eq)]
-                        base_team_global = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
-
-                    if base_team_global.empty:
-                        part_tot = base_total_team
-                        part_ok = base_team_global
-                    else:
-                        if eq == equipo_filtro:
-                            mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-                            mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-                            mask_col = mask1 & mask2
-                        elif eq == equipo2_filtro:
-                            mask_col = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-                        else:
-                            mask1 = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
-                            mask2 = _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-                            mask3 = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-                            mask_col = mask1 & mask2 & mask3
-
-                        mask_1x2 = _check_1x2_team(base_team_global, eq)
-                        mask_am = _check_am_team(base_team_global, eq)
-                        mask_xx_htft_margen = _check_xx_htft_margen_team(base_team_global, eq)
-                        mask_total = mask_col & mask_1x2 & mask_am & mask_xx_htft_margen
-                        part_ok = base_team_global[mask_total]
-                        part_tot = base_total_team
-
-                    tot = len(part_tot)
-                    hits = len(part_ok)
-                    pct = hits / tot * 100 if tot else 0
-                    if pct >= pct_marcador:
-                        rival = None
-                        if len(equipos_mostrar) == 2:
-                            rival = equipos_mostrar[1] if eq == equipos_mostrar[0] else equipos_mostrar[0]
-                        jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival)
-                        html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;border-bottom:1px solid #eee'>
-<b style='font-size:12px'>{eq.title()}</b><br>
-<span style='font-weight:900'>{hits}# {pct:.1f}%</span><br>
-{jors}
-</div>"""
-                        datos.append((pct, hits, eq, html))
-
-           
-           
-           
-            # ORDENAR DE MAYOR A MENOR POR % Y LUEGO POR # ACIERTOS
-            datos.sort(key=lambda x: (-x[0], -x[1], x[2]))
-            lineas = [d[3] for d in datos]
-
-            if lineas:
-                st.markdown(f"<div style='background:#f8f9fa;padding:8px 10px;border-left:3px solid #0A2342;margin:6px 0 10px 0'><b>{titulo} ≥{pct_marcador}% ({len(lineas)} equipos)</b><br>" + "".join(lineas) + "</div>", unsafe_allow_html=True)
-            elif pct_marcador > 0:
-                st.warning(f"Ningún equipo llega al {pct_marcador}%")
-        else:
-            st.info("No hay partidos con los filtros actuales")
         #############################################
         if equipo_filtro!= "Ninguno" and len(df_final) > 0:
             total = len(df_final)
