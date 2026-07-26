@@ -1907,21 +1907,39 @@ def _eval_team(df_in, team, col, op, val_str, alc):
         v2=df_in[contra].values if contra in df_in.columns else v1
         vh,va=v1,v2
 
-    # SIN EQUIPO -> tiene que mirar si LOCAL o VISITANTE cumple
+    # SIN EQUIPO -> respeta L/V y respeta AF/C
     if team=="Ninguno":
+        # determina si miramos solo local, solo visitante o ambos
+        # usa la variable global condicion_filtro / condicion_filtro3
+        try:
+            lv_global = condicion_filtro if 'condicion_filtro' in globals() else "Todo"
+        except:
+            lv_global = "Todo"
+        
         if tipo=="Todo":
             base=vh+va
+            if op=="=": ok=base==val
+            elif op==">": ok=base>val
+            elif op==">=": ok=base>=val
+            elif op=="<": ok=base<val
+            else: ok=base<=val
+            return ok
         else:
-            # Para GT>1 sin equipo, si CUALQUIERA de los dos mete >1, vale
             base_home = vh
             base_away = va
-            # evaluamos los dos
             if op=="=": ok_h=base_home==val; ok_a=base_away==val
             elif op==">": ok_h=base_home>val; ok_a=base_away>val
             elif op==">=": ok_h=base_home>=val; ok_a=base_away>=val
             elif op=="<": ok_h=base_home<val; ok_a=base_away<val
             else: ok_h=base_home<=val; ok_a=base_away<=val
-            return ok_h | ok_a
+            
+            if lv_global == "Local":
+                return ok_h
+            elif lv_global == "Visitante":
+                return ok_a
+            else:
+                # sin L/V, AF sin equipo = cualquiera que cumpla
+                return ok_h | ok_a
     else:
         es_loc=df_in['HomeTeam']==team
         es_team=es_loc | (df_in['AwayTeam']==team)
@@ -2200,16 +2218,12 @@ if len(df_final) > 0:
                 elif lv == "Visitante": base_total_team = base_total[base_total['AwayTeam']==eq]; base_team_global = base[base['AwayTeam']==eq]
                 else: base_total_team = base_total[(base_total['HomeTeam']==eq) | (base_total['AwayTeam']==eq)]; base_team_global = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
 
-                if base_team_global.empty: part_tot = base_total_team; part_ok = base_team_global
-                else:
-                    if eq == equipo_filtro: mask_col = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro) & _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
-                    elif eq == equipo2_filtro: mask_col = _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-                    else: mask_col = _check_col_team(base_team_global, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro) & _check_col_team(base_team_global, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2) & _check_col_team(base_team_global, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
-                    mask_total = mask_col & _check_1x2_team(base_team_global, eq) & _check_am_team(base_team_global, eq) & _check_xx_htft_margen_team(base_team_global, eq) & _check_marcador_team(base_team_global, eq)
-                    part_ok = base_team_global[mask_total]; part_tot = base_total_team
+                # FIX CERCLE BRUGGE 0/15: base_team_global ya es df_final filtrado, no lo vuelvas a filtrar
+                part_tot = base_total_team
+                part_ok = base_team_global
 
-                tot = len(part_tot) # total partidos del equipo en la temporada (38)
-                hits = len(part_ok)
+                tot = len(part_tot) # total partidos del equipo en la temporada (15 fueras)
+                hits = len(part_ok) # 1 partido que ves en Partidos
 
                 # FIX %: siempre sobre total de partidos, no sobre victorias
                 pct = (hits / tot * 100) if tot else 0
