@@ -1335,9 +1335,9 @@ if len(jornadas) > 0:
 
         # --- LINEA 6: AM(Eq1) X/X AM3(Eq2) ---
         l6 = st.columns(3)
-        ambos_marcan = l6[0].selectbox("AM (Eq1)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan')
+        ambos_marcan = l6[0].selectbox("AM (Eq1)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p"], key='ambos_marcan')
         xx_filtro = l6[1].selectbox("X/X", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro', help="G/X:Gana al descanso | X/G:Gana al final")
-        ambos_marcan_eq2 = l6[2].selectbox("AM3 (Eq2)", ["Todos","Si1P","Si2P","No1P","No2P","Si","No"], key='ambos_marcan_eq2')
+        ambos_marcan_eq2 = l6[2].selectbox("AM3 (Eq2)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p"], key='ambos_marcan_eq2')
 
         # --- LINEA 7: 1x2 Eq1 R1x2 1x2 Eq2 --- (ORDEN FINAL)
         l7 = st.columns(3)
@@ -1562,18 +1562,24 @@ if len(jornadas) > 0:
     def _filtro_am(df_in, modo_am, parte):
         for col in ['FTHG','FTAG','HTHG','HTAG']:
             df_in[col] = pd.to_numeric(df_in[col], errors='coerce').fillna(0)
+
+        am_1p = (df_in['HTHG'] > 0) & (df_in['HTAG'] > 0)
+        am_2p = ((df_in['FTHG'] - df_in['HTHG']) > 0) & ((df_in['FTAG'] - df_in['HTAG']) > 0)
+
         if modo_am == "Si":
-            if parte == "1T": return df_in[(df_in['HTHG'] > 0) & (df_in['HTAG'] > 0)]
-            elif parte == "2T": return df_in[((df_in['FTHG'] - df_in['HTHG']) > 0) & ((df_in['FTAG'] - df_in['HTAG']) > 0)]
+            if parte == "1T": return df_in[am_1p]
+            elif parte == "2T": return df_in[am_2p]
             else: return df_in[(df_in['FTHG'] > 0) & (df_in['FTAG'] > 0)]
         elif modo_am == "No":
-            if parte == "1T": return df_in[~((df_in['HTHG'] > 0) & (df_in['HTAG'] > 0))]
-            elif parte == "2T": return df_in[~(((df_in['FTHG'] - df_in['HTHG']) > 0) & ((df_in['FTAG'] - df_in['HTAG']) > 0))]
+            if parte == "1T": return df_in[~am_1p]
+            elif parte == "2T": return df_in[~am_2p]
             else: return df_in[~((df_in['FTHG'] > 0) & (df_in['FTAG'] > 0))]
-        elif modo_am == "Si1P": return df_in[(df_in['HTHG'] > 0) & (df_in['HTAG'] > 0)]
-        elif modo_am == "No1P": return df_in[~((df_in['HTHG'] > 0) & (df_in['HTAG'] > 0))]
-        elif modo_am == "Si2P": return df_in[((df_in['FTHG'] - df_in['HTHG']) > 0) & ((df_in['FTAG'] - df_in['HTAG']) > 0)]
-        elif modo_am == "No2P": return df_in[~(((df_in['FTHG'] - df_in['HTHG']) > 0) & ((df_in['FTAG'] - df_in['HTAG']) > 0))]
+        elif modo_am == "Si1P": return df_in[am_1p]
+        elif modo_am == "No1P": return df_in[~am_1p]
+        elif modo_am == "Si2P": return df_in[am_2p]
+        elif modo_am == "No2P": return df_in[~am_2p]
+        elif modo_am == "Si1pNo2p": return df_in[am_1p & ~am_2p]
+        elif modo_am == "No1pSi2p": return df_in[~am_1p & am_2p]
         return df_in
 
     if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
@@ -1721,16 +1727,7 @@ if len(jornadas) > 0:
         elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
         return df_in
 
-        if margen_tipo == "Empate": return df_in[dif==0]
-        elif margen_tipo == "Gana 1": return df_in[dif==1]
-        elif margen_tipo == "Gana 2": return df_in[dif==2]
-        elif margen_tipo == "Gana 3+": return df_in[dif>=3]
-        elif margen_tipo == "Pierde 1": return df_in[dif==-1]
-        elif margen_tipo == "Pierde 2": return df_in[dif==-2]
-        elif margen_tipo == "Pierde 3+": return df_in[dif<=-3]
-        elif margen_tipo == "Gana ≥2": return df_in[dif>=2]
-        elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
-        return df_in
+
     
     if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
         df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
@@ -2133,18 +2130,22 @@ if len(df_final) > 0:
             def _check_am_team(df_in, eq_local):
                 modo = ambos_marcan if eq_local == equipo_filtro else ambos_marcan_eq2 if eq_local == equipo2_filtro else (ambos_marcan if ambos_marcan!="Todos" else ambos_marcan_eq2)
                 if modo=="Todos": return pd.Series([True]*len(df_in), index=df_in.index)
+                am_1p = (df_in['HTHG']>0) & (df_in['HTAG']>0)
+                am_2p = ((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0)
                 if modo=="Si":
-                    if parte_gol=="1T": return (df_in['HTHG']>0) & (df_in['HTAG']>0)
-                    elif parte_gol=="2T": return ((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0)
+                    if parte_gol=="1T": return am_1p
+                    elif parte_gol=="2T": return am_2p
                     else: return (df_in['FTHG']>0) & (df_in['FTAG']>0)
                 elif modo=="No":
-                    if parte_gol=="1T": return ~((df_in['HTHG']>0) & (df_in['HTAG']>0))
-                    elif parte_gol=="2T": return ~(((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0))
+                    if parte_gol=="1T": return ~am_1p
+                    elif parte_gol=="2T": return ~am_2p
                     else: return ~((df_in['FTHG']>0) & (df_in['FTAG']>0))
-                elif modo=="Si1P": return (df_in['HTHG']>0) & (df_in['HTAG']>0)
-                elif modo=="No1P": return ~((df_in['HTHG']>0) & (df_in['HTAG']>0))
-                elif modo=="Si2P": return ((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0)
-                elif modo=="No2P": return ~(((df_in['FTHG']-df_in['HTHG'])>0) & ((df_in['FTAG']-df_in['HTAG'])>0))
+                elif modo=="Si1P": return am_1p
+                elif modo=="No1P": return ~am_1p
+                elif modo=="Si2P": return am_2p
+                elif modo=="No2P": return ~am_2p
+                elif modo=="Si1pNo2p": return am_1p & ~am_2p
+                elif modo=="No1pSi2p": return ~am_1p & am_2p
                 return pd.Series([True]*len(df_in), index=df_in.index)
 
             def _check_xx_htft_margen_team(df_in, eq_local):
