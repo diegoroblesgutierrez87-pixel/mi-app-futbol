@@ -1,3 +1,30 @@
+# --- FIX PYLANCE BUILTINS ---
+import builtins as _b
+str = _b.str
+int = _b.int
+float = _b.float
+bool = _b.bool
+list = _b.list
+dict = _b.dict
+set = _b.set
+tuple = _b.tuple
+len = _b.len
+range = _b.range
+enumerate = _b.enumerate
+zip = _b.zip
+map = _b.map
+max = _b.max
+min = _b.min
+sorted = _b.sorted
+round = _b.round
+sum = _b.sum
+open = _b.open
+isinstance = _b.isinstance
+globals = _b.globals
+Exception = _b.Exception
+# --- FIN FIX ---
+
+
 
 import re
 import unicodedata
@@ -326,7 +353,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     if df_eq.empty:
         return ""
 
-    # FIX: Series con el mismo índice que df_eq, no np.array posicional
     is_home_s = (df_eq['HomeTeam']==equipo)
     fthg_s = df_eq['FTHG']
     ftag_s = df_eq['FTAG']
@@ -340,7 +366,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
         if g.empty: continue
 
-        # ahora sí,.loc con los índices reales
         if win_s.loc[g.index].all():
             color = '#0f8105'
         elif loss_s.loc[g.index].all():
@@ -357,7 +382,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
             all_away = (g['AwayTeam']==equipo).all()
             sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
 
-        # FIX: marcador real del partido, no perspectiva del equipo
         real_gf = int(g.iloc[0]['FTHG'])
         real_gc = int(g.iloc[0]['FTAG'])
         txt = f"J{int(j)}{sufijo_final} {real_gf}-{real_gc}"
@@ -374,13 +398,14 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
-        jx_html = f"""<details style="display:inline-flex;margin:2px">
+        # FIX CARTAS: padre relative + hijo absolute top 100% + z-index alto
+        jx_html = f"""<details style="position:relative;display:inline-flex;margin:2px">
         <summary style="{estilos_summary}">{txt}</summary>
-        <div style="position:absolute;z-index:999;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:2px;box-shadow:2px 2px 6px rgba(0,0,0,0.3);max-width:340px">{viñeta}</div>
+        <div style="position:absolute;z-index:9999;top:100%;left:0;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;box-shadow:4px 4px 10px rgba(0,0,0,0.4);max-width:360px;min-width:320px">{viñeta}</div>
     </details>"""
         partes.append(jx_html)
 
-    return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%'> {''.join(partes)} </div>"
+    return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%;position:relative;overflow:visible'> {''.join(partes)} </div>"
 ############ fin jornadas conteo - OPTIMIZADO FIX INDEX
 
 with st.expander("⚙ Opciones avanzadas"):
@@ -1335,9 +1360,9 @@ if len(jornadas) > 0:
 
         # --- LINEA 6: AM(Eq1) X/X AM3(Eq2) ---
         l6 = st.columns(3)
-        ambos_marcan = l6[0].selectbox("AM (Eq1)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p"], key='ambos_marcan')
+        ambos_marcan = l6[0].selectbox("AM (Eq1)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p","Si1pSi2p"], key='ambos_marcan')
         xx_filtro = l6[1].selectbox("X/X", ["Todo","G/X","E/X","P/X","X/G","X/E","X/P"], key='xx_filtro', help="G/X:Gana al descanso | X/G:Gana al final")
-        ambos_marcan_eq2 = l6[2].selectbox("AM3 (Eq2)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p"], key='ambos_marcan_eq2')
+        ambos_marcan_eq2 = l6[2].selectbox("AM3 (Eq2)", ["Todos","Si","No","Si1P","No1P","Si2P","No2P","Si1pNo2p","No1pSi2p","Si1pSi2p"], key='ambos_marcan_eq2')
 
         # --- LINEA 7: 1x2 Eq1 R1x2 1x2 Eq2 --- (ORDEN FINAL)
         l7 = st.columns(3)
@@ -1580,6 +1605,7 @@ if len(jornadas) > 0:
         elif modo_am == "No2P": return df_in[~am_2p]
         elif modo_am == "Si1pNo2p": return df_in[am_1p & ~am_2p]
         elif modo_am == "No1pSi2p": return df_in[~am_1p & am_2p]
+        elif modo_am == "Si1pSi2p": return df_in[am_1p & am_2p]
         return df_in
 
     if equipo_filtro!= "Ninguno" and equipo2_filtro!= "Ninguno":
@@ -2146,6 +2172,7 @@ if len(df_final) > 0:
                 elif modo=="No2P": return ~am_2p
                 elif modo=="Si1pNo2p": return am_1p & ~am_2p
                 elif modo=="No1pSi2p": return ~am_1p & am_2p
+                elif modo=="Si1pSi2p": return am_1p & am_2p
                 return pd.Series([True]*len(df_in), index=df_in.index)
 
             def _check_xx_htft_margen_team(df_in, eq_local):
@@ -2561,6 +2588,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     min_2t = col_2t.number_input("2ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_2t")
     min_ext = col_ext.number_input("+", min_value=0, max_value=30, value=10, step=1, key="be2_min_ext", help="Añadido/Prórroga")
 
+    # --- TEXTO SIMPLE DE LO SELECCIONADO ---
+    lig_txt = ",".join(ligas_busca) if ligas_busca else "Todas"
+    temp_txt = ",".join(temps_busca) if temps_busca else "Todas"
+    modo_txt = f"Ult {ultimos_x}" if modo_busca=="Últimos X partidos" else f"%≥{pct_min_rango}"
+    filtro_resumen = f"filtro: {lig_txt} | {temp_txt} | J{j_desde_be}-{j_hasta_be} | {modo_txt} | {lv_busca} | Res:{res_busca} | {fav_c1}:{col1_busca}{op1_busca}{vlr1_busca} | AM:{am_busca} | {parte_busca}"
+    st.markdown(f"<div style='font-size:10px;font-family:monospace;background:#f3f4f6;padding:4px 6px;border-radius:6px;margin:6px 0'>{filtro_resumen}</div>", unsafe_allow_html=True)
+
     #########boton buscar equipos, aqui tb esta la logica de verlo "J30f 0-1
 
     if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
@@ -2578,38 +2612,49 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             if df_eq.empty: continue
 
             df_eq = df_eq[(df_eq['Jornada']>=j_rango[0]) & (df_eq['Jornada']<=j_rango[1])]
-
-            if modo_busca == "Últimos X partidos":
-                df_eq = df_eq.sort_values('Date').tail(ultimos_x)
-
             if df_eq.empty: continue
+            df_eq = df_eq.sort_values('Date')
 
-            total = len(df_eq)
+            es_ultimos = (modo_busca == "Últimos X partidos")
+            if es_ultimos:
+                # 1. Cojo exactamente los ultimos 5 jugados en ese rango
+                df_ult = df_eq.tail(ultimos_x)
+                if len(df_ult) < ultimos_x:
+                    continue
+                df_eq = df_ult
+
             es_local = df_eq['HomeTeam']==eq
-
-            # Cálculo de resultado para el equipo
             gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
             pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
             empata = ~(gana | pierde)
 
-            # === FILTRO RES G/E/P/GE/GP/EP ===
             if res_busca == "G":
-                df_eq = df_eq[gana]
+                mask_res = gana
             elif res_busca == "E":
-                df_eq = df_eq[empata]
+                mask_res = empata
             elif res_busca == "P":
-                df_eq = df_eq[pierde]
+                mask_res = pierde
             elif res_busca == "GE":
-                df_eq = df_eq[gana | empata]
+                mask_res = gana | empata
             elif res_busca == "GP":
-                df_eq = df_eq[gana | pierde]
+                mask_res = gana | pierde
             elif res_busca == "EP":
-                df_eq = df_eq[empata | pierde]
+                mask_res = empata | pierde
+            else:
+                mask_res = pd.Series([True]*len(df_eq), index=df_eq.index)
 
-            if df_eq.empty: continue
-
-            total = len(df_eq) # recalculamos total tras filtro Res
-            es_local = df_eq['HomeTeam']==eq # recalcular para el df filtrado
+            if es_ultimos:
+                # FIX: si pides Ult 5 + G, los 5 tienen que ser G. Si 1 falla, fuera.
+                if not mask_res.all():
+                    continue
+                # total y hits son 5
+                total = ultimos_x
+                hits = ultimos_x
+            else:
+                df_eq = df_eq[mask_res]
+                if df_eq.empty: continue
+                total = len(df_eq)
+                es_local = df_eq['HomeTeam']==eq
 
             if parte_busca == "1T":
                 gf = np.where(es_local, df_eq['HTHG'], df_eq['HTAG'])
@@ -2681,14 +2726,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             st.success(f"Encontrados {len(df_res)} equipos")
             lineas_html = []
             for _, r in df_res.iterrows():
-                # ESTE ES EL SEGUNDO CAMBIO CLAVE: formato con # y — donde se ordenan las lineas de datos y colocan
-                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:4px 0; border-bottom:1px solid #eee;'>
+                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee; overflow:visible; position:relative;'>
                     <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
                     <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
                     <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
                 </div>"""
                 lineas_html.append(linea)
-            st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:500px; overflow-y:auto; padding:4px'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; overflow-x:visible; padding:8px; position:relative;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
         else:
             st.warning("Ningún equipo cumple esas condiciones")
 
