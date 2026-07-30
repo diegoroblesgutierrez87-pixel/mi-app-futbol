@@ -176,92 +176,7 @@ def abreviar_equipo(nombre):
     return (n.split()[0][:3]).upper()
 
 
-#####################jornadas conteo
-##################### jornadas conteo - OPTIMIZADO #####################
-@lru_cache(maxsize=8192)
-def _formatear_h2h_compacto_cached(key_tuple):
-    # key hasheable para que no se recalcule nunca el mismo partido
-    (lg3, fecha, jorn, ht, at, hg, ag, h1, a1, hpos, apos, hpts, apts, hperf, aperf,
-     hs,hst,hf,hc,hy,hr, as_,ast2,af,ac,ay,ar, b365h,b365d,b365a, ftr, eq_norm, home_team, away_team) = key_tuple
-
-    h2, a2 = hg - h1, ag - a1
-    is_h = eq_norm == home_team if eq_norm else False
-    is_a = eq_norm == away_team if eq_norm else False
-
-    def nv(t,b=False,u=False):
-        return f"<span style='font-weight:{900 if b else 600}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
-
-    if eq_norm:
-        won = (is_h and hg > ag) or (is_a and ag > hg)
-        lost = (is_h and hg < ag) or (is_a and ag < hg)
-        color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
-        color = color_linea
-    else:
-        color_linea = "#0A2342"
-        color = "#444"
-
-    try:
-        s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
-        odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{b365h:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{b365d:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{b365a:.2f}</span>"
-    except:
-        odds = ""
-
-    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
-    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
-    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
-
-    pos = f"{nv(str(hpos)+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(apos)+'º',False,is_a)}"
-    pts = f"{nv(hpts,False,is_h)}-<span style='color:#000'>pts</span> {nv(apts,False,is_a)}"
-
-    ht_res = ht if h1>a1 else at if a1>h1 else 'E'
-    ft_res = ht if hg>ag else at if ag>hg else 'E'
-    res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
-
-    lineas = [
-        f"{lg3} {res}",
-        f"{fecha} |{jorn}|",
-        odds,
-        ht_line,
-        st_line,
-        ft_line,
-        pos,
-        pts,
-        f"<span style='color:#000'>Perf:</span>{nv(hperf,hg>ag,is_h)}-{nv(aperf,ag>hg,is_a)}",
-        f"1p:{nv(str(h1)+'G',False,is_h)}",
-        f"1p:{nv(str(a1)+'G',False,is_a)}",
-        f"2p:{nv(str(h2)+'G',False,is_h)}",
-        f"2p:{nv(str(a2)+'G',False,is_a)}",
-        nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R",hg>ag,is_h),
-        nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R",ag>hg,is_a)
-    ]
-    return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
-
-def formatear_h2h_compacto(row, equipo_ref=None):
-    # Wrapper compatible con tu código actual
-    try:
-        eq_norm = normaliza(equipo_ref) if equipo_ref else ""
-        lg3 = str(row.get('League',''))[:3].upper()
-        fecha = row['Date'].strftime('%d/%m/%y') if pd.notna(row['Date']) else ''
-        jorn = f"J{int(row['Jornada'])}"
-        ht = row.get('HomeAbbr', abreviar_equipo(row['HomeTeam']))
-        at = row.get('AwayAbbr', abreviar_equipo(row['AwayTeam']))
-        key = (
-            lg3, fecha, jorn, ht, at,
-            int(row['FTHG']), int(row['FTAG']), int(row['HTHG']), int(row['HTAG']),
-            int(row.get('HomePosPrev',0)), int(row.get('AwayPosPrev',0)),
-            int(row.get('HomePtsPrev',0)), int(row.get('AwayPtsPrev',0)),
-            round(float(row.get('HomePerf',0)),1), round(float(row.get('AwayPerf',0)),1),
-            int(row.get('HS',0)), int(row.get('HST',0)), int(row.get('HF',0)), int(row.get('HC',0)), int(row.get('HY',0)), int(row.get('HR',0)),
-            int(row.get('AS',0)), int(row.get('AST',0)), int(row.get('AF',0)), int(row.get('AC',0)), int(row.get('AY',0)), int(row.get('AR',0)),
-            float(row.get('B365H',0) or 0), float(row.get('B365D',0) or 0), float(row.get('B365A',0) or 0),
-            str(row.get('FTR','')),
-            eq_norm, str(row.get('HomeTeam','')), str(row.get('AwayTeam',''))
-        )
-        return _formatear_h2h_compacto_cached(key)
-    except Exception:
-        return "<div style='font-size:10px'>-</div>"
-
-##################### jornadas conteo - OPTIMIZADO FIX INDEX #####################
+##################### H2H COMPACTO - UNICA DEFINICION #####################
 @lru_cache(maxsize=8192)
 def _formatear_h2h_compacto_cached(key_tuple):
     (lg3, fecha, jorn, ht, at, hg, ag, h1, a1, hpos, apos, hpts, apts, hperf, aperf,
@@ -342,8 +257,9 @@ def formatear_h2h_compacto(row, equipo_ref=None):
         return _formatear_h2h_compacto_cached(key)
     except Exception:
         return "<div style='font-size:10px'>-</div>"
+##################### FIN H2H UNICO #####################
 
-def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
+def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
     from collections import Counter
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
@@ -354,18 +270,30 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         return ""
 
     is_home_s = (df_eq['HomeTeam']==equipo)
-    fthg_s = df_eq['FTHG']
-    ftag_s = df_eq['FTAG']
-    btts_s = (fthg_s>0) & (ftag_s>0)
-    gf_team_s = pd.Series(np.where(is_home_s, fthg_s, ftag_s), index=df_eq.index)
-    gc_team_s = pd.Series(np.where(is_home_s, ftag_s, fthg_s), index=df_eq.index)
-    win_s = gf_team_s > gc_team_s
-    loss_s = gf_team_s < gc_team_s
+
+    if parte == "1T":
+        gf_arr = np.where(is_home_s, df_eq['HTHG'], df_eq['HTAG'])
+        gc_arr = np.where(is_home_s, df_eq['HTAG'], df_eq['HTHG'])
+    elif parte == "2T":
+        gf_arr = np.where(is_home_s, df_eq['FTHG']-df_eq['HTHG'], df_eq['FTAG']-df_eq['HTAG'])
+        gc_arr = np.where(is_home_s, df_eq['FTAG']-df_eq['HTAG'], df_eq['FTHG']-df_eq['HTHG'])
+    else:
+        gf_arr = np.where(is_home_s, df_eq['FTHG'], df_eq['FTAG'])
+        gc_arr = np.where(is_home_s, df_eq['FTAG'], df_eq['FTHG'])
+
+    gf_team_s = pd.Series(gf_arr, index=df_eq.index)
+    gc_team_s = pd.Series(gc_arr, index=df_eq.index)
+
+    # color siempre por resultado FINAL, no por 1T/2T
+    final_gf_arr = np.where(is_home_s, df_eq['FTHG'].to_numpy(), df_eq['FTAG'].to_numpy())
+    final_gc_arr = np.where(is_home_s, df_eq['FTAG'].to_numpy(), df_eq['FTHG'].to_numpy())
+    win_s = pd.Series(final_gf_arr > final_gc_arr, index=df_eq.index)
+    loss_s = pd.Series(final_gf_arr < final_gc_arr, index=df_eq.index)
 
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
-        if g.empty: continue
-
+        if g.empty:
+            continue
         if win_s.loc[g.index].all():
             color = '#0f8105'
         elif loss_s.loc[g.index].all():
@@ -382,23 +310,22 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
             all_away = (g['AwayTeam']==equipo).all()
             sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
 
-        real_gf = int(g.iloc[0]['FTHG'])
-        real_gc = int(g.iloc[0]['FTAG'])
-        txt = f"J{int(j)}{sufijo_final} {real_gf}-{real_gc}"
-        if btts_s.loc[g.index].any():
-            txt += '●'
+        idx0 = g.index[0]
+        is_home = df_eq.loc[idx0, 'HomeTeam'] == equipo
+        final_gf = int(df_eq.loc[idx0, 'FTHG']) if is_home else int(df_eq.loc[idx0, 'FTAG'])
+        final_gc = int(df_eq.loc[idx0, 'FTAG']) if is_home else int(df_eq.loc[idx0, 'FTHG'])
+
+        txt = f"J{int(j)}{sufijo_final} {final_gf}-{final_gc}"
 
         es_h2h = False
         if rival:
             es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
 
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
-
         estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-flex;padding:3px 8px;border:1px solid #ccc;border-radius:12px;background:#fff;white-space:nowrap;font-size:11px"
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
-        # FIX CARTAS: padre relative + hijo absolute top 100% + z-index alto
         jx_html = f"""<details style="position:relative;display:inline-flex;margin:2px">
         <summary style="{estilos_summary}">{txt}</summary>
         <div style="position:absolute;z-index:9999;top:100%;left:0;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;box-shadow:4px 4px 10px rgba(0,0,0,0.4);max-width:360px;min-width:320px">{viñeta}</div>
@@ -406,7 +333,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None):
         partes.append(jx_html)
 
     return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%;position:relative;overflow:visible'> {''.join(partes)} </div>"
-############ fin jornadas conteo - OPTIMIZADO FIX INDEX
 
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
@@ -796,74 +722,7 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
 ####def formatear_h2h_compacto
 
 
-######################def formatear_h2h_compacto clasif. bloque coge aqui sus cartas de partidos
-def formatear_h2h_compacto(row, equipo_ref=None):
-    NAVY = "#0A2342"
-    league = str(row.get('League',''))[:3].upper()
-    fecha = row['Date'].strftime('%d/%m/%y') if pd.notna(row['Date']) else ''
-    jorn = f"J{int(row['Jornada'])}"
-    try:
-        h_od = float(row['B365H']); d_od = float(row['B365D']); a_od = float(row['B365A']); ftr = row.get('FTR','')
-        s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
-        odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{h_od:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{d_od:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{a_od:.2f}</span>"
-    except:
-        odds = ""
 
-    ht = row.get('HomeAbbr', abreviar_equipo(row['HomeTeam'])); at = row.get('AwayAbbr', abreviar_equipo(row['AwayTeam']))
-    hg, ag = int(row['FTHG']), int(row['FTAG'])
-    h1, a1 = int(row['HTHG']), int(row['HTAG'])
-    h2, a2 = hg - h1, ag - a1
-    
-    eq_norm = normaliza(equipo_ref) if equipo_ref else None
-    is_h = eq_norm == row['HomeTeam']
-    is_a = eq_norm == row['AwayTeam']
-
-    def nv(t,b=False,u=False):
-        return f"<span style='font-weight:{900 if b else 600}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
-
-    if eq_norm:
-        won = (is_h and hg > ag) or (is_a and ag > hg)
-        lost = (is_h and hg < ag) or (is_a and ag < hg)
-        color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
-    else:
-        color_linea = "#0A2342"
-    
-    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
-    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
-    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
-    
-    pos = f"{nv(str(int(row['HomePosPrev']))+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(int(row['AwayPosPrev']))+'º',False,is_a)}"
-    pts = f"{nv(int(row['HomePtsPrev']),False,is_h)}-<span style='color:#000'>pts</span> {nv(int(row['AwayPtsPrev']),False,is_a)}"
-
-    ht_res = ht if int(row['HTHG'])>int(row['HTAG']) else at if int(row['HTHG'])<int(row['HTAG']) else 'E'
-    ft_res = ht if hg>ag else at if ag>hg else 'E'
-    if eq_norm:
-        won = (is_h and hg > ag) or (is_a and ag > hg)
-        lost = (is_h and hg < ag) or (is_a and ag < hg)
-        color = "#0f8105" if won else "#f31818" if lost else "#f89007"
-    else:
-        color = "#444"
-    res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
-################lineas de bloque clasif. en las cartas
-    lineas = [
-        f"{league} {res}",
-        f"{fecha} |{jorn}|",
-        odds,
-        ht_line,
-        st_line,
-        ft_line,  # <-- AÑADIDO
-        pos,
-        pts,
-        f"<span style='color:#000'>Perf:</span>{nv(round(float(row.get('HomePerf',0)),1),hg>ag,is_h)}-{nv(round(float(row.get('AwayPerf',0)),1),ag>hg,is_a)}",
-        f"1p:{nv(str(int(row['HTHG']))+'G',False,is_h)}",
-        f"1p:{nv(str(int(row['HTAG']))+'G',False,is_a)}",
-        f"2p:{nv(str(hg-int(row['HTHG']))+'G',False,is_h)}",
-        f"2p:{nv(str(ag-int(row['HTAG']))+'G',False,is_a)}",
-        nv(f"{int(row['HS'])}T {int(row['HST'])}TP {int(row['HF'])}F {int(row['HC'])}C {int(row['HY'])}A {int(row['HR'])}R",hg>ag,is_h),
-        nv(f"{int(row['AS'])}T {int(row['AST'])}TP {int(row['AF'])}F {int(row['AC'])}C {int(row['AY'])}A {int(row['AR'])}R",ag>hg,is_a)
-    ]
-
-    return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
 ####def def calcular_htft
 
 
@@ -1706,42 +1565,46 @@ if len(jornadas) > 0:
         if col:
             df_final = df_final[(df_final[col] >= rango_cuotas[0]) & (df_final[col] <= rango_cuotas[1])]
 
-##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA - Eq1 y Eq2 separados + RESPETA PARTE 1T/2T FIX 2T
-    def _aplica_margen(df_in, equipo_ref, margen_tipo):
+##########LOGICA: FILTRO MARGEN VICTORIA/DERROTA - FIX DEFINITIVO PARTE 1T/2T/TODO
+    def _aplica_margen(df_in, equipo_ref, margen_tipo, parte_tipo="Todo"):
         if margen_tipo == "Todo" or df_in.empty:
             return df_in
         df_in = df_in.copy()
-        parte_actual = parte_gol_eq2 if equipo_ref == equipo2_filtro else parte_gol
-        if parte_actual == "1T":
-            gh = df_in['HTHG'].to_numpy(); ga = df_in['HTAG'].to_numpy()
-        elif parte_actual == "2T":
-            gh = (df_in['FTHG'] - df_in['HTHG']).to_numpy(); ga = (df_in['FTAG'] - df_in['HTAG']).to_numpy()
-        else:
-            gh = df_in['FTHG'].to_numpy(); ga = df_in['FTAG'].to_numpy()
 
-        # CON EQUIPO
-        if equipo_ref!= "Ninguno":
+        if parte_tipo == "1T":
+            gh = df_in['HTHG'].to_numpy()
+            ga = df_in['HTAG'].to_numpy()
+        elif parte_tipo == "2T":
+            gh = (df_in['FTHG'] - df_in['HTHG']).to_numpy()
+            ga = (df_in['FTAG'] - df_in['HTAG']).to_numpy()
+        else: # Todo = final
+            gh = df_in['FTHG'].to_numpy()
+            ga = df_in['FTAG'].to_numpy()
+
+        if equipo_ref!= "Ninguno" and equipo_ref:
             es_loc = (df_in['HomeTeam'] == equipo_ref).to_numpy()
             dif = np.where(es_loc, gh - ga, ga - gh)
         else:
-            # SIN EQUIPO
             if condicion_filtro == "Local":
                 dif = gh - ga
             elif condicion_filtro == "Visitante":
                 dif = ga - gh
             else:
-                # Sin equipo y sin L/V -> margen absoluto
                 dif = gh - ga
-                abs_dif = np.abs(dif)
 
-                if margen_tipo == "Empate": return df_in[abs_dif==0]
-                elif margen_tipo in ("Gana 1","Pierde 1"): return df_in[abs_dif==1]
-                elif margen_tipo in ("Gana 2","Pierde 2"): return df_in[abs_dif==2]
-                elif margen_tipo in ("Gana 3+","Pierde 3+"): return df_in[abs_dif>=3]
-                elif margen_tipo in ("Gana ≥2","Pierde ≥2"): return df_in[abs_dif>=2]
-                else: return df_in
+        if equipo_ref == "Ninguno" and condicion_filtro == "Todo":
+            # Sin equipo: Gana = local gana, Pierde = local pierde
+            if margen_tipo == "Empate": return df_in[dif==0]
+            elif margen_tipo == "Gana 1": return df_in[dif==1]
+            elif margen_tipo == "Pierde 1": return df_in[dif==-1]
+            elif margen_tipo == "Gana 2": return df_in[dif==2]
+            elif margen_tipo == "Pierde 2": return df_in[dif==-2]
+            elif margen_tipo == "Gana 3+": return df_in[dif>=3]
+            elif margen_tipo == "Pierde 3+": return df_in[dif<=-3]
+            elif margen_tipo == "Gana ≥2": return df_in[dif>=2]
+            elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
+            else: return df_in
 
-        # CON EQUIPO o CON L/V ya tenemos dif con signo
         if margen_tipo == "Empate": return df_in[dif==0]
         elif margen_tipo == "Gana 1": return df_in[dif==1]
         elif margen_tipo == "Gana 2": return df_in[dif==2]
@@ -1759,16 +1622,17 @@ if len(jornadas) > 0:
         df_eq1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].copy()
         df_eq2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].copy()
         if margen_filtro!= "Todo":
-            df_eq1 = _aplica_margen(df_eq1, equipo_filtro, margen_filtro)
+            df_eq1 = _aplica_margen(df_eq1, equipo_filtro, margen_filtro, parte_gol)
         if margen_filtro_eq2!= "Todo":
-            df_eq2 = _aplica_margen(df_eq2, equipo2_filtro, margen_filtro_eq2)
+            df_eq2 = _aplica_margen(df_eq2, equipo2_filtro, margen_filtro_eq2, parte_gol_eq2)
         df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
     elif equipo2_filtro!= "Ninguno":
         mf = margen_filtro_eq2 if margen_filtro_eq2!= "Todo" else margen_filtro
-        df_final = _aplica_margen(df_final, equipo2_filtro, mf)
+        mp = parte_gol_eq2 if margen_filtro_eq2!= "Todo" else parte_gol
+        df_final = _aplica_margen(df_final, equipo2_filtro, mf, mp)
     else:
         if margen_filtro!= "Todo":
-            df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro)
+            df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro, parte_gol)
 
     # --- FILTRO MARCADOR Eq1 / Eq2 INDEPENDIENTE ---
     def _aplica_marcador(df_in, marcador_txt):
@@ -2264,7 +2128,35 @@ if len(df_final) > 0:
                     continue
 
                 rival = equipos_mostrar[1] if len(equipos_mostrar)==2 and eq==equipos_mostrar[0] else (equipos_mostrar[0] if len(equipos_mostrar)==2 else None)
-                jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival) if not part_ok.empty else ""
+                # --- FIX MARGEN POR EQUIPO ---
+                margen_actual = margen_filtro_eq2 if eq == equipo2_filtro else margen_filtro
+                parte_actual = parte_gol_eq2 if eq == equipo2_filtro else parte_gol
+                
+                if not part_ok.empty and margen_actual != "Todo":
+                    if parte_actual == "1T":
+                        gh = part_ok['HTHG'].to_numpy()
+                        ga = part_ok['HTAG'].to_numpy()
+                    elif parte_actual == "2T":
+                        gh = (part_ok['FTHG']-part_ok['HTHG']).to_numpy()
+                        ga = (part_ok['FTAG']-part_ok['HTAG']).to_numpy()
+                    else:
+                        gh = part_ok['FTHG'].to_numpy()
+                        ga = part_ok['FTAG'].to_numpy()
+                    
+                    es_loc = (part_ok['HomeTeam']==eq).to_numpy()
+                    dif_team = np.where(es_loc, gh-ga, ga-gh)
+
+                    if margen_actual == "Empate": part_ok = part_ok[dif_team==0]
+                    elif margen_actual == "Gana 1": part_ok = part_ok[dif_team==1]
+                    elif margen_actual == "Pierde 1": part_ok = part_ok[dif_team==-1]
+                    elif margen_actual == "Gana 2": part_ok = part_ok[dif_team==2]
+                    elif margen_actual == "Pierde 2": part_ok = part_ok[dif_team==-2]
+                    elif margen_actual == "Gana 3+": part_ok = part_ok[dif_team>=3]
+                    elif margen_actual == "Pierde 3+": part_ok = part_ok[dif_team<=-3]
+                    elif margen_actual == "Gana ≥2": part_ok = part_ok[dif_team>=2]
+                    elif margen_actual == "Pierde ≥2": part_ok = part_ok[dif_team<=-2]
+
+                jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
 
                 titulo_eq = marc_eq if marc_eq!="Todos" else "Filtro actual"
 
