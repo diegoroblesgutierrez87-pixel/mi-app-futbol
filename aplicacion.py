@@ -1937,17 +1937,15 @@ if len(df_final) > 0:
 
     total_jornadas = conteo_j['Jornada'].nunique()
     with st.expander(f"📊 Repeticiones por jornada ({total_jornadas} jornadas)", expanded=False):
-        for season, grupo in conteo_j.groupby('Season', sort=False):
-            partidos_xj = grupo['PartidosXJornada'].iloc[0]
-            pct_total = grupo['PctTotal'].iloc[0]
-            st.markdown(f"<div style='font-size:12px;font-weight:700;padding:4px 0 2px 0;color:#0A2342'>{season} | {partidos_xj} partidos/jornada | {pct_total}% del total</div>", unsafe_allow_html=True)
-            for _, row in grupo.iterrows():
-                pct = row['Pct']
-                veces = int(row['Veces'])
-                partidos_xj = int(row['PartidosXJornada'])
-                st.markdown(f"<div style='font-size:11px;padding:1px 0 1px 8px;font-family:monospace'>J{int(row['Jornada'])} - {veces}# | <b>{pct}%</b> aprox {veces}/{partidos_xj}</div>", unsafe_allow_html=True)
-   
-   
+            for season, grupo in conteo_j.groupby('Season', sort=False):
+                partidos_xj = grupo['PartidosXJornada'].iloc[0]
+                pct_total = grupo['PctTotal'].iloc[0]
+                st.markdown(f"<div style='font-size:12px;font-weight:700;padding:4px 0 2px 0;color:#0A2342'>{season} | {partidos_xj} partidos/jornada | {pct_total}% del total</div>", unsafe_allow_html=True)
+                for _, row in grupo.iterrows():
+                    pct = row['Pct']
+                    veces = int(row['Veces'])
+                    partidos_xj = int(row['PartidosXJornada'])
+                    st.markdown(f"<div style='font-size:11px;padding:1px 0 1px 8px;font-family:monospace'>J{int(row['Jornada'])} - {veces}# | <b>{pct}%</b> aprox {veces}/{partidos_xj}</div>", unsafe_allow_html=True)
    ####################
    
     # --- RESUMEN CON % - SEPARADO Eq1 / Eq2 SIMPLE - FIX MARC EQ2 ---
@@ -1958,6 +1956,8 @@ if len(df_final) > 0:
             if equipo_filtro!= "Ninguno": equipos_mostrar.append(equipo_filtro)
             if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
             if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
+
+            # SIN TOPE - MUESTRA TODOS
 
             base_total = df_original.copy()
             base_total = base_total[base_total['League'].isin(liga_sel) & base_total['Season'].isin(temp_sel)]
@@ -2931,6 +2931,7 @@ with st.expander("📅Clasif.G/E/P %", expanded=False):
                 else:
                     st.warning("No hay partidos con los filtros actuales")
 
+   
     except Exception as e:
         st.error(f"Error en Clasif: {str(e)}")
         st.caption("Si persiste, borra cache o revisa que el parquet tenga columnas Jornada/Date")
