@@ -2489,15 +2489,18 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     modo_busca = st.radio("Modo búsqueda", ["Últimos X partidos", "% en rango jornadas"], horizontal=True, key="be2_modo")
 
     # --- NIVEL 4: CAJITA DINÁMICA + L/V EN MISMA LÍNEA ---
-    col_pct_lv1, col_pct_lv2 = st.columns(2)
+    de_busca = "-" # valor por defecto
     if modo_busca == "Últimos X partidos":
-        ultimos_x = col_pct_lv1.number_input("Últimos", 1, 38, 5, key="be2_ultimos")
+        c_ult, c_de, c_lv = st.columns([1,1,1])
+        ultimos_x = c_ult.number_input("Últimos", 1, 38, 5, key="be2_ultimos")
+        de_busca = c_de.selectbox("De", ["-"] + [str(i) for i in range(1, 51)], index=0, key="be2_de", help="Ej: Últimos 3 De 4 = 3 wins en los últimos 4")
+        lv_busca = c_lv.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
         pct_min_rango = None
     else:
+        col_pct_lv1, col_pct_lv2 = st.columns(2)
         pct_min_rango = col_pct_lv1.number_input("% mín", 0, 100, 50, 5, key="be2_pct_min")
         ultimos_x = None
-
-    lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
+        lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
 
     # --- NUEVO: FILTRO RESULTADO G/E/P/GE/GP/EP ---
     col_res_be = st.columns(1)[0]
@@ -2562,44 +2565,51 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
             es_ultimos = (modo_busca == "Últimos X partidos")
             if es_ultimos:
-                # 1. Cojo exactamente los ultimos 5 jugados en ese rango
-                df_ult = df_eq.tail(ultimos_x)
-                if len(df_ult) < ultimos_x:
-                    continue
-                df_eq = df_ult
+                # Si De = "-" => comportamiento antiguo: últimos X tienen que ser 100%
+                if de_busca == "-":
+                    df_ult = df_eq.tail(ultimos_x)
+                    if len(df_ult) < ultimos_x:
+                        continue
+                    df_eq = df_ult.copy()
+                    total = ultimos_x
+                    ventana = ultimos_x
+                    requeridos = ultimos_x
+                else:
+                    # Si De = 4 y Últimos = 3 => miro los últimos 4, pido al menos 3
+                    ventana = int(de_busca)
+                    requeridos = ultimos_x
+                    if ventana < requeridos:
+                        ventana = requeridos # seguridad
+                    df_ult = df_eq.tail(ventana)
+                    if len(df_ult) < ventana:
+                        continue
+                    df_eq = df_ult.copy()
+                    total = ventana
+            else:
+                total = len(df_eq)
+                ventana = total
+                requeridos = 0
 
             es_local = df_eq['HomeTeam']==eq
             gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
             pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
             empata = ~(gana | pierde)
 
-            if res_busca == "G":
-                mask_res = gana
-            elif res_busca == "E":
-                mask_res = empata
-            elif res_busca == "P":
-                mask_res = pierde
-            elif res_busca == "GE":
-                mask_res = gana | empata
-            elif res_busca == "GP":
-                mask_res = gana | pierde
-            elif res_busca == "EP":
-                mask_res = empata | pierde
-            else:
-                mask_res = pd.Series([True]*len(df_eq), index=df_eq.index)
+            if res_busca == "G": mask_res = gana
+            elif res_busca == "E": mask_res = empata
+            elif res_busca == "P": mask_res = pierde
+            elif res_busca == "GE": mask_res = gana | empata
+            elif res_busca == "GP": mask_res = gana | pierde
+            elif res_busca == "EP": mask_res = empata | pierde
+            else: mask_res = pd.Series([True]*len(df_eq), index=df_eq.index)
 
-            if es_ultimos:
-                # FIX: si pides Ult 5 + G, los 5 tienen que ser G. Si 1 falla, fuera.
-                if not mask_res.all():
-                    continue
-                # total y hits son 5
-                total = ultimos_x
-                hits = ultimos_x
-            else:
-                df_eq = df_eq[mask_res]
-                if df_eq.empty: continue
-                total = len(df_eq)
-                es_local = df_eq['HomeTeam']==eq
+            # Filtro 1x2 se aplica SIEMPRE antes de lo demás
+            df_eq = df_eq[mask_res]
+            if df_eq.empty: continue
+            if not es_ultimos:
+                total = len(df_eq) # en modo % el total es lo que queda tras G/E/P
+
+            es_local = df_eq['HomeTeam']==eq
 
             if parte_busca == "1T":
                 gf = np.where(es_local, df_eq['HTHG'], df_eq['HTAG'])
@@ -2614,23 +2624,15 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             cumple = np.ones(len(df_eq), dtype=bool)
 
             if vlr1_busca!= "Ninguno":
-                if fav_c1 == "AF":
-                    cumple = cumple & (gf > float(vlr1_busca))
-                elif fav_c1 == "C":
-                    cumple = cumple & (gc > float(vlr1_busca))
-                else:
-                    cumple = cumple & ((gf + gc) > float(vlr1_busca))
+                if fav_c1 == "AF": cumple = cumple & (gf > float(vlr1_busca))
+                elif fav_c1 == "C": cumple = cumple & (gc > float(vlr1_busca))
+                else: cumple = cumple & ((gf + gc) > float(vlr1_busca))
 
             if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
-                mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC',
-                            'HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
-                if fav_c1 == "AF":
-                    val_col = np.where(es_local, df_eq[col1_busca], df_eq.get(mapa_col.get(col1_busca, col1_busca), df_eq[col1_busca]))
-                elif fav_c1 == "C":
-                    val_col = np.where(es_local, df_eq.get(mapa_col.get(col1_busca, col1_busca), 0), df_eq.get(col1_busca, 0))
-                else:
-                    val_col = df_eq[col1_busca]
-
+                mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
+                if fav_c1 == "AF": val_col = np.where(es_local, df_eq[col1_busca], df_eq.get(mapa_col.get(col1_busca, col1_busca), df_eq[col1_busca]))
+                elif fav_c1 == "C": val_col = np.where(es_local, df_eq.get(mapa_col.get(col1_busca, col1_busca), 0), df_eq.get(col1_busca, 0))
+                else: val_col = df_eq[col1_busca]
                 val = float(vlr1_busca)
                 if op1_busca == "=": cumple = cumple & (val_col == val)
                 elif op1_busca == ">": cumple = cumple & (val_col > val)
@@ -2638,31 +2640,42 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                 elif op1_busca == "<": cumple = cumple & (val_col < val)
                 elif op1_busca == "<=": cumple = cumple & (val_col <= val)
 
-            if am_busca == "Si":
-                cumple = cumple & (gf > 0) & (gc > 0)
-            elif am_busca == "No":
-                cumple = cumple & ~((gf > 0) & (gc > 0))
+            if am_busca == "Si": cumple = cumple & (gf > 0) & (gc > 0)
+            elif am_busca == "No": cumple = cumple & ~((gf > 0) & (gc > 0))
 
-            hits = cumple.sum()
+            hits = int(cumple.sum())
             pct = hits / total * 100 if total else 0
 
-            if modo_busca == "% en rango jornadas" and pct < pct_min_rango:
-                continue
+            if es_ultimos:
+                if de_busca == "-":
+                    # Antiguo: 5 de 5
+                    if hits != total:
+                        continue
+                else:
+                    # Nuevo: 3 de 4
+                    if hits < requeridos:
+                        continue
+            else:
+                # MODO % = aquí sí vale 60%
+                if pct < pct_min_rango:
+                    continue
 
             if hits > 0:
-                # Recalcular gana/pierde sobre df_eq filtrado
-                gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
-                pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
+                df_cumple = df_eq[cumple].copy().sort_values('Date')
 
-                df_cumple = df_eq[cumple].copy()
-
-                # ESTE ES EL CAMBIO CLAVE: jornadas_conteo ya genera J1c 5-2● |J2f 2-0
-                jors_html = jornadas_conteo(df_cumple['Jornada'], df_cumple, eq, None)
+                # FIX: 1 chip por partido, no groupby por jornada -> adiós J20cf
+                chips = []
+                for _, rr in df_cumple.iterrows():
+                    suf = 'c' if rr['HomeTeam']==eq else 'f'
+                    gft = int(rr['FTHG'] if rr['HomeTeam']==eq else rr['FTAG'])
+                    gct = int(rr['FTAG'] if rr['HomeTeam']==eq else rr['FTHG'])
+                    col = "#0f8105" if gft>gct else "#f31818" if gft<gct else "#0A2342"
+                    chips.append(f"<span style='display:inline-flex; border:1px solid #ccc; border-radius:12px; padding:2px 8px; margin:2px; color:{col}; font-weight:700'>J{int(rr['Jornada'])}{suf} {gft}-{gct}</span>")
+                jors_html = "".join(chips)
 
                 resultados.append({
-                    'Equipo': eq, 'Liga': df_eq.iloc[0]['League'], 'PJ': total,
-                    'Cumple': hits, '%': round(pct,1), 'G': gana.sum(),
-                    'E': (total - gana.sum() - pierde.sum()), 'P': pierde.sum(),
+                    'Equipo': eq, 'Liga': df_eq.iloc[0]['League'],
+                    'PJ': total, 'Cumple': hits, '%': round(pct,1),
                     'Jornadas': jors_html
                 })
 
@@ -2671,13 +2684,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             st.success(f"Encontrados {len(df_res)} equipos")
             lineas_html = []
             for _, r in df_res.iterrows():
-                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee; overflow:visible; position:relative;'>
+                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee;'>
                     <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
                     <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
                     <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
                 </div>"""
                 lineas_html.append(linea)
-            st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; overflow-x:visible; padding:8px; position:relative;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
         else:
             st.warning("Ningún equipo cumple esas condiciones")
 
