@@ -1287,38 +1287,61 @@ if len(jornadas) > 0:
     # --- RESUMEN DE FILTROS ACTIVOS - FIX COL2 Y COL3 ---
     filtros_activos = []
 
-    if equipo_filtro!= "Ninguno": filtros_activos.append(f"Eq1:{equipo_filtro}")
-    if equipo2_filtro!= "Ninguno": filtros_activos.append(f"Eq2:{equipo2_filtro}")
-    if condicion_filtro!= "Todo": filtros_activos.append(f"L/V:{condicion_filtro}")
-    if condicion_filtro3!= "Todo": filtros_activos.append(f"L/V3:{condicion_filtro3}")
-    if resultado_filtro!= "Ninguno": filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
-    if resultado_filtro_eq2!= "Ninguno": filtros_activos.append(f"1x2 Eq2:{mapa_1x2[resultado_filtro_eq2]}")
-    if ambos_marcan!= "Todos": filtros_activos.append(f"AM:{ambos_marcan}")
-    if ambos_marcan_eq2!= "Todos": filtros_activos.append(f"AM3:{ambos_marcan_eq2}")
-    if htft_filtro!= "Todo": filtros_activos.append(f"HT/FT:{htft_filtro}")
-    if xx_filtro!= "Todo": filtros_activos.append(f"X/X:{xx_filtro}")
-    if margen_filtro!= "Todo": filtros_activos.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
-    if marcador_filtro!= "Todos": filtros_activos.append(f"Marc:{marcador_filtro}")
-    if pct_marcador > 0: filtros_activos.append(f"Min%:{pct_marcador}%")
-    if cuota_tipo not in ["Ninguno","Todo"]: filtros_activos.append(f"R1x2:{cuota_tipo}")
-    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): filtros_activos.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
-    if parte_gol!= "Todo": filtros_activos.append(f"Parte:{parte_gol}")
-    if jugador_filtro!= "TODOS": filtros_activos.append(f"Jug:{jugador_filtro}")
-    if not (rango_minutos[0]==0 and rango_minutos[1]>=120): filtros_activos.append(f"Min:{rango_minutos[0]}-{rango_minutos[1]}")
+    if equipo_filtro!= "Ninguno":
+        filtros_activos.append(f"Eq1:{equipo_filtro}")
+    if equipo2_filtro!= "Ninguno":
+        filtros_activos.append(f"Eq2:{equipo2_filtro}")
+    if condicion_filtro!= "Todo":
+        filtros_activos.append(f"L/V:{condicion_filtro}")
+    if condicion_filtro3!= "Todo":
+        filtros_activos.append(f"L/V3:{condicion_filtro3}")
+    if resultado_filtro!= "Ninguno":
+        filtros_activos.append(f"1x2:{mapa_1x2[resultado_filtro]}")
+    if resultado_filtro_eq2!= "Ninguno":
+        filtros_activos.append(f"1x2 Eq2:{mapa_1x2[resultado_filtro_eq2]}")
+    if ambos_marcan!= "Todos":
+        filtros_activos.append(f"AM:{ambos_marcan}")
+    if ambos_marcan_eq2!= "Todos":
+        filtros_activos.append(f"AM3:{ambos_marcan_eq2}")
+    if htft_filtro!= "Todo":
+        filtros_activos.append(f"HT/FT:{htft_filtro}")
+    if xx_filtro!= "Todo":
+        filtros_activos.append(f"X/X:{xx_filtro}")
+    if margen_filtro!= "Todo":
+        filtros_activos.append(f"Margen:{ABREV_MARGEN[margen_filtro]}")
+    if marcador_filtro!= "Todos":
+        filtros_activos.append(f"Marc:{marcador_filtro}")
+    if pct_marcador > 0:
+        filtros_activos.append(f"Min%:{pct_marcador}%")
+    if cuota_tipo not in ["Ninguno","Todo"]:
+        filtros_activos.append(f"R1x2:{cuota_tipo}")
+    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0):
+        filtros_activos.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
+    if parte_gol!= "Todo":
+        filtros_activos.append(f"Parte:{parte_gol}")
+    if jugador_filtro!= "TODOS":
+        filtros_activos.append(f"Jug:{jugador_filtro}")
+    if not (rango_minutos[0]==0 and rango_minutos[1]>=120):
+        filtros_activos.append(f"Min:{rango_minutos[0]}-{rango_minutos[1]}")
 
     def fmt_col(col, op, val, alc):
-        if col=="Ninguno" or val=="Ninguno": return None
+        if col=="Ninguno" or val=="Ninguno":
+            return None
         txt = f"{ABREV_COL.get(col, col)}{op}{val}"
-        if alc!= "Todo": txt = f"{alc}:{txt}"
+        if alc!= "Todo":
+            txt = f"{alc}:{txt}"
         return txt
 
     c1 = fmt_col(columna_filtro, operador_filtro, valor_filtro, alcance_filtro)
     c2 = fmt_col(columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2)
     c3 = fmt_col(columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3)
 
-    if c1: filtros_activos.append(c1)
-    if c2: filtros_activos.append(c2)
-    if c3: filtros_activos.append(c3)
+    if c1:
+        filtros_activos.append(c1)
+    if c2:
+        filtros_activos.append(c2)
+    if c3:
+        filtros_activos.append(c3)
 
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
         filtros_activos.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
@@ -2236,50 +2259,80 @@ if len(df_final) > 0:
         df_tmp = df_tmp.sort_values(['Jornada','Date'], ascending=[False, False]).head(150)
         return df_tmp[['partidos']].to_html(escape=False, index=False, classes='dataframe')
 
-    # --- Partidos plegables ---
-    # --- Partidos plegables ---
+    # --- Partidos plegables CON BOTON ---
     with st.expander("📋 Partidos", expanded=False, key="exp_partidos"):
-        if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
-            df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
-            df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
-            html1 = "".join([formatear_h2h_compacto(r, equipo_filtro) for _, r in df1.iterrows()])
-            html2 = "".join([formatear_h2h_compacto(r, equipo2_filtro) for _, r in df2.iterrows()])
-            h2h_html = f'''
-            <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; position:sticky; top:0; background:#fff; z-index:5; border-bottom:2px solid #000;">
-                <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo_filtro} ({len(df1)})</div>
-                <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo2_filtro} ({len(df2)})</div>
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
-                <div>{html1}</div>
-                <div>{html2}</div>
-              </div>
-            </div>
-            '''
-            st.markdown(h2h_html, unsafe_allow_html=True)
-        ############ver 2 partidos en 2 columnas a la vez
+        
+        # Estado inicial
+        if 'ver_partidos' not in st.session_state:
+            st.session_state.ver_partidos = False
+
+        # Reset automático si cambias Eq1/Eq2/Jornada
+        firma = f"{equipo_filtro}|{equipo2_filtro}|{rango_jornadas}|{cuota_tipo}"
+        if 'firma_partidos' not in st.session_state:
+            st.session_state.firma_partidos = firma
+        if firma != st.session_state.firma_partidos:
+            st.session_state.ver_partidos = False
+            st.session_state.firma_partidos = firma
+
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            if not st.session_state.ver_partidos:
+                if st.button("📥 Cargar partidos", key="btn_cargar_partidos", type="primary", use_container_width=True):
+                    st.session_state.ver_partidos = True
+                    st.rerun()
+            else:
+                if st.button("❌ Ocultar", key="btn_ocultar_partidos", use_container_width=True):
+                    st.session_state.ver_partidos = False
+                    st.rerun()
+        with c2:
+            if not st.session_state.ver_partidos:
+                st.caption(f"Hay {len(df_final)} partidos listos. Dale a cargar para verlos.")
+            else:
+                st.caption(f"Mostrando {min(150, len(df_final))} de {len(df_final)} partidos")
+
+        # SI NO HA DADO AL BOTON, NO HACE NADA MÁS
+        if not st.session_state.ver_partidos:
+            pass
         else:
-            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True)
-            MAX_FILAS = 150
-            if len(df_mostrar) > MAX_FILAS:
-                st.warning(f"Mostrando {MAX_FILAS} de {len(df_mostrar)} partidos")
-                df_mostrar = df_mostrar.head(MAX_FILAS)
-            st.caption(f"Mostrando {len(df_mostrar)} partidos")
-            partidos_html = []
-            if len(df_mostrar) > 0:
-                for _, r in df_mostrar.iterrows():
-                    partidos_html.append(formatear_partido(r, equipo_filtro if equipo_filtro != "Ninguno" else None, cuota_tipo, r.get('Goles','')))
-            left_html = "".join(partidos_html[0::2])
-            right_html = "".join(partidos_html[1::2])
-            grid_html = f'''
-            <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
-                <div>{left_html}</div>
-                <div>{right_html}</div>
-              </div>
-            </div>
-            '''
-            st.markdown(grid_html, unsafe_allow_html=True)
+            # --- TU LOGICA ORIGINAL A PARTIR DE AQUI ---
+            if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
+                df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
+                df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
+                html1 = "".join([formatear_h2h_compacto(r, equipo_filtro) for _, r in df1.iterrows()])
+                html2 = "".join([formatear_h2h_compacto(r, equipo2_filtro) for _, r in df2.iterrows()])
+                h2h_html = f'''
+                <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; position:sticky; top:0; background:#fff; z-index:5; border-bottom:2px solid #000;">
+                    <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo_filtro} ({len(df1)})</div>
+                    <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo2_filtro} ({len(df2)})</div>
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
+                    <div>{html1}</div>
+                    <div>{html2}</div>
+                  </div>
+                </div>
+                '''
+                st.markdown(h2h_html, unsafe_allow_html=True)
+            else:
+                df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True)
+                MAX_FILAS = 150
+                if len(df_mostrar) > MAX_FILAS:
+                    df_mostrar = df_mostrar.head(MAX_FILAS)
+                partidos_html = []
+                if len(df_mostrar) > 0:
+                    for _, r in df_mostrar.iterrows():
+                        partidos_html.append(formatear_partido(r, equipo_filtro if equipo_filtro != "Ninguno" else None, cuota_tipo, r.get('Goles','')))
+                left_html = "".join(partidos_html[0::2])
+                right_html = "".join(partidos_html[1::2])
+                grid_html = f'''
+                <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
+                    <div>{left_html}</div>
+                    <div>{right_html}</div>
+                  </div>
+                </div>
+                '''
+                st.markdown(grid_html, unsafe_allow_html=True)
 
 
 
