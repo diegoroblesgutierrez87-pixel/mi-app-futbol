@@ -281,10 +281,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         gf_arr = np.where(is_home_s, df_eq['FTHG'], df_eq['FTAG'])
         gc_arr = np.where(is_home_s, df_eq['FTAG'], df_eq['FTHG'])
 
-    gf_team_s = pd.Series(gf_arr, index=df_eq.index)
-    gc_team_s = pd.Series(gc_arr, index=df_eq.index)
-
-    # color siempre por resultado FINAL, no por 1T/2T
     final_gf_arr = np.where(is_home_s, df_eq['FTHG'].to_numpy(), df_eq['FTAG'].to_numpy())
     final_gc_arr = np.where(is_home_s, df_eq['FTAG'].to_numpy(), df_eq['FTHG'].to_numpy())
     win_s = pd.Series(final_gf_arr > final_gc_arr, index=df_eq.index)
@@ -310,12 +306,30 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             all_away = (g['AwayTeam']==equipo).all()
             sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
 
-        idx0 = g.index[0]
-        is_home = df_eq.loc[idx0, 'HomeTeam'] == equipo
-        final_gf = int(df_eq.loc[idx0, 'FTHG']) if is_home else int(df_eq.loc[idx0, 'FTAG'])
-        final_gc = int(df_eq.loc[idx0, 'FTAG']) if is_home else int(df_eq.loc[idx0, 'FTHG'])
+        # FIX FINAL: J1c con pos subrayada + G/E + ▪
+        real_home = int(first_row['FTHG'])
+        real_away = int(first_row['FTAG'])
+        home_short = str(first_row['HomeTeam'])[:3].upper()
+        away_short = str(first_row['AwayTeam'])[:3].upper()
+        h_pos = int(first_row.get('HomePosPrev', 0))
+        a_pos = int(first_row.get('AwayPosPrev', 0))
+        es_local = first_row['HomeTeam'] == equipo
 
-        txt = f"J{int(j)}{sufijo_final} {final_gf}-{final_gc}"
+        if es_local:
+            htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG'])
+            ftgf, ftgc = real_home, real_away
+        else:
+            htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG'])
+            ftgf, ftgc = real_away, real_home
+
+        res_ht = 'G' if htgf > htgc else 'P' if htgf < htgc else 'E'
+        res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
+        am = " ▪" if real_home > 0 and real_away > 0 else ""
+
+        if es_local:
+            txt = f"J{int(j)}{sufijo_final}<u>{h_pos}º {home_short} {real_home}</u>-{real_away} {away_short} {a_pos}º {res_ht}/{res_ft}{am}"
+        else:
+            txt = f"J{int(j)}{sufijo_final}{h_pos}º {home_short} {real_home}-<u>{real_away} {away_short} {a_pos}º</u> {res_ht}/{res_ft}{am}"
 
         es_h2h = False
         if rival:
@@ -334,6 +348,60 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 
     return f"<div style='display:flex;flex-wrap:wrap;gap:4px;max-width:100%;position:relative;overflow:visible'> {''.join(partes)} </div>"
 
+###########bloque rachas comprimidas "filtro actual"
+
+def racha_comprimida_html(df_team, equipo):
+    """Devuelve 2E | 1G | 1E... con separador |"""
+    if df_team.empty:
+        return ""
+    df_team = df_team.sort_values('Date')
+    res = []
+    for _, r in df_team.iterrows():
+        is_home = r['HomeTeam'] == equipo
+        hg, ag = int(r['FTHG']), int(r['FTAG'])
+        if is_home:
+            if hg > ag: res.append('G')
+            elif hg < ag: res.append('P')
+            else: res.append('E')
+        else:
+            if ag > hg: res.append('G')
+            elif ag < hg: res.append('P')
+            else: res.append('E')
+    comp = []
+    cnt = 1
+    for i in range(1, len(res)):
+        if res[i] == res[i-1]:
+            cnt += 1
+        else:
+            comp.append((cnt, res[i-1]))
+            cnt = 1
+    comp.append((cnt, res[-1]))
+    html = []
+    for c, letra in comp:
+        col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
+        html.append(f"<span style='color:{col};font-weight:900'>{c}{letra}</span>")
+    return "<span style='color:#999'> | </span>".join(html)
+def racha_ambos_marcan_html(df_team):
+    """Devuelve 5si | 1no | 1si... con separador |"""
+    if df_team.empty:
+        return ""
+    df_team = df_team.sort_values('Date')
+    res = []
+    for _, r in df_team.iterrows():
+        if int(r['FTHG']) > 0 and int(r['FTAG']) > 0:
+            res.append('si')
+        else:
+            res.append('no')
+    comp = []
+    cnt = 1
+    for i in range(1, len(res)):
+        if res[i] == res[i-1]:
+            cnt += 1
+        else:
+            comp.append(f"{cnt}{res[i-1]}")
+            cnt = 1
+    comp.append(f"{cnt}{res[-1]}")
+    return " | ".join(comp)
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
@@ -2180,14 +2248,17 @@ if len(df_final) > 0:
                     elif margen_actual == "Pierde ≥2": part_ok = part_ok[dif_team<=-2]
 
                 jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
+                racha = racha_comprimida_html(part_ok, eq) if not part_ok.empty else ""
+                racha_am = racha_ambos_marcan_html(part_ok) if not part_ok.empty else ""
 
                 titulo_eq = marc_eq if marc_eq!="Todos" else "Filtro actual"
 
-                # NUEVO VISUAL: 7/19 36.8%  y 31/38 81.6%
-                html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:4px;'>
+                html = f"""<div style='font-size:11px;line-height:1.4;margin:4px 0;padding-bottom:6px;border-bottom:1px solid #eee'>
 <b style='font-size:12px'>{eq.title()}</b> - {titulo_eq}<br>
 <span style='font-weight:900'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
-{jors}
+<span style='font-size:13px;letter-spacing:0.5px'>{racha}</span><br>
+<span style='font-size:11px;color:#555;font-weight:400'>{racha_am}</span><br>
+<div style='margin-top:4px'>{jors}</div>
 </div>"""
 
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html, titulo_eq))
@@ -2663,14 +2734,22 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             if hits > 0:
                 df_cumple = df_eq[cumple].copy().sort_values('Date')
 
-                # FIX: 1 chip por partido, no groupby por jornada -> adiós J20cf
+                # MARCADOR REAL 0-1 fuera en vez de 1-0 - FIX gft/gct
                 chips = []
                 for _, rr in df_cumple.iterrows():
                     suf = 'c' if rr['HomeTeam']==eq else 'f'
-                    gft = int(rr['FTHG'] if rr['HomeTeam']==eq else rr['FTAG'])
-                    gct = int(rr['FTAG'] if rr['HomeTeam']==eq else rr['FTHG'])
-                    col = "#0f8105" if gft>gct else "#f31818" if gft<gct else "#0A2342"
-                    chips.append(f"<span style='display:inline-flex; border:1px solid #ccc; border-radius:12px; padding:2px 8px; margin:2px; color:{col}; font-weight:700'>J{int(rr['Jornada'])}{suf} {gft}-{gct}</span>")
+                    real_home = int(rr['FTHG'])
+                    real_away = int(rr['FTAG'])
+                    
+                    if rr['HomeTeam']==eq:
+                        gano = real_home > real_away
+                        perdio = real_home < real_away
+                    else:
+                        gano = real_away > real_home
+                        perdio = real_away < real_home
+                    
+                    col = "#0f8105" if gano else "#f31818" if perdio else "#0A2342"
+                    chips.append(f"<span style='display:inline-flex; border:1px solid #ccc; border-radius:12px; padding:2px 8px; margin:2px; color:{col}; font-weight:700'>J{int(rr['Jornada'])}{suf} {real_home}-{real_away}</span>")
                 jors_html = "".join(chips)
 
                 resultados.append({
