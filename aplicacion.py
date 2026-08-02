@@ -1989,24 +1989,70 @@ else:
         df_total = df_base_h2h.copy() if 'df_base_h2h' in locals() else df_original.copy()
         df_total = df_total[(df_total['Jornada']>=rango_jornadas[0]) & (df_total['Jornada']<=rango_jornadas[1])]
 
+        # --- FIX Eq1 + Col2 + Ult: respetar Eq1/Eq2 ---
+        if equipo_filtro!="Ninguno" and equipo2_filtro=="Ninguno":
+            df_total = df_total[(df_total['HomeTeam']==equipo_filtro) | (df_total['AwayTeam']==equipo_filtro)]
+        elif equipo2_filtro!="Ninguno" and equipo_filtro=="Ninguno":
+            df_total = df_total[(df_total['HomeTeam']==equipo2_filtro) | (df_total['AwayTeam']==equipo2_filtro)]
+        elif equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+            df_total = df_total[((df_total['HomeTeam']==equipo_filtro) | (df_total['AwayTeam']==equipo_filtro)) | ((df_total['HomeTeam']==equipo2_filtro) | (df_total['AwayTeam']==equipo2_filtro))]
+        # --- FIN FIX ---
+
+        def parse_alcance(alc_str):
+            import re
+            s = str(alc_str)
+            m = re.match(r'^(AF|C)(\d+(\.\d+)?)?$', s)
+            if s in ("AF","C","Todo"):
+                return s, None
+            if m:
+                tipo = m.group(1)
+                if m.group(2):
+                    try: return tipo, float(m.group(2))
+                    except: return tipo, None
+                return tipo, None
+            return "Todo", None
+
         def get_base(row, col, eq, alcance):
             es_loc = row['HomeTeam']==eq
-            if col=='GolesTotales': return row['FTHG']+row['FTAG']
-            if col=='GolesHT': return row['HTHG']+row['HTAG']
-            if col=='Goles2T': return (row['FTHG']-row['HTHG'])+(row['FTAG']-row['HTAG'])
-            if col=='corneTot': return (row['HC']+row['AC']) if alcance=="Todo" else (row['HC'] if es_loc else row['AC'])
-            if col=='tirosTot': return (row['HS']+row['AS']) if alcance=="Todo" else (row['HS'] if es_loc else row['AS'])
-            if col=='tirosPuertaTot': return (row['HST']+row['AST']) if alcance=="Todo" else (row['HST'] if es_loc else row['AST'])
-            if col=='TargAmTot': return (row['HY']+row['AY']) if alcance=="Todo" else (row['HY'] if es_loc else row['AY'])
-            if col=='TargRojTot': return (row['HR']+row['AR']) if alcance=="Todo" else (row['HR'] if es_loc else row['AR'])
-            if col=='faltasTot': return (row['HF']+row['AF']) if alcance=="Todo" else (row['HF'] if es_loc else row['AF'])
+            tipo, _ = parse_alcance(alcance)
+            if col == 'GolesTotales':
+                gf = row['FTHG'] if es_loc else row['FTAG']
+                gc = row['FTAG'] if es_loc else row['FTHG']
+                if tipo == "AF": return gf
+                if tipo == "C": return gc
+                return gf+gc
+            if col == 'GolesHT':
+                gf = row['HTHG'] if es_loc else row['HTAG']
+                gc = row['HTAG'] if es_loc else row['HTHG']
+                if tipo == "AF": return gf
+                if tipo == "C": return gc
+                return gf+gc
+            if col == 'Goles2T':
+                gf = (row['FTHG']-row['HTHG']) if es_loc else (row['FTAG']-row['HTAG'])
+                gc = (row['FTAG']-row['HTAG']) if es_loc else (row['FTHG']-row['HTHG'])
+                if tipo == "AF": return gf
+                if tipo == "C": return gc
+                return gf+gc
+            if col == 'corneTot':
+                return (row['HC']+row['AC']) if tipo=="Todo" else (row['HC'] if es_loc else row['AC']) if tipo=="AF" else (row['AC'] if es_loc else row['HC'])
+            if col == 'tirosTot':
+                return (row['HS']+row['AS']) if tipo=="Todo" else (row['HS'] if es_loc else row['AS']) if tipo=="AF" else (row['AS'] if es_loc else row['HS'])
+            if col == 'tirosPuertaTot':
+                return (row['HST']+row['AST']) if tipo=="Todo" else (row['HST'] if es_loc else row['AST']) if tipo=="AF" else (row['AST'] if es_loc else row['HST'])
+            if col == 'TargAmTot':
+                return (row['HY']+row['AY']) if tipo=="Todo" else (row['HY'] if es_loc else row['AY']) if tipo=="AF" else (row['AY'] if es_loc else row['HY'])
+            if col == 'TargRojTot':
+                return (row['HR']+row['AR']) if tipo=="Todo" else (row['HR'] if es_loc else row['AR']) if tipo=="AF" else (row['AR'] if es_loc else row['HR'])
+            if col == 'faltasTot':
+                return (row['HF']+row['AF']) if tipo=="Todo" else (row['HF'] if es_loc else row['AF']) if tipo=="AF" else (row['AF'] if es_loc else row['HF'])
             if col in row:
-                if alcance=="AF" or alcance=="C":
-                    mapa={'FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HC':'AC','AC':'HC','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR'}
-                    if alcance=="AF": return row[col] if (es_loc and col in ['FTHG','HTHG','HS','HST','HC','HF','HY','HR'] or not es_loc and col in ['FTAG','HTAG','AS','AST','AC','AF','AY','AR']) else (row['HY'] if es_loc else row['AY'] if col=='TargAmTot' else row[col])
-                    else:
-                        contra=mapa.get(col,col)
-                        return row[contra] if contra in row else row[col]
+                mapa={'FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HC':'AC','AC':'HC','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR'}
+                if tipo=="AF":
+                    if es_loc: return row[col] if col in ['FTHG','HTHG','HS','HST','HC','HF','HY','HR'] else row.get(mapa.get(col,col),0)
+                    else: return row[col] if col in ['FTAG','HTAG','AS','AST','AC','AF','AY','AR'] else row.get(mapa.get(col,col),0)
+                if tipo=="C":
+                    if es_loc: return row.get(mapa.get(col,col),0)
+                    else: return row[col] if col in ['FTHG','HTHG'] else row.get(mapa.get(col,col),0)
                 return row[col]
             return 0
 
@@ -2030,22 +2076,51 @@ else:
 
         def cumple_para_equipo(row, eq):
             if columna_filtro not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro!="Ninguno":
+                _, v_fijo = parse_alcance(alcance_filtro)
+                vv = float(v_fijo if v_fijo is not None else valor_filtro)
                 base = get_base(row, columna_filtro, eq, alcance_filtro)
-                vv = float(valor_filtro)
                 if operador_filtro=="=" and base!=vv: return False
                 if operador_filtro==">" and not (base>vv): return False
                 if operador_filtro==">=" and not (base>=vv): return False
                 if operador_filtro=="<" and not (base<vv): return False
                 if operador_filtro=="<=" and not (base<=vv): return False
             if columna_filtro2 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro2!="Ninguno":
+                _, v_fijo = parse_alcance(alcance_filtro2)
+                vv = float(v_fijo if v_fijo is not None else valor_filtro2)
                 base = get_base(row, columna_filtro2, eq, alcance_filtro2)
-                vv = float(valor_filtro2)
                 if operador_filtro2=="=" and base!=vv: return False
                 if operador_filtro2==">" and not (base>vv): return False
                 if operador_filtro2==">=" and not (base>=vv): return False
                 if operador_filtro2=="<" and not (base<vv): return False
                 if operador_filtro2=="<=" and not (base<=vv): return False
+            if columna_filtro3 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro3!="Ninguno":
+                _, v_fijo = parse_alcance(alcance_filtro3)
+                vv = float(v_fijo if v_fijo is not None else valor_filtro3)
+                base = get_base(row, columna_filtro3, eq, alcance_filtro3)
+                if operador_filtro3=="=" and base!=vv: return False
+                if operador_filtro3==">" and not (base>vv): return False
+                if operador_filtro3==">=" and not (base>=vv): return False
+                if operador_filtro3=="<" and not (base<vv): return False
+                if operador_filtro3=="<=" and not (base<=vv): return False
             if not cumple_am(row): return False
+            if margen_filtro!= "Todo" or parte_gol!= "Todo":
+                if parte_gol == "1T":
+                    gh = row['HTHG']; ga = row['HTAG']
+                elif parte_gol == "2T":
+                    gh = row['FTHG']-row['HTHG']; ga = row['FTAG']-row['HTAG']
+                else:
+                    gh = row['FTHG']; ga = row['FTAG']
+                es_loc = row['HomeTeam']==eq
+                dif = (gh-ga) if es_loc else (ga-gh)
+                if margen_filtro == "Empate" and dif!=0: return False
+                if margen_filtro == "Gana 1" and dif!=1: return False
+                if margen_filtro == "Gana 2" and dif!=2: return False
+                if margen_filtro == "Gana 3+" and dif<3: return False
+                if margen_filtro == "Pierde 1" and dif!=-1: return False
+                if margen_filtro == "Pierde 2" and dif!=-2: return False
+                if margen_filtro == "Pierde 3+" and dif>-3: return False
+                if margen_filtro == "Gana ≥2" and dif<2: return False
+                if margen_filtro == "Pierde ≥2" and dif>-2: return False
             return True
 
         dict_tails = {}
@@ -2072,6 +2147,7 @@ else:
             df_final = df_final.iloc[0:0].copy()
     else:
         st.session_state.dict_ultimos = {}
+
 
 ######################################################################################
     if len(df_final) > 0:
