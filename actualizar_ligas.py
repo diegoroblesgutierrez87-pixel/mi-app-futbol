@@ -2187,7 +2187,7 @@ if len(df_final) > 0:
                 html = f"""<div style='font-size:7px;line-height:1.3;margin:2px 0;padding-bottom:4px;border-bottom:2px solid #000;font-family:monospace'>
 <span style='font-size:7px'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
 <span style='font-size:5px;letter-spacing:0.2px'>{racha}</span><br>
-<span style='font-size:7.5px;color:#555;font-weight:400'>{racha_am}</span><br>
+<span style='font-size:7.5px;color:#000;font-weight:700'>{racha_am}</span><br> 
 <div style='margin-top:4px'>{jors}</div>
 </div>"""
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
