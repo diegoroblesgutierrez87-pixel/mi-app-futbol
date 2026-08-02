@@ -1016,6 +1016,7 @@ def _rachas(df_base, cond, loc, x_max=None):
 
 def limpiar_filtros():
     st.session_state.parte_gol_eq2 = "Todo"
+    st.session_state.margen_jornadas_filtro = "Todos"
     st.session_state.marcador_filtro_eq2 = "Todos"
     st.session_state.marcador_filtro = "Todos"
     st.session_state.pct_marcador = 1
@@ -1309,8 +1310,14 @@ if len(jornadas) > 0:
         lista_jug = sorted([p for p,t in player_to_team.items() if t==equipo_filtro]) if equipo_filtro!="Ninguno" else sorted(player_to_team.keys())
 
         # --- NUEVA CAJITA ULTIMOS PART. ---
+        c_ult, c_mar = st.columns(2)
         ultimos_opciones = ["Todos"] + list(range(1, 39))
-        ultimos_part_filtro = st.selectbox("Últimos part.", ultimos_opciones, key='ultimos_part_filtro', help="Si pones 3, solo equipos donde sus últimos 3 partidos TODOS cumplan el resto de filtros")
+        ultimos_part_filtro = c_ult.selectbox("Últimos part.", ultimos_opciones, key='ultimos_part_filtro', help="Últimos N que tienen que cumplir el filtro")
+
+        margen_j_opciones = ["Todos"] + list(range(1, 39))
+        if 'margen_jornadas_filtro' not in st.session_state:
+            st.session_state.margen_jornadas_filtro = "Todos"
+        margen_jornadas_filtro = c_mar.selectbox("Margen J", margen_j_opciones, key='margen_jornadas_filtro', help="En cuantas jornadas busco esos N. Ej: Ult 5 + Margen 10 = 5 que cumplan dentro de las últimas 10 jugadas")
 
         jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
@@ -1359,7 +1366,10 @@ if len(jornadas) > 0:
     if not (rango_minutos[0]==0 and rango_minutos[1]>=120):
         filtros_activos.append(f"Min:{rango_minutos[0]}-{rango_minutos[1]}")
     if str(ultimos_part_filtro)!="Todos":
-        filtros_activos.append(f"Ult:{ultimos_part_filtro}")
+        txt_ult = f"Ult:{ultimos_part_filtro}"
+        if str(st.session_state.get('margen_jornadas_filtro',"Todos"))!="Todos":
+            txt_ult += f"/{st.session_state.get('margen_jornadas_filtro')}J"
+        filtros_activos.append(txt_ult)
 
     def fmt_col(col, op, val, alc):
         if col=="Ninguno" or val=="Ninguno":
@@ -1414,7 +1424,11 @@ if len(jornadas) > 0:
     if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j): comunes.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
-    if str(ultimos_part_filtro)!="Todos": comunes.append(f"Ult:{ultimos_part_filtro}")
+    if str(ultimos_part_filtro)!="Todos":
+        if str(st.session_state.get('margen_jornadas_filtro',"Todos"))!="Todos":
+            comunes.append(f"Ult:{ultimos_part_filtro}/{st.session_state.get('margen_jornadas_filtro')}J")
+        else:
+            comunes.append(f"Ult:{ultimos_part_filtro}")
 
     if eq1_list or eq2_list or comunes:
         txt = "<div style='font-size:10px; line-height:1.3; font-family:monospace; padding:2px 0'>filtros:<br>"
@@ -1962,53 +1976,98 @@ else:
     if jugador_filtro!= "TODOS" and not df_final.empty:
         df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
 
-    # --- FILTRO ULTIMOS X - DEFINITIVO: ULTIMOS N JUGADOS TIENEN QUE CUMPLIR EL FILTRO ---
+    # --- FILTRO ULTIMOS X + MARGEN J - CON AF/C REAL POR EQUIPO - FINAL FIX Si1P ---
     if 'dict_ultimos' not in st.session_state:
         st.session_state.dict_ultimos = {}
     st.session_state.dict_ultimos = {}
 
     if str(ultimos_part_filtro)!="Todos" and len(df_final) > 0:
         n_ult = int(ultimos_part_filtro)
+        margen_j = st.session_state.get('margen_jornadas_filtro', "Todos")
+        margen_n = int(margen_j) if str(margen_j)!="Todos" else None
 
-        # df_filtrado = lo que ya cumple AM, 1x2, etc
-        df_filtrado = df_final.copy()
-        # df_total = todos los partidos de la jornada, sin filtrar por AM
-        # para sacar los ULTIMOS N REALES
         df_total = df_base_h2h.copy() if 'df_base_h2h' in locals() else df_original.copy()
         df_total = df_total[(df_total['Jornada']>=rango_jornadas[0]) & (df_total['Jornada']<=rango_jornadas[1])]
 
+        def get_base(row, col, eq, alcance):
+            es_loc = row['HomeTeam']==eq
+            if col=='GolesTotales': return row['FTHG']+row['FTAG']
+            if col=='GolesHT': return row['HTHG']+row['HTAG']
+            if col=='Goles2T': return (row['FTHG']-row['HTHG'])+(row['FTAG']-row['HTAG'])
+            if col=='corneTot': return (row['HC']+row['AC']) if alcance=="Todo" else (row['HC'] if es_loc else row['AC'])
+            if col=='tirosTot': return (row['HS']+row['AS']) if alcance=="Todo" else (row['HS'] if es_loc else row['AS'])
+            if col=='tirosPuertaTot': return (row['HST']+row['AST']) if alcance=="Todo" else (row['HST'] if es_loc else row['AST'])
+            if col=='TargAmTot': return (row['HY']+row['AY']) if alcance=="Todo" else (row['HY'] if es_loc else row['AY'])
+            if col=='TargRojTot': return (row['HR']+row['AR']) if alcance=="Todo" else (row['HR'] if es_loc else row['AR'])
+            if col=='faltasTot': return (row['HF']+row['AF']) if alcance=="Todo" else (row['HF'] if es_loc else row['AF'])
+            if col in row:
+                if alcance=="AF" or alcance=="C":
+                    mapa={'FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HC':'AC','AC':'HC','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR'}
+                    if alcance=="AF": return row[col] if (es_loc and col in ['FTHG','HTHG','HS','HST','HC','HF','HY','HR'] or not es_loc and col in ['FTAG','HTAG','AS','AST','AC','AF','AY','AR']) else (row['HY'] if es_loc else row['AY'] if col=='TargAmTot' else row[col])
+                    else:
+                        contra=mapa.get(col,col)
+                        return row[contra] if contra in row else row[col]
+                return row[col]
+            return 0
+
+        def cumple_am(row):
+            h1=row['HTHG']; a1=row['HTAG']; ft1=row['FTHG']; ft2=row['FTAG']
+            h2=ft1-h1; a2=ft2-a1
+            am_1p = (h1>0 and a1>0)
+            am_2p = (h2>0 and a2>0)
+            am_ft = (ft1>0 and ft2>0)
+            if ambos_marcan=="Todos": return True
+            if ambos_marcan=="Si": return am_ft
+            if ambos_marcan=="No": return not am_ft
+            if ambos_marcan=="Si1P": return am_1p
+            if ambos_marcan=="No1P": return not am_1p
+            if ambos_marcan=="Si2P": return am_2p
+            if ambos_marcan=="No2P": return not am_2p
+            if ambos_marcan=="Si1pNo2p": return am_1p and not am_2p
+            if ambos_marcan=="No1pSi2p": return (not am_1p) and am_2p
+            if ambos_marcan=="Si1pSi2p": return am_1p and am_2p
+            return True
+
+        def cumple_para_equipo(row, eq):
+            if columna_filtro not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro!="Ninguno":
+                base = get_base(row, columna_filtro, eq, alcance_filtro)
+                vv = float(valor_filtro)
+                if operador_filtro=="=" and base!=vv: return False
+                if operador_filtro==">" and not (base>vv): return False
+                if operador_filtro==">=" and not (base>=vv): return False
+                if operador_filtro=="<" and not (base<vv): return False
+                if operador_filtro=="<=" and not (base<=vv): return False
+            if columna_filtro2 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro2!="Ninguno":
+                base = get_base(row, columna_filtro2, eq, alcance_filtro2)
+                vv = float(valor_filtro2)
+                if operador_filtro2=="=" and base!=vv: return False
+                if operador_filtro2==">" and not (base>vv): return False
+                if operador_filtro2==">=" and not (base>=vv): return False
+                if operador_filtro2=="<" and not (base<vv): return False
+                if operador_filtro2=="<=" and not (base<=vv): return False
+            if not cumple_am(row): return False
+            return True
+
         dict_tails = {}
         lista_final = []
-
         for eq in pd.unique(df_total[['HomeTeam','AwayTeam']].values.ravel()):
             df_eq_total = df_total[(df_total['HomeTeam']==eq) | (df_total['AwayTeam']==eq)].sort_values('Date')
-            if len(df_eq_total) < n_ult:
-                continue
-
-            # LOS ULTIMOS N JUGADOS DE VERDAD
-            df_last_n_real = df_eq_total.tail(n_ult).copy()
-
-            # ¿Estan TODOS esos N en df_filtrado? (es decir, cumplen Si2P etc)
-            # Merge por Date+Home+Away+League para comprobar
-            merged = pd.merge(
-                df_last_n_real[['Date','HomeTeam','AwayTeam','League']],
-                df_filtrado[['Date','HomeTeam','AwayTeam','League']],
-                on=['Date','HomeTeam','AwayTeam','League'],
-                how='inner'
-            )
-            if len(merged)!= n_ult:
-                continue # falla 1, se descarta equipo entero
-
-            # Si llega aquí, sus últimos N reales SÍ cumplen el filtro
-            dict_tails[eq] = df_last_n_real
-            lista_final.append(df_last_n_real)
+            if len(df_eq_total) < n_ult: continue
+            if margen_n is None:
+                df_last_n = df_eq_total.tail(n_ult)
+                if not all(cumple_para_equipo(r, eq) for _, r in df_last_n.iterrows()): continue
+                df_a_guardar = df_last_n
+            else:
+                df_ventana = df_eq_total.tail(margen_n) if len(df_eq_total)>=margen_n else df_eq_total
+                df_ok = df_ventana[df_ventana.apply(lambda r: cumple_para_equipo(r, eq), axis=1)]
+                if len(df_ok) < n_ult: continue
+                df_a_guardar = df_ok.sort_values('Date').tail(n_ult)
+            dict_tails[eq] = df_a_guardar
+            lista_final.append(df_a_guardar)
 
         st.session_state.dict_ultimos = dict_tails
-
         if lista_final:
-            df_final = pd.concat(lista_final).drop_duplicates(
-                subset=['Date','HomeTeam','AwayTeam','League']
-            ).sort_values('Date').copy()
+            df_final = pd.concat(lista_final).drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League']).sort_values('Date').copy()
         else:
             df_final = df_final.iloc[0:0].copy()
     else:
