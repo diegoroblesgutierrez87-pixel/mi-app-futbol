@@ -2148,11 +2148,11 @@ if len(df_final) > 0:
                 jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
                 racha = racha_comprimida_html(part_ok, eq) if not part_ok.empty else ""
                 racha_am = racha_ambos_marcan_html(part_ok) if not part_ok.empty else ""
-                html = f"""<div style='font-size:14px!important;line-height:1.6!important;margin:6px 0;padding-bottom:8px;border-bottom:3px solid #000;font-family:monospace;color:#000000!important'>
-<span style='font-size:14px!important;color:#000000!important;font-weight:900!important'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
-<span style='font-size:15px!important;display:block;margin:4px 0;line-height:1.4!important'>{racha}</span>
-<span style='font-size:17px!important;color:#000000!important;font-weight:900!important;display:block;margin:5px 0;line-height:1.4!important'>{racha_am}</span>
-<div style='margin-top:8px;font-size:11px!important'>{jors}</div>
+                html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:1px solid #000;font-family:monospace;color:#000'>
+<div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}%</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 3px 0'>{racha_am}</div>
+<div style='margin-top:4px'>{jors}</div>
 </div>"""
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
                 elif eq == equipo2_filtro: datos_eq2.append((pct, hits, eq, html))
