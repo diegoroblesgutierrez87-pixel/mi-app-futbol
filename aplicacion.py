@@ -342,11 +342,11 @@ def racha_comprimida_html(df_team, equipo):
         else: comp.append((cnt,res[i-1])); cnt=1
     comp.append((cnt,res[-1]))
 
-    sep = "<span style='color:#bbb;font-size:7px;margin:0 1px'>|</span>"
+    sep = "<span style='color:#bbb;font-size:11px;margin:0 1px'>|</span>"
     parts = []
     for c, letra in comp:
         col = "#0f8105" if letra=='G' else "#f31818" if letra=='P' else "#0A2342"
-        parts.append(f"<span style='color:{col};font-weight:700;font-size:9px;line-height:1.1'>{c}{letra}</span>")
+        parts.append(f"<span style='color:{col};font-weight:700;font-size:11px;line-height:1.1'>{c}{letra}</span>")
     return sep.join(parts)
 ############################################
 def racha_ambos_marcan_html(df_team):
@@ -362,7 +362,7 @@ def racha_ambos_marcan_html(df_team):
     comp.append(f"{cnt}{res[-1]}")
 
     sep = "<span style='color:#bbb;font-size:7px;margin:0 1px'>|</span>"
-    return sep.join([f"<span style='font-size:9px;font-weight:700;color:#000;line-height:1.1'>{x}</span>" for x in comp])
+    return sep.join([f"<span style='font-size:11px;font-weight:700;color:#000;line-height:1.1'>{x}</span>" for x in comp])
     ##############
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
