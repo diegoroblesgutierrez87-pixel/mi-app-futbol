@@ -1050,7 +1050,7 @@ def limpiar_filtros():
     st.session_state.equipo2_filtro = "Ninguno"
     st.session_state.margen_filtro = "Todo"
     st.session_state.margen_filtro_eq2 = "Todo"
-
+    st.session_state.ultimos_part_filtro = "Todos"
 
 
 
@@ -1176,6 +1176,7 @@ if len(jornadas) > 0:
     if 'equipo2_filtro' not in st.session_state: st.session_state.equipo2_filtro = "Ninguno"
     if 'margen_filtro' not in st.session_state: st.session_state.margen_filtro = "Todo"
     if 'margen_filtro_eq2' not in st.session_state: st.session_state.margen_filtro_eq2 = "Todo"
+    if 'ultimos_part_filtro' not in st.session_state: st.session_state.ultimos_part_filtro = "Todos"
 
     columnas_numericas = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot','HomePtsPrev','AwayPtsPrev','HomePosPrev','AwayPosPrev','HomePerf','AwayPerf']
     ABREV_COL = {
@@ -1307,6 +1308,10 @@ if len(jornadas) > 0:
         player_to_team = {p: max(cnts.items(), key=lambda x: x[1])[0] for p, cnts in player_teams.items()} if player_teams else {}
         lista_jug = sorted([p for p,t in player_to_team.items() if t==equipo_filtro]) if equipo_filtro!="Ninguno" else sorted(player_to_team.keys())
 
+        # --- NUEVA CAJITA ULTIMOS PART. ---
+        ultimos_opciones = ["Todos"] + list(range(1, 39))
+        ultimos_part_filtro = st.selectbox("Últimos part.", ultimos_opciones, key='ultimos_part_filtro', help="Si pones 3, solo equipos donde sus últimos 3 partidos TODOS cumplan el resto de filtros")
+
         jugador_filtro = st.selectbox("Jugador", ["TODOS"] + lista_jug, key='jugador_filtro')
 
         st.button("Limpiar", on_click=limpiar_filtros, use_container_width=False)
@@ -1353,6 +1358,8 @@ if len(jornadas) > 0:
         filtros_activos.append(f"Jug:{jugador_filtro}")
     if not (rango_minutos[0]==0 and rango_minutos[1]>=120):
         filtros_activos.append(f"Min:{rango_minutos[0]}-{rango_minutos[1]}")
+    if str(ultimos_part_filtro)!="Todos":
+        filtros_activos.append(f"Ult:{ultimos_part_filtro}")
 
     def fmt_col(col, op, val, alc):
         if col=="Ninguno" or val=="Ninguno":
@@ -1407,6 +1414,7 @@ if len(jornadas) > 0:
     if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j): comunes.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
+    if str(ultimos_part_filtro)!="Todos": comunes.append(f"Ult:{ultimos_part_filtro}")
 
     if eq1_list or eq2_list or comunes:
         txt = "<div style='font-size:10px; line-height:1.3; font-family:monospace; padding:2px 0'>filtros:<br>"
@@ -1944,14 +1952,67 @@ else:
     df_final['Goles'] = ''
     if todos_eventos and not df_final.empty:
         df_final['Goles'] = df_final.apply(
-            lambda r: buscar_goles_partido(r, todos_eventos, rango_minutos[0], rango_minutos[1], parte_gol, equipo_filtro),
+            lambda r: buscar_goles_partido(r, todos_eventos, rango_minutos[0], rango_minutos[1], parte_gol, equipo_filtro if equipo_filtro!="Ninguno" else None),
             axis=1
         )
         if not (rango_minutos[0] == 0 and rango_minutos[1] >= 120):
             df_final = df_final[df_final['Goles'].str.len() > 0]
-      # --- FILTRO JUGADOR ---
-    if jugador_filtro!= "TODOS":
+
+    # --- FILTRO JUGADOR ---
+    if jugador_filtro!= "TODOS" and not df_final.empty:
         df_final = df_final[df_final['Goles'].str.contains(jugador_filtro, case=False, na=False)]
+
+    # --- FILTRO ULTIMOS X - DEFINITIVO: ULTIMOS N JUGADOS TIENEN QUE CUMPLIR EL FILTRO ---
+    if 'dict_ultimos' not in st.session_state:
+        st.session_state.dict_ultimos = {}
+    st.session_state.dict_ultimos = {}
+
+    if str(ultimos_part_filtro)!="Todos" and len(df_final) > 0:
+        n_ult = int(ultimos_part_filtro)
+
+        # df_filtrado = lo que ya cumple AM, 1x2, etc
+        df_filtrado = df_final.copy()
+        # df_total = todos los partidos de la jornada, sin filtrar por AM
+        # para sacar los ULTIMOS N REALES
+        df_total = df_base_h2h.copy() if 'df_base_h2h' in locals() else df_original.copy()
+        df_total = df_total[(df_total['Jornada']>=rango_jornadas[0]) & (df_total['Jornada']<=rango_jornadas[1])]
+
+        dict_tails = {}
+        lista_final = []
+
+        for eq in pd.unique(df_total[['HomeTeam','AwayTeam']].values.ravel()):
+            df_eq_total = df_total[(df_total['HomeTeam']==eq) | (df_total['AwayTeam']==eq)].sort_values('Date')
+            if len(df_eq_total) < n_ult:
+                continue
+
+            # LOS ULTIMOS N JUGADOS DE VERDAD
+            df_last_n_real = df_eq_total.tail(n_ult).copy()
+
+            # ¿Estan TODOS esos N en df_filtrado? (es decir, cumplen Si2P etc)
+            # Merge por Date+Home+Away+League para comprobar
+            merged = pd.merge(
+                df_last_n_real[['Date','HomeTeam','AwayTeam','League']],
+                df_filtrado[['Date','HomeTeam','AwayTeam','League']],
+                on=['Date','HomeTeam','AwayTeam','League'],
+                how='inner'
+            )
+            if len(merged)!= n_ult:
+                continue # falla 1, se descarta equipo entero
+
+            # Si llega aquí, sus últimos N reales SÍ cumplen el filtro
+            dict_tails[eq] = df_last_n_real
+            lista_final.append(df_last_n_real)
+
+        st.session_state.dict_ultimos = dict_tails
+
+        if lista_final:
+            df_final = pd.concat(lista_final).drop_duplicates(
+                subset=['Date','HomeTeam','AwayTeam','League']
+            ).sort_values('Date').copy()
+        else:
+            df_final = df_final.iloc[0:0].copy()
+    else:
+        st.session_state.dict_ultimos = {}
 
 ######################################################################################
     if len(df_final) > 0:
@@ -2017,12 +2078,18 @@ if len(df_final) > 0:
         num_a_mostrar = st.session_state.num_ligas_filtro_actual
         ligas_visibles = ligas_ordenadas_all[:num_a_mostrar] if ligas_ordenadas_all else []
 
-        # TITULITO - CON Eq y Partidos restaurado
+        # TITULITO - Eq real = solo los que cumplen Ult
         if len(df_final) > 0 and ligas_visibles:
             df_visible_titulo = df_final[df_final['League'].isin(ligas_visibles)]
             ligas_mostrar = "|".join(ligas_visibles)
-            num_equipos = len(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
-            partidos_mostrar = len(df_visible_titulo)
+            if str(ultimos_part_filtro)!="Todos" and st.session_state.get('dict_ultimos'):
+                num_equipos = len([eq for eq in st.session_state.dict_ultimos.keys() if eq in pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()) or True])
+                # solo los que están en dict_ultimos y además tienen liga visible
+                num_equipos = len(st.session_state.dict_ultimos)
+                partidos_mostrar = len(df_visible_titulo)
+            else:
+                num_equipos = len(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
+                partidos_mostrar = len(df_visible_titulo)
             st.markdown(f"<div style='font-size:8px;font-family:monospace;color:#555;padding:0 0 4px 0'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas</div>", unsafe_allow_html=True)
         else:
             st.markdown(f"<div style='font-size:8px;font-family:monospace;color:#555;padding:0 0 4px 0'>Ligas: - | Eq: 0 | Partidos: 0 | Mostrando 0/{len(ligas_ordenadas_all)} ligas</div>", unsafe_allow_html=True)
@@ -2107,7 +2174,16 @@ if len(df_final) > 0:
                         base_team_global = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
 
                     part_tot = base_total_team
-                    part_ok = base_team_global
+
+                    if str(ultimos_part_filtro)!="Todos":
+                        # Si pide 5 y el equipo no está en dict_ultimos es que tiene <5, lo saltamos
+                        if eq not in st.session_state.get('dict_ultimos', {}):
+                            continue
+                        df_tail_eq = st.session_state.dict_ultimos[eq]
+                        part_ok = df_tail_eq[df_tail_eq['League'].isin(ligas_visibles)]
+                    else:
+                        part_ok = base_team_global
+
                     tot = len(part_tot)
                     hits = len(part_ok)
                     pct = (hits / tot * 100) if tot else 0
