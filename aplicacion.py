@@ -303,19 +303,19 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
         
                 # ESTILO TEXTO SIMPLE, SIN BURBUJA NI BORDE tamaño J1f9º WES 1-0 BLA 10º P/P....
-        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline;background:transparent;border:none;padding:0;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px"
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-block;background:transparent;border:none;padding:1px 3px;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px;line-height:20px"
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
-        jx_html = f"""<details style="display:inline-block;margin:0;padding:0;vertical-align:baseline">
+        jx_html = f"""<details style="display:inline-block;margin:1px 1px;padding:0;vertical-align:middle">
         <summary style="{estilos_summary}">{txt}</summary>
         <div style="position:absolute;z-index:9999;top:100%;left:0;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;box-shadow:4px 4px 10px rgba(0,0,0,0.4);max-width:360px;min-width:320px;text-align:left;white-space:normal">{viñeta}</div>
     </details>"""
         partes.append(jx_html)
 
-    # ESTO ES LO QUE LO PONE TODO SEGUIDO
-    separador = " <span style='color:#999;font-size:7.5px;font-weight:900;letter-spacing:-0.4px'>|</span> "
-    return f"<div style='display:block;line-height:1.5;font-size:7.5px;white-space:normal;letter-spacing:-0.3px;word-spacing:-1px'>{separador.join(partes)}</div>"
+    # CON GAP JUSTO PARA DEDO
+    separador = " <span style='color:#999;font-size:9px;font-weight:900;margin:0 1px'>|</span> "
+    return f"<div style='display:flex;flex-wrap:wrap;gap:2px 2px;align-items:center;line-height:1.8;padding:2px 0'>{separador.join(partes)}</div>"
 
 
 
