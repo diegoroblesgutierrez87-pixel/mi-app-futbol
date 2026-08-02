@@ -1548,7 +1548,7 @@ if len(jornadas) > 0:
         if ambos_marcan!= "Todos":
             df_eq1 = _filtro_am(df_eq1, ambos_marcan, parte_gol)
         if ambos_marcan_eq2!= "Todos":
-            df_eq2 = _filtro_am(df_eq2, ambos_marcan_eq2, parte_gol)
+            df_eq2 = _filtro_am(df_eq2, ambos_marcan_eq2, parte_gol_eq2)
         df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
     elif equipo_filtro!= "Ninguno":
         if ambos_marcan!= "Todos":
@@ -1668,16 +1668,15 @@ if len(jornadas) > 0:
                 dif = gh - ga
 
         if equipo_ref == "Ninguno" and condicion_filtro == "Todo":
-            # Sin equipo: Gana = local gana, Pierde = local pierde
             if margen_tipo == "Empate": return df_in[dif==0]
-            elif margen_tipo == "Gana 1": return df_in[dif==1]
-            elif margen_tipo == "Pierde 1": return df_in[dif==-1]
-            elif margen_tipo == "Gana 2": return df_in[dif==2]
-            elif margen_tipo == "Pierde 2": return df_in[dif==-2]
-            elif margen_tipo == "Gana 3+": return df_in[dif>=3]
-            elif margen_tipo == "Pierde 3+": return df_in[dif<=-3]
-            elif margen_tipo == "Gana ≥2": return df_in[dif>=2]
-            elif margen_tipo == "Pierde ≥2": return df_in[dif<=-2]
+            elif margen_tipo == "Gana 1": return df_in[np.abs(dif)==1]
+            elif margen_tipo == "Pierde 1": return df_in[np.abs(dif)==1]
+            elif margen_tipo == "Gana 2": return df_in[np.abs(dif)==2]
+            elif margen_tipo == "Pierde 2": return df_in[np.abs(dif)==2]
+            elif margen_tipo == "Gana 3+": return df_in[np.abs(dif)>=3]
+            elif margen_tipo == "Pierde 3+": return df_in[np.abs(dif)>=3]
+            elif margen_tipo == "Gana ≥2": return df_in[np.abs(dif)>=2]
+            elif margen_tipo == "Pierde ≥2": return df_in[np.abs(dif)>=2]
             else: return df_in
 
         if margen_tipo == "Empate": return df_in[dif==0]
@@ -1869,15 +1868,8 @@ def _eval_team(df_in, team, col, op, val_str, alc):
         v2=df_in[contra].values if contra in df_in.columns else v1
         vh,va=v1,v2
 
-    # SIN EQUIPO -> respeta L/V y respeta AF/C
+    # SIN EQUIPO -> no pre-filtra AF/C, deja que el resumen lo haga por equipo
     if team=="Ninguno":
-        # determina si miramos solo local, solo visitante o ambos
-        # usa la variable global condicion_filtro / condicion_filtro3
-        try:
-            lv_global = condicion_filtro if 'condicion_filtro' in globals() else "Todo"
-        except:
-            lv_global = "Todo"
-        
         if tipo=="Todo":
             base=vh+va
             if op=="=": ok=base==val
@@ -1887,21 +1879,8 @@ def _eval_team(df_in, team, col, op, val_str, alc):
             else: ok=base<=val
             return ok
         else:
-            base_home = vh
-            base_away = va
-            if op=="=": ok_h=base_home==val; ok_a=base_away==val
-            elif op==">": ok_h=base_home>val; ok_a=base_away>val
-            elif op==">=": ok_h=base_home>=val; ok_a=base_away>=val
-            elif op=="<": ok_h=base_home<val; ok_a=base_away<val
-            else: ok_h=base_home<=val; ok_a=base_away<=val
-            
-            if lv_global == "Local":
-                return ok_h
-            elif lv_global == "Visitante":
-                return ok_a
-            else:
-                # sin L/V, AF sin equipo = cualquiera que cumpla
-                return ok_h | ok_a
+            # AF/C sin equipo no puede filtrar aquí, devolver todo
+            return np.ones(len(df_in), dtype=bool)
     else:
         es_loc=df_in['HomeTeam']==team
         es_team=es_loc | (df_in['AwayTeam']==team)
@@ -2056,71 +2035,79 @@ else:
                 return row[col]
             return 0
 
-        def cumple_am(row):
+        def cumple_am(row, eq):
+            es_eq2_am = (equipo2_filtro!="Ninguno" and eq==equipo2_filtro)
+            am_modo = ambos_marcan_eq2 if es_eq2_am else ambos_marcan
             h1=row['HTHG']; a1=row['HTAG']; ft1=row['FTHG']; ft2=row['FTAG']
             h2=ft1-h1; a2=ft2-a1
             am_1p = (h1>0 and a1>0)
             am_2p = (h2>0 and a2>0)
             am_ft = (ft1>0 and ft2>0)
-            if ambos_marcan=="Todos": return True
-            if ambos_marcan=="Si": return am_ft
-            if ambos_marcan=="No": return not am_ft
-            if ambos_marcan=="Si1P": return am_1p
-            if ambos_marcan=="No1P": return not am_1p
-            if ambos_marcan=="Si2P": return am_2p
-            if ambos_marcan=="No2P": return not am_2p
-            if ambos_marcan=="Si1pNo2p": return am_1p and not am_2p
-            if ambos_marcan=="No1pSi2p": return (not am_1p) and am_2p
-            if ambos_marcan=="Si1pSi2p": return am_1p and am_2p
+            if am_modo=="Todos": return True
+            if am_modo=="Si": return am_ft
+            if am_modo=="No": return not am_ft
+            if am_modo=="Si1P": return am_1p
+            if am_modo=="No1P": return not am_1p
+            if am_modo=="Si2P": return am_2p
+            if am_modo=="No2P": return not am_2p
+            if am_modo=="Si1pNo2p": return am_1p and not am_2p
+            if am_modo=="No1pSi2p": return (not am_1p) and am_2p
+            if am_modo=="Si1pSi2p": return am_1p and am_2p
             return True
 
         def cumple_para_equipo(row, eq):
-            if columna_filtro not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro!="Ninguno":
-                _, v_fijo = parse_alcance(alcance_filtro)
-                vv = float(v_fijo if v_fijo is not None else valor_filtro)
-                base = get_base(row, columna_filtro, eq, alcance_filtro)
-                if operador_filtro=="=" and base!=vv: return False
-                if operador_filtro==">" and not (base>vv): return False
-                if operador_filtro==">=" and not (base>=vv): return False
-                if operador_filtro=="<" and not (base<vv): return False
-                if operador_filtro=="<=" and not (base<=vv): return False
-            if columna_filtro2 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro2!="Ninguno":
-                _, v_fijo = parse_alcance(alcance_filtro2)
-                vv = float(v_fijo if v_fijo is not None else valor_filtro2)
-                base = get_base(row, columna_filtro2, eq, alcance_filtro2)
-                if operador_filtro2=="=" and base!=vv: return False
-                if operador_filtro2==">" and not (base>vv): return False
-                if operador_filtro2==">=" and not (base>=vv): return False
-                if operador_filtro2=="<" and not (base<vv): return False
-                if operador_filtro2=="<=" and not (base<=vv): return False
-            if columna_filtro3 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro3!="Ninguno":
-                _, v_fijo = parse_alcance(alcance_filtro3)
-                vv = float(v_fijo if v_fijo is not None else valor_filtro3)
-                base = get_base(row, columna_filtro3, eq, alcance_filtro3)
-                if operador_filtro3=="=" and base!=vv: return False
-                if operador_filtro3==">" and not (base>vv): return False
-                if operador_filtro3==">=" and not (base>=vv): return False
-                if operador_filtro3=="<" and not (base<vv): return False
-                if operador_filtro3=="<=" and not (base<=vv): return False
-            if not cumple_am(row): return False
-            if margen_filtro!= "Todo" or parte_gol!= "Todo":
-                if parte_gol == "1T":
+            es_eq2 = (equipo2_filtro!="Ninguno" and eq==equipo2_filtro)
+            margen_actual = margen_filtro_eq2 if es_eq2 else margen_filtro
+            parte_actual = parte_gol_eq2 if es_eq2 else parte_gol
+            # Eq2 solo mira Col3, Eq1 mira Col1+Col2
+            if es_eq2:
+                if columna_filtro3 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro3!="Ninguno":
+                    _, v_fijo = parse_alcance(alcance_filtro3)
+                    vv = float(v_fijo if v_fijo is not None else valor_filtro3)
+                    base = get_base(row, columna_filtro3, eq, alcance_filtro3)
+                    if operador_filtro3=="=" and base!=vv: return False
+                    if operador_filtro3==">" and not (base>vv): return False
+                    if operador_filtro3==">=" and not (base>=vv): return False
+                    if operador_filtro3=="<" and not (base<vv): return False
+                    if operador_filtro3=="<=" and not (base<=vv): return False
+            else:
+                if columna_filtro not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro!="Ninguno":
+                    _, v_fijo = parse_alcance(alcance_filtro)
+                    vv = float(v_fijo if v_fijo is not None else valor_filtro)
+                    base = get_base(row, columna_filtro, eq, alcance_filtro)
+                    if operador_filtro=="=" and base!=vv: return False
+                    if operador_filtro==">" and not (base>vv): return False
+                    if operador_filtro==">=" and not (base>=vv): return False
+                    if operador_filtro=="<" and not (base<vv): return False
+                    if operador_filtro=="<=" and not (base<=vv): return False
+                if columna_filtro2 not in ["Ninguno","_GOL_","_TARJ_","_TIR_","_CORN_","_FALT_","_CLASF_"] and valor_filtro2!="Ninguno":
+                    _, v_fijo = parse_alcance(alcance_filtro2)
+                    vv = float(v_fijo if v_fijo is not None else valor_filtro2)
+                    base = get_base(row, columna_filtro2, eq, alcance_filtro2)
+                    if operador_filtro2=="=" and base!=vv: return False
+                    if operador_filtro2==">" and not (base>vv): return False
+                    if operador_filtro2==">=" and not (base>=vv): return False
+                    if operador_filtro2=="<" and not (base<vv): return False
+                    if operador_filtro2=="<=" and not (base<=vv): return False
+            if not cumple_am(row, eq): return False
+            if margen_actual!= "Todo" or parte_actual!= "Todo":
+                if parte_actual == "1T":
                     gh = row['HTHG']; ga = row['HTAG']
-                elif parte_gol == "2T":
+                elif parte_actual == "2T":
                     gh = row['FTHG']-row['HTHG']; ga = row['FTAG']-row['HTAG']
                 else:
                     gh = row['FTHG']; ga = row['FTAG']
                 es_loc = row['HomeTeam']==eq
                 dif = (gh-ga) if es_loc else (ga-gh)
-                if margen_filtro == "Empate" and dif!=0: return False
-                if margen_filtro == "Gana 1" and dif!=1: return False
-                if margen_filtro == "Gana 2" and dif!=2: return False
-                if margen_filtro == "Gana 3+" and dif<3: return False
-                if margen_filtro == "Pierde 1" and dif!=-1: return False
-                if margen_filtro == "Pierde 2" and dif!=-2: return False
-                if margen_filtro == "Pierde 3+" and dif>-3: return False
-                if margen_filtro == "Gana ≥2" and dif<2: return False
-                if margen_filtro == "Pierde ≥2" and dif>-2: return False
+                if margen_actual == "Empate" and dif!=0: return False
+                if margen_actual == "Gana 1" and dif!=1: return False
+                if margen_actual == "Gana 2" and dif!=2: return False
+                if margen_actual == "Gana 3+" and dif<3: return False
+                if margen_actual == "Pierde 1" and dif!=-1: return False
+                if margen_actual == "Pierde 2" and dif!=-2: return False
+                if margen_actual == "Pierde 3+" and dif>-3: return False
+                if margen_actual == "Gana ≥2" and dif<2: return False
+                if margen_actual == "Pierde ≥2" and dif>-2: return False
             return True
 
         dict_tails = {}
@@ -2841,6 +2828,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
         else:
             st.warning("Ningún equipo cumple esas condiciones")
+
 
 #####FIN
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
