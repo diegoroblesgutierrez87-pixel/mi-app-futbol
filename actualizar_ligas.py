@@ -378,9 +378,8 @@ def racha_comprimida_html(df_team, equipo):
     html = []
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        #######bajar / subir tamaño 2E | 1G | 1E | 1G.....
-        html.append(f"<span style='color:{col};font-weight:900;font-size:14px'>{c}{letra}</span>")
         html.append(f"<span style='color:{col};font-weight:900;font-size:14px!important'>{c}{letra}</span>")
+    return "<span style='color:#999;font-size:14px!important'> | </span>".join(html)
 def racha_ambos_marcan_html(df_team):
     """Devuelve 5si | 1no | 1si... con separador |"""
     if df_team.empty:
@@ -2165,10 +2164,10 @@ if len(df_final) > 0:
                 jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
                 racha = racha_comprimida_html(part_ok, eq) if not part_ok.empty else ""
                 racha_am = racha_ambos_marcan_html(part_ok) if not part_ok.empty else ""
-                html = f"""<div style='font-size:7px;line-height:1.3;margin:2px 0;padding-bottom:4px;border-bottom:2px solid #000;font-family:monospace'>
-<span style='font-size:7px'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
-<span style='font-size:5px;letter-spacing:0.2px'>{racha}</span><br>
-<span style='font-size:7.5px;color:#555;font-weight:400'>{racha_am}</span><br>
+                html = f"""<div style='font-size:14px!important;line-height:1.3;margin:2px 0;padding-bottom:4px;border-bottom:2px solid #000;font-family:monospace'>
+<span style='font-size:14px!important'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
+<span style='font-size:14px!important;letter-spacing:0.2px'>{racha}</span><br>
+<span style='font-size:14px!important;color:#555;font-weight:400'>{racha_am}</span><br>
 <div style='margin-top:4px'>{jors}</div>
 </div>"""
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
