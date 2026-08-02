@@ -347,7 +347,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 ###########bloque rachas comprimidas "filtro actual"
 
 def racha_comprimida_html(df_team, equipo):
-    """Devuelve 2E | 1G | 1E... con separador |"""
+    """Devuelve 2E | 1G | 1E... con separador | - LETRA OSCURA MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -375,11 +375,12 @@ def racha_comprimida_html(df_team, equipo):
     html = []
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        #######bajar / subir tamaño 2E | 1G | 1E | 1G.....
-        html.append(f"<span style='color:{col};font-weight:900;font-size:11px'>{c}{letra}</span>")
-    return "<span style='color:#999;font-size:3px'> | </span>".join(html)
+        # AQUI EL FIX - 13px y!important para que el movil obedezca
+        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:13px!important'>{c}{letra}</span>")
+    return "<span style='color:#000!important;font-size:10px!important;margin:0 3px'> | </span>".join(html)
+
 def racha_ambos_marcan_html(df_team):
-    """Devuelve 5si | 1no | 1si... con separador |"""
+    """Devuelve 5si | 1no | 1si... con letra NEGRA"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -398,8 +399,10 @@ def racha_ambos_marcan_html(df_team):
             comp.append(f"{cnt}{res[i-1]}")
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
-    # SIN ESPACIOS, separador pegado tamaño  sinosino..
-    return "<span style='color:#999;font-size:5px;margin:0 1px'>|</span>".join([f"<span style='font-size:11px;letter-spacing:-0.5px'>{x}</span>" for x in comp])
+    # FIX LETRA OSCURA - negro puro y 13px
+    return "<span style='color:#000!important;font-size:9px!important;margin:0 2px'>|</span>".join(
+        [f"<span style='font-size:13px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
+    )
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
@@ -3593,4 +3596,4 @@ with st.expander("📋 Resumen", expanded=False):
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        ##############FIN APP##################################################################################
+                        ##############FIN APP
