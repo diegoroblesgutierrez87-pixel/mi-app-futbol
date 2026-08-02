@@ -352,7 +352,7 @@ def racha_comprimida_html(df_team, equipo):
     html = []
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:14px!important'>{c}{letra}</span>")
+        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:9px!important'>{c}{letra}</span>")
     return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'> | </span>".join(html)
 
 def racha_ambos_marcan_html(df_team):
@@ -375,7 +375,7 @@ def racha_ambos_marcan_html(df_team):
             comp.append(f"{cnt}{res[i-1]}")
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
-    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'>|</span>".join(
+    return "<span style='color:#000!important;font-size:9px!important;margin:0 3px'>|</span>".join(
         [f"<span style='font-size:14px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
     )
 with st.expander("⚙ Opciones avanzadas"):
