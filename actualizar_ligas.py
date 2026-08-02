@@ -326,7 +326,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
         
                 # ESTILO TEXTO SIMPLE, SIN BURBUJA NI BORDE tamaño J1f9º WES 1-0 BLA 10º P/P....
-        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline;background:transparent;border:none;padding:0;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px"
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline;background:transparent;border:none;padding:0;margin:0;white-space:nowrap;font-size:14px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px"
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
@@ -376,7 +376,7 @@ def racha_comprimida_html(df_team, equipo):
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
         #######bajar / subir tamaño 2E | 1G | 1E | 1G.....
-        html.append(f"<span style='color:{col};font-weight:900;font-size:11px'>{c}{letra}</span>")
+        html.append(f"<span style='color:{col};font-weight:900;font-size:14px'>{c}{letra}</span>")
     return "<span style='color:#999;font-size:3px'> | </span>".join(html)
 def racha_ambos_marcan_html(df_team):
     """Devuelve 5si | 1no | 1si... con separador |"""
@@ -399,7 +399,7 @@ def racha_ambos_marcan_html(df_team):
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
     # SIN ESPACIOS, separador pegado tamaño  sinosino..
-    return "<span style='color:#999;font-size:5px;margin:0 1px'>|</span>".join([f"<span style='font-size:11px;letter-spacing:-0.5px'>{x}</span>" for x in comp])
+    return "<span style='color:#999;font-size:5px;margin:0 1px'>|</span>".join([f"<span style='font-size:13px;letter-spacing:-0.5px'>{x}</span>" for x in comp])
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
