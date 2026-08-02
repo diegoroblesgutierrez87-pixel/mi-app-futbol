@@ -46,7 +46,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
 )
-
+import time
+st.caption(f"VERSION-MOVIL-FIX {int(time.time())}")
 # CSS LIMPIO - fondo blanco papel - FIX MOVIL
 st.markdown("""
 <style>
