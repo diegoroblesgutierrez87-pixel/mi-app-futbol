@@ -47,7 +47,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
 )
 
-# CSS LIMPIO - fondo blanco papel
+# CSS LIMPIO - fondo blanco papel - FIX MOVIL
 st.markdown("""
 <style>
 html, body, [data-testid="stAppViewContainer"],
@@ -58,60 +58,36 @@ section[data-testid="stSidebar"] > div:first-child,
     color-scheme: light!important;
 }
 html, body { background: #FFFFFF!important; }
-
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
+.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
 
-/* --- 3 POR FILA LEGIBLE SIN SCROLL --- */
 div[data-testid="stExpanderDetails"]{
     padding:8px 4px!important;
+    max-height: none!important;
+    overflow: visible!important;
 }
 div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"]{
     display:grid!important;
     grid-template-columns: 32% 32% 32%!important;
     gap:4px!important;
-    overflow:hidden!important;
 }
 div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
     width:100%!important;
     min-width:0!important;
 }
 [data-testid="stWidgetLabel"] p{
-    font-size:9px!important;
-    margin:0!important;
-    color:#000!important;
+    font-size:10px!important;margin:0!important;white-space:nowrap;color:#000!important;
 }
-div[data-baseweb="select"] > div{
-    min-height:32px!important;
-    height:auto!important;
-    padding:2px 6px!important;
-}
-div[data-baseweb="select"] span,
-div[data-baseweb="select"] div{
-    font-size:12px!important;
-    color:#000!important;
-    opacity:1!important;
-    visibility:visible!important;
-}
-
-[data-testid="stWidgetLabel"] p{font-size:10px!important;margin:0!important;white-space:nowrap}
 table{border-collapse:collapse;width:100%;font-size:9px;font-family:'Source Code Pro',monospace;table-layout:fixed;margin:0; background:#FFFFFF}
 thead{display:none}
 td{padding:3px 5px!important;border-bottom:2px solid #000!important;border-left:1px solid #d1d5db;border-right:1px solid #d1d5db;vertical-align:middle;line-height:1.15; background:#FFFFFF}
-tr:nth-child(even){background:#FFFFFF}tr:hover{background:#f5f5f5}
 
-/* PEGA ESTO AQUÍ - FIX SCROLL EXPANDER */
-div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
-    max-height: none !important;
-    overflow: visible !important;
+/* FIX MOVIL - fuerza letra oscura */
+@media (max-width: 768px) {
+  div[data-testid="stExpanderDetails"] span {
+    color: #000000!important;
+  }
 }
-
-div[data-testid="stExpander"]:has(> details > summary:contains("Filtros de partidos")) div[data-testid="stExpanderDetails"] {
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    padding-right: 10px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -375,12 +351,11 @@ def racha_comprimida_html(df_team, equipo):
     html = []
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        # AQUI EL FIX - 13px y!important para que el movil obedezca
-        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:13px!important'>{c}{letra}</span>")
-    return "<span style='color:#000!important;font-size:10px!important;margin:0 3px'> | </span>".join(html)
+        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:14px!important'>{c}{letra}</span>")
+    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'> | </span>".join(html)
 
 def racha_ambos_marcan_html(df_team):
-    """Devuelve 5si | 1no | 1si... con letra NEGRA"""
+    """Devuelve 5si | 1no | 1si... con letra NEGRA - FIX MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -399,9 +374,8 @@ def racha_ambos_marcan_html(df_team):
             comp.append(f"{cnt}{res[i-1]}")
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
-    # FIX LETRA OSCURA - negro puro y 13px
-    return "<span style='color:#000!important;font-size:9px!important;margin:0 2px'>|</span>".join(
-        [f"<span style='font-size:13px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
+    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'>|</span>".join(
+        [f"<span style='font-size:14px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
     )
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
@@ -2187,11 +2161,11 @@ if len(df_final) > 0:
                 jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
                 racha = racha_comprimida_html(part_ok, eq) if not part_ok.empty else ""
                 racha_am = racha_ambos_marcan_html(part_ok) if not part_ok.empty else ""
-                html = f"""<div style='font-size:7px;line-height:1.3;margin:2px 0;padding-bottom:4px;border-bottom:2px solid #000;font-family:monospace'>
-<span style='font-size:7px'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
-<span style='font-size:5px;letter-spacing:0.2px'>{racha}</span><br>
-<span style='font-size:7.5px;color:#000;font-weight:700'>{racha_am}</span><br> 
-<div style='margin-top:4px'>{jors}</div>
+                html = f"""<div style='font-size:12px;line-height:1.4;margin:3px 0;padding-bottom:6px;border-bottom:2px solid #000;font-family:monospace;color:#000000!important'>
+<span style='font-size:12px!important;color:#000000!important;font-weight:900!important'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
+<span style='font-size:12px!important;letter-spacing:0.2px;display:block;margin:2px 0'>{racha}</span><br>
+<span style='font-size:14px!important;color:#000000!important;font-weight:900!important;display:block;margin:2px 0'>{racha_am}</span><br> 
+<div style='margin-top:6px'>{jors}</div>
 </div>"""
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
                 elif eq == equipo2_filtro: datos_eq2.append((pct, hits, eq, html))
