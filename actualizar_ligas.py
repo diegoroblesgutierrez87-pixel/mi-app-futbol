@@ -50,6 +50,10 @@ st.set_page_config(
 # CSS LIMPIO - fondo blanco papel
 st.markdown("""
 <style>
+html, body {
+    -webkit-text-size-adjust: none!important;
+    text-size-adjust: none!important;
+}
 html, body, [data-testid="stAppViewContainer"],
 [data-testid="stHeader"], [data-testid="stToolbar"],
 section[data-testid="stSidebar"] > div:first-child,
@@ -336,9 +340,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     </details>"""
         partes.append(jx_html)
 
-    # ESTO ES LO QUE LO PONE TODO SEGUIDO
-    separador = " <span style='color:#999;font-size:7.5px;font-weight:900;letter-spacing:-0.4px'>|</span> "
-    return f"<div style='display:block;line-height:1.5;font-size:7.5px;white-space:normal;letter-spacing:-0.3px;word-spacing:-1px'>{separador.join(partes)}</div>"
+    separador = " <span style='color:#999;font-size:14px!important;font-weight:900;letter-spacing:-0.4px'>|</span> "
+    return f"<div style='display:block;line-height:1.5;font-size:14px!important;white-space:normal;letter-spacing:-0.3px;word-spacing:-1px'>{separador.join(partes)}</div>"
 
 
 
@@ -377,7 +380,7 @@ def racha_comprimida_html(df_team, equipo):
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
         #######bajar / subir tamaño 2E | 1G | 1E | 1G.....
         html.append(f"<span style='color:{col};font-weight:900;font-size:14px'>{c}{letra}</span>")
-    return "<span style='color:#999;font-size:3px'> | </span>".join(html)
+        html.append(f"<span style='color:{col};font-weight:900;font-size:14px!important'>{c}{letra}</span>")
 def racha_ambos_marcan_html(df_team):
     """Devuelve 5si | 1no | 1si... con separador |"""
     if df_team.empty:
@@ -399,7 +402,7 @@ def racha_ambos_marcan_html(df_team):
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
     # SIN ESPACIOS, separador pegado tamaño  sinosino..
-    return "<span style='color:#999;font-size:5px;margin:0 1px'>|</span>".join([f"<span style='font-size:13px;letter-spacing:-0.5px'>{x}</span>" for x in comp])
+    return "<span style='color:#999;font-size:14px!important;margin:0 2px'>|</span>".join([f"<span style='font-size:14px!important;letter-spacing:-0.5px'>{x}</span>" for x in comp])
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
