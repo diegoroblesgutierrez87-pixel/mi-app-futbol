@@ -2621,7 +2621,6 @@ with st.expander("🔥 Filtro Rachas", expanded=False, key="exp_rachas"):
 with st.expander("🔍 Buscador de Equipos", expanded=False):
     st.markdown("""
     <style>
-    /* Ancho completo para selects en este expander */
     div[data-testid="stExpander"] [data-testid="stSelectbox"] {
         width: 100%!important;
     }
@@ -2633,7 +2632,6 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         width: 100%!important;
         min-width: 100%!important;
     }
-    /* Evita que las columnas compriman el contenido en móvil */
     div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div {
         min-width: 45%!important;
         flex-shrink: 0!important;
@@ -2644,21 +2642,16 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     st.caption("Busca equipos que cumplan condiciones en cualquier liga/temporada")
 
     df_busca = df.copy()
-
     col_liga, col_temp = st.columns(2)
     ligas_busca = col_liga.multiselect("Ligas", sorted(df_busca['League'].unique()), default=[], key="be2_ligas_v2")
     temps_busca = col_temp.multiselect("Temps", sorted(df_busca['Season'].unique()), default=[], key="be2_temps_v2")
-
     if ligas_busca: df_busca = df_busca[df_busca['League'].isin(ligas_busca)]
     if temps_busca: df_busca = df_busca[df_busca['Season'].isin(temps_busca)]
-
     if df_busca.empty:
         st.warning("Selecciona liga/temporada")
         st.stop()
 
     df_be, _ = calcular_estado_jornada(df_busca)
-
-    # --- NIVEL 2: JORNADA DE/A en misma línea ---
     st.markdown("**Jornadas**")
     jmin, jmax = int(df_be['Jornada'].min()), int(df_be['Jornada'].max())
     col_j1, col_j2 = st.columns(2)
@@ -2668,12 +2661,8 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         st.warning("'De' no puede ser mayor que 'A'")
         j_desde_be = j_hasta_be
     j_rango = (int(j_desde_be), int(j_hasta_be))
-
-    # --- NIVEL 3: MODO en línea completa ---
     modo_busca = st.radio("Modo búsqueda", ["Últimos X partidos", "% en rango jornadas"], horizontal=True, key="be2_modo")
-
-    # --- NIVEL 4: CAJITA DINÁMICA + L/V EN MISMA LÍNEA ---
-    de_busca = "-" # valor por defecto
+    de_busca = "-"
     if modo_busca == "Últimos X partidos":
         c_ult, c_de, c_lv = st.columns([1,1,1])
         ultimos_x = c_ult.number_input("Últimos", 1, 38, 5, key="be2_ultimos")
@@ -2686,99 +2675,70 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         ultimos_x = None
         lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
 
-    # --- NUEVO: FILTRO RESULTADO G/E/P/GE/GP/EP ---
     col_res_be = st.columns(1)[0]
-    res_busca = col_res_be.selectbox("Res", ["Todo","G","E","P","GE","GP","EP"], key="be2_res",
-                                     help="G:Gana | E:Empata | P:Pierde | GE:Gana/Empata | GP:Gana/Pierde | EP:Empata/Pierde")
+    res_busca = col_res_be.selectbox("Res", ["Todo","G","E","P","GE","GP","EP"], key="be2_res", help="G:Gana | E:Empata | P:Pierde | GE:Gana/Empata | GP:Gana/Pierde | EP:Empata/Pierde")
 
-    # --- RESTO IGUAL: Fav/Cntr1, AM, Vlr1, Parte ---
     colc1, colc2, colc3, colc4 = st.columns(4)
     fav_c1 = colc1.selectbox("Fav/Cntr1", ["Todo","AF","C"], key="be2_favc1", help="AF=a favor del equipo | C=en contra")
     am_busca = colc2.selectbox("AM", ["Todos","Si","No"], key="be2_am")
     vlr1_busca = colc3.selectbox("Vlr1", ["Ninguno"] + [i/2 for i in range(21)], key="be2_vlr1")
     parte_busca = colc4.selectbox("Parte", ["Todo","1T","2T"], key="be2_parte")
 
-    # --- Col1, Op1, Minutos ---
     columnas_numericas_be = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot']
-    ABREV_COL_BE = {
-        'FTHG': 'GL','FTAG': 'GV','HTHG': 'G1L','HTAG': 'G1V',
-        'HS': 'TL','AS': 'TV','HST': 'TPL','AST': 'TPV',
-        'HF': 'FL','AF': 'FV','HC': 'CL','AC': 'CV',
-        'HY': 'AL','AY': 'AV','HR': 'RL','AR': 'RV',
-        'GolesTotales': 'GT','GolesHT': 'G1T','Goles2T': 'G2T',
-        'corneTot': 'CT','TargAmTot': 'TAM',
-        'tirosTot': 'TT','tirosPuertaTot': 'TPT','faltasTot': 'FT','TargRojTot': 'TRT',
-        'Ninguno': '—',
-    }
+    ABREV_COL_BE = {'FTHG':'GL','FTAG':'GV','HTHG':'G1L','HTAG':'G1V','HS':'TL','AS':'TV','HST':'TPL','AST':'TPV','HF':'FL','AF':'FV','HC':'CL','AC':'CV','HY':'AL','AY':'AV','HR':'RL','AR':'RV','GolesTotales':'GT','GolesHT':'G1T','Goles2T':'G2T','corneTot':'CT','TargAmTot':'TAM','tirosTot':'TT','tirosPuertaTot':'TPT','faltasTot':'FT','TargRojTot':'TRT','Ninguno':'—'}
     colc5, colc6 = st.columns(2)
     col1_busca = colc5.selectbox("Col1", ["Ninguno"] + columnas_numericas_be, format_func=lambda x: ABREV_COL_BE.get(x, x), key="be2_col1")
     op1_busca = colc6.selectbox("Op1", ["=", ">", ">=", "<", "<="], key="be2_op1")
 
-    st.caption("Minutos por parte")
-    col_1t, col_2t, col_ext = st.columns(3)
-    min_1t = col_1t.number_input("1ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_1t")
-    min_2t = col_2t.number_input("2ªT", min_value=0, max_value=60, value=45, step=1, key="be2_min_2t")
-    min_ext = col_ext.number_input("+", min_value=0, max_value=30, value=10, step=1, key="be2_min_ext", help="Añadido/Prórroga")
-
-    # --- TEXTO SIMPLE DE LO SELECCIONADO ---
     lig_txt = ",".join(ligas_busca) if ligas_busca else "Todas"
     temp_txt = ",".join(temps_busca) if temps_busca else "Todas"
     modo_txt = f"Ult {ultimos_x}" if modo_busca=="Últimos X partidos" else f"%≥{pct_min_rango}"
     filtro_resumen = f"filtro: {lig_txt} | {temp_txt} | J{j_desde_be}-{j_hasta_be} | {modo_txt} | {lv_busca} | Res:{res_busca} | {fav_c1}:{col1_busca}{op1_busca}{vlr1_busca} | AM:{am_busca} | {parte_busca}"
     st.markdown(f"<div style='font-size:10px;font-family:monospace;background:#f3f4f6;padding:4px 6px;border-radius:6px;margin:6px 0'>{filtro_resumen}</div>", unsafe_allow_html=True)
 
-    #########boton buscar equipos, aqui tb esta la logica de verlo "J30f 0-1
-
     if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
         equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
         resultados = []
+        mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
+        tot_map = {'corneTot':('HC','AC'),'tirosTot':('HS','AS'),'tirosPuertaTot':('HST','AST'),'faltasTot':('HF','AF'),'TargAmTot':('HY','AY'),'TargRojTot':('HR','AR'),'GolesTotales':('FTHG','FTAG'),'GolesHT':('HTHG','HTAG'),'Goles2T':('FTHG','FTAG')}
 
         for eq in equipos:
             df_eq = df_be[(df_be['HomeTeam']==eq) | (df_be['AwayTeam']==eq)].copy()
             if df_eq.empty: continue
-
             if lv_busca == "Local":
                 df_eq = df_eq[df_eq['HomeTeam']==eq]
             elif lv_busca == "Visitante":
                 df_eq = df_eq[df_eq['AwayTeam']==eq]
             if df_eq.empty: continue
-
             df_eq = df_eq[(df_eq['Jornada']>=j_rango[0]) & (df_eq['Jornada']<=j_rango[1])]
             if df_eq.empty: continue
             df_eq = df_eq.sort_values('Date')
 
             es_ultimos = (modo_busca == "Últimos X partidos")
             if es_ultimos:
-                # Si De = "-" => comportamiento antiguo: últimos X tienen que ser 100%
                 if de_busca == "-":
-                    df_ult = df_eq.tail(ultimos_x)
-                    if len(df_ult) < ultimos_x:
-                        continue
-                    df_eq = df_ult.copy()
+                    if len(df_eq) < ultimos_x: continue
+                    df_vent = df_eq.tail(ultimos_x)
                     total = ultimos_x
                     ventana = ultimos_x
                     requeridos = ultimos_x
                 else:
-                    # Si De = 4 y Últimos = 3 => miro los últimos 4, pido al menos 3
                     ventana = int(de_busca)
                     requeridos = ultimos_x
-                    if ventana < requeridos:
-                        ventana = requeridos # seguridad
-                    df_ult = df_eq.tail(ventana)
-                    if len(df_ult) < ventana:
-                        continue
-                    df_eq = df_ult.copy()
-                    total = ventana
+                    if ventana < requeridos: ventana = requeridos
+                    if len(df_eq) < ventana: continue
+                    df_vent = df_eq.tail(ventana)
+                    total = len(df_vent)
+                df_eq = df_vent.copy()
             else:
-                total = len(df_eq)
-                ventana = total
+                total = 0
+                ventana = 0
                 requeridos = 0
 
             es_local = df_eq['HomeTeam']==eq
             gana = ((es_local) & (df_eq['FTHG']>df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']>df_eq['FTHG']))
             pierde = ((es_local) & (df_eq['FTHG']<df_eq['FTAG'])) | ((~es_local) & (df_eq['FTAG']<df_eq['FTHG']))
             empata = ~(gana | pierde)
-
             if res_busca == "G": mask_res = gana
             elif res_busca == "E": mask_res = empata
             elif res_busca == "P": mask_res = pierde
@@ -2786,15 +2746,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             elif res_busca == "GP": mask_res = gana | pierde
             elif res_busca == "EP": mask_res = empata | pierde
             else: mask_res = pd.Series([True]*len(df_eq), index=df_eq.index)
-
-            # Filtro 1x2 se aplica SIEMPRE antes de lo demás
             df_eq = df_eq[mask_res]
             if df_eq.empty: continue
+
             if not es_ultimos:
-                total = len(df_eq) # en modo % el total es lo que queda tras G/E/P
+                total = len(df_eq)
 
             es_local = df_eq['HomeTeam']==eq
-
             if parte_busca == "1T":
                 gf = np.where(es_local, df_eq['HTHG'], df_eq['HTAG'])
                 gc = np.where(es_local, df_eq['HTAG'], df_eq['HTHG'])
@@ -2807,76 +2765,74 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
             cumple = np.ones(len(df_eq), dtype=bool)
 
-            if vlr1_busca!= "Ninguno":
-                if fav_c1 == "AF": cumple = cumple & (gf > float(vlr1_busca))
-                elif fav_c1 == "C": cumple = cumple & (gc > float(vlr1_busca))
-                else: cumple = cumple & ((gf + gc) > float(vlr1_busca))
-
-            if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
-                mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
-                if fav_c1 == "AF": val_col = np.where(es_local, df_eq[col1_busca], df_eq.get(mapa_col.get(col1_busca, col1_busca), df_eq[col1_busca]))
-                elif fav_c1 == "C": val_col = np.where(es_local, df_eq.get(mapa_col.get(col1_busca, col1_busca), 0), df_eq.get(col1_busca, 0))
-                else: val_col = df_eq[col1_busca]
+            if vlr1_busca!="Ninguno":
                 val = float(vlr1_busca)
-                if op1_busca == "=": cumple = cumple & (val_col == val)
-                elif op1_busca == ">": cumple = cumple & (val_col > val)
-                elif op1_busca == ">=": cumple = cumple & (val_col >= val)
-                elif op1_busca == "<": cumple = cumple & (val_col < val)
-                elif op1_busca == "<=": cumple = cumple & (val_col <= val)
+                if col1_busca=="Ninguno":
+                    if fav_c1=="AF": base = gf
+                    elif fav_c1=="C": base = gc
+                    else: base = gf+gc
+                    if op1_busca=="=": cumple = cumple & (base==val)
+                    elif op1_busca==">": cumple = cumple & (base>val)
+                    elif op1_busca==">=": cumple = cumple & (base>=val)
+                    elif op1_busca=="<": cumple = cumple & (base<val)
+                    elif op1_busca=="<=": cumple = cumple & (base<=val)
+                else:
+                    if col1_busca in tot_map and fav_c1=="Todo":
+                        cH,cA = tot_map[col1_busca]
+                        if col1_busca=='Goles2T':
+                            base = (df_eq['FTHG']-df_eq['HTHG'] + df_eq['FTAG']-df_eq['HTAG']).values
+                        else:
+                            base = df_eq[cH].values + df_eq[cA].values
+                    else:
+                        try:
+                            if fav_c1=="AF":
+                                base = np.where(es_local, df_eq[col1_busca].values, df_eq[mapa_col.get(col1_busca,col1_busca)].values if mapa_col.get(col1_busca,col1_busca) in df_eq.columns else df_eq[col1_busca].values)
+                            elif fav_c1=="C":
+                                base = np.where(es_local, df_eq[mapa_col.get(col1_busca,col1_busca)].values if mapa_col.get(col1_busca,col1_busca) in df_eq.columns else 0, df_eq[col1_busca].values)
+                            else:
+                                base = df_eq[col1_busca].values if col1_busca in df_eq.columns else np.zeros(len(df_eq))
+                        except:
+                            base = df_eq[col1_busca].values if col1_busca in df_eq.columns else np.zeros(len(df_eq))
+                    if op1_busca=="=": cumple = cumple & (base==val)
+                    elif op1_busca==">": cumple = cumple & (base>val)
+                    elif op1_busca==">=": cumple = cumple & (base>=val)
+                    elif op1_busca=="<": cumple = cumple & (base<val)
+                    elif op1_busca=="<=": cumple = cumple & (base<=val)
 
-            if am_busca == "Si": cumple = cumple & (gf > 0) & (gc > 0)
-            elif am_busca == "No": cumple = cumple & ~((gf > 0) & (gc > 0))
+            if am_busca=="Si": cumple = cumple & (gf>0) & (gc>0)
+            elif am_busca=="No": cumple = cumple & ~((gf>0) & (gc>0))
 
             hits = int(cumple.sum())
-            pct = hits / total * 100 if total else 0
+            pct = hits/total*100 if total else 0
 
             if es_ultimos:
-                if de_busca == "-":
-                    # Antiguo: 5 de 5
-                    if hits != total:
-                        continue
+                if de_busca=="-":
+                    if hits!=total: continue
                 else:
-                    # Nuevo: 3 de 4
-                    if hits < requeridos:
-                        continue
+                    if hits<requeridos: continue
             else:
-                # MODO % = aquí sí vale 60%
-                if pct < pct_min_rango:
-                    continue
+                if pct < pct_min_rango: continue
 
-            if hits > 0:
+            if hits>0:
                 df_cumple = df_eq[cumple].copy().sort_values('Date')
-
-                # MARCADOR REAL 0-1 fuera en vez de 1-0 - FIX gft/gct
-                chips = []
+                partes = []
                 for _, rr in df_cumple.iterrows():
                     suf = 'c' if rr['HomeTeam']==eq else 'f'
                     real_home = int(rr['FTHG'])
                     real_away = int(rr['FTAG'])
-                    
-                    if rr['HomeTeam']==eq:
-                        gano = real_home > real_away
-                        perdio = real_home < real_away
-                    else:
-                        gano = real_away > real_home
-                        perdio = real_away < real_home
-                    
+                    gano = (rr['HomeTeam']==eq and real_home>real_away) or (rr['AwayTeam']==eq and real_away>real_home)
+                    perdio = (rr['HomeTeam']==eq and real_home<real_away) or (rr['AwayTeam']==eq and real_away<real_home)
                     col = "#0f8105" if gano else "#f31818" if perdio else "#0A2342"
-                    chips.append(f"<span style='display:inline-flex; border:1px solid #ccc; border-radius:12px; padding:2px 8px; margin:2px; color:{col}; font-weight:700'>J{int(rr['Jornada'])}{suf} {real_home}-{real_away}</span>")
-                jors_html = "".join(chips)
-
-                resultados.append({
-                    'Equipo': eq, 'Liga': df_eq.iloc[0]['League'],
-                    'PJ': total, 'Cumple': hits, '%': round(pct,1),
-                    'Jornadas': jors_html
-                })
+                    partes.append(f"<span style='color:{col};font-weight:700'>J{int(rr['Jornada'])}{suf} {real_home}-{real_away}</span>")
+                jors_html = " | ".join(partes)
+                resultados.append({'Equipo':eq,'Liga':df_eq.iloc[0]['League'],'PJ':total,'Cumple':hits,'%':round(pct,1),'Jornadas':jors_html})
 
         if resultados:
             df_res = pd.DataFrame(resultados).sort_values(['%','Cumple'], ascending=False)
             st.success(f"Encontrados {len(df_res)} equipos")
-            lineas_html = []
+            lineas_html=[]
             for _, r in df_res.iterrows():
-                linea = f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee;'>
+                linea=f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee;'>
                     <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
                     <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span><br>
                     <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> — {r['Jornadas']}
@@ -2886,7 +2842,6 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         else:
             st.warning("Ningún equipo cumple esas condiciones")
 
-#########boton buscar equipos, aqui tb esta la logica de verlo "J30f 0-1
 #####FIN
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
 def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta, condicion_lv="Todo", filtro_res="Todo", ambos_marcan_clasif="Todos", goles_clasif="Todo", operador_goles_clasif="Todo", valor_goles_clasif="Todo"):
