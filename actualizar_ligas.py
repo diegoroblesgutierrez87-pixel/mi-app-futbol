@@ -3593,4 +3593,4 @@ with st.expander("📋 Resumen", expanded=False):
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        ##############FIN APP
+                        ##############FIN APP##################################################################################
