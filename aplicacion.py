@@ -46,8 +46,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
 )
-
-# CSS LIMPIO - fondo blanco papel
+import time
+st.caption(f"VERSION-MOVIL-FIX {int(time.time())}")
+# CSS LIMPIO - fondo blanco papel - FIX MOVIL
 st.markdown("""
 <style>
 html, body, [data-testid="stAppViewContainer"],
@@ -58,60 +59,36 @@ section[data-testid="stSidebar"] > div:first-child,
     color-scheme: light!important;
 }
 html, body { background: #FFFFFF!important; }
-
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
+.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
 
-/* --- 3 POR FILA LEGIBLE SIN SCROLL --- */
 div[data-testid="stExpanderDetails"]{
     padding:8px 4px!important;
+    max-height: none!important;
+    overflow: visible!important;
 }
 div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"]{
     display:grid!important;
     grid-template-columns: 32% 32% 32%!important;
     gap:4px!important;
-    overflow:hidden!important;
 }
 div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
     width:100%!important;
     min-width:0!important;
 }
 [data-testid="stWidgetLabel"] p{
-    font-size:9px!important;
-    margin:0!important;
-    color:#000!important;
+    font-size:10px!important;margin:0!important;white-space:nowrap;color:#000!important;
 }
-div[data-baseweb="select"] > div{
-    min-height:32px!important;
-    height:auto!important;
-    padding:2px 6px!important;
-}
-div[data-baseweb="select"] span,
-div[data-baseweb="select"] div{
-    font-size:12px!important;
-    color:#000!important;
-    opacity:1!important;
-    visibility:visible!important;
-}
-
-[data-testid="stWidgetLabel"] p{font-size:10px!important;margin:0!important;white-space:nowrap}
 table{border-collapse:collapse;width:100%;font-size:9px;font-family:'Source Code Pro',monospace;table-layout:fixed;margin:0; background:#FFFFFF}
 thead{display:none}
 td{padding:3px 5px!important;border-bottom:2px solid #000!important;border-left:1px solid #d1d5db;border-right:1px solid #d1d5db;vertical-align:middle;line-height:1.15; background:#FFFFFF}
-tr:nth-child(even){background:#FFFFFF}tr:hover{background:#f5f5f5}
 
-/* PEGA ESTO AQUÍ - FIX SCROLL EXPANDER */
-div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
-    max-height: none !important;
-    overflow: visible !important;
+/* FIX MOVIL - fuerza letra oscura */
+@media (max-width: 768px) {
+  div[data-testid="stExpanderDetails"] span {
+    color: #000000!important;
+  }
 }
-
-div[data-testid="stExpander"]:has(> details > summary:contains("Filtros de partidos")) div[data-testid="stExpanderDetails"] {
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-    padding-right: 10px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -325,8 +302,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
         
-                # ESTILO TEXTO SIMPLE, SIN BURBUJA NI BORDE
-        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline;background:transparent;border:none;padding:0;margin:0;white-space:nowrap;font-size:7.5px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px"
+                # ESTILO TEXTO SIMPLE, SIN BURBUJA NI BORDE tamaño J1f9º WES 1-0 BLA 10º P/P....
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline;background:transparent;border:none;padding:0;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px"
         if es_h2h:
             estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
 
@@ -347,7 +324,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 ###########bloque rachas comprimidas "filtro actual"
 
 def racha_comprimida_html(df_team, equipo):
-    """Devuelve 2E | 1G | 1E... con separador |"""
+    """Devuelve 2E | 1G | 1E... con separador | - LETRA OSCURA MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -375,11 +352,11 @@ def racha_comprimida_html(df_team, equipo):
     html = []
     for c, letra in comp:
         col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        #######bajar tamaño 2E | 1G | 1E | 1G.....
-        html.append(f"<span style='color:{col};font-weight:900;font-size:6px'>{c}{letra}</span>")
-    return "<span style='color:#999;font-size:3px'> | </span>".join(html)
+        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:14px!important'>{c}{letra}</span>")
+    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'> | </span>".join(html)
+
 def racha_ambos_marcan_html(df_team):
-    """Devuelve 5si | 1no | 1si... con separador |"""
+    """Devuelve 5si | 1no | 1si... con letra NEGRA - FIX MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -398,8 +375,9 @@ def racha_ambos_marcan_html(df_team):
             comp.append(f"{cnt}{res[i-1]}")
             cnt = 1
     comp.append(f"{cnt}{res[-1]}")
-    # SIN ESPACIOS, separador pegado
-    return "<span style='color:#999;font-size:5px;margin:0 1px'>|</span>".join([f"<span style='font-size:6px;letter-spacing:-0.5px'>{x}</span>" for x in comp])
+    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'>|</span>".join(
+        [f"<span style='font-size:14px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
+    )
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
@@ -2072,16 +2050,38 @@ if len(df_final) > 0:
                     st.rerun()
             else:
                 st.success(f"✅ Todas las ligas cargadas ({len(ligas_ordenadas_all)})")
+            ######
+            
+            
+            #botones cargar ligas
+    st.markdown("""
+    <style>
+    /* Fuerza los 2 botones pequeños y uno al lado del otro */
+    div[data-testid="stHorizontalBlock"]:has(button[key="btn_cargar_todas_filtro_actual"]) {
+        gap: 6px !important;
+    }
+    button[key="btn_cargar_todas_filtro_actual"],
+    button[key="btn_reset_filtro_actual"] {
+        font-size: 9px !important;
+        padding: 1px 8px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        border-radius: 6px !important;
+        line-height: 1 !important;
+        width: auto !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("Cargar todas de golpe", key="btn_cargar_todas_filtro_actual", use_container_width=True):
-                    st.session_state.num_ligas_filtro_actual = len(ligas_ordenadas_all)
-                    st.rerun()
-            with col_b:
-                if st.button("Reset a 1 liga", key="btn_reset_filtro_actual", use_container_width=True):
-                    st.session_state.num_ligas_filtro_actual = 1
-                    st.rerun()
+    c1, c2 = st.columns([1, 1], gap="small")
+    with c1:
+        if st.button("Cargar todas", key="btn_cargar_todas_filtro_actual", use_container_width=False):
+            st.session_state.num_ligas_filtro_actual = len(ligas_ordenadas_all)
+            st.rerun()
+    with c2:
+        if st.button("Reset a 1", key="btn_reset_filtro_actual", use_container_width=False):
+            st.session_state.num_ligas_filtro_actual = 1
+            st.rerun()
 
             st.markdown("---")
 
@@ -2162,11 +2162,11 @@ if len(df_final) > 0:
                 jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
                 racha = racha_comprimida_html(part_ok, eq) if not part_ok.empty else ""
                 racha_am = racha_ambos_marcan_html(part_ok) if not part_ok.empty else ""
-                html = f"""<div style='font-size:14px!important;line-height:1.5!important;margin:4px 0;padding-bottom:6px;border-bottom:2px solid #000;font-family:monospace;color:#000000!important'>
+                html = f"""<div style='font-size:14px!important;line-height:1.6!important;margin:6px 0;padding-bottom:8px;border-bottom:3px solid #000;font-family:monospace;color:#000000!important'>
 <span style='font-size:14px!important;color:#000000!important;font-weight:900!important'>{hits}/{tot} - {hits}# {pct:.1f}%</span><br>
-<span style='font-size:14px!important;display:block;margin:3px 0;color:#000000!important'>{racha}</span>
-<span style='font-size:16px!important;color:#000000!important;font-weight:900!important;display:block;margin:4px 0'>{racha_am}</span>
-<div style='margin-top:6px'>{jors}</div>
+<span style='font-size:15px!important;display:block;margin:4px 0;line-height:1.4!important'>{racha}</span>
+<span style='font-size:17px!important;color:#000000!important;font-weight:900!important;display:block;margin:5px 0;line-height:1.4!important'>{racha_am}</span>
+<div style='margin-top:8px;font-size:11px!important'>{jors}</div>
 </div>"""
                 if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
                 elif eq == equipo2_filtro: datos_eq2.append((pct, hits, eq, html))
