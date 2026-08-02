@@ -324,7 +324,6 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 ###########bloque rachas comprimidas "filtro actual"
 
 def racha_comprimida_html(df_team, equipo):
-    """Devuelve 2E | 1G | 1E... con separador | - LETRA OSCURA MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
@@ -333,51 +332,38 @@ def racha_comprimida_html(df_team, equipo):
         is_home = r['HomeTeam'] == equipo
         hg, ag = int(r['FTHG']), int(r['FTAG'])
         if is_home:
-            if hg > ag: res.append('G')
-            elif hg < ag: res.append('P')
-            else: res.append('E')
+            res.append('G' if hg>ag else 'P' if hg<ag else 'E')
         else:
-            if ag > hg: res.append('G')
-            elif ag < hg: res.append('P')
-            else: res.append('E')
+            res.append('G' if ag>hg else 'P' if ag<hg else 'E')
     comp = []
     cnt = 1
     for i in range(1, len(res)):
-        if res[i] == res[i-1]:
-            cnt += 1
-        else:
-            comp.append((cnt, res[i-1]))
-            cnt = 1
-    comp.append((cnt, res[-1]))
-    html = []
-    for c, letra in comp:
-        col = "#0f8105" if letra == 'G' else "#f31818" if letra == 'P' else "#0A2342"
-        html.append(f"<span style='color:{col}!important;font-weight:900!important;font-size:9px!important'>{c}{letra}</span>")
-    return "<span style='color:#000!important;font-size:11px!important;margin:0 3px'> | </span>".join(html)
+        if res[i]==res[i-1]: cnt+=1
+        else: comp.append((cnt,res[i-1])); cnt=1
+    comp.append((cnt,res[-1]))
 
+    sep = "<span style='color:#bbb;font-size:7px;margin:0 1px'>|</span>"
+    parts = []
+    for c, letra in comp:
+        col = "#0f8105" if letra=='G' else "#f31818" if letra=='P' else "#0A2342"
+        parts.append(f"<span style='color:{col};font-weight:700;font-size:9px;line-height:1.1'>{c}{letra}</span>")
+    return sep.join(parts)
+############################################
 def racha_ambos_marcan_html(df_team):
-    """Devuelve 5si | 1no | 1si... con letra NEGRA - FIX MOVIL"""
     if df_team.empty:
         return ""
     df_team = df_team.sort_values('Date')
-    res = []
-    for _, r in df_team.iterrows():
-        if int(r['FTHG']) > 0 and int(r['FTAG']) > 0:
-            res.append('si')
-        else:
-            res.append('no')
+    res = ['si' if int(r['FTHG'])>0 and int(r['FTAG'])>0 else 'no' for _,r in df_team.iterrows()]
     comp = []
-    cnt = 1
-    for i in range(1, len(res)):
-        if res[i] == res[i-1]:
-            cnt += 1
-        else:
-            comp.append(f"{cnt}{res[i-1]}")
-            cnt = 1
+    cnt=1
+    for i in range(1,len(res)):
+        if res[i]==res[i-1]: cnt+=1
+        else: comp.append(f"{cnt}{res[i-1]}"); cnt=1
     comp.append(f"{cnt}{res[-1]}")
-    return "<span style='color:#000!important;font-size:9px!important;margin:0 3px'>|</span>".join(
-        [f"<span style='font-size:14px!important;letter-spacing:0px;color:#000000!important;font-weight:900!important'>{x}</span>" for x in comp]
-    )
+
+    sep = "<span style='color:#bbb;font-size:7px;margin:0 1px'>|</span>"
+    return sep.join([f"<span style='font-size:9px;font-weight:700;color:#000;line-height:1.1'>{x}</span>" for x in comp])
+    ##############
 with st.expander("⚙ Opciones avanzadas"):
     col_a, col_b = st.columns(2)
     with col_a:
