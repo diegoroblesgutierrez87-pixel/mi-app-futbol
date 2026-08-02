@@ -2072,16 +2072,38 @@ if len(df_final) > 0:
                     st.rerun()
             else:
                 st.success(f"✅ Todas las ligas cargadas ({len(ligas_ordenadas_all)})")
+            ######
+            
+            
+            #botones cargar ligas
+    st.markdown("""
+    <style>
+    /* Fuerza los 2 botones pequeños y uno al lado del otro */
+    div[data-testid="stHorizontalBlock"]:has(button[key="btn_cargar_todas_filtro_actual"]) {
+        gap: 6px !important;
+    }
+    button[key="btn_cargar_todas_filtro_actual"],
+    button[key="btn_reset_filtro_actual"] {
+        font-size: 9px !important;
+        padding: 1px 8px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        border-radius: 6px !important;
+        line-height: 1 !important;
+        width: auto !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("Cargar todas de golpe", key="btn_cargar_todas_filtro_actual", use_container_width=True):
-                    st.session_state.num_ligas_filtro_actual = len(ligas_ordenadas_all)
-                    st.rerun()
-            with col_b:
-                if st.button("Reset a 1 liga", key="btn_reset_filtro_actual", use_container_width=True):
-                    st.session_state.num_ligas_filtro_actual = 1
-                    st.rerun()
+    c1, c2 = st.columns([1, 1], gap="small")
+    with c1:
+        if st.button("Cargar todas", key="btn_cargar_todas_filtro_actual", use_container_width=False):
+            st.session_state.num_ligas_filtro_actual = len(ligas_ordenadas_all)
+            st.rerun()
+    with c2:
+        if st.button("Reset a 1", key="btn_reset_filtro_actual", use_container_width=False):
+            st.session_state.num_ligas_filtro_actual = 1
+            st.rerun()
 
             st.markdown("---")
 
