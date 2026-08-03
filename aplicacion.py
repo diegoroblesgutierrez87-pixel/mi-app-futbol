@@ -21,23 +21,16 @@ st.set_page_config(
 
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 
-# BLOQUE ANTI-REINICIO MOVIL
+# BLOQUE ANTI-REINICIO MOVIL - no bloquea scroll
 components.html("""
 <script>
-(function() {
-  try {
-    const d = window.parent.document;
-    const w = window.parent;
-    d.documentElement.style.overscrollBehavior = 'none';
-    d.body.style.overscrollBehavior = 'none';
-    let startY = 0;
-    d.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
-    d.addEventListener('touchmove', e => {
-      const diff = e.touches[0].clientY - startY;
-      if (w.scrollY <= 0 && diff > 5) { e.preventDefault(); }
-    }, {passive: false});
-  } catch(e) {}
-})();
+try {
+  const doc = window.parent.document;
+  doc.documentElement.style.overscrollBehaviorY = 'contain';
+  doc.body.style.overscrollBehaviorY = 'contain';
+  const app = doc.querySelector('[data-testid="stAppViewContainer"]');
+  if(app) app.style.overscrollBehaviorY = 'contain';
+} catch(e) {}
 </script>
 """, height=0)
 
@@ -45,7 +38,6 @@ st.markdown("""
 <style>
 html, body {
   overscroll-behavior: none!important;
-  overscroll-behavior-y: contain!important;
   background: #FFFFFF!important;
 }
 [data-testid="stAppViewContainer"]{
@@ -53,16 +45,10 @@ html, body {
   overscroll-behavior: contain!important;
 }
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
-div[data-testid="stExpanderDetails"]{
-    padding:8px 4px!important;
-}
-[data-testid="stWidgetLabel"] p{
-    font-size:10px!important;margin:0!important;white-space:nowrap;color:#000!important;
-}
-table{border-collapse:collapse;width:100%;font-size:9px;font-family:'Source Code Pro',monospace;table-layout:fixed;margin:0; background:#FFFFFF}
-thead{display:none}
-td{padding:3px 5px!important;border-bottom:2px solid #000!important;border-left:1px solid #d1d5db;border-right:1px solid #d1d5db;vertical-align:middle;line-height:1.15; background:#FFFFFF}
+.block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
+
+/* no rompas los expanders */
+div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
 </style>
 """, unsafe_allow_html=True)
 
