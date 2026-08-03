@@ -1,37 +1,9 @@
-# --- FIX PYLANCE BUILTINS ---
-import builtins as _b
-str = _b.str
-int = _b.int
-float = _b.float
-bool = _b.bool
-list = _b.list
-dict = _b.dict
-set = _b.set
-tuple = _b.tuple
-len = _b.len
-range = _b.range
-enumerate = _b.enumerate
-zip = _b.zip
-map = _b.map
-max = _b.max
-min = _b.min
-sorted = _b.sorted
-round = _b.round
-sum = _b.sum
-open = _b.open
-isinstance = _b.isinstance
-globals = _b.globals
-Exception = _b.Exception
-# --- FIN FIX ---
-
-
-
 import re
 import unicodedata
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt  # type: ignore
+import matplotlib.pyplot as plt # type: ignore
 import os
 from functools import lru_cache
 import json
@@ -39,29 +11,49 @@ from datetime import datetime
 import subprocess
 import sys
 import time
-import streamlit.components.v1 as components  # <-- ESTA ES LA LÍNEA NUEVA
+import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Filtro Jornada", 
+    page_title="Filtro Jornada",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-# BORRADO - esto hacia que se reiniciara al hacer scroll
-# CSS LIMPIO - FIX SCROLL MOVIL - no hace pull-to-refresh
+
+st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
+
+# BLOQUE ANTI-REINICIO MOVIL
+components.html("""
+<script>
+(function() {
+  try {
+    const d = window.parent.document;
+    const w = window.parent;
+    d.documentElement.style.overscrollBehavior = 'none';
+    d.body.style.overscrollBehavior = 'none';
+    let startY = 0;
+    d.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
+    d.addEventListener('touchmove', e => {
+      const diff = e.touches[0].clientY - startY;
+      if (w.scrollY <= 0 && diff > 5) { e.preventDefault(); }
+    }, {passive: false});
+  } catch(e) {}
+})();
+</script>
+""", height=0)
+
 st.markdown("""
 <style>
 html, body {
-  overscroll-behavior-y: contain !important;
-  overscroll-behavior: none !important;
+  overscroll-behavior: none!important;
+  overscroll-behavior-y: contain!important;
   background: #FFFFFF!important;
 }
 [data-testid="stAppViewContainer"]{
   background-color: #FFFFFF!important;
-  overscroll-behavior: contain !important;
+  overscroll-behavior: contain!important;
 }
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
-
+.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
 div[data-testid="stExpanderDetails"]{
     padding:8px 4px!important;
 }
@@ -383,16 +375,13 @@ with st.expander("⚙ Opciones avanzadas"):
 # --- FIN BOTONES ---
 
 # --- INICIALIZAR SESSION STATE ---
-if 'rango_cuotas' not in st.session_state: 
+if 'rango_cuotas' not in st.session_state:
     st.session_state.rango_cuotas = (1.5, 10.0)
-if 'rango_minutos' not in st.session_state: 
+if 'rango_minutos' not in st.session_state:
     st.session_state.rango_minutos = (0, 120)
-if 'pct_marcador' not in st.session_state: 
+if 'pct_marcador' not in st.session_state:
     st.session_state.pct_marcador = 1
 if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
-
-# anti-traductor sin JS - no reinicia en movil
-st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 
 
 
