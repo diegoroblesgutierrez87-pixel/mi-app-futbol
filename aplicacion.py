@@ -21,18 +21,59 @@ st.set_page_config(
 
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 
-# BLOQUE ANTI-REINICIO MOVIL - no bloquea scroll
-components.html("""
-<script>
-try {
-  const doc = window.parent.document;
-  doc.documentElement.style.overscrollBehaviorY = 'contain';
-  doc.body.style.overscrollBehaviorY = 'contain';
-  const app = doc.querySelector('[data-testid="stAppViewContainer"]');
-  if(app) app.style.overscrollBehaviorY = 'contain';
-} catch(e) {}
-</script>
-""", height=0)
+# FIX DEFINITIVO - 3 COLS MISMA LINEA EN MOVIL SIN CORTARSE
+st.markdown("""
+<style>
+/* en movil fuerza fila, no columna */
+@media (max-width: 768px){
+  div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"]{
+    flex-direction: row!important;
+    flex-wrap: nowrap!important;
+    overflow-x: auto!important;
+    gap: 4px!important;
+  }
+  div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
+    flex: 0 0 32%!important;
+    min-width: 105px!important;
+    max-width: 32%!important;
+  }
+}
+div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
+  font-size: 8px!important;
+  margin: 0 0 1px 0!important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+html, body {
+  overscroll-behavior: none!important;
+  background: #FFFFFF!important;
+}
+[data-testid="stAppViewContainer"]{
+  background-color: #FFFFFF!important;
+  overscroll-behavior: contain!important;
+}
+[data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
+.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
+div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
+</style>
+""", unsafe_allow_html=True)
+
+# FUERZA Col1 Col2 Col3 EN LA MISMA LINEA EN MOVIL
+st.markdown("""
+<style>
+div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
+  flex-wrap: nowrap!important;
+  gap: 5px!important;
+}
+div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div{
+  flex: 1 1 0%!important;
+  min-width: 0!important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -1169,15 +1210,15 @@ if len(jornadas) > 0:
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
 ############filtros avanzados
     with st.expander("🎛 Filtros avanzados", expanded=False):
-        # --- LINEA 1: Eq1 Eq2 (Eq2 en col 3 para caer encima de L/V3) ---
-        l1 = st.columns(3)
+        # --- LINEA 1: Eq1 Eq2 ---
+        l1 = st.columns(2)
         equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-        equipo2_filtro = l1[2].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
 
         # --- LINEA 1b: L/V... L/V3 ---
-        l1b = st.columns(3)
+        l1b = st.columns(2)
         condicion_filtro = l1b[0].selectbox("L/V", ["Todo", "Local", "Visitante"], key='condicion_filtro')
-        condicion_filtro3 = l1b[2].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
+        condicion_filtro3 = l1b[1].selectbox("L/V3", ["Todo", "Local", "Visitante"], key='condicion_filtro3')
 
         # --- LINEA 2: Col1 Col2 Col3 ---
         l2 = st.columns(3)
