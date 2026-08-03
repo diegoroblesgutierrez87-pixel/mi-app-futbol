@@ -1393,7 +1393,7 @@ if len(jornadas) > 0:
     if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j):
         filtros_activos.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
 
-       # --- RESUMEN FILTROS SIMPLE 2 LINEAS - FIX FINAL + MARC EQ2 ---
+       # --- RESUMEN FILTROS SIMPLE 2 LINEAS - FIX FINAL + MARC EQ2 + TEMP Y J ---
     eq1_list = []
     eq2_list = []
 
@@ -1423,15 +1423,20 @@ if len(jornadas) > 0:
     if cuota_tipo not in ["Ninguno","Todo"]: comunes.append(f"R1x2:{cuota_tipo}")
     if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
-    if len(jornadas) > 0 and (rango_jornadas[0]!=min_j or rango_jornadas[1]!=max_j): comunes.append(f"J:{rango_jornadas[0]}-{rango_jornadas[1]}")
     if str(ultimos_part_filtro)!="Todos":
         if str(st.session_state.get('margen_jornadas_filtro',"Todos"))!="Todos":
             comunes.append(f"Ult:{ultimos_part_filtro}/{st.session_state.get('margen_jornadas_filtro')}J")
         else:
             comunes.append(f"Ult:{ultimos_part_filtro}")
 
-    if eq1_list or eq2_list or comunes:
+    # --- AÑADIDO TEMP Y J ---
+    temp_txt = ", ".join(temp_sel) if 'temp_sel' in locals() and temp_sel else "-"
+    j_txt = f"J{rango_jornadas[0]} - J{rango_jornadas[1]}" if 'rango_jornadas' in locals() else "-"
+
+    if eq1_list or eq2_list or comunes or temp_sel:
         txt = "<div style='font-size:10px; line-height:1.3; font-family:monospace; padding:2px 0'>filtros:<br>"
+        txt += f"Temp: {temp_txt}<br>"
+        txt += f"J: {j_txt}<br>"
         if eq1_list:
             txt += "eq1: " + " | ".join(eq1_list) + "<br>"
         if eq2_list:
@@ -1976,7 +1981,6 @@ else:
         elif equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
             df_total = df_total[((df_total['HomeTeam']==equipo_filtro) | (df_total['AwayTeam']==equipo_filtro)) | ((df_total['HomeTeam']==equipo2_filtro) | (df_total['AwayTeam']==equipo2_filtro))]
         # --- FIN FIX ---
-
         def parse_alcance(alc_str):
             import re
             s = str(alc_str)
@@ -2144,6 +2148,38 @@ else:
         df_final['partidos'] = pd.Series(dtype='object')
         df_final['Tarjetas/Corners/goles'] = pd.Series(dtype='object')
 
+    # FIX VERIFICADO: % funciona con TODOS los filtros (1x2, Col1, GT, AM, Margen)
+    _pct_min = int(st.session_state.get('pct_min', 1))
+    _pct_max = int(st.session_state.get('pct_max', 100))
+    if not (_pct_min == 1 and _pct_max == 100) and len(df_final) > 0:
+        # total por equipo en la liga/temp/jornada seleccionada (sin filtros)
+        _base_tot = df_original.copy()
+        try:
+            _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].isin(temp_sel)]
+        except:
+            pass
+        try:
+            _base_tot = _base_tot[(_base_tot['Jornada'] >= rango_jornadas[0]) & (_base_tot['Jornada'] <= rango_jornadas[1])]
+        except:
+            pass
+        _base_tot, _ = calcular_estado_jornada(_base_tot)
+
+        _equipos_ok = []
+        for _eq in pd.unique(df_final[['HomeTeam','AwayTeam']].values.ravel()):
+            _tot = len(_base_tot[(_base_tot['HomeTeam']==_eq) | (_base_tot['AwayTeam']==_eq)])
+            if _tot == 0:
+                continue
+            # hits = lo que ya pasó todos los filtros (GT, AM, Margen, 1x2) para ESE equipo
+            _hits = len(df_final[(df_final['HomeTeam']==_eq) | (df_final['AwayTeam']==_eq)])
+            _pct = (_hits / _tot * 100) if _tot else 0
+            if _pct_min <= _pct <= _pct_max and _hits > 0:
+                _equipos_ok.append(_eq)
+
+        if _equipos_ok:
+            df_final = df_final[(df_final['HomeTeam'].isin(_equipos_ok)) | (df_final['AwayTeam'].isin(_equipos_ok))]
+        else:
+            df_final = df_final.iloc[0:0]
+
     st.caption(f"Mostrando {len(df_final)} partidos")
   
   
@@ -2310,9 +2346,13 @@ if len(df_final) > 0:
                     hits = len(part_ok)
                     pct = (hits / tot * 100) if tot else 0
 
-                    marc_eq = marcador_filtro_eq2 if eq==equipo2_filtro else marcador_filtro
-                    if not (rango_pct[0] <= pct <= rango_pct[1]) and marc_eq=="Todos":
+                    # FIX % De - A
+                    _pct_min = int(st.session_state.get('pct_min', 1))
+                    _pct_max = int(st.session_state.get('pct_max', 100))
+                    if not (_pct_min <= pct <= _pct_max):
                         continue
+
+                    marc_eq = marcador_filtro_eq2 if eq==equipo2_filtro else marcador_filtro
                     if marc_eq!="Todos" and hits==0:
                         continue
 
@@ -2656,11 +2696,15 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
         de_busca = c_de.selectbox("De", ["-"] + [str(i) for i in range(1, 51)], index=0, key="be2_de", help="Ej: Últimos 3 De 4 = 3 wins en los últimos 4")
         lv_busca = c_lv.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
         pct_min_rango = None
+        pct_max_rango = None
     else:
-        col_pct_lv1, col_pct_lv2 = st.columns(2)
-        pct_min_rango = col_pct_lv1.number_input("% mín", 0, 100, 50, 5, key="be2_pct_min")
+        col_pct1, col_pct2, col_pct_lv = st.columns([1,1,1])
+        pct_min_rango = col_pct1.number_input("% De", 0, 100, 1, 5, key="be2_pct_min")
+        pct_max_rango = col_pct2.number_input("% A", 0, 100, 100, 5, key="be2_pct_max")
+        if pct_min_rango > pct_max_rango:
+            pct_min_rango = pct_max_rango
         ultimos_x = None
-        lv_busca = col_pct_lv2.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
+        lv_busca = col_pct_lv.selectbox("L/V", ["Todo","Local","Visitante"], key="be2_lv")
 
     col_res_be = st.columns(1)[0]
     res_busca = col_res_be.selectbox("Res", ["Todo","G","E","P","GE","GP","EP"], key="be2_res", help="G:Gana | E:Empata | P:Pierde | GE:Gana/Empata | GP:Gana/Pierde | EP:Empata/Pierde")
@@ -2679,7 +2723,10 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
     lig_txt = ",".join(ligas_busca) if ligas_busca else "Todas"
     temp_txt = ",".join(temps_busca) if temps_busca else "Todas"
-    modo_txt = f"Ult {ultimos_x}" if modo_busca=="Últimos X partidos" else f"%≥{pct_min_rango}"
+    if modo_busca=="Últimos X partidos":
+        modo_txt = f"Ult {ultimos_x} De {de_busca}" if de_busca!="-" else f"Ult {ultimos_x}"
+    else:
+        modo_txt = f"% {pct_min_rango}-{pct_max_rango}"
     filtro_resumen = f"filtro: {lig_txt} | {temp_txt} | J{j_desde_be}-{j_hasta_be} | {modo_txt} | {lv_busca} | Res:{res_busca} | {fav_c1}:{col1_busca}{op1_busca}{vlr1_busca} | AM:{am_busca} | {parte_busca}"
     st.markdown(f"<div style='font-size:10px;font-family:monospace;background:#f3f4f6;padding:4px 6px;border-radius:6px;margin:6px 0'>{filtro_resumen}</div>", unsafe_allow_html=True)
 
@@ -2798,7 +2845,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                 else:
                     if hits<requeridos: continue
             else:
-                if pct < pct_min_rango: continue
+                if pct < pct_min_rango or pct > pct_max_rango: continue
 
             if hits>0:
                 df_cumple = df_eq[cumple].copy().sort_values('Date')
@@ -2810,7 +2857,8 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                     gano = (rr['HomeTeam']==eq and real_home>real_away) or (rr['AwayTeam']==eq and real_away>real_home)
                     perdio = (rr['HomeTeam']==eq and real_home<real_away) or (rr['AwayTeam']==eq and real_away<real_home)
                     col = "#0f8105" if gano else "#f31818" if perdio else "#0A2342"
-                    partes.append(f"<span style='color:{col};font-weight:700'>J{int(rr['Jornada'])}{suf} {real_home}-{real_away}</span>")
+                    am = " ▪" if real_home>0 and real_away>0 else ""
+                    partes.append(f"<span style='color:{col};font-weight:700'>J{int(rr['Jornada'])}{suf} {real_home}-{real_away}{am}</span>")
                 jors_html = " | ".join(partes)
                 resultados.append({'Equipo':eq,'Liga':df_eq.iloc[0]['League'],'PJ':total,'Cumple':hits,'%':round(pct,1),'Jornadas':jors_html})
 
@@ -2828,9 +2876,6 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
         else:
             st.warning("Ningún equipo cumple esas condiciones")
-
-
-#####FIN
 # --- RESUMEN JORNADAS + % G/E/P CORREGIDO ---
 def resumen_jornadas_visual(df_partidos, df_clas, liga, season, j_desde, j_hasta, condicion_lv="Todo", filtro_res="Todo", ambos_marcan_clasif="Todos", goles_clasif="Todo", operador_goles_clasif="Todo", valor_goles_clasif="Todo"):
     df_liga = df_partidos[(df_partidos['League']==liga) & (df_partidos['Season']==season) &
