@@ -44,37 +44,26 @@ import streamlit.components.v1 as components  # <-- ESTA ES LA LÍNEA NUEVA
 st.set_page_config(
     page_title="Filtro Jornada", 
     layout="wide",
-    initial_sidebar_state="expanded"  # <-- ESTO FUERZA EL SIDEBAR ABIERTO
+    initial_sidebar_state="collapsed"
 )
-import time
-st.caption(f"VERSION-MOVIL-FIX {int(time.time())}")
-# CSS LIMPIO - fondo blanco papel - FIX MOVIL
+# BORRADO - esto hacia que se reiniciara al hacer scroll
+# CSS LIMPIO - FIX SCROLL MOVIL - no hace pull-to-refresh
 st.markdown("""
 <style>
-html, body, [data-testid="stAppViewContainer"],
-[data-testid="stHeader"], [data-testid="stToolbar"],
-section[data-testid="stSidebar"] > div:first-child,
-.block-container {
-    background-color: #FFFFFF!important;
-    color-scheme: light!important;
+html, body {
+  overscroll-behavior-y: contain !important;
+  overscroll-behavior: none !important;
+  background: #FFFFFF!important;
 }
-html, body { background: #FFFFFF!important; }
+[data-testid="stAppViewContainer"]{
+  background-color: #FFFFFF!important;
+  overscroll-behavior: contain !important;
+}
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
 .block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
 
 div[data-testid="stExpanderDetails"]{
     padding:8px 4px!important;
-    max-height: none!important;
-    overflow: visible!important;
-}
-div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"]{
-    display:grid!important;
-    grid-template-columns: 32% 32% 32%!important;
-    gap:4px!important;
-}
-div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
-    width:100%!important;
-    min-width:0!important;
 }
 [data-testid="stWidgetLabel"] p{
     font-size:10px!important;margin:0!important;white-space:nowrap;color:#000!important;
@@ -82,13 +71,6 @@ div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
 table{border-collapse:collapse;width:100%;font-size:9px;font-family:'Source Code Pro',monospace;table-layout:fixed;margin:0; background:#FFFFFF}
 thead{display:none}
 td{padding:3px 5px!important;border-bottom:2px solid #000!important;border-left:1px solid #d1d5db;border-right:1px solid #d1d5db;vertical-align:middle;line-height:1.15; background:#FFFFFF}
-
-/* FIX MOVIL - solo texto base en negro, respeta colores inline verde/rojo */
-@media (max-width: 768px) {
-  div[data-testid="stExpanderDetails"]{
-    color: #000000!important;
-  }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -309,7 +291,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 
         jx_html = f"""<details style="display:inline-block;margin:1px 1px;padding:0;vertical-align:middle">
         <summary style="{estilos_summary}">{txt}</summary>
-        <div style="position:absolute;z-index:9999;top:100%;left:0;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;box-shadow:4px 4px 10px rgba(0,0,0,0.4);max-width:360px;min-width:320px;text-align:left;white-space:normal">{viñeta}</div>
+        <div style="position:relative;z-index:10;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;max-width:360px;min-width:320px;text-align:left;white-space:normal;max-height:350px;overflow-y:auto">{viñeta}</div>
     </details>"""
         partes.append(jx_html)
 
@@ -409,11 +391,8 @@ if 'pct_marcador' not in st.session_state:
     st.session_state.pct_marcador = 1
 if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 
-# anti-traductor
-components.html("""<script>
-const doc = window.parent.document;
-doc.documentElement.setAttribute('translate','no');
-</script>""", height=0)
+# anti-traductor sin JS - no reinicia en movil
+st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 
 
 
