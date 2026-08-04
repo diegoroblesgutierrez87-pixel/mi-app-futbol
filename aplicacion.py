@@ -61,6 +61,7 @@ div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
 </style>
 """, unsafe_allow_html=True)
 
+
 # FUERZA Col1 Col2 Col3 EN LA MISMA LINEA EN MOVIL
 st.markdown("""
 <style>
@@ -292,10 +293,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
         am = " ▪" if real_home > 0 and real_away > 0 else ""
 
+        MORADO = "#581C87"
         if es_local:
-            txt = f"J{int(j)}{sufijo_final}<u>{h_pos}º {home_short} {real_home}</u>-{real_away} {away_short} {a_pos}º {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{am}"
         else:
-            txt = f"J{int(j)}{sufijo_final}{h_pos}º {home_short} {real_home}-<u>{real_away} {away_short} {a_pos}º</u> {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{am}"
 
         es_h2h = False
         if rival:
@@ -668,20 +670,23 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     league_short = str(league)[:3].upper()
     home_perf = round(float(row.get('HomePerf',0)),1); away_perf = round(float(row.get('AwayPerf',0)),1)
 
+    MORADO_STYLE = "color:#581C87; font-weight:900; font-size:9px;"
     hg_txt = f"<span style='{style_base}'>{hg_num}</span>"; ag_txt = f"<span style='{style_base}'>{ag_num}</span>"
     hpts_txt = f"<span style='{style_base}'>{hpts}</span>"; apts_txt = f"<span style='{style_base}'>{apts}</span>"
-    hpos_txt = f"<span style='{style_base}'>{hpos}º</span>"; apos_txt = f"<span style='{style_base}'>{apos}º</span>"
+    hpos_txt = f"<span style='{MORADO_STYLE}'>{hpos}º</span>"; apos_txt = f"<span style='{MORADO_STYLE}'>{apos}º</span>"
     ht_txt = ht_disp; at_txt = at_disp
     home_perf_txt = f"<span style='{style_base}'>{home_perf:.1f}</span>"
     away_perf_txt = f"<span style='{style_base}'>{away_perf:.1f}</span>"
 
     if hg_num > ag_num:
         ht_txt = f"<span style='{style_ganador}'>{ht_disp}</span>"; hg_txt = f"<span style='{style_ganador}'>{hg_num}</span>"
-        hpts_txt = f"<span style='{style_ganador}'>{hpts}</span>"; hpos_txt = f"<span style='{style_ganador}'>{hpos}º</span>"
+        hpts_txt = f"<span style='{style_ganador}'>{hpts}</span>"
+        # hpos_txt se queda morado, no lo toques
         home_perf_txt = f"<span style='{style_ganador}'>{home_perf:.1f}</span>"
     elif ag_num > hg_num:
         at_txt = f"<span style='{style_ganador}'>{at_disp}</span>"; ag_txt = f"<span style='{style_ganador}'>{ag_num}</span>"
-        apts_txt = f"<span style='{style_ganador}'>{apts}</span>"; apos_txt = f"<span style='{style_ganador}'>{apos}º</span>"
+        apts_txt = f"<span style='{style_ganador}'>{apts}</span>"
+        # apos_txt se queda morado, no lo toques
         away_perf_txt = f"<span style='{style_ganador}'>{away_perf:.1f}</span>"
 
     if eq_norm == ht:
