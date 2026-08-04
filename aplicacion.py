@@ -1178,6 +1178,10 @@ if len(jornadas) > 0:
     if 'margen_filtro' not in st.session_state: st.session_state.margen_filtro = "Todo"
     if 'margen_filtro_eq2' not in st.session_state: st.session_state.margen_filtro_eq2 = "Todo"
     if 'ultimos_part_filtro' not in st.session_state: st.session_state.ultimos_part_filtro = "Todos"
+    if 'clasif_eq1_modo' not in st.session_state: st.session_state.clasif_eq1_modo = "-"
+    if 'clasif_eq1_de' not in st.session_state: st.session_state.clasif_eq1_de = 0
+    if 'clasif_eq1_a' not in st.session_state: st.session_state.clasif_eq1_a = 100
+    if 'temp_eq1_pct' not in st.session_state: st.session_state.temp_eq1_pct = "-"
 
     columnas_numericas = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','GolesTotales','GolesHT','Goles2T','corneTot','TargAmTot','tirosTot','tirosPuertaTot','faltasTot','TargRojTot','HomePtsPrev','AwayPtsPrev','HomePosPrev','AwayPosPrev','HomePerf','AwayPerf']
     ABREV_COL = {
@@ -1266,7 +1270,20 @@ if len(jornadas) > 0:
         margen_filtro = l7b[0].selectbox("Margen", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro')
         htft_filtro = l7b[1].selectbox("R=HT/FT", ["Todo","G/G","G/E","G/P","E/G","E/E","E/P","P/G","P/E","P/P","RE","FAIL"], key='htft_filtro')
         margen_filtro_eq2 = l7b[2].selectbox("Margen Eq2", list(ABREV_MARGEN.keys()), format_func=lambda x: ABREV_MARGEN.get(x, x), key='margen_filtro_eq2')
+        # --- LINEA 7c: %Clasif Eq1 y %Temp Eq1 - SIN COLUMNAS ANIDADAS ---
+        l7c = st.columns(2)
+        with l7c[0]:
+            st.markdown("<div style='font-size:10px'>%Clasif Eq1</div>", unsafe_allow_html=True)
+            st.selectbox("modo_clasif", ["-", "Rango"], key='clasif_eq1_modo', label_visibility="collapsed")
+            if st.session_state.clasif_eq1_modo == "Rango":
+                st.markdown("<div style='font-size:9px;margin:2px 0 -2px 0'>De (min)</div>", unsafe_allow_html=True)
+                st.number_input("De_min", 0, 100, key='clasif_eq1_de', label_visibility="collapsed")
+                st.markdown("<div style='font-size:9px;margin:6px 0 -2px 0'>A (max)</div>", unsafe_allow_html=True)
+                st.number_input("A_max", 0, 100, key='clasif_eq1_a', label_visibility="collapsed")
 
+        with l7c[1]:
+            st.markdown("<div style='font-size:10px'>%Temp Eq1</div>", unsafe_allow_html=True)
+            st.selectbox("temp_eq1", ["-"] + list(range(0, 101, 5)), key='temp_eq1_pct', label_visibility="collapsed")
         # --- LINEA 8: Marcador Parte Eq1 Parte Eq2 % ---
         marcadores_unicos = sorted(
             (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
@@ -1295,6 +1312,7 @@ if len(jornadas) > 0:
             st.session_state.pct_marcador = pct_min
             pct_marcador = pct_min
             rango_pct = (pct_min, pct_max)
+
 
         # --- LINEA 9: Jugador ---
         from collections import defaultdict, Counter
@@ -1429,14 +1447,32 @@ if len(jornadas) > 0:
         else:
             comunes.append(f"Ult:{ultimos_part_filtro}")
 
-    # --- AÑADIDO TEMP Y J ---
+    # --- AÑADIDO TEMP, J Y MARGEN ---
     temp_txt = ", ".join(temp_sel) if 'temp_sel' in locals() and temp_sel else "-"
     j_txt = f"J{rango_jornadas[0]} - J{rango_jornadas[1]}" if 'rango_jornadas' in locals() else "-"
+
+    margen_resumen = []
+    if 'margen_filtro' in locals() and margen_filtro!= "Todo":
+        margen_resumen.append(f"Eq1:{margen_filtro}")
+    if 'margen_filtro_eq2' in locals() and margen_filtro_eq2!= "Todo":
+        margen_resumen.append(f"Eq2:{margen_filtro_eq2}")
+    margen_txt = " | ".join(margen_resumen) if margen_resumen else "-"
+
+    # --- %Clasif Eq1 para resumen ---
+    clasif_resumen_txt = "-"
+    if 'clasif_eq1_modo' in st.session_state and st.session_state.clasif_eq1_modo == "Rango":
+        de_c = st.session_state.get('clasif_eq1_de', 0)
+        a_c = st.session_state.get('clasif_eq1_a', 100)
+        clasif_resumen_txt = f"{de_c}-{a_c}% del lider"
+        # lo meto tambien en comunes para que salga en la linea de abajo
+        comunes.append(f"%Clasif:{de_c}-{a_c}%")
 
     if eq1_list or eq2_list or comunes or temp_sel:
         txt = "<div style='font-size:10px; line-height:1.3; font-family:monospace; padding:2px 0'>filtros:<br>"
         txt += f"Temp: {temp_txt}<br>"
         txt += f"J: {j_txt}<br>"
+        txt += f"Margen: {margen_txt}<br>"
+        txt += f"%Clasif Eq1: {clasif_resumen_txt}<br>"
         if eq1_list:
             txt += "eq1: " + " | ".join(eq1_list) + "<br>"
         if eq2_list:
@@ -1712,7 +1748,59 @@ if len(jornadas) > 0:
     else:
         if margen_filtro!= "Todo":
             df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro, parte_gol)
+    # --- NUEVO FILTRO: %Clasif Eq1 ( % del lider ) - ARREGLADO BASURA 1-30% ---
+    if st.session_state.get('clasif_eq1_modo', '-') == "Rango" and not df_final.empty and not df_clasificacion.empty:
+        try:
+            pct_de = float(st.session_state.get('clasif_eq1_de', 0))
+            pct_a = float(st.session_state.get('clasif_eq1_a', 100))
+            if pct_de > pct_a:
+                pct_de, pct_a = pct_a, pct_de
 
+            df_clas_f = df_clasificacion.copy()
+            idx_max = df_clas_f.groupby(['League','Season'])['Jornada'].transform('max')
+            df_last = df_clas_f[df_clas_f['Jornada'] == idx_max].copy()
+
+            equipos_ok_clasif = set()
+            for (liga, temp), g_last in df_last.groupby(['League','Season']):
+                if g_last.empty:
+                    continue
+                lider_pts = g_last['Pts'].max()
+                if lider_pts <= 0:
+                    continue
+                g_last['pct_lider'] = g_last['Pts'] / lider_pts * 100.0
+                # tolerancia para que entre 1% exacto
+                ok = g_last[(g_last['pct_lider'] >= pct_de - 0.01) & (g_last['pct_lider'] <= pct_a + 0.01)]['Equipo'].tolist()
+                # si pides 1-30 incluye tambien los de 0 pts = 0% real
+                if pct_de <= 1:
+                    ok_zero = g_last[g_last['Pts'] <= 0]['Equipo'].tolist()
+                    ok = list(set(ok + ok_zero))
+                equipos_ok_clasif.update(ok)
+
+            st.session_state.equipos_ok_clasif = equipos_ok_clasif
+
+            if equipos_ok_clasif:
+                if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
+                    if equipo_filtro not in equipos_ok_clasif:
+                        df_final = df_final.iloc[0:0].copy()
+                elif equipo2_filtro != "Ninguno" and equipo_filtro == "Ninguno":
+                    if equipo2_filtro not in equipos_ok_clasif:
+                        df_final = df_final.iloc[0:0].copy()
+                elif equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
+                    if equipo_filtro not in equipos_ok_clasif and equipo2_filtro not in equipos_ok_clasif:
+                        df_final = df_final.iloc[0:0].copy()
+                    else:
+                        df_final = df_final[(df_final['HomeTeam'].isin(equipos_ok_clasif)) | (df_final['AwayTeam'].isin(equipos_ok_clasif))].copy()
+                else:
+                    df_final = df_final[(df_final['HomeTeam'].isin(equipos_ok_clasif)) | (df_final['AwayTeam'].isin(equipos_ok_clasif))].copy()
+            else:
+                df_final = df_final.iloc[0:0].copy()
+        except Exception as e:
+            st.warning(f"Error filtro %Clasif: {e}")
+            st.session_state.equipos_ok_clasif = set()
+    else:
+        if 'equipos_ok_clasif' in st.session_state:
+            st.session_state.equipos_ok_clasif = set()
+    # --- FIN FILTRO %Clasif Eq1 ---
     # --- FILTRO MARCADOR Eq1 / Eq2 INDEPENDIENTE ---
     def _aplica_marcador(df_in, marcador_txt):
         if marcador_txt=="Todos" or df_in.empty: return df_in
@@ -2148,10 +2236,11 @@ else:
         df_final['partidos'] = pd.Series(dtype='object')
         df_final['Tarjetas/Corners/goles'] = pd.Series(dtype='object')
 
-    # FIX VERIFICADO: % funciona con TODOS los filtros (1x2, Col1, GT, AM, Margen)
+    # FIX VERIFICADO: % aparicion - DESACTIVADO si hay %Clasif activo
+    es_filtro_clasif_activo = st.session_state.get('clasif_eq1_modo','-') == "Rango"
     _pct_min = int(st.session_state.get('pct_min', 1))
     _pct_max = int(st.session_state.get('pct_max', 100))
-    if not (_pct_min == 1 and _pct_max == 100) and len(df_final) > 0:
+    if not es_filtro_clasif_activo and not (_pct_min == 1 and _pct_max == 100) and len(df_final) > 0:
         # total por equipo en la liga/temp/jornada seleccionada (sin filtros)
         _base_tot = df_original.copy()
         try:
@@ -2220,12 +2309,28 @@ if len(df_final) > 0:
                     st.markdown(f"<div style='font-size:11px;padding:1px 0 1px 8px;font-family:monospace'>J{int(row['Jornada'])} - {veces}# | <b>{pct}%</b> aprox {veces}/{partidos_xj}</div>", unsafe_allow_html=True)
    ####################
    
-    # --- RESUMEN CON % - CARGA PROGRESIVA POR LIGA ---
     with st.expander(f"📊 Filtro actual ≥{pct_marcador}%", expanded=False):
         if 'num_ligas_filtro_actual' not in st.session_state:
             st.session_state.num_ligas_filtro_actual = 1
         if 'firma_ligas_filtro_actual' not in st.session_state:
             st.session_state.firma_ligas_filtro_actual = ""
+
+        # --- BOTON LIMPIAR VISTA UNICO - NO BORRAR ---
+        c_limp1, c_limp2 = st.columns([1,1])
+        with c_limp1:
+            if st.button("🧹 Limpiar vista", key="btn_limpiar_vista_final_unico_999", use_container_width=True):
+                st.session_state.num_ligas_filtro_actual = 0
+                st.session_state.dict_ultimos = {}
+                if 'ver_partidos' in st.session_state:
+                    st.session_state.ver_partidos = False
+                st.rerun()
+        with c_limp2:
+            st.caption(f"Cargadas: {st.session_state.get('num_ligas_filtro_actual',0)}")
+
+        vista_limpia = st.session_state.get('num_ligas_filtro_actual', 1) == 0
+        if vista_limpia:
+            st.info("Vista limpiada. Cambia ligas/jornadas arriba y vuelve a dar a Cargar.")
+        # --- FIN BOTON ---
 
         ligas_ordenadas_all = sorted(df_final['League'].dropna().unique()) if len(df_final) > 0 else []
         firma_actual = f"{'|'.join(ligas_ordenadas_all)}|{pct_marcador}|{equipo_filtro}|{equipo2_filtro}"
@@ -2294,7 +2399,7 @@ if len(df_final) > 0:
                     st.rerun()
 
             st.markdown("---")
-
+        if not vista_limpia:
             # --- A PARTIR DE AQUI TU CODIGO ORIGINAL PERO FILTRADO POR ligas_visibles ---
             if len(df_final) > 0 and ligas_visibles:
                 base = df_final[df_final['League'].isin(ligas_visibles)].copy()
@@ -2302,7 +2407,12 @@ if len(df_final) > 0:
                 if equipo_filtro!= "Ninguno": equipos_mostrar.append(equipo_filtro)
                 if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
                 if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
-
+                # --- PARCHE: si hay filtro %Clasif, solo mostrar TOP ---
+                if 'equipos_ok_clasif' in st.session_state and st.session_state.equipos_ok_clasif:
+                    if equipos_mostrar:
+                        equipos_mostrar = [eq for eq in equipos_mostrar if eq in st.session_state.equipos_ok_clasif]
+                    else:
+                        equipos_mostrar = list(st.session_state.equipos_ok_clasif)
                 base_total = df_original.copy()
                 base_total = base_total[base_total['League'].isin(ligas_visibles) & base_total['Season'].isin(temp_sel)]
                 base_total, _ = calcular_estado_jornada(base_total)
