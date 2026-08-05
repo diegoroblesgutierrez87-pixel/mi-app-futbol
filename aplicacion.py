@@ -1748,59 +1748,45 @@ if len(jornadas) > 0:
     else:
         if margen_filtro!= "Todo":
             df_final = _aplica_margen(df_final, equipo_filtro, margen_filtro, parte_gol)
-    # --- NUEVO FILTRO: %Clasif Eq1 ( % del lider ) - ARREGLADO BASURA 1-30% ---
-    if st.session_state.get('clasif_eq1_modo', '-') == "Rango" and not df_final.empty and not df_clasificacion.empty:
-        try:
-            pct_de = float(st.session_state.get('clasif_eq1_de', 0))
-            pct_a = float(st.session_state.get('clasif_eq1_a', 100))
-            if pct_de > pct_a:
-                pct_de, pct_a = pct_a, pct_de
+# --- FILTRO %Clasif Eq1 FIX DEFINITIVO ---
+if st.session_state.get('clasif_eq1_modo', '-') == "Rango" and not df_final.empty:
+    try:
+        pct_de = float(st.session_state.get('clasif_eq1_de', 0))
+        pct_a = float(st.session_state.get('clasif_eq1_a', 100))
+        if pct_de > pct_a: pct_de, pct_a = pct_a, pct_de
 
-            df_clas_f = df_clasificacion.copy()
-            idx_max = df_clas_f.groupby(['League','Season'])['Jornada'].transform('max')
-            df_last = df_clas_f[df_clas_f['Jornada'] == idx_max].copy()
+        # USA CLASIFICACION FINAL REAL, no la de J1-J34
+        df_clas_f = df_clas_base.copy()
+        idx_max = df_clas_f.groupby(['League','Season'])['Jornada'].transform('max')
+        df_last = df_clas_f[df_clas_f['Jornada'] == idx_max].copy()
+        # Solo temps/ligas seleccionadas
+        df_last = df_last[df_last['Season'].isin(temp_sel)]
+        if liga_sel:
+            df_last = df_last[df_last['League'].isin(liga_sel)]
 
-            equipos_ok_clasif = set()
-            for (liga, temp), g_last in df_last.groupby(['League','Season']):
-                if g_last.empty:
-                    continue
-                lider_pts = g_last['Pts'].max()
-                if lider_pts <= 0:
-                    continue
-                g_last['pct_lider'] = g_last['Pts'] / lider_pts * 100.0
-                # tolerancia para que entre 1% exacto
-                ok = g_last[(g_last['pct_lider'] >= pct_de - 0.01) & (g_last['pct_lider'] <= pct_a + 0.01)]['Equipo'].tolist()
-                # si pides 1-30 incluye tambien los de 0 pts = 0% real
-                if pct_de <= 1:
-                    ok_zero = g_last[g_last['Pts'] <= 0]['Equipo'].tolist()
-                    ok = list(set(ok + ok_zero))
-                equipos_ok_clasif.update(ok)
+        equipos_ok_clasif = set()
+        for (liga, temp), g_last in df_last.groupby(['League','Season']):
+            lider_pts = g_last['Pts'].max()
+            if lider_pts <= 0: continue
+            g_last['pct_lider'] = g_last['Pts'] / lider_pts * 100.0
+            ok = g_last[(g_last['pct_lider'] >= pct_de - 0.01) & (g_last['pct_lider'] <= pct_a + 0.01)]['Equipo'].tolist()
+            if pct_de <= 1:
+                ok += g_last[g_last['Pts'] <= 0]['Equipo'].tolist()
+            equipos_ok_clasif.update(ok)
 
-            st.session_state.equipos_ok_clasif = equipos_ok_clasif
+        st.session_state.equipos_ok_clasif = equipos_ok_clasif
 
-            if equipos_ok_clasif:
-                if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
-                    if equipo_filtro not in equipos_ok_clasif:
-                        df_final = df_final.iloc[0:0].copy()
-                elif equipo2_filtro != "Ninguno" and equipo_filtro == "Ninguno":
-                    if equipo2_filtro not in equipos_ok_clasif:
-                        df_final = df_final.iloc[0:0].copy()
-                elif equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
-                    if equipo_filtro not in equipos_ok_clasif and equipo2_filtro not in equipos_ok_clasif:
-                        df_final = df_final.iloc[0:0].copy()
-                    else:
-                        df_final = df_final[(df_final['HomeTeam'].isin(equipos_ok_clasif)) | (df_final['AwayTeam'].isin(equipos_ok_clasif))].copy()
-                else:
-                    df_final = df_final[(df_final['HomeTeam'].isin(equipos_ok_clasif)) | (df_final['AwayTeam'].isin(equipos_ok_clasif))].copy()
-            else:
-                df_final = df_final.iloc[0:0].copy()
-        except Exception as e:
-            st.warning(f"Error filtro %Clasif: {e}")
-            st.session_state.equipos_ok_clasif = set()
-    else:
-        if 'equipos_ok_clasif' in st.session_state:
-            st.session_state.equipos_ok_clasif = set()
-    # --- FIN FILTRO %Clasif Eq1 ---
+        if equipos_ok_clasif:
+            df_final = df_final[(df_final['HomeTeam'].isin(equipos_ok_clasif)) | (df_final['AwayTeam'].isin(equipos_ok_clasif))].copy()
+        else:
+            df_final = df_final.iloc[0:0].copy()
+
+    except Exception as e:
+        st.warning(f"Error filtro %Clasif: {e}")
+        st.session_state.equipos_ok_clasif = set()
+else:
+    st.session_state.equipos_ok_clasif = set()
+# --- FIN FILTRO %Clasif Eq1 ---
     # --- FILTRO MARCADOR Eq1 / Eq2 INDEPENDIENTE ---
     def _aplica_marcador(df_in, marcador_txt):
         if marcador_txt=="Todos" or df_in.empty: return df_in
@@ -2341,45 +2327,55 @@ if len(df_final) > 0:
         num_a_mostrar = st.session_state.num_ligas_filtro_actual
         ligas_visibles = ligas_ordenadas_all[:num_a_mostrar] if ligas_ordenadas_all else []
 
-        # TITULITO - Eq real = solo los que cumplen Ult
+        # TITULITO - Eq real = solo los que cumplen Ult + %Clasif
         if len(df_final) > 0 and ligas_visibles:
             df_visible_titulo = df_final[df_final['League'].isin(ligas_visibles)]
             ligas_mostrar = "|".join(ligas_visibles)
+            equipos_unicos = pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel())
+            # FIX %Clasif: filtra lista ANTES de contar
+            if st.session_state.get('equipos_ok_clasif'):
+                equipos_unicos = [e for e in equipos_unicos if e in st.session_state.equipos_ok_clasif]
+            
             if str(ultimos_part_filtro)!="Todos" and st.session_state.get('dict_ultimos'):
-                num_equipos = len([eq for eq in st.session_state.dict_ultimos.keys() if eq in pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()) or True])
-                # solo los que están en dict_ultimos y además tienen liga visible
                 num_equipos = len(st.session_state.dict_ultimos)
                 partidos_mostrar = len(df_visible_titulo)
             else:
-                num_equipos = len(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
+                num_equipos = len(equipos_unicos)
                 partidos_mostrar = len(df_visible_titulo)
             # lista de equipos que se estan mostrando en esa liga
-                equipos_unicos = pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel())
-                temp = []
+                
+                # --- AGRUPADO POR LIGA ---
+                from collections import defaultdict
+                equipos_por_liga = defaultdict(list)
                 for eq in equipos_unicos:
+                    # liga del equipo
+                    df_l = df_visible_titulo[(df_visible_titulo['HomeTeam']==eq) | (df_visible_titulo['AwayTeam']==eq)]
+                    liga_eq = df_l['League'].iloc[0] if not df_l.empty else "OTRA"
                     d = df_clas_base[df_clas_base['Equipo']==eq]
                     if not d.empty:
                         d = d.sort_values('Jornada').iloc[-1]
-                        pos = int(d['Pos'])
-                        pts = int(d['Pts'])
+                        pos = int(d['Pos']); pts = int(d['Pts'])
                     else:
-                        pos = 999
-                        pts = 0
-                    temp.append((pos, eq, pts))
+                        pos = 999; pts = 0
+                    equipos_por_liga[liga_eq].append((pos, eq, pts))
 
-                temp.sort(key=lambda x: x[0]) # orden por posicion
+                lista_bloques = []
+                for liga in sorted(equipos_por_liga.keys()):
+                    equipos_por_liga[liga].sort(key=lambda x: x[0])
+                    lista_eq_liga = []
+                    for pos, eq, pts in equipos_por_liga[liga]:
+                        if pos == 999:
+                            lista_eq_liga.append(f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>")
+                        else:
+                            lista_eq_liga.append(f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos}º {pts}pts</span>")
+                    # Liga en NEGRITA CURSIVA NEGRA (no morado)
+                    bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
+                    lista_bloques.append(bloque)
 
-                lista_eq = []
-                for pos, eq, pts in temp:
-                    if pos == 999:
-                        lista_eq.append(f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>")
-                    else:
-                        lista_eq.append(f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos}º {pts}pts</span>")
-
-                equipos_txt = " <span style='color:#555'>|</span> ".join(lista_eq)
-                st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)      
+                equipos_txt = "<br>".join(lista_bloques)
+                st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)      
         else:
-            st.markdown(f"<div style='font-size:8px;font-family:monospace;color:#555;padding:0 0 4px 0'>Ligas: - | Eq: 0 | Partidos: 0 | Mostrando 0/{len(ligas_ordenadas_all)} ligas</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0'>Ligas: - | Eq: 0 | Partidos: 0 | Mostrando 0/{len(ligas_ordenadas_all)} ligas</div>", unsafe_allow_html=True)
 
         # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
         if ligas_ordenadas_all:
@@ -2432,11 +2428,15 @@ if len(df_final) > 0:
                 if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
                 if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
                 # --- PARCHE: si hay filtro %Clasif, solo mostrar TOP ---
-                if 'equipos_ok_clasif' in st.session_state and st.session_state.equipos_ok_clasif:
-                    if equipos_mostrar:
-                        equipos_mostrar = [eq for eq in equipos_mostrar if eq in st.session_state.equipos_ok_clasif]
+                if st.session_state.get('equipos_ok_clasif'):
+                    ok_set = st.session_state.equipos_ok_clasif
+                    base_teams = set(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
+                    ok_in_base = [e for e in base_teams if e in ok_set]
+                    if equipo_filtro != "Ninguno" or equipo2_filtro != "Ninguno":
+                        equipos_mostrar = [e for e in equipos_mostrar if e in ok_set]
                     else:
-                        equipos_mostrar = list(st.session_state.equipos_ok_clasif)
+                        equipos_mostrar = ok_in_base
+                # --- FIN PARCHE ---
                 base_total = df_original.copy()
                 base_total = base_total[base_total['League'].isin(ligas_visibles) & base_total['Season'].isin(temp_sel)]
                 base_total, _ = calcular_estado_jornada(base_total)
