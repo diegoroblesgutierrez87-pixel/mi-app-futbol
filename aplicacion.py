@@ -2180,88 +2180,78 @@ else:
             df_final = df_final.iloc[0:0].copy()
     else:
         st.session_state.dict_ultimos = {}
-       # --- FILTRO SEGUIDOS N - SOLO LA RACHA ---
-    if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_final) > 0:
+    # --- FILTRO SEGUIDOS N - V5 FINAL CORREGIDO ---
+    if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_base_h2h) > 0:
         try:
             n_seg = int(st.session_state.get('seguidos_filtro'))
             if n_seg >= 2:
-                # Base TOTAL para ver si fue seguido de verdad (sin fallar en medio)
-                df_total_seg = df_original.copy()
-                df_total_seg = df_total_seg[df_total_seg['League'].isin(liga_sel) & df_total_seg['Season'].isin(temp_sel)]
-                try:
-                    df_total_seg = df_total_seg[(df_total_seg['Jornada'] >= rango_jornadas[0]) & (df_total_seg['Jornada'] <= rango_jornadas[1])]
-                except:
-                    pass
+                # Usamos df_base_h2h que SI tiene Jornada
+                df_base_seguidos = df_base_h2h.copy()
 
-                # Que partidos son HIT (cumplen todo lo anterior: 1x2:G, AM, etc)
-                df_final = df_final.sort_values('Date')
-                set_hits = set(zip(df_final['Date'].astype(str), df_final['HomeTeam'], df_final['AwayTeam']))
+                # Que filtro de AM respetar
+                am_filtro = ambos_marcan
+                if equipo2_filtro!= "Ninguno" and equipo_filtro == "Ninguno":
+                    am_filtro = ambos_marcan_eq2
 
-                lista_rachas_final = []
-                dict_rachas_final = {}
+                lista_rachas = []
+                dict_rachas = {}
 
-                equipos_revisar = pd.unique(df_total_seg[['HomeTeam','AwayTeam']].values.ravel())
-                # Si filtras Eq1/Eq2 solo mira esos
-                if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
-                    equipos_revisar = [e for e in equipos_revisar if e in [equipo_filtro, equipo2_filtro]]
-                elif equipo_filtro!="Ninguno":
-                    equipos_revisar = [equipo_filtro] if equipo_filtro in equipos_revisar else []
-                elif equipo2_filtro!="Ninguno":
-                    equipos_revisar = [equipo2_filtro] if equipo2_filtro in equipos_revisar else []
+                equipos_revisar = pd.unique(df_base_seguidos[['HomeTeam','AwayTeam']].values.ravel())
+                if equipo_filtro!= "Ninguno":
+                    equipos_revisar = [equipo_filtro]
+                elif equipo2_filtro!= "Ninguno":
+                    equipos_revisar = [equipo2_filtro]
 
                 for eq in equipos_revisar:
-                    df_eq = df_total_seg[(df_total_seg['HomeTeam']==eq) | (df_total_seg['AwayTeam']==eq)].sort_values(['Date','Jornada'])
+                    df_eq = df_base_seguidos[(df_base_seguidos['HomeTeam']==eq) | (df_base_seguidos['AwayTeam']==eq)].sort_values('Date').copy()
                     if len(df_eq) < n_seg:
                         continue
 
-                    # recorre partido a partido viendo si es hit - FIX SET RAPIDO
+                    # Define si ese partido cumple para la racha
+                    if am_filtro == "Si":
+                        df_eq['cumple'] = (df_eq['FTHG'] > 0) & (df_eq['FTAG'] > 0)
+                    elif am_filtro == "No":
+                        df_eq['cumple'] = ~((df_eq['FTHG'] > 0) & (df_eq['FTAG'] > 0))
+                    elif am_filtro == "Si1P":
+                        df_eq['cumple'] = (df_eq['HTHG'] > 0) & (df_eq['HTAG'] > 0)
+                    elif am_filtro == "No1P":
+                        df_eq['cumple'] = ~((df_eq['HTHG'] > 0) & (df_eq['HTAG'] > 0))
+                    elif am_filtro == "Si2P":
+                        df_eq['cumple'] = ((df_eq['FTHG']-df_eq['HTHG']) > 0) & ((df_eq['FTAG']-df_eq['HTAG']) > 0)
+                    elif am_filtro == "No2P":
+                        df_eq['cumple'] = ~(((df_eq['FTHG']-df_eq['HTHG']) > 0) & ((df_eq['FTAG']-df_eq['HTAG']) > 0))
+                    else:
+                        df_eq['cumple'] = True
+
                     racha = []
-                    # Prepara set sin hora para fallback
-                    set_hits_dateonly = set((str(d)[:10], h, a) for d,h,a in set_hits)
+                    rachas_eq = []
                     for _, r in df_eq.iterrows():
-                        key_full = (str(r['Date']), r['HomeTeam'], r['AwayTeam'])
-                        key_short = (str(r['Date'])[:10], r['HomeTeam'], r['AwayTeam'])
-                        es_hit = (key_full in set_hits) or (key_short in set_hits_dateonly)
-
-                        if es_hit:
+                        if r['cumple']:
                             racha.append(r)
-                            # si llegamos a N, guardamos ESOS N y seguimos buscando si la racha se alarga
-                            if len(racha) >= n_seg:
-                                # Guarda solo la ventana de N que acaba de completarse
-                                # Si quieres que si gana 6 seguidos te muestre los 6, cambia a df_racha = pd.DataFrame(racha)
-                                # Si quieres solo bloques de 4 exactos, deja como está:
-                                df_racha = pd.DataFrame(racha[-n_seg:]) # ULTIMOS N
-                                # Para guardar la racha completa de 6: df_racha = pd.DataFrame(racha)
-                                # TE DEJO LA COMPLETA que es lo que pides:
-                                df_racha = pd.DataFrame(racha)
-                                # Evita duplicar la misma racha
-                                if eq not in dict_rachas_final:
-                                    dict_rachas_final[eq] = []
-                                # Solo añade si no es la misma que la anterior
-                                if not dict_rachas_final[eq] or not df_racha.equals(dict_rachas_final[eq][-1]):
-                                    dict_rachas_final[eq].append(df_racha)
-                                    lista_rachas_final.append(df_racha)
                         else:
+                            if len(racha) >= n_seg:
+                                rachas_eq.append(pd.DataFrame(racha))
                             racha = []
+                    if len(racha) >= n_seg:
+                        rachas_eq.append(pd.DataFrame(racha))
 
-                    # Si quieres unir todas las rachas de un equipo en una sola lista
-                    if eq in dict_rachas_final and dict_rachas_final[eq]:
-                        dict_rachas_final[eq] = [pd.concat(dict_rachas_final[eq]).drop_duplicates(subset=['Date','HomeTeam','AwayTeam'])]
+                    if rachas_eq:
+                        df_racha_eq = pd.concat(rachas_eq).drop_duplicates(subset=['Date','HomeTeam','AwayTeam'])
+                        dict_rachas[eq] = df_racha_eq
+                        lista_rachas.append(df_racha_eq)
 
-                if lista_rachas_final:
-                    # df_final ahora SON SOLO LOS PARTIDOS DE LAS RACHAS
-                    df_final = pd.concat(lista_rachas_final).drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League']).sort_values('Date').copy()
-                    # Esto es lo que usa "Filtro actual" y "Mostrando X partidos"
-                    st.session_state.dict_ultimos = {}
-                    for k, vlist in dict_rachas_final.items():
-                        st.session_state.dict_ultimos[k] = pd.concat(vlist).drop_duplicates()
+                if lista_rachas:
+                    df_final = pd.concat(lista_rachas).drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League']).sort_values('Date').copy()
+                    if 'cumple' in df_final.columns:
+                        df_final = df_final.drop(columns=['cumple'])
+                    st.session_state.dict_ultimos = dict_rachas
                 else:
                     df_final = df_final.iloc[0:0].copy()
                     st.session_state.dict_ultimos = {}
 
         except Exception as e:
-            st.warning(f"Error Seguidos: {e}")
-    # --- FIN FILTRO SEGUIDOS ---
+            st.error(f"Error Seguidos V5: {e}")
+    # --- FIN FILTRO SEGUIDOS V5 ---
 
 ######################################################################################
     if len(df_final) > 0:
@@ -2505,6 +2495,9 @@ if len(df_final) > 0:
                 if equipo_filtro!= "Ninguno": equipos_mostrar.append(equipo_filtro)
                 if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
                 if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
+                                # Si Seguidos activo, solo los que tienen racha
+                if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and st.session_state.get('dict_ultimos'):
+                    equipos_mostrar = list(st.session_state.dict_ultimos.keys())
                 # --- PARCHE: si hay filtro %Clasif, solo mostrar TOP ---
                 if st.session_state.get('equipos_ok_clasif'):
                     ok_set = st.session_state.equipos_ok_clasif
