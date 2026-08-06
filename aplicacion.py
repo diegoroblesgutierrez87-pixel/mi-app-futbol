@@ -1456,30 +1456,9 @@ if len(jornadas) > 0:
     def _aplica_1x2(df_in, equipo_ref, modo_1x2):
         if modo_1x2 == "Ninguno":
             return df_in
-
-        # FIX DEFINITIVO: Sin equipo, Gana/Pierde = que haya ganador (FTR!='D'), Empata = empate
+        # Sin equipo no filtra, deja que el % lo calcule por equipo luego
         if equipo_ref=="Ninguno" or equipo_ref is None or equipo_ref=="":
-            if modo_1x2 == "Gana": return df_in[df_in['FTR']!='D']
-            if modo_1x2 == "Pierde": return df_in[df_in['FTR']!='D']
-            if modo_1x2 == "Empata": return df_in[df_in['FTR']=='D']
-            if modo_1x2 == "Gana/Empata": return df_in[df_in['FTR']!='A']
-            if modo_1x2 == "Gana/Pierde": return df_in[df_in['FTR']!='D']
-            if modo_1x2 == "Empata/Pierde": return df_in[df_in['FTR']!='H']
             return df_in
-
-        if modo_1x2 == "Gana":
-            return df_in[((df_in['HomeTeam']==equipo_ref) & (df_in['FTR']=='H')) | ((df_in['AwayTeam']==equipo_ref) & (df_in['FTR']=='A'))]
-        elif modo_1x2 == "Pierde":
-            return df_in[((df_in['HomeTeam']==equipo_ref) & (df_in['FTR']=='A')) | ((df_in['AwayTeam']==equipo_ref) & (df_in['FTR']=='H'))]
-        elif modo_1x2 == "Empata":
-            return df_in[df_in['FTR']=='D']
-        elif modo_1x2 == "Gana/Empata":
-            return df_in[~(((df_in['HomeTeam']==equipo_ref) & (df_in['FTR']=='A')) | ((df_in['AwayTeam']==equipo_ref) & (df_in['FTR']=='H')))]
-        elif modo_1x2 == "Gana/Pierde":
-            return df_in[df_in['FTR']!='D']
-        elif modo_1x2 == "Empata/Pierde":
-            return df_in[~(((df_in['HomeTeam']==equipo_ref) & (df_in['FTR']=='H')) | ((df_in['AwayTeam']==equipo_ref) & (df_in['FTR']=='A')))]
-        return df_in
 
         if modo_1x2 == "Gana":
             return df_in[((df_in['HomeTeam']==equipo_ref) & (df_in['FTR']=='H')) | ((df_in['AwayTeam']==equipo_ref) & (df_in['FTR']=='A'))]
@@ -1563,67 +1542,84 @@ if len(jornadas) > 0:
         elif ambos_marcan_eq2!= "Todos":
             df_final = _filtro_am(df_final, ambos_marcan_eq2, parte_gol)
     
-    # === FILTRO NUEVO X/X - con y sin equipo ===
+    # === FILTRO NUEVO X/X - FIX Eq1+Eq2 ===
     if xx_filtro!= "Todo":
-        if equipo_filtro!= "Ninguno" and equipo2_filtro == "Ninguno":
-            es_local = df_final['HomeTeam'] == equipo_filtro
-            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-            ht_empata = ~(ht_gana | ht_pierde)
-            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-            ft_empata = ~(ft_gana | ft_pierde)
-        else:
-            ht_gana = df_final['HTHG'] > df_final['HTAG']
-            ht_pierde = df_final['HTHG'] < df_final['HTAG']
-            ht_empata = ~(ht_gana | ht_pierde)
-            ft_gana = df_final['FTHG'] > df_final['FTAG']
-            ft_pierde = df_final['FTHG'] < df_final['FTAG']
-            ft_empata = ~(ft_gana | ft_pierde)
+        def _mask_xx(df_in, eq_ref):
+            if eq_ref=="Ninguno":
+                ht_g = df_in['HTHG'] > df_in['HTAG']
+                ht_p = df_in['HTHG'] < df_in['HTAG']
+                ht_e = ~(ht_g | ht_p)
+                ft_g = df_in['FTHG'] > df_in['FTAG']
+                ft_p = df_in['FTHG'] < df_in['FTAG']
+                ft_e = ~(ft_g | ft_p)
+            else:
+                es_loc = df_in['HomeTeam']==eq_ref
+                ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+                ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+                ht_e = ~(ht_g | ht_p)
+                ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+                ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
+                ft_e = ~(ft_g | ft_p)
 
-        if xx_filtro == "G/X":
-            df_final = df_final[ht_gana]
-        elif xx_filtro == "E/X":
-            df_final = df_final[ht_empata]
-        elif xx_filtro == "P/X":
-            df_final = df_final[ht_pierde]
-        elif xx_filtro == "X/G":
-            df_final = df_final[ft_gana]
-        elif xx_filtro == "X/E":
-            df_final = df_final[ft_empata]
-        elif xx_filtro == "X/P":
-            df_final = df_final[ft_pierde]
+            if xx_filtro=="G/X": return ht_g
+            if xx_filtro=="E/X": return ht_e
+            if xx_filtro=="P/X": return ht_p
+            if xx_filtro=="X/G": return ft_g
+            if xx_filtro=="X/E": return ft_e
+            if xx_filtro=="X/P": return ft_p
+            return np.ones(len(df_in), dtype=bool)
+
+        if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+            df_e1 = df_final[(df_final['HomeTeam']==equipo_filtro)|(df_final['AwayTeam']==equipo_filtro)].copy()
+            df_e2 = df_final[(df_final['HomeTeam']==equipo2_filtro)|(df_final['AwayTeam']==equipo2_filtro)].copy()
+            df_e1 = df_e1[_mask_xx(df_e1, equipo_filtro)]
+            df_e2 = df_e2[_mask_xx(df_e2, equipo2_filtro)]
+            df_final = pd.concat([df_e1, df_e2]).drop_duplicates()
+        elif equipo_filtro!="Ninguno":
+            df_final = df_final[_mask_xx(df_final, equipo_filtro)]
+        elif equipo2_filtro!="Ninguno":
+            df_final = df_final[_mask_xx(df_final, equipo2_filtro)]
+        else:
+            df_final = df_final[_mask_xx(df_final, "Ninguno")]
 
     
     
     
     
     #######################################
-    # === FILTRO HT/FT - con y sin equipo ===
+    # === FILTRO HT/FT - FIX Eq1+Eq2 ===
     if htft_filtro != "Todo":
-        if equipo_filtro != "Ninguno" and equipo2_filtro == "Ninguno":
-            es_local = df_final['HomeTeam'] == equipo_filtro
-            ht_gana = np.where(es_local, df_final['HTHG'] > df_final['HTAG'], df_final['HTAG'] > df_final['HTHG'])
-            ht_pierde = np.where(es_local, df_final['HTHG'] < df_final['HTAG'], df_final['HTAG'] < df_final['HTHG'])
-            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-            ft_gana = np.where(es_local, df_final['FTHG'] > df_final['FTAG'], df_final['FTAG'] > df_final['FTHG'])
-            ft_pierde = np.where(es_local, df_final['FTHG'] < df_final['FTAG'], df_final['FTAG'] < df_final['FTHG'])
-            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
-        else:
-            ht_gana = df_final['HTHG'] > df_final['HTAG']
-            ht_pierde = df_final['HTHG'] < df_final['HTAG']
-            ht_res = np.where(ht_gana, 'G', np.where(ht_pierde, 'P', 'E'))
-            ft_gana = df_final['FTHG'] > df_final['FTAG']
-            ft_pierde = df_final['FTHG'] < df_final['FTAG']
-            ft_res = np.where(ft_gana, 'G', np.where(ft_pierde, 'P', 'E'))
+        def _mask_htft(df_in, eq_ref):
+            if eq_ref=="Ninguno":
+                ht_g = df_in['HTHG'] > df_in['HTAG']; ht_p = df_in['HTHG'] < df_in['HTAG']
+                ht_res = np.where(ht_g,'G', np.where(ht_p,'P','E'))
+                ft_g = df_in['FTHG'] > df_in['FTAG']; ft_p = df_in['FTHG'] < df_in['FTAG']
+                ft_res = np.where(ft_g,'G', np.where(ft_p,'P','E'))
+            else:
+                es_loc = df_in['HomeTeam']==eq_ref
+                ht_g = np.where(es_loc, df_in['HTHG']>df_in['HTAG'], df_in['HTAG']>df_in['HTHG'])
+                ht_p = np.where(es_loc, df_in['HTHG']<df_in['HTAG'], df_in['HTAG']<df_in['HTHG'])
+                ht_res = np.where(ht_g,'G', np.where(ht_p,'P','E'))
+                ft_g = np.where(es_loc, df_in['FTHG']>df_in['FTAG'], df_in['FTAG']>df_in['FTHG'])
+                ft_p = np.where(es_loc, df_in['FTHG']<df_in['FTAG'], df_in['FTAG']<df_in['FTHG'])
+                ft_res = np.where(ft_g,'G', np.where(ft_p,'P','E'))
+            combo = ht_res + '/' + ft_res
+            if htft_filtro=="RE": return (ht_res!='G') & (ft_res=='G')
+            if htft_filtro=="FAIL": return ((ht_res=='G')&(ft_res!='G')) | ((ht_res=='E')&(ft_res=='P'))
+            return combo==htft_filtro
 
-        combo = ht_res + '/' + ft_res
-        if htft_filtro == "RE":
-            df_final = df_final[(ht_res != 'G') & (ft_res == 'G')]
-        elif htft_filtro == "FAIL":
-            df_final = df_final[((ht_res == 'G') & (ft_res != 'G')) | ((ht_res == 'E') & (ft_res == 'P'))]
+        if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+            df_e1 = df_final[(df_final['HomeTeam']==equipo_filtro)|(df_final['AwayTeam']==equipo_filtro)].copy()
+            df_e2 = df_final[(df_final['HomeTeam']==equipo2_filtro)|(df_final['AwayTeam']==equipo2_filtro)].copy()
+            df_e1 = df_e1[_mask_htft(df_e1, equipo_filtro)]
+            df_e2 = df_e2[_mask_htft(df_e2, equipo2_filtro)]
+            df_final = pd.concat([df_e1, df_e2]).drop_duplicates()
+        elif equipo_filtro!="Ninguno":
+            df_final = df_final[_mask_htft(df_final, equipo_filtro)]
+        elif equipo2_filtro!="Ninguno":
+            df_final = df_final[_mask_htft(df_final, equipo2_filtro)]
         else:
-            df_final = df_final[combo == htft_filtro]
+            df_final = df_final[_mask_htft(df_final, "Ninguno")]
 
     if cuota_tipo not in ["Ninguno","Todo"]:
         if cuota_tipo == "1":
@@ -1793,18 +1789,11 @@ else:
         vh, va = get_pair(col)
         if equipo_ref is None:
             if tipo in ("AF","C"):
-                # Sin Eq1, AF/C no puede pre-filtrar. Dejamos todo y que el resumen filtre por equipo.
-                # Si quieres que al menos un equipo cumpla: base = vh, pero dejamos pasar si vh cumple O va cumple
-                if op == "=":
-                    mask = (vh == val) | (va == val)
-                elif op == ">":
-                    mask = (vh > val) | (va > val)
-                elif op == ">=":
-                    mask = (vh >= val) | (va >= val)
-                elif op == "<":
-                    mask = (vh < val) | (va < val)
-                else:
-                    mask = (vh <= val) | (va <= val)
+                if op == "=": mask = (vh == val) | (va == val)
+                elif op == ">": mask = (vh > val) | (va > val)
+                elif op == ">=": mask = (vh >= val) | (va >= val)
+                elif op == "<": mask = (vh < val) | (va < val)
+                else: mask = (vh <= val) | (va <= val)
                 return df_in[mask]
             else:
                 base = vh + va if col in ['GolesHT','GolesTotales','Goles2T','corneTot','tirosTot','tirosPuertaTot','faltasTot','TargAmTot','TargRojTot'] else np.maximum(vh, va)
@@ -2225,14 +2214,14 @@ else:
                     if len(df_eq) < n_seg:
                         continue
 
-                    # recorre partido a partido viendo si es hit
+                    # recorre partido a partido viendo si es hit - FIX SET RAPIDO
                     racha = []
+                    # Prepara set sin hora para fallback
+                    set_hits_dateonly = set((str(d)[:10], h, a) for d,h,a in set_hits)
                     for _, r in df_eq.iterrows():
-                        # es hit?
-                        es_hit = (str(r['Date']), r['HomeTeam'], r['AwayTeam']) in set_hits
-                        # fallback por si Date tiene hora
-                        if not es_hit:
-                            es_hit = ((df_final['HomeTeam']==r['HomeTeam']) & (df_final['AwayTeam']==r['AwayTeam']) & (df_final['Date']==r['Date'])).any()
+                        key_full = (str(r['Date']), r['HomeTeam'], r['AwayTeam'])
+                        key_short = (str(r['Date'])[:10], r['HomeTeam'], r['AwayTeam'])
+                        es_hit = (key_full in set_hits) or (key_short in set_hits_dateonly)
 
                         if es_hit:
                             racha.append(r)
@@ -3052,6 +3041,11 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
 
             cumple = np.ones(len(df_eq), dtype=bool)
 
+            es_local_arr = df_eq['HomeTeam'].values == eq
+            if col1_busca == 'GolesHT' and parte_busca == "2T":
+                continue
+            if col1_busca == 'Goles2T' and parte_busca == "1T":
+                continue
             def get_base_buscador(col_name, fav_mode, df_e, es_local_arr):
                 if col_name == "Ninguno":
                     return None
@@ -3081,19 +3075,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                             af = np.where(es_local_arr, df_e['FTHG'].values, df_e['FTAG'].values)
                             c = np.where(es_local_arr, df_e['FTAG'].values, df_e['FTHG'].values)
                     elif col_name == 'GolesHT':
-                        if parte_busca == "2T":
-                            tot = np.full(len(df_e), -999); af = np.full(len(df_e), -999); c = np.full(len(df_e), -999)
-                        else:
-                            tot = df_e['HTHG'].values + df_e['HTAG'].values
-                            af = np.where(es_local_arr, df_e['HTHG'].values, df_e['HTAG'].values)
-                            c = np.where(es_local_arr, df_e['HTAG'].values, df_e['HTHG'].values)
+                        tot = df_e['HTHG'].values + df_e['HTAG'].values
+                        af = np.where(es_local_arr, df_e['HTHG'].values, df_e['HTAG'].values)
+                        c = np.where(es_local_arr, df_e['HTAG'].values, df_e['HTHG'].values)
                     elif col_name == 'Goles2T':
-                        if parte_busca == "1T":
-                            tot = np.full(len(df_e), -999); af = np.full(len(df_e), -999); c = np.full(len(df_e), -999)
-                        else:
-                            tot = (df_e['FTHG']-df_e['HTHG']).values + (df_e['FTAG']-df_e['HTAG']).values
-                            af = np.where(es_local_arr, (df_e['FTHG']-df_e['HTHG']).values, (df_e['FTAG']-df_e['HTAG']).values)
-                            c = np.where(es_local_arr, (df_e['FTAG']-df_e['HTAG']).values, (df_e['FTHG']-df_e['HTHG']).values)
+                        tot = (df_e['FTHG']-df_e['HTHG']).values + (df_e['FTAG']-df_e['HTAG']).values
+                        af = np.where(es_local_arr, (df_e['FTHG']-df_e['HTHG']).values, (df_e['FTAG']-df_e['HTAG']).values)
+                        c = np.where(es_local_arr, (df_e['FTAG']-df_e['HTAG']).values, (df_e['FTHG']-df_e['HTHG']).values)
                     else:
                         tot = df_e[cH].values + df_e[cA].values
                         af = np.where(es_local_arr, df_e[cH].values, df_e[cA].values)
@@ -3102,7 +3090,6 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                     elif fav_mode == "C": return c
                     else: return tot
                 return np.zeros(len(df_e))
-
             # Col1 + Vlr1 con Parte y AF/C bien
             if col1_busca!= "Ninguno" and vlr1_busca!= "Ninguno":
                 base = get_base_buscador(col1_busca, fav_c1, df_eq, es_local)
