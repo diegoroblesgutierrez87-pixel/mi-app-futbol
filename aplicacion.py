@@ -1736,25 +1736,35 @@ if st.session_state.get('clasif_eq1_modo', '-') == "Rango" and not df_final.empt
 else:
     st.session_state.equipos_ok_clasif = set()
 
-# --- FILTRO SEGUIDOS N - V5 FINAL CORREGIDO ---
+# --- FILTRO SEGUIDOS N - V7 CORRECTO ---
 if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_base_h2h) > 0:
     try:
         n_seg = int(st.session_state.get('seguidos_filtro'))
         if n_seg >= 2:
-            df_base_seguidos = df_base_h2h.copy()
-            am_filtro = ambos_marcan
-            if equipo2_filtro!= "Ninguno" and equipo_filtro == "Ninguno":
-                am_filtro = ambos_marcan_eq2
+            lv_seg = condicion_filtro if equipo_filtro!="Ninguno" else condicion_filtro3 if equipo2_filtro!="Ninguno" else condicion_filtro # usa el L/V global si no hay Eq
+
+            # BASE REAL: todos los partidos de la liga en el rango J, sin filtrar por AM
+            df_base_rachas = df_base.copy()  # df_base SI tiene Jornada
+            try:
+                df_base_rachas = df_base_rachas[df_base_rachas['League'].isin(liga_sel) & df_base_rachas['Season'].isin(temp_sel)]
+                df_base_rachas = df_base_rachas[(df_base_rachas['Jornada']>=rango_jornadas[0]) & (df_base_rachas['Jornada']<=rango_jornadas[1])]
+            except: pass
+
+            am_filtro = ambos_marcan if equipo_filtro!="Ninguno" or (equipo_filtro=="Ninguno" and equipo2_filtro=="Ninguno") else ambos_marcan_eq2
+
             lista_rachas = []
             dict_rachas = {}
-            equipos_revisar = pd.unique(df_base_seguidos[['HomeTeam','AwayTeam']].values.ravel())
-            if equipo_filtro!= "Ninguno":
-                equipos_revisar = [equipo_filtro]
-            elif equipo2_filtro!= "Ninguno":
-                equipos_revisar = [equipo2_filtro]
+            equipos_revisar = pd.unique(df_base_rachas[['HomeTeam','AwayTeam']].values.ravel())
+            if equipo_filtro!="Ninguno": equipos_revisar = [equipo_filtro]
+            elif equipo2_filtro!="Ninguno": equipos_revisar = [equipo2_filtro]
+
             for eq in equipos_revisar:
-                df_eq = df_base_seguidos[(df_base_seguidos['HomeTeam']==eq) | (df_base_seguidos['AwayTeam']==eq)].sort_values('Date').copy()
+                df_eq = df_base_rachas[(df_base_rachas['HomeTeam']==eq) | (df_base_rachas['AwayTeam']==eq)].copy()
+                if lv_seg == "Local": df_eq = df_eq[df_eq['HomeTeam']==eq]
+                elif lv_seg == "Visitante": df_eq = df_eq[df_eq['AwayTeam']==eq]
+                df_eq = df_eq.sort_values('Date')
                 if len(df_eq) < n_seg: continue
+
                 if am_filtro == "Si": df_eq['cumple'] = (df_eq['FTHG'] > 0) & (df_eq['FTAG'] > 0)
                 elif am_filtro == "No": df_eq['cumple'] = ~((df_eq['FTHG'] > 0) & (df_eq['FTAG'] > 0))
                 elif am_filtro == "Si1P": df_eq['cumple'] = (df_eq['HTHG'] > 0) & (df_eq['HTAG'] > 0)
@@ -1762,17 +1772,25 @@ if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_b
                 elif am_filtro == "Si2P": df_eq['cumple'] = ((df_eq['FTHG']-df_eq['HTHG']) > 0) & ((df_eq['FTAG']-df_eq['HTAG']) > 0)
                 elif am_filtro == "No2P": df_eq['cumple'] = ~(((df_eq['FTHG']-df_eq['HTHG']) > 0) & ((df_eq['FTAG']-df_eq['HTAG']) > 0))
                 else: df_eq['cumple'] = True
-                racha = []; rachas_eq = []
+
+                # Busca rachas REALES consecutivas
+                racha_actual = []
+                rachas_eq = []
                 for _, r in df_eq.iterrows():
-                    if r['cumple']: racha.append(r)
+                    if r['cumple']:
+                        racha_actual.append(r)
                     else:
-                        if len(racha) >= n_seg: rachas_eq.append(pd.DataFrame(racha))
-                        racha = []
-                if len(racha) >= n_seg: rachas_eq.append(pd.DataFrame(racha))
+                        if len(racha_actual) >= n_seg:
+                            rachas_eq.append(pd.DataFrame(racha_actual))
+                        racha_actual = []
+                if len(racha_actual) >= n_seg:
+                    rachas_eq.append(pd.DataFrame(racha_actual))
+
                 if rachas_eq:
                     df_racha_eq = pd.concat(rachas_eq).drop_duplicates(subset=['Date','HomeTeam','AwayTeam'])
                     dict_rachas[eq] = df_racha_eq
                     lista_rachas.append(df_racha_eq)
+
             if lista_rachas:
                 df_final = pd.concat(lista_rachas).drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League']).sort_values('Date').copy()
                 if 'cumple' in df_final.columns: df_final = df_final.drop(columns=['cumple'])
@@ -1780,10 +1798,9 @@ if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_b
             else:
                 df_final = df_final.iloc[0:0].copy()
                 st.session_state.dict_ultimos = {}
+                st.info(f"Ningún equipo tiene {n_seg} seguidos con {am_filtro} en {lv_seg}")
     except Exception as e:
-        st.error(f"Error Seguidos V5: {e}")
-# --- FIN FILTRO SEGUIDOS V5 ---
-
+        st.error(f"Error Seguidos V7: {e}")
 
 
 
