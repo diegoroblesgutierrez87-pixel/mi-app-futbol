@@ -20,79 +20,29 @@ st.set_page_config(
 )
 
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
-
-# FIX DEFINITIVO - 3 COLS MISMA LINEA EN MOVIL SIN CORTARSE
+#############################css visualizacion filtros avanzados columnas todo centrado y bien - 1 SOLO CARTEL
 st.markdown("""
 <style>
-/* en movil fuerza fila, no columna */
-@media (max-width: 768px){
-  div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"]{
-    flex-direction: row!important;
-    flex-wrap: nowrap!important;
-    overflow-x: auto!important;
-    gap: 4px!important;
-  }
-  div[data-testid="stExpander"] div[data-testid="stHorizontalBlock"] > div{
-    flex: 0 0 32%!important;
-    min-width: 105px!important;
-    max-width: 32%!important;
-  }
-}
-div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
-  font-size: 8px!important;
-  margin: 0 0 1px 0!important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-html, body {
-  overscroll-behavior: none!important;
-  background: #FFFFFF!important;
-}
-[data-testid="stAppViewContainer"]{
-  background-color: #FFFFFF!important;
-  overscroll-behavior: contain!important;
-}
+html, body { overscroll-behavior: none!important; background: #FFFFFF!important; overflow-x: hidden!important; }
+[data-testid="stAppViewContainer"]{ background-color: #FFFFFF!important; overscroll-behavior: contain!important; }
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem.5rem.5rem.5rem!important; background:#FFFFFF!important}
+.block-container{padding:3rem 10px .5rem 10px!important; max-width:100%!important}
 div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
-</style>
-""", unsafe_allow_html=True)
-
-
-# FUERZA Col1 Col2 Col3 EN LA MISMA LINEA EN MOVIL
-st.markdown("""
-<style>
 div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
-  flex-wrap: nowrap!important;
-  gap: 5px!important;
+  display: grid!important;
+  grid-template-columns: repeat(3, minmax(0, 1fr))!important;
+  gap: 6px!important;
+  width: 100%!important;
 }
 div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div{
-  flex: 1 1 0%!important;
-  min-width: 0!important;
+  width: 100%!important; min-width: 0!important; max-width: none!important; flex: none!important;
+}
+div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
+  font-size: 8px!important; margin: 0 0 1px 0!important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 </style>
 """, unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-html, body {
-  overscroll-behavior: none!important;
-  background: #FFFFFF!important;
-}
-[data-testid="stAppViewContainer"]{
-  background-color: #FFFFFF!important;
-  overscroll-behavior: contain!important;
-}
-[data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem .5rem .5rem .5rem!important; background:#FFFFFF!important}
-
-/* no rompas los expanders */
-div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
-</style>
-""", unsafe_allow_html=True)
+#############################css visualizacion filtros avanzados columnas todo centrado y bien FIN
 
 
 # --- LIMPIEZA FORZADA DE CACHE VIEJO --- (ahora con botón)
@@ -407,6 +357,8 @@ if 'rango_cuotas' not in st.session_state:
     st.session_state.rango_cuotas = (1.5, 10.0)
 if 'rango_minutos' not in st.session_state:
     st.session_state.rango_minutos = (0, 120)
+if 'ultimas_jornadas_filtro' not in st.session_state:
+    st.session_state.ultimas_jornadas_filtro = "-"
 if 'pct_marcador' not in st.session_state:
     st.session_state.pct_marcador = 1
 if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
@@ -1008,10 +960,7 @@ with st.expander("Filtros de partidos", expanded=False):
     if df_fil.empty:
         st.stop()
 
-    @st.cache_data
-    def calcular_estado_jornada_rapido(df, temporadas, ligas):
-        df_fil = df[df['League'].isin(ligas) & df['Season'].isin(temporadas)]
-        return calcular_estado_jornada(df_fil)
+    # calcular_estado_jornada_rapido eliminado - usamos get_df_base_calculado (1 solo cache)
 
 
     with st.spinner('Calculando clasificación...'):
@@ -1063,11 +1012,32 @@ with st.expander("Filtros de partidos", expanded=False):
     rango_cuotas = (float(cuota_desde), float(cuota_hasta))
     st.session_state.rango_cuotas = rango_cuotas
     # --- FIN RANGO CUOTAS ---
-    rango_minutos = st.slider("Minutos", 0, 120, st.session_state.rango_minutos, 1, key='rango_minutos')
-
+    # --- NUEVO: ULTIMAS JORNADAS ---
+    st.markdown("**Ultimas jornadas**")
+    ultimas_jornadas_filtro = st.selectbox(
+        "Ultimas jornadas",
+        ["-"] + list(range(1, 41)),
+        key='ultimas_jornadas_filtro',
+        label_visibility="collapsed"
+    )
+    # mantenemos rango_minutos fijo para no romper goles
+    rango_minutos = (0, 120)
+    st.session_state.rango_minutos = rango_minutos
+#########filtro rango de ultimas jornadas
 if len(jornadas) > 0:
     df_final = df_final[(df_final['Jornada'] >= rango_jornadas[0]) & (df_final['Jornada'] <= rango_jornadas[1])]
     df_clasificacion = df_clasificacion[(df_clasificacion['Jornada'] >= rango_jornadas[0]) & (df_clasificacion['Jornada'] <= rango_jornadas[1])]
+
+    # --- FILTRO ULTIMAS X JORNADAS ---
+    if str(st.session_state.get('ultimas_jornadas_filtro', '-'))!= "-":
+        try:
+            x = int(st.session_state.ultimas_jornadas_filtro)
+            max_jor = df_final.groupby(['League','Season'])['Jornada'].transform('max')
+            df_final = df_final[df_final['Jornada'] >= (max_jor - x + 1)]
+            max_jor_clas = df_clasificacion.groupby(['League','Season'])['Jornada'].transform('max')
+            df_clasificacion = df_clasificacion[df_clasificacion['Jornada'] >= (max_jor_clas - x + 1)]
+        except:
+            pass
 
     df_base_h2h = df_final.copy()
 
@@ -1075,7 +1045,7 @@ if len(jornadas) > 0:
     for liga in liga_sel:
         for temp in temp_sel:
             todos_eventos.update(cargar_eventos(liga, temp))
-
+#########filtro rango de ultimas jornadas
     if 'marcador_filtro' not in st.session_state: st.session_state.marcador_filtro = "Todos"
     if 'marcador_filtro_eq2' not in st.session_state: st.session_state.marcador_filtro_eq2 = "Todos"
     if 'pct_marcador' not in st.session_state: st.session_state.pct_marcador = 0
