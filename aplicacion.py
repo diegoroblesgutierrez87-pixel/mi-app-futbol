@@ -3451,34 +3451,43 @@ with st.expander("📋 Resumen", expanded=False):
 
                 # === MINI RESUMEN EQ1 CON DELTA ===
                 if lista_stats1:
-                    temp_orden = sorted(lista_stats1, key=lambda x: x['temp'])
+                    temp_orden_asc = sorted(lista_stats1, key=lambda x: x['temp'])
                     historial = {}
                     for s in lista_stats1:
                         dft = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season']==s['temp'])]
                         pos = int(dft.sort_values('Jornada').iloc[-1]['Pos']) if not dft.empty else 0
                         historial[s['temp']] = {'pos':pos,'pts':s['pts_final'],'g':s['n_g'],'e':s['n_e'],'p':s['n_p']}
 
-                    filas = []
-                    for idx, s in enumerate(temp_orden):
-                        cur = historial.get(s['temp'])
-                        if not cur:
+                    # calculo delta en orden cronologico asc
+                    delta_map = {}
+                    for idx, s in enumerate(temp_orden_asc):
+                        if idx==0: 
+                            delta_map[s['temp']]=""
                             continue
-                        delta_html = ""
-                        if idx > 0:
-                            prev = historial.get(temp_orden[idx-1]['temp'])
-                            if prev:
-                                d_pos = prev['pos'] - cur['pos']
-                                d_pts = cur['pts'] - prev['pts']
-                                d_g = cur['g'] - prev['g']
-                                d_e = cur['e'] - prev['e']
-                                d_p = cur['p'] - prev['p']
-                                c_pos = "#0f8105" if d_pos>0 else "#dc2626" if d_pos<0 else "#6b7280"
-                                c_pts = "#0f8105" if d_pts>0 else "#dc2626" if d_pts<0 else "#6b7280"
-                                c_g = "#0f8105" if d_g>0 else "#dc2626" if d_g<0 else "#6b7280"
-                                c_e = "#b45309" if d_e!=0 else "#6b7280"
-                                c_p = "#dc2626" if d_p>0 else "#0f8105" if d_p<0 else "#6b7280"
-                                d_pos_col = f"<span style='color:{c_pos};font-weight:900'>{d_pos:+d}&ordm;</span>" if cur['pos'] and prev['pos'] else ""
-                                delta_html = f" | {d_pos_col} <span style='color:{c_pts};font-weight:900'>{d_pts:+d}pts</span> <span style='color:{c_g};font-weight:900'>{d_g:+d}G</span> <span style='color:{c_e};font-weight:900'>{d_e:+d}E</span> <span style='color:{c_p};font-weight:900'>{d_p:+d}P</span>"
+                        cur = historial.get(s['temp']); prev = historial.get(temp_orden_asc[idx-1]['temp'])
+                        if not cur or not prev: 
+                            delta_map[s['temp']]=""
+                            continue
+                        d_pos = prev['pos'] - cur['pos']
+                        d_pts = cur['pts'] - prev['pts']
+                        d_g = cur['g'] - prev['g']
+                        d_e = cur['e'] - prev['e']
+                        d_p = cur['p'] - prev['p']
+                        c_pos = "#0f8105" if d_pos>0 else "#dc2626" if d_pos<0 else "#6b7280"
+                        c_pts = "#0f8105" if d_pts>0 else "#dc2626" if d_pts<0 else "#6b7280"
+                        c_g = "#0f8105" if d_g>0 else "#dc2626" if d_g<0 else "#6b7280"
+                        c_e = "#b45309" if d_e!=0 else "#6b7280"
+                        c_p = "#dc2626" if d_p>0 else "#0f8105" if d_p<0 else "#6b7280"
+                        d_pos_col = f"<span style='color:{c_pos};font-weight:900'>{d_pos:+d}&ordm;</span>" if cur['pos'] and prev['pos'] else ""
+                        delta_map[s['temp']] = f" | {d_pos_col} <span style='color:{c_pts};font-weight:900'>{d_pts:+d}pts</span> <span style='color:{c_g};font-weight:900'>{d_g:+d}G</span> <span style='color:{c_e};font-weight:900'>{d_e:+d}E</span> <span style='color:{c_p};font-weight:900'>{d_p:+d}P</span>"
+
+                    # render en orden descendente (mas reciente arriba)
+                    temp_orden_desc = sorted(lista_stats1, key=lambda x: x['temp'], reverse=True)
+                    filas = []
+                    for s in temp_orden_desc:
+                        cur = historial.get(s['temp'])
+                        if not cur: continue
+                        delta_html = delta_map.get(s['temp'],"")
                         linea = f"<div style='font-size:10px;font-family:monospace'><b>{equipo_res.title()}</b> {s['temp']}: <span style='color:#4B0082;font-weight:900'>{cur['pos']}&ordm; {cur['pts']}pts</span> | {cur['g']}G {cur['e']}E {cur['p']}P<span style='font-size:9px'>{delta_html}</span></div>"
                         filas.append(linea)
                     st.caption(f"Resumen {equipo_res}")
@@ -3487,33 +3496,41 @@ with st.expander("📋 Resumen", expanded=False):
                 # === MINI RESUMEN EQ2 CON DELTA ===
                 if stats2:
                     lista_stats2, df_clas_res2, df_eq_total2 = stats2
-                    temp_orden2 = sorted(lista_stats2, key=lambda x: x['temp'])
+                    temp_orden2_asc = sorted(lista_stats2, key=lambda x: x['temp'])
                     historial2 = {}
                     for s in lista_stats2:
                         dft = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season']==s['temp'])]
                         pos = int(dft.sort_values('Jornada').iloc[-1]['Pos']) if not dft.empty else 0
                         historial2[s['temp']] = {'pos':pos,'pts':s['pts_final'],'g':s['n_g'],'e':s['n_e'],'p':s['n_p']}
-                    filas2 = []
-                    for idx, s in enumerate(temp_orden2):
-                        cur = historial2.get(s['temp'])
-                        if not cur:
+
+                    delta_map2 = {}
+                    for idx, s in enumerate(temp_orden2_asc):
+                        if idx==0:
+                            delta_map2[s['temp']]=""
                             continue
-                        delta_html = ""
-                        if idx > 0:
-                            prev = historial2.get(temp_orden2[idx-1]['temp'])
-                            if prev:
-                                d_pos = prev['pos'] - cur['pos']
-                                d_pts = cur['pts'] - prev['pts']
-                                d_g = cur['g'] - prev['g']
-                                d_e = cur['e'] - prev['e']
-                                d_p = cur['p'] - prev['p']
-                                c_pos = "#0f8105" if d_pos>0 else "#dc2626" if d_pos<0 else "#6b7280"
-                                c_pts = "#0f8105" if d_pts>0 else "#dc2626" if d_pts<0 else "#6b7280"
-                                c_g = "#0f8105" if d_g>0 else "#dc2626" if d_g<0 else "#6b7280"
-                                c_e = "#b45309" if d_e!=0 else "#6b7280"
-                                c_p = "#dc2626" if d_p>0 else "#0f8105" if d_p<0 else "#6b7280"
-                                d_pos_col = f"<span style='color:{c_pos};font-weight:900'>{d_pos:+d}&ordm;</span>" if cur['pos'] and prev['pos'] else ""
-                                delta_html = f" | {d_pos_col} <span style='color:{c_pts};font-weight:900'>{d_pts:+d}pts</span> <span style='color:{c_g};font-weight:900'>{d_g:+d}G</span> <span style='color:{c_e};font-weight:900'>{d_e:+d}E</span> <span style='color:{c_p};font-weight:900'>{d_p:+d}P</span>"
+                        cur = historial2.get(s['temp']); prev = historial2.get(temp_orden2_asc[idx-1]['temp'])
+                        if not cur or not prev:
+                            delta_map2[s['temp']]=""
+                            continue
+                        d_pos = prev['pos'] - cur['pos']
+                        d_pts = cur['pts'] - prev['pts']
+                        d_g = cur['g'] - prev['g']
+                        d_e = cur['e'] - prev['e']
+                        d_p = cur['p'] - prev['p']
+                        c_pos = "#0f8105" if d_pos>0 else "#dc2626" if d_pos<0 else "#6b7280"
+                        c_pts = "#0f8105" if d_pts>0 else "#dc2626" if d_pts<0 else "#6b7280"
+                        c_g = "#0f8105" if d_g>0 else "#dc2626" if d_g<0 else "#6b7280"
+                        c_e = "#b45309" if d_e!=0 else "#6b7280"
+                        c_p = "#dc2626" if d_p>0 else "#0f8105" if d_p<0 else "#6b7280"
+                        d_pos_col = f"<span style='color:{c_pos};font-weight:900'>{d_pos:+d}&ordm;</span>" if cur['pos'] and prev['pos'] else ""
+                        delta_map2[s['temp']] = f" | {d_pos_col} <span style='color:{c_pts};font-weight:900'>{d_pts:+d}pts</span> <span style='color:{c_g};font-weight:900'>{d_g:+d}G</span> <span style='color:{c_e};font-weight:900'>{d_e:+d}E</span> <span style='color:{c_p};font-weight:900'>{d_p:+d}P</span>"
+
+                    temp_orden2_desc = sorted(lista_stats2, key=lambda x: x['temp'], reverse=True)
+                    filas2 = []
+                    for s in temp_orden2_desc:
+                        cur = historial2.get(s['temp'])
+                        if not cur: continue
+                        delta_html = delta_map2.get(s['temp'],"")
                         linea = f"<div style='font-size:10px;font-family:monospace'><b>{equipo2_res.title()}</b> {s['temp']}: <span style='color:#4B0082;font-weight:900'>{cur['pos']}&ordm; {cur['pts']}pts</span> | {cur['g']}G {cur['e']}E {cur['p']}P<span style='font-size:9px'>{delta_html}</span></div>"
                         filas2.append(linea)
                     st.caption(f"Resumen {equipo2_res}")
