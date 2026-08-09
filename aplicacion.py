@@ -1215,13 +1215,20 @@ if len(jornadas) > 0:
             st.markdown("<div style='font-size:10px'>%Temp Eq1</div>", unsafe_allow_html=True)
             st.selectbox("temp_eq1", ["-"] + list(range(0, 101, 5)), key='temp_eq1_pct', label_visibility="collapsed")
         # --- LINEA 8: Marcador Parte Eq1 Parte Eq2 % ---
-        marcadores_unicos = sorted(
+        marcadores_ft = sorted(
             (df_final['FTHG'].astype(int).astype(str) + '-' + df_final['FTAG'].astype(int).astype(str)).unique(),
             key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
         )
+        marcadores_ht = sorted(
+            (df_final['HTHG'].astype(int).astype(str) + '-' + df_final['HTAG'].astype(int).astype(str)).unique(),
+            key=lambda s: (int(s.split('-')[0]), int(s.split('-')[1]))
+        )
+        marcadores_1t = [f"{m} 1T" for m in marcadores_ht]
+        marcadores_combinados = ["Todos"] + marcadores_ft + marcadores_1t
+
         l8 = st.columns(5)
-        marcador_filtro = l8[0].selectbox("Marc Eq1", ["Todos"] + marcadores_unicos, key='marcador_filtro')
-        marcador_filtro_eq2 = l8[1].selectbox("Marc Eq2", ["Todos"] + marcadores_unicos, key='marcador_filtro_eq2')
+        marcador_filtro = l8[0].selectbox("Marc Eq1", marcadores_combinados, key='marcador_filtro')
+        marcador_filtro_eq2 = l8[1].selectbox("Marc Eq2", marcadores_combinados, key='marcador_filtro_eq2')
         parte_gol = l8[2].selectbox("Parte Eq1", ["Todo","1T","2T"], key='parte_gol')
         parte_gol_eq2 = l8[3].selectbox("Parte Eq2", ["Todo","1T","2T"], key='parte_gol_eq2')
         with l8[4]:
@@ -1411,8 +1418,12 @@ if len(jornadas) > 0:
         if f"%Clasif:{de_c}-{a_c}%" not in comunes:
             comunes.append(f"%Clasif:{de_c}-{a_c}%")
 
+    # --- LIGAS DE FILTROS DE PARTIDOS ---
+    ligas_txt = ", ".join(liga_sel) if 'liga_sel' in locals() and liga_sel else "Todas"
+
     if eq1_list or eq2_list or comunes or temp_sel:
         txt = "<div style='font-size:10px; line-height:1.3; font-family:monospace; padding:2px 0'>filtros:<br>"
+        txt += f"Ligas: {ligas_txt}<br>"
         txt += f"Temp: {temp_txt}<br>"
         txt += f"J: {j_txt}<br>"
         txt += f"Margen: {margen_txt}<br>"
@@ -1591,14 +1602,26 @@ def _mask_margen(df_in, eq, margen_tipo, parte_tipo, cond_lv):
     return pd.Series(True, index=df_in.index)
 
 def _mask_marcador(df_in, eq, marcador_txt, cond_lv="Todo"):
-    if marcador_txt=="Todos" or df_in.empty: return pd.Series(True, index=df_in.index)
-    gl, gv = map(int, marcador_txt.split('-'))
+    if marcador_txt=="Todos" or df_in.empty:
+        return pd.Series(True, index=df_in.index)
+
+    txt = str(marcador_txt).strip()
+    es_1t = txt.endswith("1T")
+    clean = txt.replace(" 1T","").strip()
+
+    try:
+        gl, gv = map(int, clean.split('-'))
+    except:
+        return pd.Series(True, index=df_in.index)
+
+    col_h, col_a = ('HTHG','HTAG') if es_1t else ('FTHG','FTAG')
+
     if eq=="Ninguno":
-        if cond_lv=="Local": return (df_in['FTHG']==gl) & (df_in['FTAG']==gv)
-        if cond_lv=="Visitante": return (df_in['FTHG']==gv) & (df_in['FTAG']==gl)
-        return ((df_in['FTHG']==gl) & (df_in['FTAG']==gv)) | ((df_in['FTHG']==gv) & (df_in['FTAG']==gl))
+        if cond_lv=="Local": return (df_in[col_h]==gl) & (df_in[col_a]==gv)
+        if cond_lv=="Visitante": return (df_in[col_h]==gv) & (df_in[col_a]==gl)
+        return ((df_in[col_h]==gl) & (df_in[col_a]==gv)) | ((df_in[col_h]==gv) & (df_in[col_a]==gl))
     es_loc = df_in['HomeTeam']==eq
-    return ((es_loc & (df_in['FTHG']==gl) & (df_in['FTAG']==gv)) | (~es_loc & (df_in['FTHG']==gv) & (df_in['FTAG']==gl)))
+    return ((es_loc & (df_in[col_h]==gl) & (df_in[col_a]==gv)) | (~es_loc & (df_in[col_h]==gv) & (df_in[col_a]==gl)))
 
 def _get_base_col(df_in, col, eq, alcance_str, cond_lv="Todo"):
     es_loc = df_in['HomeTeam']==eq if eq!="Ninguno" else None
@@ -1673,37 +1696,105 @@ def filtra_equipo(df_base, eq, cond_lv, res, am, parte, xx, htft, margen, marcad
     df = df[_mask_cuota(df, cuota_tipo, rango_cuotas, eq, cond_lv)]
     return df
 
-# --- APLICACION REAL ---
+# --- APLICACION REAL - V2 INDEPENDIENTE (no rompe nada, solo hace OR) ---
 df_base_h2h = df_final.copy()
 df_base_h2h_lv = df_base_h2h.copy()
 
+def _hay_filtros_eq1_v2():
+    if columna_filtro!="Ninguno" and valor_filtro!="Ninguno": return True
+    if columna_filtro2!="Ninguno" and valor_filtro2!="Ninguno": return True
+    if resultado_filtro!="Ninguno": return True
+    if ambos_marcan!="Todos": return True
+    if xx_filtro!="Todo": return True
+    if htft_filtro!="Todo": return True
+    if margen_filtro!="Todo": return True
+    if marcador_filtro!="Todos": return True
+    if cuota_tipo not in ["Ninguno","Todo"]: return True
+    return False
+
+def _hay_filtros_eq2_v2():
+    if columna_filtro3!="Ninguno" and valor_filtro3!="Ninguno": return True
+    if resultado_filtro_eq2!="Ninguno": return True
+    if ambos_marcan_eq2!="Todos": return True
+    if margen_filtro_eq2!="Todo": return True
+    if marcador_filtro_eq2!="Todos": return True
+    return False
+
+def _filtra_global_eq1_v2(df_in):
+    df = df_in.copy()
+    df = df[_mask_1x2(df, "Ninguno", resultado_filtro, condicion_filtro)]
+    df = df[_mask_am(df, ambos_marcan, parte_gol, "Ninguno", condicion_filtro)]
+    df = df[_mask_xx(df, "Ninguno", xx_filtro, condicion_filtro)]
+    df = df[_mask_htft(df, "Ninguno", htft_filtro, condicion_filtro)]
+    df = df[_mask_margen(df, "Ninguno", margen_filtro, parte_gol, condicion_filtro)]
+    df = df[_mask_marcador(df, "Ninguno", marcador_filtro, condicion_filtro)]
+    df = df[_mask_columna(df, "Ninguno", columna_filtro, operador_filtro, valor_filtro, alcance_filtro, condicion_filtro)]
+    df = df[_mask_columna(df, "Ninguno", columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, condicion_filtro)]
+    df = df[_mask_cuota(df, cuota_tipo, rango_cuotas, "Ninguno", condicion_filtro)]
+    return df
+
+def _filtra_global_eq2_v2(df_in):
+    df = df_in.copy()
+    df = df[_mask_1x2(df, "Ninguno", resultado_filtro_eq2, condicion_filtro3)]
+    df = df[_mask_am(df, ambos_marcan_eq2, parte_gol_eq2, "Ninguno", condicion_filtro3)]
+    df = df[_mask_margen(df, "Ninguno", margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
+    df = df[_mask_marcador(df, "Ninguno", marcador_filtro_eq2, condicion_filtro3)]
+    df = df[_mask_columna(df, "Ninguno", columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, condicion_filtro3)]
+    df = df[_mask_cuota(df, cuota_tipo, rango_cuotas, "Ninguno", condicion_filtro3)]
+    return df
+
+dfs_v2 = []
+
+# CASO 1: los dos equipos puestos -> cada uno con SUS filtros solamente
 if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
     df_eq1 = filtra_equipo(df_base_h2h, equipo_filtro, condicion_filtro, resultado_filtro, ambos_marcan, parte_gol, xx_filtro, htft_filtro, margen_filtro, marcador_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, "Ninguno","=","Ninguno","Todo", cuota_tipo, rango_cuotas)
-    df_eq2 = filtra_equipo(df_base_h2h, equipo2_filtro, condicion_filtro3, resultado_filtro_eq2, ambos_marcan_eq2, parte_gol_eq2, xx_filtro, htft_filtro, margen_filtro_eq2, marcador_filtro_eq2, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, "Ninguno","=","Ninguno","Todo", "Ninguno","=","Ninguno","Todo", "Ninguno", rango_cuotas)
-    df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
-    df_final = pd.concat([df_eq1, df_eq2]).drop_duplicates()
+    df_eq2 = filtra_equipo(df_base_h2h, equipo2_filtro, condicion_filtro3, resultado_filtro_eq2, ambos_marcan_eq2, parte_gol_eq2, xx_filtro, htft_filtro, margen_filtro_eq2, marcador_filtro_eq2, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, "Ninguno","=","Ninguno","Todo", "Ninguno","=","Ninguno","Todo", cuota_tipo, rango_cuotas)
+    dfs_v2 = [df_eq1, df_eq2]
+
+# CASO 2: solo Eq1 con equipo -> Eq1 con sus filtros + si Eq2 tiene filtros globales, añadelos también (OR)
 elif equipo_filtro!="Ninguno":
-    df_final = filtra_equipo(df_base_h2h, equipo_filtro, condicion_filtro, resultado_filtro, ambos_marcan, parte_gol, xx_filtro, htft_filtro, margen_filtro, marcador_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, cuota_tipo, rango_cuotas)
+    df_eq1 = filtra_equipo(df_base_h2h, equipo_filtro, condicion_filtro, resultado_filtro, ambos_marcan, parte_gol, xx_filtro, htft_filtro, margen_filtro, marcador_filtro, columna_filtro, operador_filtro, valor_filtro, alcance_filtro, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, "Ninguno","=","Ninguno","Todo", cuota_tipo, rango_cuotas)
+    dfs_v2.append(df_eq1)
+    if _hay_filtros_eq2_v2():
+        dfs_v2.append(_filtra_global_eq2_v2(df_base_h2h))
+
+# CASO 3: solo Eq2 con equipo -> igual
 elif equipo2_filtro!="Ninguno":
-    df_final = filtra_equipo(df_base_h2h, equipo2_filtro, condicion_filtro3, resultado_filtro_eq2, ambos_marcan_eq2, parte_gol_eq2, xx_filtro, htft_filtro, margen_filtro_eq2, marcador_filtro_eq2, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, "Ninguno","=","Ninguno","Todo", "Ninguno","=","Ninguno","Todo", cuota_tipo, rango_cuotas)
+    df_eq2 = filtra_equipo(df_base_h2h, equipo2_filtro, condicion_filtro3, resultado_filtro_eq2, ambos_marcan_eq2, parte_gol_eq2, xx_filtro, htft_filtro, margen_filtro_eq2, marcador_filtro_eq2, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, "Ninguno","=","Ninguno","Todo", "Ninguno","=","Ninguno","Todo", cuota_tipo, rango_cuotas)
+    dfs_v2.append(df_eq2)
+    if _hay_filtros_eq1_v2():
+        dfs_v2.append(_filtra_global_eq1_v2(df_base_h2h))
+
+# CASO 4: ningún equipo -> si hay filtros en Eq1 y Eq2, une ambos (OR), si no, comportamiento antiguo
 else:
-    df_final = df_base_h2h.copy()
-    df_final = df_final[_mask_1x2(df_final, "Ninguno", "Ninguno", condicion_filtro)]
-    df_final = df_final[_mask_am(df_final, ambos_marcan, parte_gol, "Ninguno", condicion_filtro)]
-    if ambos_marcan_eq2!="Todos":
-        df_final = df_final[_mask_am(df_final, ambos_marcan_eq2, parte_gol_eq2, "Ninguno", condicion_filtro3)]
-    df_final = df_final[_mask_xx(df_final, "Ninguno", xx_filtro, condicion_filtro)]
-    df_final = df_final[_mask_htft(df_final, "Ninguno", htft_filtro, condicion_filtro)]
-    df_final = df_final[_mask_margen(df_final, "Ninguno", margen_filtro, parte_gol, condicion_filtro)]
-    if margen_filtro_eq2!="Todo":
-        df_final = df_final[_mask_margen(df_final, "Ninguno", margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
-    df_final = df_final[_mask_marcador(df_final, "Ninguno", marcador_filtro, condicion_filtro)]
-    if marcador_filtro_eq2!="Todos":
-        df_final = df_final[_mask_marcador(df_final, "Ninguno", marcador_filtro_eq2, condicion_filtro3)]
-    df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro, operador_filtro, valor_filtro, alcance_filtro, condicion_filtro)]
-    df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, condicion_filtro)]
-    df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, condicion_filtro)]
-    df_final = df_final[_mask_cuota(df_final, cuota_tipo, rango_cuotas, "Ninguno", condicion_filtro)]
+    if _hay_filtros_eq1_v2() and _hay_filtros_eq2_v2():
+        dfs_v2 = [_filtra_global_eq1_v2(df_base_h2h), _filtra_global_eq2_v2(df_base_h2h)]
+    elif _hay_filtros_eq1_v2():
+        dfs_v2 = [_filtra_global_eq1_v2(df_base_h2h)]
+    elif _hay_filtros_eq2_v2():
+        dfs_v2 = [_filtra_global_eq2_v2(df_base_h2h)]
+    else:
+        df_final = df_base_h2h.copy()
+        df_final = df_final[_mask_1x2(df_final, "Ninguno", "Ninguno", condicion_filtro)]
+        df_final = df_final[_mask_am(df_final, ambos_marcan, parte_gol, "Ninguno", condicion_filtro)]
+        if ambos_marcan_eq2!="Todos":
+            df_final = df_final[_mask_am(df_final, ambos_marcan_eq2, parte_gol_eq2, "Ninguno", condicion_filtro3)]
+        df_final = df_final[_mask_xx(df_final, "Ninguno", xx_filtro, condicion_filtro)]
+        df_final = df_final[_mask_htft(df_final, "Ninguno", htft_filtro, condicion_filtro)]
+        df_final = df_final[_mask_margen(df_final, "Ninguno", margen_filtro, parte_gol, condicion_filtro)]
+        if margen_filtro_eq2!="Todo":
+            df_final = df_final[_mask_margen(df_final, "Ninguno", margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
+        df_final = df_final[_mask_marcador(df_final, "Ninguno", marcador_filtro, condicion_filtro)]
+        if marcador_filtro_eq2!="Todos":
+            df_final = df_final[_mask_marcador(df_final, "Ninguno", marcador_filtro_eq2, condicion_filtro3)]
+        df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro, operador_filtro, valor_filtro, alcance_filtro, condicion_filtro)]
+        df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, condicion_filtro)]
+        df_final = df_final[_mask_columna(df_final, "Ninguno", columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, condicion_filtro)]
+        df_final = df_final[_mask_cuota(df_final, cuota_tipo, rango_cuotas, "Ninguno", condicion_filtro)]
+
+if dfs_v2:
+    # Une con OR y quita duplicados - visualización intacta
+    df_final = pd.concat(dfs_v2).drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League']).sort_values('Date')
 
 # --- FILTRO %Clasif Eq1 FIX DEFINITIVO ---
 if st.session_state.get('clasif_eq1_modo', '-') == "Rango" and not df_final.empty:
@@ -2185,10 +2276,51 @@ if len(df_final) > 0:
                         partes_txt = ",".join([f"J{j}" for j in df_racha_eq['Jornada'].tolist()])
                         texto_seg = f"<div style='font-size:9px;font-weight:900;margin-top:4px;color:#0A2342;line-height:1.2'>1# {partes_txt}</div>"
 
+                    # --- MINI RESUMEN G/E/P + AM GENERAL ---
+                    try:
+                        df_all = base_total_team
+                        es_loc_all = df_all['HomeTeam']==eq
+                        tot_all = len(df_all)
+                        tot_c = int(es_loc_all.sum())
+                        tot_f = int(tot_all - tot_c)
+
+                        gana_all = ((es_loc_all) & (df_all['FTHG']>df_all['FTAG'])) | ((~es_loc_all) & (df_all['FTAG']>df_all['FTHG']))
+                        pierde_all = ((es_loc_all) & (df_all['FTHG']<df_all['FTAG'])) | ((~es_loc_all) & (df_all['FTAG']<df_all['FTHG']))
+                        empata_all = ~(gana_all | pierde_all)
+
+                        g_all = int(gana_all.sum()); e_all = int(empata_all.sum()); p_all = int(pierde_all.sum())
+                        g_c = int((gana_all & es_loc_all).sum()); g_f = int((gana_all & ~es_loc_all).sum())
+                        e_c = int((empata_all & es_loc_all).sum()); e_f = int((empata_all & ~es_loc_all).sum())
+                        p_c = int((pierde_all & es_loc_all).sum()); p_f = int((pierde_all & ~es_loc_all).sum())
+
+                        resumen_gep = f"<div style='font-size:8px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'>" \
+                                      f"<span style='color:#0f8105;font-weight:900'>G:{g_all}/{tot_all}</span> <span style='color:#555'>(c{g_c}/{tot_c} | f{g_f}/{tot_f})</span> | " \
+                                      f"<span style='color:#0A2342;font-weight:900'>E:{e_all}/{tot_all}</span> <span style='color:#555'>(c{e_c}/{tot_c} | f{e_f}/{tot_f})</span> | " \
+                                      f"<span style='color:#f31818;font-weight:900'>P:{p_all}/{tot_all}</span> <span style='color:#555'>(c{p_c}/{tot_c} | f{p_f}/{tot_f})</span>" \
+                                      f"</div>"
+
+                        # --- AM SI/NO ---
+                        am_all = (df_all['FTHG']>0) & (df_all['FTAG']>0)
+                        si_all = int(am_all.sum())
+                        no_all = int(tot_all - si_all)
+                        si_c = int((am_all & es_loc_all).sum()); si_f = int(si_all - si_c)
+                        no_c = int(tot_c - si_c); no_f = int(tot_f - si_f)
+
+                        resumen_am = f"<div style='font-size:8px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'>" \
+                                     f"<span style='font-weight:900'>Si:{si_all}/{tot_all}</span> <span style='color:#555'>(c{si_c}/{tot_c} | f{si_f}/{tot_f})</span> | " \
+                                     f"<span style='font-weight:900'>No:{no_all}/{tot_all}</span> <span style='color:#555'>(c{no_c}/{tot_c} | f{no_f}/{tot_f})</span>" \
+                                     f"</div>"
+
+                    except:
+                        resumen_gep = ""
+                        resumen_am = ""
+
                     html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:1px solid #000;font-family:monospace;color:#000'>
 <div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}%</div>
+{resumen_gep}
 <div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 3px 0'>{racha_am}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{racha_am}</div>
+{resumen_am}
 {texto_seg}
 <div style='margin-top:4px'>{jors}</div>
 </div>"""
