@@ -232,6 +232,13 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         a_pos = int(first_row.get('AwayPosPrev', 0))
         es_local = first_row['HomeTeam'] == equipo
 
+        # --- NUEVO: rojas del equipo seleccionado ---
+        try:
+            rojas_eq = int(first_row['HR']) if es_local else int(first_row['AR'])
+        except:
+            rojas_eq = 0
+        rojo_html = f"<span style='color:#dc2626;font-weight:900'> {' -'*rojas_eq}</span>" if rojas_eq>0 else ""
+
         if es_local:
             htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG'])
             ftgf, ftgc = real_home, real_away
@@ -245,9 +252,9 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 
         MORADO = "#581C87"
         if es_local:
-            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{am}"
         else:
-            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{am}"
 
         es_h2h = False
         if rival:
@@ -809,11 +816,20 @@ def calcular_estado_jornada(df):
     df['HPts'] = np.where(df['FTR']=='H', 3, np.where(df['FTR']=='D', 1, 0))
     df['APts'] = np.where(df['FTR']=='A', 3, np.where(df['FTR']=='D', 1, 0))
 
-    # 3) Puntos previos
-    df['HomePtsPrev'] = df.groupby(['League','Season','HomeTeam'])['HPts']\
-                        .transform(lambda x: x.cumsum().shift(fill_value=0))
-    df['AwayPtsPrev'] = df.groupby(['League','Season','AwayTeam'])['APts']\
-                        .transform(lambda x: x.cumsum().shift(fill_value=0))
+    # 3) Puntos previos - FIX: acumulado TOTAL por equipo (casa+fuera)
+    _pts_acum = {}
+    _home_prev = {}
+    _away_prev = {}
+    for _idx in df.sort_values(['League','Season','Date','Jornada']).index:
+        _r = df.loc[_idx]
+        _k_ht = (_r['League'], _r['Season'], _r['HomeTeam'])
+        _k_at = (_r['League'], _r['Season'], _r['AwayTeam'])
+        _home_prev[_idx] = _pts_acum.get(_k_ht, 0)
+        _away_prev[_idx] = _pts_acum.get(_k_at, 0)
+        _pts_acum[_k_ht] = _pts_acum.get(_k_ht, 0) + int(_r['HPts'])
+        _pts_acum[_k_at] = _pts_acum.get(_k_at, 0) + int(_r['APts'])
+    df['HomePtsPrev'] = pd.Series(_home_prev).reindex(df.index).fillna(0).astype(int)
+    df['AwayPtsPrev'] = pd.Series(_away_prev).reindex(df.index).fillna(0).astype(int)
 
     # 4) Posiciones previas con numpy
     home_pos = pd.Series(0, index=df.index, dtype=int)
@@ -1626,27 +1642,87 @@ def _mask_marcador(df_in, eq, marcador_txt, cond_lv="Todo"):
 def _get_base_col(df_in, col, eq, alcance_str, cond_lv="Todo"):
     es_loc = df_in['HomeTeam']==eq if eq!="Ninguno" else None
     tipo, val_fijo = _parse_alcance(alcance_str)
-    def _retorna(vh, va, es_loc, cond_lv):
-        if eq!="Ninguno":
-            if tipo=="AF": return np.where(es_loc, vh, va)
-            if tipo=="C": return np.where(es_loc, va, vh)
-            return vh+va if col in ['GolesHT','GolesTotales','Goles2T','corneTot'] else np.where(es_loc, vh, va)
-        else:
-            if cond_lv=="Local":
-                if tipo=="AF": return vh
-                if tipo=="C": return va
-                return vh+va if col in ['GolesHT','GolesTotales'] else vh
-            elif cond_lv=="Visitante":
-                if tipo=="AF": return va
-                if tipo=="C": return vh
-                return vh+va if col in ['GolesHT','GolesTotales'] else va
+
+    # Mapa de totales -> (casa, fuera) real
+    TOT_MAP = {
+        'corneTot':('HC','AC'),
+        'tirosTot':('HS','AS'),
+        'tirosPuertaTot':('HST','AST'),
+        'faltasTot':('HF','AF'),
+        'TargAmTot':('HY','AY'),
+        'TargRojTot':('HR','AR'),
+        'GolesTotales':('FTHG','FTAG'),
+        'GolesHT':('HTHG','HTAG'),
+    }
+
+    def _retorna(vh, va, es_loc, cond_lv, es_total=False, af_arr=None, c_arr=None, tot_arr=None):
+        if es_total:
+            # Para totales, AF = del equipo, C = del rival, Todo = suma
+            if eq!="Ninguno":
+                if tipo=="AF": return af_arr
+                if tipo=="C": return c_arr
+                return tot_arr
             else:
-                if tipo=="AF": return np.maximum(vh, va)
-                if tipo=="C": return np.minimum(vh, va)
-                return vh+va
-    if col=='GolesHT': vh,va = df_in['HTHG'].values, df_in['HTAG'].values
+                if cond_lv=="Local":
+                    if tipo=="AF": return vh
+                    if tipo=="C": return va
+                    return vh+va
+                elif cond_lv=="Visitante":
+                    if tipo=="AF": return va
+                    if tipo=="C": return vh
+                    return vh+va
+                else:
+                    if tipo=="AF": return np.maximum(vh, va)
+                    if tipo=="C": return np.minimum(vh, va)
+                    return vh+va
+        else:
+            if eq!="Ninguno":
+                if tipo=="AF": return np.where(es_loc, vh, va)
+                if tipo=="C": return np.where(es_loc, va, vh)
+                return vh+va if col in ['GolesHT','GolesTotales','Goles2T','corneTot'] else np.where(es_loc, vh, va)
+            else:
+                if cond_lv=="Local":
+                    if tipo=="AF": return vh
+                    if tipo=="C": return va
+                    return vh+va if col in ['GolesHT','GolesTotales'] else vh
+                elif cond_lv=="Visitante":
+                    if tipo=="AF": return va
+                    if tipo=="C": return vh
+                    return vh+va if col in ['GolesHT','GolesTotales'] else va
+                else:
+                    if tipo=="AF": return np.maximum(vh, va)
+                    if tipo=="C": return np.minimum(vh, va)
+                    return vh+va
+
+    # Caso especial totales
+    if col in TOT_MAP:
+        cH, cA = TOT_MAP[col]
+        if col == 'Goles2T':
+            vh = (df_in['FTHG']-df_in['HTHG']).values
+            va = (df_in['FTAG']-df_in['HTAG']).values
+        elif col == 'GolesHT':
+            vh = df_in['HTHG'].values
+            va = df_in['HTAG'].values
+        elif col == 'GolesTotales':
+            vh = df_in['FTHG'].values
+            va = df_in['FTAG'].values
+        else:
+            vh = df_in[cH].values if cH in df_in.columns else np.zeros(len(df_in))
+            va = df_in[cA].values if cA in df_in.columns else np.zeros(len(df_in))
+        # Calculo AF/C/TOT correcto
+        if eq!="Ninguno":
+            af_arr = np.where(es_loc, vh, va)
+            c_arr = np.where(es_loc, va, vh)
+            tot_arr = vh+va
+        else:
+            af_arr = vh
+            c_arr = va
+            tot_arr = vh+va
+        return _retorna(vh, va, es_loc, cond_lv, es_total=True, af_arr=af_arr, c_arr=c_arr, tot_arr=tot_arr), val_fijo
+
+    if col=='Goles2T': vh,va = (df_in['FTHG']-df_in['HTHG']).values, (df_in['FTAG']-df_in['HTAG']).values
+    elif col=='GolesHT': vh,va = df_in['HTHG'].values, df_in['HTAG'].values
     elif col=='GolesTotales': vh,va = df_in['FTHG'].values, df_in['FTAG'].values
-    elif col=='Goles2T': vh,va = (df_in['FTHG']-df_in['HTHG']).values, (df_in['FTAG']-df_in['HTAG']).values
     else:
         mapa={'HC':'AC','AC':'HC','HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
         contra=mapa.get(col,col)
@@ -2254,75 +2330,78 @@ if len(df_final) > 0:
                     # --- FIJO DENTRO DE TEMP SELECCIONADA ---
                     df_tmp = df_original[df_original['Season'].isin(temp_sel)] if 'temp_sel' in locals() and temp_sel else df_original
                     df_eq_fijo = df_tmp[(df_tmp['HomeTeam']==eq) | (df_tmp['AwayTeam']==eq)].sort_values('Date')
-                    racha = racha_comprimida_html(df_eq_fijo, eq) if not df_eq_fijo.empty else ""
-                    racha_am = racha_ambos_marcan_html(df_eq_fijo) if not df_eq_fijo.empty else ""
-                    jors = jornadas_conteo(part_ok['Jornada'], part_ok, eq, rival, parte_actual) if not part_ok.empty else ""
 
                                         # --- TEXTO SEGUIDOS - V9 USA DICT_RACHAS DIRECTO ---
                     texto_seg = ""
                     seg_val_str = str(st.session_state.get('seguidos_filtro', '-'))
                     if seg_val_str not in ["-", ""] and eq in st.session_state.get('dict_ultimos', {}):
                         df_racha_eq = st.session_state.dict_ultimos[eq].sort_values('Date')
-                        # Separa rachas que no son consecutivas en el calendario
                         rachas_j = []
                         cur = [int(df_racha_eq.iloc[0]['Jornada'])]
                         for i in range(1, len(df_racha_eq)):
-                            # si la diferencia de fecha es > 15 dias, es otra racha (opcional)
-                            # aqui solo separamos por que no sean consecutivas en df_eq original
-                            # Para simplificar, cada DataFrame en dict_ultimos ya es una racha completa
                             cur.append(int(df_racha_eq.iloc[i]['Jornada']))
-                        # Como dict_ultimos ya guarda rachas de >=n_seg, todo df_racha_eq es 1 o varias rachas pegadas
-                        # Lo mostramos como una sola lista
                         partes_txt = ",".join([f"J{j}" for j in df_racha_eq['Jornada'].tolist()])
                         texto_seg = f"<div style='font-size:9px;font-weight:900;margin-top:4px;color:#0A2342;line-height:1.2'>1# {partes_txt}</div>"
 
-                    # --- MINI RESUMEN G/E/P + AM GENERAL ---
-                    try:
-                        df_all = base_total_team
-                        es_loc_all = df_all['HomeTeam']==eq
-                        tot_all = len(df_all)
-                        tot_c = int(es_loc_all.sum())
-                        tot_f = int(tot_all - tot_c)
+                    # --- NUEVO: DIVIDIDO POR TEMPORADA CON POS/PTS POR TEMP ---
+                    seasons_list = sorted(base_total_team['Season'].dropna().unique().tolist())
+                    if 'temp_sel' in locals() and temp_sel:
+                        seasons_list = [s for s in temp_sel if s in seasons_list]
 
-                        gana_all = ((es_loc_all) & (df_all['FTHG']>df_all['FTAG'])) | ((~es_loc_all) & (df_all['FTAG']>df_all['FTHG']))
-                        pierde_all = ((es_loc_all) & (df_all['FTHG']<df_all['FTAG'])) | ((~es_loc_all) & (df_all['FTAG']<df_all['FTHG']))
-                        empata_all = ~(gana_all | pierde_all)
+                    html_temporadas = ""
+                    for _season in seasons_list:
+                        _df_season = base_total_team[base_total_team['Season']==_season]
+                        _part_ok_season = part_ok[part_ok['Season']==_season] if not part_ok.empty and 'Season' in part_ok.columns else part_ok
+                        _df_eq_fijo_season = df_eq_fijo[df_eq_fijo['Season']==_season] if not df_eq_fijo.empty and 'Season' in df_eq_fijo.columns else df_eq_fijo
 
-                        g_all = int(gana_all.sum()); e_all = int(empata_all.sum()); p_all = int(pierde_all.sum())
-                        g_c = int((gana_all & es_loc_all).sum()); g_f = int((gana_all & ~es_loc_all).sum())
-                        e_c = int((empata_all & es_loc_all).sum()); e_f = int((empata_all & ~es_loc_all).sum())
-                        p_c = int((pierde_all & es_loc_all).sum()); p_f = int((pierde_all & ~es_loc_all).sum())
+                        _racha = racha_comprimida_html(_df_eq_fijo_season, eq) if not _df_eq_fijo_season.empty else ""
+                        _racha_am = racha_ambos_marcan_html(_df_eq_fijo_season) if not _df_eq_fijo_season.empty else ""
+                        _jors = jornadas_conteo(_part_ok_season['Jornada'], _part_ok_season, eq, rival, parte_actual) if not _part_ok_season.empty else ""
 
-                        resumen_gep = f"<div style='font-size:8px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'>" \
-                                      f"<span style='color:#0f8105;font-weight:900'>G:{g_all}/{tot_all}</span> <span style='color:#555'>(c{g_c}/{tot_c} | f{g_f}/{tot_f})</span> | " \
-                                      f"<span style='color:#0A2342;font-weight:900'>E:{e_all}/{tot_all}</span> <span style='color:#555'>(c{e_c}/{tot_c} | f{e_f}/{tot_f})</span> | " \
-                                      f"<span style='color:#f31818;font-weight:900'>P:{p_all}/{tot_all}</span> <span style='color:#555'>(c{p_c}/{tot_c} | f{p_f}/{tot_f})</span>" \
-                                      f"</div>"
+                        # Pos y Pts finales de ESA temporada (no total)
+                        try:
+                            _d_clas = df_clas_base[(df_clas_base['Equipo']==eq) & (df_clas_base['Season']==_season)]
+                            if not _d_clas.empty:
+                                _d_last = _d_clas.sort_values('Jornada').iloc[-1]
+                                _pos_txt = f"{int(_d_last['Pos'])}º {int(_d_last['Pts'])}pts"
+                            else:
+                                _pos_txt = "Xº Xpts"
+                        except:
+                            _pos_txt = "Xº Xpts"
 
-                        # --- AM SI/NO ---
-                        am_all = (df_all['FTHG']>0) & (df_all['FTAG']>0)
-                        si_all = int(am_all.sum())
-                        no_all = int(tot_all - si_all)
-                        si_c = int((am_all & es_loc_all).sum()); si_f = int(si_all - si_c)
-                        no_c = int(tot_c - si_c); no_f = int(tot_f - si_f)
+                        try:
+                            _es_loc = _df_season['HomeTeam']==eq
+                            _tot = len(_df_season)
+                            _tot_c = int(_es_loc.sum()); _tot_f = int(_tot - _tot_c)
+                            _gana = ((_es_loc) & (_df_season['FTHG']>_df_season['FTAG'])) | ((~_es_loc) & (_df_season['FTAG']>_df_season['FTHG']))
+                            _pierde = ((_es_loc) & (_df_season['FTHG']<_df_season['FTAG'])) | ((~_es_loc) & (_df_season['FTAG']<_df_season['FTHG']))
+                            _empata = ~(_gana | _pierde)
+                            _g_all = int(_gana.sum()); _e_all = int(_empata.sum()); _p_all = int(_pierde.sum())
+                            _g_c = int((_gana & _es_loc).sum()); _g_f = int(_g_all - _g_c)
+                            _e_c = int((_empata & _es_loc).sum()); _e_f = int(_e_all - _e_c)
+                            _p_c = int((_pierde & _es_loc).sum()); _p_f = int(_p_all - _p_c)
+                            _resumen_gep = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'><span style='color:#0f8105;font-weight:900'>G:{_g_all}/{_tot}</span> <span style='color:#000'>(c{_g_c}/{_tot_c} | f{_g_f}/{_tot_f})</span> | <span style='color:#0A2342;font-weight:900'>E:{_e_all}/{_tot}</span> <span style='color:#000'>(c{_e_c}/{_tot_c} | f{_e_f}/{_tot_f})</span> | <span style='color:#f31818;font-weight:900'>P:{_p_all}/{_tot}</span> <span style='color:#000'>(c{_p_c}/{_tot_c} | f{_p_f}/{_tot_f})</span></div>"
+                            _am = (_df_season['FTHG']>0) & (_df_season['FTAG']>0)
+                            _si_all = int(_am.sum()); _no_all = int(_tot - _si_all)
+                            _si_c = int((_am & _es_loc).sum()); _si_f = int(_si_all - _si_c)
+                            _no_c = int(_tot_c - _si_c); _no_f = int(_tot_f - _si_f)
+                            _resumen_am = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>Si:{_si_all}/{_tot}</span> <span style='color:#000'>(c{_si_c}/{_tot_c} | f{_si_f}/{_tot_f})</span> | <span style='font-weight:900'>No:{_no_all}/{_tot}</span> <span style='color:#000'>(c{_no_c}/{_tot_c} | f{_no_f}/{_tot_f})</span></div>"
+                        except:
+                            _resumen_gep = ""; _resumen_am = ""; _tot=0
 
-                        resumen_am = f"<div style='font-size:8px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'>" \
-                                     f"<span style='font-weight:900'>Si:{si_all}/{tot_all}</span> <span style='color:#555'>(c{si_c}/{tot_c} | f{si_f}/{tot_f})</span> | " \
-                                     f"<span style='font-weight:900'>No:{no_all}/{tot_all}</span> <span style='color:#555'>(c{no_c}/{tot_c} | f{no_f}/{tot_f})</span>" \
-                                     f"</div>"
+                        html_temporadas += f"""<div style='background:#FFFFFF'>
+<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
+{_resumen_gep}
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
+{_resumen_am}
+<div style='margin-top:4px'>{_jors}</div>
+</div>"""
 
-                    except:
-                        resumen_gep = ""
-                        resumen_am = ""
-
-                    html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:1px solid #000;font-family:monospace;color:#000'>
-<div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}%</div>
-{resumen_gep}
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{racha_am}</div>
-{resumen_am}
+                    html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:2px solid #000;font-family:monospace;color:#000'>
+<div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}% (TOTAL {len(seasons_list)} temps)</div>
 {texto_seg}
-<div style='margin-top:4px'>{jors}</div>
+{html_temporadas}
 </div>"""
                     if eq == equipo_filtro: datos_eq1.append((pct, hits, eq, html))
                     elif eq == equipo2_filtro: datos_eq2.append((pct, hits, eq, html))
@@ -3329,7 +3408,7 @@ def guardar_agenda(data):
 
 @st.fragment
 def mostrar_agenda():
-    with st.expander("🗓️ Agenda Apuestas", expanded=False):
+    with st.expander("🗓 Agenda Apuestas", expanded=False):
         agenda_data = cargar_agenda()
         banca_inicial = st.number_input("💰 Banca inicial €", 0.0, 1000000.0,
                                        float(agenda_data.get("banca_inicial", 1000)), 10.0,
@@ -3440,7 +3519,7 @@ def mostrar_agenda():
                 col1.caption(f"{ap['fecha']}")
                 col2.write(f"**{ap['partido']}** {ap['marcador']} · **{ap.get('detalle','')}** · min {ap.get('minuto',0)}' · {ap.get('tipo','')}")
                 col3.write(f"{ap['stake']}€ @ {ap['cuota']} → **{ap['resultado']}**")
-                if col4.button("🗑️", key=f"del_{ap['id']}"):
+                if col4.button("🗑", key=f"del_{ap['id']}"):
                     # Borrado rápido sin rerun completo
                     agenda_data["apuestas"] = [a for a in apuestas if a['id']!= ap['id']]
                     guardar_agenda(agenda_data)
@@ -3821,3 +3900,5 @@ with st.expander("📋 Resumen", expanded=False):
         if st.button("Cerrar resumen", key="cerrar_resumen"):
             st.session_state.resumen_buscado = False
             st.rerun()
+
+
