@@ -981,56 +981,32 @@ def limpiar_filtros():
 
 ######"Filtros de partidos"
 
+
+
 with st.expander("Filtros de partidos", expanded=False):
     ligas_disponibles = sorted(df['League'].unique())
     temporadas_disponibles = sorted(df['Season'].unique())
 
-    if 'filtro_liga_main' not in st.session_state or not st.session_state.filtro_liga_main:
-        st.session_state.filtro_liga_main = [ligas_disponibles[0]] if ligas_disponibles else []
-    if 'filtro_temp_main' not in st.session_state or not st.session_state.filtro_temp_main:
-        st.session_state.filtro_temp_main = [temporadas_disponibles[-1]] if temporadas_disponibles else []
-    st.session_state.filtro_liga_main = [x for x in st.session_state.filtro_liga_main if x in ligas_disponibles]
-    st.session_state.filtro_temp_main = [x for x in st.session_state.filtro_temp_main if x in temporadas_disponibles]
-    if not st.session_state.filtro_liga_main and ligas_disponibles:
-        st.session_state.filtro_liga_main = [ligas_disponibles[0]]
-    if not st.session_state.filtro_temp_main and temporadas_disponibles:
-        st.session_state.filtro_temp_main = [temporadas_disponibles[-1]]
-
     st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)}")
 
     st.markdown("**Liga**")
-    liga_sel = st.multiselect("Liga", ligas_disponibles, format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main")
+    liga_sel = st.multiselect("Liga", ligas_disponibles, default=[ligas_disponibles[0]] if ligas_disponibles else [],
+        format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main")
 
     st.markdown("**Temporada**")
-    temp_sel = st.multiselect("Temporada", temporadas_disponibles, label_visibility="collapsed", key="filtro_temp_main")
+    temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=[temporadas_disponibles[-1]] if temporadas_disponibles else [], label_visibility="collapsed", key="filtro_temp_main")
     modo_vista = "Jornadas"
 
-    if not liga_sel or not temp_sel:
-        st.warning("Selecciona al menos 1 liga y 1 temporada")
-        df_fil = pd.DataFrame()
-        df_base = pd.DataFrame()
-        df_clas_base = pd.DataFrame()
-    else:
-        df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
-        if df_fil.empty:
-            st.info("No hay partidos para esa combinación. Cambia liga/temporada.")
-            df_base = pd.DataFrame()
-            df_clas_base = pd.DataFrame()
-        else:
-            with st.spinner('Calculando clasificación...'):
-                df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
+    df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
 
+    if df_fil.empty:
+        st.stop()
 
-########
     # calcular_estado_jornada_rapido eliminado - usamos get_df_base_calculado (1 solo cache)
 
 
     with st.spinner('Calculando clasificación...'):
         df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
-
-
-
-#####
 
 
     df_final = df_base.copy()
