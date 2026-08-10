@@ -1425,9 +1425,11 @@ if len(jornadas) > 0:
         else:
             comunes.append(f"Ult:{ultimos_part_filtro}")
 
-    # --- AÑADIDO TEMP, J, MARGEN Y SEGUIDOS - FIX MOSTRAR SIEMPRE ---
+    # --- AÑADIDO TEMP, J, ULTIMAS, MARGEN Y SEGUIDOS - FIX MOSTRAR SIEMPRE ---
     temp_txt = ", ".join(temp_sel) if 'temp_sel' in locals() and temp_sel else "-"
     j_txt = f"J{rango_jornadas[0]} - J{rango_jornadas[1]}" if 'rango_jornadas' in locals() else "-"
+    ult_val = str(st.session_state.get('ultimas_jornadas_filtro', '-'))
+    ult_txt = "-" if ult_val=="-" or ult_val=="" else f"Ult {ult_val}J"
 
     margen_resumen = []
     if 'margen_filtro' in locals() and margen_filtro!= "Todo":
@@ -1440,7 +1442,6 @@ if len(jornadas) > 0:
     seg_val = str(st.session_state.get('seguidos_filtro', '-'))
     seguidos_txt = "-" if seg_val=="-" or seg_val=="" else f"{seg_val} seguidos"
     if seg_val!="-" and seg_val!="":
-        # Evita duplicados si ya estaba
         if f"Seg:{seg_val}" not in comunes:
             comunes.append(f"Seg:{seg_val}")
 
@@ -1461,11 +1462,11 @@ if len(jornadas) > 0:
         txt += f"Ligas: {ligas_txt}<br>"
         txt += f"Temp: {temp_txt}<br>"
         txt += f"J: {j_txt}<br>"
+        txt += f"Ultimas jornadas: {ult_txt}<br>"
         txt += f"Margen: {margen_txt}<br>"
         txt += f"%Clasif Eq1: {clasif_resumen_txt}<br>"
         if eq1_list:
             txt += "eq1: " + " | ".join(eq1_list) + "<br>"
-        # AQUI JUSTO DEBAJO DE EQ1 COMO ME PEDISTE
         txt += f"Seguidos: {seguidos_txt}<br>"
         if eq2_list:
             txt += "eq2: " + " | ".join(eq2_list) + "<br>"
@@ -2171,17 +2172,16 @@ if len(df_final) > 0:
                 for pos, eq, pts in equipos_por_liga[liga]:
                     pos_txt = f"{pos}º {pts}pts" if pos!=999 else "Xº Xpts"
                     if eq in equipos_con_partidos:
-                        # TIENE PARTIDOS = negro + morado + subrayado gordo
-                        txt = f"<u style='text-decoration-thickness:3px'><b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span></u>"
+                        txt = f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span>"
                     else:
-                        # NO TIENE = igual que antes, negro + morado sin subrayar
                         txt = f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span>"
                     lista_eq_liga.append(txt)
                 bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
                 lista_bloques.append(bloque)
 
             equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
-            st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
+            with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=False):
+                st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
        
         # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
         if ligas_ordenadas_all:
@@ -2192,6 +2192,87 @@ if len(df_final) > 0:
                     st.rerun()
             else:
                 st.markdown(f"<span style='color:#0f4d0f;font-size:10px;font-family:monospace'>Todas las ligas cargadas ({len(ligas_ordenadas_all)})</span>", unsafe_allow_html=True)
+
+                # --- MINI RESUMEN REAL: SOLO EQUIPOS QUE PASAN EL % IGUAL QUE ABAJO ---
+                try:
+                    if not df_final.empty:
+                        _pct_min = int(st.session_state.get('pct_min', 1))
+                        _pct_max = int(st.session_state.get('pct_max', 100))
+                        dict_ult = st.session_state.get('dict_ultimos', {})
+                        ok_clasif = st.session_state.get('equipos_ok_clasif', set())
+
+                        # base_total para calcular el % real (igual que haces abajo)
+                        _base_tot = df_original.copy()
+                        try:
+                            _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].isin(temp_sel)]
+                            _base_tot = _base_tot[(_base_tot['Jornada']>=rango_jornadas[0]) & (_base_tot['Jornada']<=rango_jornadas[1])]
+                        except:
+                            pass
+
+                        from collections import defaultdict
+                        equipos_por_liga = defaultdict(list)
+
+                        # equipos a revisar = los que salen en df_final + dict si hay seguidos
+                        if dict_ult:
+                            _candidatos = set(dict_ult.keys())
+                        else:
+                            _candidatos = set(pd.unique(df_final[['HomeTeam','AwayTeam']].values.ravel()))
+
+                        if equipo_filtro!="Ninguno":
+                            _candidatos = {equipo_filtro} if equipo_filtro in _candidatos else set()
+                        if equipo2_filtro!="Ninguno":
+                            _candidatos.add(equipo2_filtro)
+
+                        # si hay filtro %Clasif, respétalo
+                        if ok_clasif:
+                            _candidatos = {e for e in _candidatos if e in ok_clasif}
+
+                        for eq in sorted(_candidatos):
+                            # total sin filtro de ese equipo
+                            _tot_eq = len(_base_tot[(_base_tot['HomeTeam']==eq) | (_base_tot['AwayTeam']==eq)])
+                            if _tot_eq==0:
+                                continue
+                            # hits que cumplen filtro
+                            if eq in dict_ult and not dict_ult[eq].empty:
+                                _hits_eq = len(dict_ult[eq])
+                                _liga_eq = dict_ult[eq]['League'].iloc[0] if 'League' in dict_ult[eq].columns and not dict_ult[eq].empty else "OTRA"
+                            else:
+                                _df_eq = df_final[(df_final['HomeTeam']==eq) | (df_final['AwayTeam']==eq)]
+                                _hits_eq = len(_df_eq)
+                                _liga_eq = _df_eq['League'].iloc[0] if not _df_eq.empty else "OTRA"
+
+                            if _hits_eq==0:
+                                continue
+                            _pct = _hits_eq / _tot_eq * 100
+                            # MISMO FILTRO QUE LAS TARJETAS
+                            if not (_pct_min <= _pct <= _pct_max):
+                                continue
+                            # solo si tiene liga visible
+                            if ligas_visibles and _liga_eq not in ligas_visibles:
+                                # intenta sacar liga real de df_final
+                                _df_tmp = df_final[(df_final['HomeTeam']==eq) | (df_final['AwayTeam']==eq)]
+                                if not _df_tmp.empty:
+                                    _liga_eq = _df_tmp['League'].iloc[0]
+                                else:
+                                    continue
+                            equipos_por_liga[_liga_eq].append(f"{eq.lower()} ({_hits_eq})")
+
+                        _html = []
+                        for liga in sorted(equipos_por_liga.keys()):
+                            lista = sorted(set(equipos_por_liga[liga]))
+                            if lista:
+                                _html.append(f"<div style='font-size:10px;font-family:monospace;line-height:1.6'><b>{liga}:</b> {' | '.join(lista)}</div>")
+
+                        if _html:
+                            st.markdown(
+                                f"<div style='background:#eef2ff;padding:8px 10px;border-left:4px solid #4B0082;margin:8px 0 12px 0'>"
+                                f"{''.join(_html)}</div>",
+                                unsafe_allow_html=True
+                            )
+                        else:
+                            st.caption("Mini resumen: 0 equipos pasan el %")
+                except Exception:
+                    pass
             ######
 
             #botones cargar ligas
@@ -3676,7 +3757,20 @@ with st.expander("📋 Resumen", expanded=False):
                 if leyendas:
                     st.markdown("<div style='font-size:10px;line-height:1.4'>" + " &nbsp; ".join(leyendas) + "</div>", unsafe_allow_html=True)
 
-                # === TARJETAS EQ1 ===
+                # --- HELPER NUEVO (ponlo justo antes del for) ---
+                def jornadas_simples_resumen(df_temp, equipo, condicion_fn):
+                    if df_temp.empty:
+                        return "-"
+                    df_temp = df_temp.sort_values('Jornada')
+                    out = []
+                    for _, r in df_temp.iterrows():
+                        if not condicion_fn(r):
+                            continue
+                        suf = 'c' if r['HomeTeam'] == equipo else 'f'
+                        out.append(f"J{int(r['Jornada'])}{suf}")
+                    return " | ".join(out) if out else "-"
+
+                # === TARJETAS EQ1 - MEJORADO ===
                 for i, s in enumerate(lista_stats1):
                     df_temp_cf = df_eq_total1[(df_eq_total1['Season']==s['temp'])].copy()
                     df_casa = df_temp_cf[df_temp_cf['HomeTeam']==s['equipo']]
@@ -3704,15 +3798,41 @@ with st.expander("📋 Resumen", expanded=False):
                         else: cur_g=0
                         if x=='P': cur_p+=1; max_p=max(max_p,cur_p)
                         else: cur_p=0
+
+                    total_1p = len(df_temp_cf)
+                    total_gol_1p = df_temp_cf['HTHG'] + df_temp_cf['HTAG']
+                    g05_1p = (total_gol_1p > 0.5).sum()
+                    g1_1p = (total_gol_1p > 1).sum()
+                    g15_1p = (total_gol_1p > 1.5).sum()
+                    si1p = ((df_temp_cf['HTHG']>0) & (df_temp_cf['HTAG']>0)).sum()
+                    
+                    pct_g05 = round(g05_1p/total_1p*100) if total_1p else 0
+                    pct_g1 = round(g1_1p/total_1p*100) if total_1p else 0
+                    pct_g15 = round(g15_1p/total_1p*100) if total_1p else 0
+                    pct_si1p = round(si1p/total_1p*100) if total_1p else 0
+
+                    jor_g05 = jornadas_simples_resumen(df_temp_cf, s['equipo'], lambda r: (r['HTHG']+r['HTAG']) > 0.5)
+                    jor_g1 = jornadas_simples_resumen(df_temp_cf, s['equipo'], lambda r: (r['HTHG']+r['HTAG']) > 1)
+                    jor_g15 = jornadas_simples_resumen(df_temp_cf, s['equipo'], lambda r: (r['HTHG']+r['HTAG']) > 1.5)
+                    jor_si1p = jornadas_simples_resumen(df_temp_cf, s['equipo'], lambda r: r['HTHG']>0 and r['HTAG']>0)
+
                     st.markdown(f"""
-                    <div style='background:#f8f9fa;padding:8px 10px;border-left:4px solid #0A2342;margin:6px 0 0 0;font-family:monospace;font-size:10px;line-height:1.4'>
-                    <b style='font-size:12px'>{s['equipo'].title()} | {s['temp']}</b><br>
+                    <div style='background:#f8f9fa;padding:10px 10px;border-left:4px solid #0A2342;margin:8px 0 0 0;font-family:monospace;font-size:11px;line-height:1.5'>
+                    <b style='font-size:13px'>{s['equipo'].title()} | {s['temp']}</b><br>
                     <b>{s['total']}PJ</b> -> <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span> | <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span> | <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span><br>
-                    <span style='font-size:9px;color:#000'>Casa: <span style='color:#0f8105'>{g_c}G</span> <span style='color:#b45309'>{e_c}E</span> <span style='color:#dc2626'>{p_c}P</span> | Fuera: <span style='color:#0f8105'>{g_f}G</span> <span style='color:#b45309'>{e_f}E</span> <span style='color:#dc2626'>{p_f}P</span></span><br>
+                    <span style='color:#000'>Casa: <span style='color:#0f8105'>{g_c}G</span> <span style='color:#b45309'>{e_c}E</span> <span style='color:#dc2626'>{p_c}P</span> | Fuera: <span style='color:#0f8105'>{g_f}G</span> <span style='color:#b45309'>{e_f}E</span> <span style='color:#dc2626'>{p_f}P</span></span><br>
                     <b>Goles:</b> {int(s['gf_tot'])}GF {int(s['gc_tot'])}GC | Prom: {s['gf_avg']:.2f}-{s['gc_avg']:.2f} | AM:{s['am']}/{s['total']} ({round(s['am']/s['total']*100)}%) | Over2.5:{s['over25']}/{s['total']} ({round(s['over25']/s['total']*100)}%)<br>
+                    <b>GStats 1P:</b> G1T>0.5: {g05_1p}/{total_1p} ({pct_g05}%) | >1: {g1_1p}/{total_1p} ({pct_g1}%) | >1.5: {g15_1p}/{total_1p} ({pct_g15}%)<br>
+                    <div style='font-size:10px;color:#333;margin:2px 0 2px 12px;line-height:1.4'>
+                    >0.5: {jor_g05}<br>
+                    >1: {jor_g1}<br>
+                    >1.5: {jor_g15}
+                    </div>
+                    <b>Si1P:</b> {si1p}/{total_1p} ({pct_si1p}%)<br>
+                    <div style='font-size:10px;color:#333;margin:2px 0 2px 12px'>{jor_si1p}</div>
                     <b>Stats:</b> {s['hs']:.1f}T | {s['hst']:.1f}TP | {s['hf']:.1f}F | {s['hc']:.1f}C | {s['hy']:.1f}A | {s['hr']:.1f}R<br>
                     <b>Racha:</b> Mejor <span style='color:#0f8105;font-weight:900'>{max_g}G</span> | Peor <span style='color:#dc2626;font-weight:900'>{max_p}P</span><br>
-                    <b>Pos final:</b> <span style='color:#4B0082;font-weight:900'>{s['pos_final']}o</span> | <b>Pts final:</b> <span style='color:#4B0082;font-weight:900'>{s['pts_final']}</span>
+                    <b>Pos final:</b> <span style='color:#4B0082;font-weight:900'>{s['pos_final']}º</span> | <b>Pts final:</b> <span style='color:#4B0082;font-weight:900'>{s['pts_final']}</span>
                     </div>
                     """, unsafe_allow_html=True)
                     key_j = f"ver_jor_{s['equipo']}_{s['temp']}_eq1"
@@ -3761,15 +3881,28 @@ with st.expander("📋 Resumen", expanded=False):
                             else: cur_g=0
                             if x=='P': cur_p+=1; max_p=max(max_p,cur_p)
                             else: cur_p=0
+                        df_1p_calc = df_temp_cf.copy()
+                        total_gol_1p = df_1p_calc['HTHG'] + df_1p_calc['HTAG']
+                        am_1p = (df_1p_calc['HTHG'] > 0) & (df_1p_calc['HTAG'] > 0)
+                        g05_1p = (total_gol_1p > 0.5).sum()
+                        g1_1p = (total_gol_1p > 1).sum()
+                        si1p = am_1p.sum()
+                        total_1p = len(df_1p_calc)
+                        pct_g05 = round(g05_1p/total_1p*100) if total_1p else 0
+                        pct_g1 = round(g1_1p/total_1p*100) if total_1p else 0
+                        pct_si1p = round(si1p/total_1p*100) if total_1p else 0
+
                         st.markdown(f"""
                         <div style='background:#e0f2fe;padding:8px 10px;border-left:4px solid #0369a1;margin:6px 0 0 0;font-family:monospace;font-size:10px;line-height:1.4'>
                         <b style='font-size:12px'>{s['equipo'].title()} | {s['temp']}</b><br>
                         <b>{s['total']}PJ</b> -> <span style='color:#0f8105;font-weight:900'>{s['n_g']}G {s['pct_g']}%</span> | <span style='color:#b45309;font-weight:900'>{s['n_e']}E {s['pct_e']}%</span> | <span style='color:#dc2626;font-weight:900'>{s['n_p']}P {s['pct_p']}%</span><br>
                         <span style='font-size:9px;color:#000'>Casa: <span style='color:#0f8105'>{g_c}G</span> <span style='color:#b45309'>{e_c}E</span> <span style='color:#dc2626'>{p_c}P</span> | Fuera: <span style='color:#0f8105'>{g_f}G</span> <span style='color:#b45309'>{e_f}E</span> <span style='color:#dc2626'>{p_f}P</span></span><br>
                         <b>Goles:</b> {int(s['gf_tot'])}GF {int(s['gc_tot'])}GC | Prom: {s['gf_avg']:.2f}-{s['gc_avg']:.2f} | AM:{s['am']}/{s['total']} ({round(s['am']/s['total']*100)}%) | Over2.5:{s['over25']}/{s['total']} ({round(s['over25']/s['total']*100)}%)<br>
+                        <b>GStats 1P:</b> G1T>0.5: {g05_1p}/{total_1p} ({pct_g05}%) | >1: {g1_1p}/{total_1p} ({pct_g1}%)<br>
+                        <b>Si1P:</b> {si1p}/{total_1p} ({pct_si1p}%)<br>
                         <b>Stats:</b> {s['hs']:.1f}T | {s['hst']:.1f}TP | {s['hf']:.1f}F | {s['hc']:.1f}C | {s['hy']:.1f}A | {s['hr']:.1f}R<br>
                         <b>Racha:</b> Mejor <span style='color:#0f8105;font-weight:900'>{max_g}G</span> | Peor <span style='color:#dc2626;font-weight:900'>{max_p}P</span><br>
-                        <b>Pos final:</b> <span style='color:#4B0082;font-weight:900'>{s['pos_final']}o</span> | <b>Pts final:</b> <span style='color:#4B0082;font-weight:900'>{s['pts_final']}</span>
+                        <b>Pos final:</b> <span style='color:#4B0082;font-weight:900'>{s['pos_final']}º</span> | <b>Pts final:</b> <span style='color:#4B0082;font-weight:900'>{s['pts_final']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                         key_j2 = f"ver_jor_{s['equipo']}_{s['temp']}_eq2"
