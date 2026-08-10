@@ -37,8 +37,9 @@ div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
 div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div{
   width: 100%!important; min-width: 0!important; max-width: none!important; flex: none!important;
 }
+###tamaño letra desplegables filtros avanzados#####
 div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
-  font-size: 8px!important; margin: 0 0 1px 0!important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 13px!important; margin: 0 0 1px 0!important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 </style>
 """, unsafe_allow_html=True)
