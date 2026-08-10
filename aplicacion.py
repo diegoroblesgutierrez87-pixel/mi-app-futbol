@@ -1035,9 +1035,16 @@ with st.expander("Filtros de partidos", expanded=False):
 
     if len(jornadas) > 0:
         min_j, max_j = int(min(jornadas)), int(max(jornadas))
+        # FIX MOVIL: limpia valores viejos fuera de rango
+        if 'j_desde' in st.session_state:
+            if st.session_state.j_desde < min_j or st.session_state.j_desde > max_j:
+                st.session_state.j_desde = min_j
+        if 'j_hasta' in st.session_state:
+            if st.session_state.j_hasta < min_j or st.session_state.j_hasta > max_j:
+                st.session_state.j_hasta = max_j
         col_j1, col_j2 = st.columns(2)
-        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=min_j, key='j_desde', step=1)
-        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, value=max_j, key='j_hasta', step=1)
+        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=st.session_state.get('j_desde', min_j), key='j_desde', step=1)
+        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, value=st.session_state.get('j_hasta', max_j), key='j_hasta', step=1)
         # Validamos que De <= A
         if j_desde > j_hasta:
             st.warning("Jornada 'De' no puede ser mayor que 'A'")
