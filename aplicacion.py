@@ -2246,7 +2246,7 @@ if len(df_final) > 0:
             else:
                 st.markdown(f"<span style='color:#0f4d0f;font-size:10px;font-family:monospace'>Todas las ligas cargadas ({len(ligas_ordenadas_all)})</span>", unsafe_allow_html=True)
 
-                # --- MINI RESUMEN REAL: SOLO EQUIPOS QUE PASAN EL % IGUAL QUE ABAJO ---
+                # --- MINI RESUMEN REAL: SOLO EQUIPOS QUE PASAN EL % - V2 DESPLEGABLE SIN FONDO ---
                 try:
                     if not df_final.empty:
                         _pct_min = int(st.session_state.get('pct_min', 1))
@@ -2254,7 +2254,6 @@ if len(df_final) > 0:
                         dict_ult = st.session_state.get('dict_ultimos', {})
                         ok_clasif = st.session_state.get('equipos_ok_clasif', set())
 
-                        # base_total para calcular el % real (igual que haces abajo)
                         _base_tot = df_original.copy()
                         try:
                             _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].isin(temp_sel)]
@@ -2265,7 +2264,6 @@ if len(df_final) > 0:
                         from collections import defaultdict
                         equipos_por_liga = defaultdict(list)
 
-                        # equipos a revisar = los que salen en df_final + dict si hay seguidos
                         if dict_ult:
                             _candidatos = set(dict_ult.keys())
                         else:
@@ -2276,16 +2274,13 @@ if len(df_final) > 0:
                         if equipo2_filtro!="Ninguno":
                             _candidatos.add(equipo2_filtro)
 
-                        # si hay filtro %Clasif, respétalo
                         if ok_clasif:
                             _candidatos = {e for e in _candidatos if e in ok_clasif}
 
                         for eq in sorted(_candidatos):
-                            # total sin filtro de ese equipo
                             _tot_eq = len(_base_tot[(_base_tot['HomeTeam']==eq) | (_base_tot['AwayTeam']==eq)])
                             if _tot_eq==0:
                                 continue
-                            # hits que cumplen filtro
                             if eq in dict_ult and not dict_ult[eq].empty:
                                 _hits_eq = len(dict_ult[eq])
                                 _liga_eq = dict_ult[eq]['League'].iloc[0] if 'League' in dict_ult[eq].columns and not dict_ult[eq].empty else "OTRA"
@@ -2297,12 +2292,9 @@ if len(df_final) > 0:
                             if _hits_eq==0:
                                 continue
                             _pct = _hits_eq / _tot_eq * 100
-                            # MISMO FILTRO QUE LAS TARJETAS
                             if not (_pct_min <= _pct <= _pct_max):
                                 continue
-                            # solo si tiene liga visible
                             if ligas_visibles and _liga_eq not in ligas_visibles:
-                                # intenta sacar liga real de df_final
                                 _df_tmp = df_final[(df_final['HomeTeam']==eq) | (df_final['AwayTeam']==eq)]
                                 if not _df_tmp.empty:
                                     _liga_eq = _df_tmp['League'].iloc[0]
@@ -2310,18 +2302,21 @@ if len(df_final) > 0:
                                     continue
                             equipos_por_liga[_liga_eq].append(f"{eq.lower()} ({_hits_eq})")
 
-                        _html = []
-                        for liga in sorted(equipos_por_liga.keys()):
-                            lista = sorted(set(equipos_por_liga[liga]))
-                            if lista:
-                                _html.append(f"<div style='font-size:10px;font-family:monospace;line-height:1.6'><b>{liga}:</b> {' | '.join(lista)}</div>")
-
-                        if _html:
-                            st.markdown(
-                                f"<div style='background:#eef2ff;padding:8px 10px;border-left:4px solid #4B0082;margin:8px 0 12px 0'>"
-                                f"{''.join(_html)}</div>",
-                                unsafe_allow_html=True
-                            )
+                        if equipos_por_liga:
+                            total_eq = sum(len(set(v)) for v in equipos_por_liga.values())
+                            with st.expander(f"📁 Equipos que pasan filtro ({total_eq} equipos en {len(equipos_por_liga)} ligas)", expanded=False):
+                                for liga in sorted(equipos_por_liga.keys()):
+                                    lista = sorted(set(equipos_por_liga[liga]))
+                                    if not lista:
+                                        continue
+                                    # Liga en negrita + 1pt más grande
+                                    with st.expander(f"{liga.upper()} ({len(lista)})", expanded=False):
+                                        st.markdown(
+                                            f"<div style='font-size:11px;font-family:monospace;line-height:1.7;background:transparent;padding:2px 0'>"
+                                            f"<b style='font-size:12px;font-weight:900'>{liga.upper()}:</b><br>{' | '.join(lista)}"
+                                            f"</div>",
+                                            unsafe_allow_html=True
+                                        )
                         else:
                             st.caption("Mini resumen: 0 equipos pasan el %")
                 except Exception:
