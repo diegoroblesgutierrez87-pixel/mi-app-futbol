@@ -23,8 +23,8 @@ st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True
 #############################css visualizacion filtros avanzados columnas todo centrado y bien - 1 SOLO CARTEL
 st.markdown("""
 <style>
-html, body { overscroll-behavior: none!important; background: #FFFFFF!important; overflow-x: hidden!important; }
-[data-testid="stAppViewContainer"]{ background-color: #FFFFFF!important; overscroll-behavior: contain!important; }
+html, body { background: #FFFFFF!important; overflow-x: hidden!important; }
+[data-testid="stAppViewContainer"]{ background-color: #FFFFFF!important; }
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
 .block-container{padding:3rem 10px .5rem 10px!important; max-width:100%!important}
 div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
@@ -479,16 +479,33 @@ PERSIST_KEYS = [
     'seguidos_filtro'
 ]
 
-# Cargar filtros desde la URL si existen
-for k,v in st.query_params.items():
-    if k in PERSIST_KEYS:
-        st.session_state[k] = v
+# Cargar filtros desde la URL si existen - FIX bucle movil
+import json
+if 'url_cargada' not in st.session_state:
+    for k,v in st.query_params.items():
+        if k in PERSIST_KEYS:
+            # Fix: si viene como "['LaLiga']" lo convertimos a lista real
+            if isinstance(v, str) and v.startswith('[') and v.endswith(']'):
+                try:
+                    st.session_state[k] = json.loads(v.replace("'", '"'))
+                except:
+                    # fallback por si viene malformado
+                    clean = v.strip("[]").replace("'", "").replace('"','').split(',')
+                    st.session_state[k] = [x.strip() for x in clean if x.strip()]
+            else:
+                st.session_state[k] = v
+    st.session_state.url_cargada = True
 
 def persistir():
     d = {}
     for k in PERSIST_KEYS:
         if k in st.session_state:
-            d[k] = str(st.session_state[k])
+            v = st.session_state[k]
+            # Fix: no usar str() para listas, usar json
+            if isinstance(v, list):
+                d[k] = json.dumps(v)
+            else:
+                d[k] = str(v)
     st.query_params.from_dict(d)
 
 @st.cache_data
@@ -991,15 +1008,16 @@ with st.expander("Filtros de partidos", expanded=False):
 
     st.markdown("**Liga**")
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=[ligas_disponibles[0]] if ligas_disponibles else [],
-        format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main")
+        format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main", on_change=persistir)
 
     st.markdown("**Temporada**")
-    temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=[temporadas_disponibles[-1]] if temporadas_disponibles else [], label_visibility="collapsed", key="filtro_temp_main")
+    temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=[temporadas_disponibles[-1]] if temporadas_disponibles else [], label_visibility="collapsed", key="filtro_temp_main", on_change=persistir)
     modo_vista = "Jornadas"
 
     df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
 
     if df_fil.empty:
+        st.warning("Selecciona al menos 1 liga y 1 temporada")
         st.stop()
 
     # calcular_estado_jornada_rapido eliminado - usamos get_df_base_calculado (1 solo cache)
