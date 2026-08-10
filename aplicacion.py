@@ -465,7 +465,15 @@ def cargar_todo():
 
 df = cargar_todo()
 df_original = df.copy()
-
+# FIX GLOBAL: si vienen de la URL como texto, convertir números
+def _fix_session_ints():
+    for k in ['j_desde','j_hasta','pct_min','pct_max','cuota_desde','cuota_hasta','clasif_eq1_de','clasif_eq1_a']:
+        if k in st.session_state:
+            try:
+                # solo convierte si es convertible
+                st.session_state[k] = int(float(str(st.session_state[k]).strip()))
+            except:
+                pass
 PERSIST_KEYS = [
     'filtro_liga_main','filtro_temp_main','j_desde','j_hasta',
     'equipo_filtro','equipo2_filtro','condicion_filtro','condicion_filtro3',
@@ -479,34 +487,33 @@ PERSIST_KEYS = [
     'seguidos_filtro'
 ]
 
-# Cargar filtros desde la URL si existen - FIX DEFINITIVO MOVIL
-import json
-def _to_int_safe(x, default):
-    try: return int(float(str(x).strip()))
-    except: return default
+# FIX GLOBAL: si vienen de la URL como texto, convertir números
+def _fix_session_ints():
+    for k in ['j_desde','j_hasta','pct_min','pct_max','cuota_desde','cuota_hasta','clasif_eq1_de','clasif_eq1_a']:
+        if k in st.session_state:
+            try:
+                st.session_state[k] = int(float(str(st.session_state[k]).strip()))
+            except:
+                pass
 
+# Cargar filtros desde la URL si existen - FIX bucle movil
+import json
 if 'url_cargada' not in st.session_state:
     for k,v in st.query_params.items():
         if k in PERSIST_KEYS:
-            raw = v
-            # Si viene como lista serializada
-            if isinstance(raw, str) and raw.startswith('[') and raw.endswith(']'):
+            # Fix: si viene como "['LaLiga']" lo convertimos a lista real
+            if isinstance(v, str) and v.startswith('[') and v.endswith(']'):
                 try:
-                    st.session_state[k] = json.loads(raw.replace("'", '"'))
-                    continue
+                    st.session_state[k] = json.loads(v.replace("'", '"'))
                 except:
-                    clean = raw.strip("[]").replace("'", "").replace('"','').split(',')
+                    # fallback por si viene malformado
+                    clean = v.strip("[]").replace("'", "").replace('"','').split(',')
                     st.session_state[k] = [x.strip() for x in clean if x.strip()]
-                    continue
-            # Conversión numérica para jornadas
-            if k in ('j_desde','j_hasta'):
-                try:
-                    st.session_state[k] = int(float(str(raw).strip()))
-                except:
-                    st.session_state[k] = raw
             else:
-                st.session_state[k] = raw
+                st.session_state[k] = v
     st.session_state.url_cargada = True
+
+_fix_session_ints()
 
 def persistir():
     d = {}
@@ -1307,9 +1314,17 @@ if len(jornadas) > 0:
         with l8[4]:
             st.caption("% De - A")
             c_p1, c_p2 = st.columns(2)
-            # por defecto 1% a 100%
+            # por defecto 1% a 100% - FIX seguro para móvil
+            def _safe_pct(v, default):
+                try:
+                    return int(float(str(v).strip()))
+                except:
+                    return default
             if 'pct_min' not in st.session_state: st.session_state.pct_min = 1
             if 'pct_max' not in st.session_state: st.session_state.pct_max = 100
+            # limpia si vienen como texto desde la URL
+            st.session_state.pct_min = _safe_pct(st.session_state.pct_min, 1)
+            st.session_state.pct_max = _safe_pct(st.session_state.pct_max, 100)
 
             pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=st.session_state.pct_min, step=5, key='pct_min', label_visibility="collapsed")
             pct_max = c_p2.number_input("max", min_value=0, max_value=100, value=st.session_state.pct_max, step=5, key='pct_max', label_visibility="collapsed")
