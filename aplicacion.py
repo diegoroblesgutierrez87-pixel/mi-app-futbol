@@ -3606,31 +3606,63 @@ with st.expander("📋 Resumen", expanded=False):
                     st.caption(f"Resumen {equipo2_res}")
                     st.markdown("\n".join(filas2), unsafe_allow_html=True)
 
-                # === GRAFICA ===
+                # === GRAFICA MEJORADA CON PUNTOS G/P/E - SIN LEYENDA ===
                 import matplotlib.pyplot as plt
-                import matplotlib.colors as mcolors
                 PALETA = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#e377c2', '#17becf', '#bcbd22', '#8c564b', '#000000']
+
+                def _resultados_por_jornada(df_eq_total_temp, equipo):
+                    res = {}
+                    df_t = df_eq_total_temp.sort_values('Jornada')
+                    for _, r in df_t.iterrows():
+                        es_loc = r['HomeTeam'] == equipo
+                        if es_loc:
+                            if r['FTHG'] > r['FTAG']: res[int(r['Jornada'])] = 'G'
+                            elif r['FTHG'] < r['FTAG']: res[int(r['Jornada'])] = 'P'
+                            else: res[int(r['Jornada'])] = 'E'
+                        else:
+                            if r['FTAG'] > r['FTHG']: res[int(r['Jornada'])] = 'G'
+                            elif r['FTAG'] < r['FTHG']: res[int(r['Jornada'])] = 'P'
+                            else: res[int(r['Jornada'])] = 'E'
+                    return res
+
                 df_graf1 = df_clas_res1[(df_clas_res1['Equipo']==equipo_res) & (df_clas_res1['Season'].isin(temp1_res))]
                 fig = plt.figure(figsize=(5, 2.8), dpi=150)
                 ax = fig.add_subplot(111)
                 leyendas = []
                 max_pos = 0
+
                 for idx, temp in enumerate(temp1_res):
                     d = df_graf1[df_graf1['Season']==temp].sort_values('Jornada')
                     if not d.empty:
                         color = PALETA[idx % len(PALETA)]
-                        line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, color=color)
+                        ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, color=color, alpha=0.7, zorder=1)
                         max_pos = max(max_pos, d['Pos'].max())
+                        df_eq_t = df_eq_total1[(df_eq_total1['Season']==temp) & ((df_eq_total1['HomeTeam']==equipo_res)|(df_eq_total1['AwayTeam']==equipo_res))]
+                        res_map = _resultados_por_jornada(df_eq_t, equipo_res)
+                        col_map = {'G':'#0f8105', 'P':'#dc2626', 'E':'#000000'}
+                        for _, row in d.iterrows():
+                            j = int(row['Jornada'])
+                            r = res_map.get(j, 'E')
+                            ax.scatter(j, row['Pos'], c=col_map[r], s=22, zorder=5, edgecolors='white', linewidths=0.4)
                         leyendas.append(f"<span style='color:{color};font-size:14px'>-</span> {equipo_res} {temp}")
+
                 if stats2:
                     df_graf2 = df_clas_res2[(df_clas_res2['Equipo']==equipo2_res) & (df_clas_res2['Season'].isin(temp2_res))]
                     for idx, temp in enumerate(temp2_res):
                         d = df_graf2[df_graf2['Season']==temp].sort_values('Jornada')
                         if not d.empty:
                             color = PALETA[(len(temp1_res)+idx) % len(PALETA)]
-                            line, = ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, linestyle='--', color=color)
+                            ax.plot(d['Jornada'], d['Pos'], linewidth=1.4, linestyle='--', color=color, alpha=0.7, zorder=1)
                             max_pos = max(max_pos, d['Pos'].max())
+                            df_eq_t = df_eq_total2[(df_eq_total2['Season']==temp) & ((df_eq_total2['HomeTeam']==equipo2_res)|(df_eq_total2['AwayTeam']==equipo2_res))]
+                            res_map = _resultados_por_jornada(df_eq_t, equipo2_res)
+                            col_map = {'G':'#0f8105', 'P':'#dc2626', 'E':'#000000'}
+                            for _, row in d.iterrows():
+                                j = int(row['Jornada'])
+                                r = res_map.get(j, 'E')
+                                ax.scatter(j, row['Pos'], c=col_map[r], s=22, zorder=5, edgecolors='white', linewidths=0.4)
                             leyendas.append(f"<span style='color:{color};font-size:14px'>--</span> {equipo2_res} {temp}")
+
                 ax.invert_yaxis()
                 ax.set_ylim(max_pos+1, 0.5)
                 ax.set_xlabel("Jornada", fontsize=8)
