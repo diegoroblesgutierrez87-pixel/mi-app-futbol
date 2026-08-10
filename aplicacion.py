@@ -479,21 +479,33 @@ PERSIST_KEYS = [
     'seguidos_filtro'
 ]
 
-# Cargar filtros desde la URL si existen - FIX bucle movil
+# Cargar filtros desde la URL si existen - FIX DEFINITIVO MOVIL
 import json
+def _to_int_safe(x, default):
+    try: return int(float(str(x).strip()))
+    except: return default
+
 if 'url_cargada' not in st.session_state:
     for k,v in st.query_params.items():
         if k in PERSIST_KEYS:
-            # Fix: si viene como "['LaLiga']" lo convertimos a lista real
-            if isinstance(v, str) and v.startswith('[') and v.endswith(']'):
+            raw = v
+            # Si viene como lista serializada
+            if isinstance(raw, str) and raw.startswith('[') and raw.endswith(']'):
                 try:
-                    st.session_state[k] = json.loads(v.replace("'", '"'))
+                    st.session_state[k] = json.loads(raw.replace("'", '"'))
+                    continue
                 except:
-                    # fallback por si viene malformado
-                    clean = v.strip("[]").replace("'", "").replace('"','').split(',')
+                    clean = raw.strip("[]").replace("'", "").replace('"','').split(',')
                     st.session_state[k] = [x.strip() for x in clean if x.strip()]
+                    continue
+            # Conversión numérica para jornadas
+            if k in ('j_desde','j_hasta'):
+                try:
+                    st.session_state[k] = int(float(str(raw).strip()))
+                except:
+                    st.session_state[k] = raw
             else:
-                st.session_state[k] = v
+                st.session_state[k] = raw
     st.session_state.url_cargada = True
 
 def persistir():
@@ -1035,16 +1047,35 @@ with st.expander("Filtros de partidos", expanded=False):
 
     if len(jornadas) > 0:
         min_j, max_j = int(min(jornadas)), int(max(jornadas))
-        # FIX MOVIL: limpia valores viejos fuera de rango
+        # FIX MOVIL DEFINITIVO: convierte a int antes de comparar y limpia
+        def _safe_int(val, fallback):
+            try:
+                return int(float(str(val).strip()))
+            except:
+                return fallback
+
         if 'j_desde' in st.session_state:
-            if st.session_state.j_desde < min_j or st.session_state.j_desde > max_j:
+            try:
+                cur = _safe_int(st.session_state.j_desde, min_j)
+                if cur < min_j or cur > max_j:
+                    st.session_state.j_desde = min_j
+                else:
+                    st.session_state.j_desde = cur
+            except:
                 st.session_state.j_desde = min_j
         if 'j_hasta' in st.session_state:
-            if st.session_state.j_hasta < min_j or st.session_state.j_hasta > max_j:
+            try:
+                cur = _safe_int(st.session_state.j_hasta, max_j)
+                if cur < min_j or cur > max_j:
+                    st.session_state.j_hasta = max_j
+                else:
+                    st.session_state.j_hasta = cur
+            except:
                 st.session_state.j_hasta = max_j
+
         col_j1, col_j2 = st.columns(2)
-        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=st.session_state.get('j_desde', min_j), key='j_desde', step=1)
-        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, value=st.session_state.get('j_hasta', max_j), key='j_hasta', step=1)
+        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=_safe_int(st.session_state.get('j_desde', min_j), min_j), key='j_desde', step=1)
+        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, value=_safe_int(st.session_state.get('j_hasta', max_j), max_j), key='j_hasta', step=1)
         # Validamos que De <= A
         if j_desde > j_hasta:
             st.warning("Jornada 'De' no puede ser mayor que 'A'")
