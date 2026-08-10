@@ -1009,6 +1009,10 @@ with st.expander("Filtros de partidos", expanded=False):
         df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
 
 
+
+#####
+
+
     df_final = df_base.copy()
     df_clasificacion = df_clas_base.copy()
     
