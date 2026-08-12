@@ -4088,4 +4088,95 @@ with st.expander("📋 Resumen", expanded=False):
             st.session_state.resumen_buscado = False
             st.rerun()
 
+# ==================== DESPLEGABLE DATOS - INDEPENDIENTE CON FILTROS PROPIOS ====================
+with st.expander("📋 DATOS", expanded=False):
+    # Filtros propios, independientes de todo lo demas
+    if 'datos_cargado' not in st.session_state:
+        st.session_state.datos_cargado = False
+    if 'datos_liga_sel' not in st.session_state:
+        st.session_state.datos_liga_sel = []
+    if 'datos_temp_sel' not in st.session_state:
+        st.session_state.datos_temp_sel = []
 
+    st.caption("Filtro independiente - no afecta al resto de la app")
+    c1, c2 = st.columns(2)
+    try:
+        ligas_datos_disp = sorted(df['League'].unique())
+    except:
+        ligas_datos_disp = sorted(df_original['League'].unique())
+    try:
+        temps_datos_disp = sorted(df['Season'].unique())
+    except:
+        temps_datos_disp = sorted(df_original['Season'].unique())
+
+    liga_datos_sel = c1.multiselect("Liga", ligas_datos_disp, default=st.session_state.datos_liga_sel, key="filtro_datos_liga_v2")
+    temp_datos_sel = c2.multiselect("Temporada", temps_datos_disp, default=st.session_state.datos_temp_sel, key="filtro_datos_temp_v2")
+
+    col_btn1, col_btn2 = st.columns([1,3])
+    if col_btn1.button("Cargar", key="btn_cargar_datos_v2", type="primary"):
+        st.session_state.datos_liga_sel = liga_datos_sel
+        st.session_state.datos_temp_sel = temp_datos_sel
+        st.session_state.datos_cargado = True
+        st.rerun()
+    if col_btn2.button("Limpiar", key="btn_limpiar_datos_v2"):
+        st.session_state.datos_cargado = False
+        st.session_state.datos_liga_sel = []
+        st.session_state.datos_temp_sel = []
+        st.rerun()
+
+    if st.session_state.datos_cargado:
+        try:
+            _df_base = df if 'df' in globals() else df_original
+            if liga_datos_sel:
+                _df_base = _df_base[_df_base['League'].isin(liga_datos_sel)]
+            if temp_datos_sel:
+                _df_base = _df_base[_df_base['Season'].isin(temp_datos_sel)]
+            st.caption(f"Mostrando {len(_df_base)} partidos | Ligas: {', '.join(liga_datos_sel) if liga_datos_sel else 'Todas'} | Temps: {', '.join(temp_datos_sel) if temp_datos_sel else 'Todas'}")
+            _txt_bruto = _df_base.to_csv(index=False, sep='|').lower()
+            
+            # --- BOTON COPIAR PARA MOVIL ---
+            import streamlit.components.v1 as components
+            import json
+            _txt_json = json.dumps(_txt_bruto)
+            components.html(f"""
+                <div style="margin:8px 0">
+                    <button id="btn_copy_datos" style="
+                        background:#0A2342;color:#fff;border:none;
+                        padding:10px 18px;border-radius:8px;
+                        font-size:14px;font-weight:700;
+                        width:100%;cursor:pointer;
+                    ">📋 Copiar al portapapeles</button>
+                    <div id="copy_msg" style="font-size:11px;font-family:monospace;margin-top:4px;color:#0f8105;display:none">¡Copiado!</div>
+                </div>
+                <script>
+                    const btn = document.getElementById('btn_copy_datos');
+                    const msg = document.getElementById('copy_msg');
+                    const texto = {_txt_json};
+                    btn.addEventListener('click', async () => {{
+                        try {{
+                            await navigator.clipboard.writeText(texto);
+                            msg.style.display = 'block';
+                            btn.innerText = '✅ ¡Copiado!';
+                            setTimeout(()=>{{ msg.style.display='none'; btn.innerText='📋 Copiar al portapapeles'; }}, 2000);
+                        }} catch(e) {{
+                            const ta = document.createElement('textarea');
+                            ta.value = texto;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(ta);
+                            msg.style.display = 'block';
+                            btn.innerText = '✅ ¡Copiado!';
+                            setTimeout(()=>{{ msg.style.display='none'; btn.innerText='📋 Copiar al portapapeles'; }}, 2000);
+                        }}
+                    }});
+                </script>
+            """, height=90)
+            # -------------------------------
+            
+            st.text_area("datos_bruto_independiente", value=_txt_bruto, height=650, key="datos_bruto_v5_indep", label_visibility="collapsed")
+        except Exception as _e:
+            st.error(f"error: {_e}")
+    else:
+        st.info("Selecciona Liga/Temporada y dale a Cargar")
+# ==================== FIN DATOS INDEPENDIENTE ====================
