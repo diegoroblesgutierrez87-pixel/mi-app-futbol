@@ -1191,10 +1191,18 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
         am = " ▪" if real_home > 0 and real_away > 0 else ""
         MORADO = "#581C87"
+        # --- RE COLORES ---
+        re_html = ""
+        if res_ht == 'P' and res_ft == 'E':
+            re_html = "<span style='display:inline-block;background:#facc15;color:#000;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px;border:1px solid #eab308'>RE</span>"
+        elif res_ht == 'G' and res_ft == 'P':
+            re_html = "<span style='display:inline-block;background:#ef4444;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
+        elif res_ht == 'P' and res_ft == 'G':
+            re_html = "<span style='display:inline-block;background:#22c55e;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
         if es_local:
-            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
-            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{re_html}{am}"
         # --- AÑADIDO: goles SEGUIDO en misma linea ---
         goles_inline = ""
         try:
