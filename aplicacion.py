@@ -1120,43 +1120,102 @@ def cargar_eventos(league, season):
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     if pd.isna(row['Date']):
         return ""
-    key = (row['HomeTeam'], row['AwayTeam'], row['Date'].strftime('%Y-%m-%d'))
-    evs = eventos_dict.get(key, [])
-    if not evs:
+    try:
+        key = (row['HomeTeam'], row['AwayTeam'], row['Date'].strftime('%Y-%m-%d'))
+        evs = eventos_dict.get(key, [])
+        if not evs: return ""
+        hg = int(row['FTHG']); ag = int(row['FTAG'])
+        ganador = row['HomeTeam'] if hg > ag else row['AwayTeam'] if ag > hg else None
+        filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!= "Ninguno" else None
+        txt = []
+        for ev in evs:
+            if ev.get('missed'): continue
+            minuto = int(ev.get('minute',0) or 0)
+            if parte == "1T" and minuto > 45: continue
+            if parte == "2T" and minuto <= 45: continue
+            if not (min_min <= minuto <= max_min): continue
+            team = ev.get('team','')
+            minuto_txt = f"{minuto}'(pen)" if ev.get('penalty') else f"{minuto}'"
+            gol_text = f"{minuto_txt} {ev.get('player','')}"
+            if ev.get('assist'): gol_text += f" ({ev['assist']})"
+            estilos = []
+            if ganador and team == ganador: estilos.append("font-weight:900;color:#000")
+            else: estilos.append("font-weight:600;color:#444")
+            if filtro_norm and team == filtro_norm: estilos.append("text-decoration:underline;text-decoration-thickness:2px")
+            txt.append(f"<span style=\"{';'.join(estilos)}\">{gol_text}</span>")
+        return " | ".join(txt)
+    except:
         return ""
 
-    hg = int(row['FTHG']); ag = int(row['FTAG'])
-    ganador = row['HomeTeam'] if hg > ag else row['AwayTeam'] if ag > hg else None
-    filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!= "Ninguno" else None
-
-    txt = []
-    for ev in evs:
-        minuto = ev.get('minute', 0)
-        if parte == "1T" and minuto > 45: continue
-        if parte == "2T" and minuto <= 45: continue
-        if not (min_min <= minuto <= max_min): continue
-
-        team = ev.get('team','')
-
-        if ev.get('penalty'):
-            minuto_txt = f"{minuto}'(penX)" if ev.get('missed') else f"{minuto}'(pen)"
+def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
+    from collections import Counter
+    if df_ref is None or equipo is None:
+        c = Counter(jornadas)
+        return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
+    df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)] if len(df_ref) > 300 else df_ref
+    if df_eq.empty: return ""
+    is_home_s = (df_eq['HomeTeam']==equipo)
+    final_gf_arr = np.where(is_home_s, df_eq['FTHG'].to_numpy(), df_eq['FTAG'].to_numpy())
+    final_gc_arr = np.where(is_home_s, df_eq['FTAG'].to_numpy(), df_eq['FTHG'].to_numpy())
+    win_s = pd.Series(final_gf_arr > final_gc_arr, index=df_eq.index)
+    loss_s = pd.Series(final_gf_arr < final_gc_arr, index=df_eq.index)
+    partes = []
+    for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
+        if g.empty: continue
+        if win_s.loc[g.index].all(): color = '#0f8105'
+        elif loss_s.loc[g.index].all(): color = '#f31818'
+        else: color = '#0A2342'
+        first_row = g.iloc[0]
+        is_h_first = first_row['HomeTeam']==equipo
+        if len(g)==1: sufijo_final = 'c' if is_h_first else 'f'
         else:
-            minuto_txt = f"{minuto}'"
+            all_home = (g['HomeTeam']==equipo).all()
+            all_away = (g['AwayTeam']==equipo).all()
+            sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
+        real_home = int(first_row['FTHG']); real_away = int(first_row['FTAG'])
+        # Mantiene Abbr si existe, si no 3 letras
+        try: home_short = str(first_row['HomeAbbr'])
+        except: home_short = str(first_row['HomeTeam'])[:3].upper()
+        try: away_short = str(first_row['AwayAbbr'])
+        except: away_short = str(first_row['AwayTeam'])[:3].upper()
+        h_pos = int(first_row.get('HomePosPrev', 0)); a_pos = int(first_row.get('AwayPosPrev', 0))
+        es_local = first_row['HomeTeam'] == equipo
+        try: rojas_eq = int(first_row['HR']) if es_local else int(first_row['AR'])
+        except: rojas_eq = 0
+        rojo_html = f"<span style='color:#dc2626;font-weight:900'> {' -'*rojas_eq}</span>" if rojas_eq>0 else ""
+        if es_local:
+            htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
+        else:
+            htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG']); ftgf, ftgc = real_away, real_home
+        res_ht = 'G' if htgf > htgc else 'P' if htgf < htgc else 'E'
+        res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
+        am = " ▪" if real_home > 0 and real_away > 0 else ""
+        MORADO = "#581C87"
+        if es_local:
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {real_home}</u>-{real_away} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{am}"
+        else:
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {real_home}-<u>{real_away} {away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{am}"
+        # --- AÑADIDO: goles SEGUIDO en misma linea ---
+        goles_inline = ""
+        try:
+            if 'todos_eventos' in globals() and todos_eventos:
+                gt = buscar_goles_partido(first_row, todos_eventos, 0, 120, parte, equipo)
+                if gt: 
+                    goles_inline = f"<span style='font-size:10px;font-weight:400;margin-left:3px;white-space:normal'>{gt}</span>"
+        except: pass
+        es_h2h = False
+        if rival: es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
+        viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-block;background:transparent;border:none;padding:1px 3px;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px;line-height:20px"
+        if es_h2h: estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
+        jx_html = f"""<details style="display:block;width:100%;margin:0;padding:5px 0 5px 2px;position:relative;border-bottom:1px solid #eeeeee">
+        <summary style="{estilos_summary};white-space:normal;line-height:1.25"><span>{txt}{goles_inline}</span></summary>
+        <div style="position:absolute;top:100%;left:0;z-index:9999;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;width:92vw;max-width:360px;min-width:280px;text-align:left;white-space:normal;max-height:400px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.3)">{viñeta}</div>
+    </details>"""
+        partes.append(jx_html)
+    # Ahora cada partido en su propia linea
+    return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
 
-        gol_text = f"{minuto_txt} {ev.get('player','')}"
-        if ev.get('assist') and not ev.get('missed'):
-            gol_text += f" ({ev['assist']})"
-
-        estilos = []
-        if filtro_norm and team == filtro_norm:
-            estilos.append("text-decoration:underline; text-decoration-thickness:2px")
-        if ganador and team == ganador:
-            estilos.append("font-weight:900")
-        if ev.get('missed'):
-            estilos.append("color:#dc2626")
-        txt.append(f"<span style=\"{';'.join(estilos)}\">{gol_text}</span>" if estilos else gol_text)
-
-    return " | ".join(txt)
 ###################def formatear_partido
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht, at = row['HomeTeam'], row['AwayTeam']
