@@ -389,8 +389,7 @@ with st.expander("⚙ Opciones avanzadas"):
     with col_b:
         if st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_actualizar_2627"):
             import requests as _req
-            ###############meter api key
-            API_KEY = "2"
+            API_KEY = "9ad18f235fecc18540aa98b959b8f1c7"
             try:
                 if "API_KEY" in st.secrets:
                     API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
@@ -626,7 +625,7 @@ with st.expander("⚙ Opciones avanzadas"):
     with col_b:
         if st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_2627_final_unico"):
             import requests as _req
-            API_KEY = "9ad18f235fecc18540aa98b959b8f1c7"
+            API_KEY = "e"
             try:
                 if "API_KEY" in st.secrets: API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
             except: pass
@@ -736,7 +735,7 @@ with st.expander("⚙ Opciones avanzadas"):
     with col_c:
         if st.button("🔄 Actualizar 22/23-25/26", width='stretch', key="btn_2226_final_unico"):
             import requests as _req
-            API_KEY = "9ad18f235fecc18540aa98b959b8f1c7"
+            API_KEY = "9ae"
             try:
                 if "API_KEY" in st.secrets: API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
             except: pass
@@ -1613,32 +1612,40 @@ with st.expander("Filtros de partidos", expanded=False):
     
 
     if len(jornadas) > 0:
-        min_j, max_j = int(min(jornadas)), int(max(jornadas))
-        # FIX MOVIL DEFINITIVO: convierte a int antes de comparar y limpia
+        min_j = 1
+        max_j = int(max(jornadas))
+        # FIX AUTOMATICO: De=1 y A=ultima jugada - sin romper nada mas
         def _safe_int(val, fallback):
             try:
                 return int(float(str(val).strip()))
             except:
                 return fallback
 
-        if 'j_desde' in st.session_state:
-            try:
-                cur = _safe_int(st.session_state.j_desde, min_j)
-                if cur < min_j or cur > max_j:
-                    st.session_state.j_desde = min_j
-                else:
-                    st.session_state.j_desde = cur
-            except:
-                st.session_state.j_desde = min_j
-        if 'j_hasta' in st.session_state:
-            try:
-                cur = _safe_int(st.session_state.j_hasta, max_j)
-                if cur < min_j or cur > max_j:
-                    st.session_state.j_hasta = max_j
-                else:
-                    st.session_state.j_hasta = cur
-            except:
-                st.session_state.j_hasta = max_j
+        firma_jornadas = f"{','.join(sorted(liga_sel))}|{','.join(sorted(temp_sel))}"
+        if st.session_state.get('firma_jornadas_auto') != firma_jornadas:
+            st.session_state.j_desde = min_j
+            st.session_state.j_hasta = max_j
+            st.session_state.firma_jornadas_auto = firma_jornadas
+
+        # Limpieza por si viene corrupto
+        if 'j_desde' not in st.session_state:
+            st.session_state.j_desde = min_j
+        if 'j_hasta' not in st.session_state:
+            st.session_state.j_hasta = max_j
+        try:
+            cur_desde = _safe_int(st.session_state.j_desde, min_j)
+            if cur_desde < min_j or cur_desde > max_j:
+                cur_desde = min_j
+            st.session_state.j_desde = cur_desde
+        except:
+            st.session_state.j_desde = min_j
+        try:
+            cur_hasta = _safe_int(st.session_state.j_hasta, max_j)
+            if cur_hasta < min_j or cur_hasta > max_j:
+                cur_hasta = max_j
+            st.session_state.j_hasta = cur_hasta
+        except:
+            st.session_state.j_hasta = max_j
 
         col_j1, col_j2 = st.columns(2)
         j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=_safe_int(st.session_state.get('j_desde', min_j), min_j), key='j_desde', step=1)
