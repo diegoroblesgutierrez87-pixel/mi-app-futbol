@@ -24,9 +24,7 @@ def log_terminal(msg):
     # 2. A terminal VS Code - FORZADO sin buffer
     try:
         print(line, flush=True)
-        sys.stdout.flush()
-        sys.stderr.write(line + "\n")
-        sys.stderr.flush()
+        
         # Extra para que Streamlit lo deje pasar
         os.system("") 
     except: pass
@@ -285,10 +283,6 @@ def racha_ambos_marcan_html(df_team):
 # BLOQUE LIMPIO - PEGA ESTO DONDE ESTABA TU EXPANDER DUPLICADO
 
 with st.expander("⚙ Opciones avanzadas"):
-    # LIMPIEZA DE KEYS VIEJAS QUE PETAN STREAMLIT
-    for _k in ["btn_2627_final_unico", "btn_2226_final_unico", "btn_especificas_final_unico"]:
-        if _k in st.session_state:
-            del st.session_state[_k]
     if 'pausa_descarga' not in st.session_state:
         st.session_state.pausa_descarga = False
     if 'ultima_descarga' not in st.session_state:
@@ -346,31 +340,40 @@ with col_b:
         if _quedan<150:
             st.error(f"⛔ Solo {_quedan}/7500 - resetea 02:00 Madrid"); log_terminal(f"⛔ BLOQ 26/27 {_quedan}"); st.stop()
 
-        # LISTA UNICA Y LIMPIA 26/27 - 50 LIGAS REALES - SIN DUPLICADOS
         MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
-            "Saudi Professional League": 307, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
-            "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
-            "Jupiler Pro League": 144, "Challenger Pro League": 145,
-            "Serie A Brasil": 71, "Brasileirao Serie B": 72,
-            "League One": 41, "Cyprus League": 318, "K League 1": 292, "K League 2": 293,
-            "UAE League": 301, "Premiership Escocia": 179, "Nike Liga": 332,
-            "Ligue 1": 61, "Ligue 2": 62, "NB I": 271, "Superliga Dinamarca": 119,
-            "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
-            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
-            "Botola Pro": 200, "Eliteserien": 103, "Eredivisie": 88, "Copa de Primera Paraguay": 250,
-            "Liga Portugal": 94, "Liga Portugal 2": 95, "Taça de Portugal": 96,
-            "Super Liga Serbia": 286, "Super League Suiza": 207, "Super League 2 Grecia": 196,
-            "Thai League 1": 290, "Thai League 2": 291, "Süper Lig": 203, "1. Lig": 204,
-            "V.League 1": 340, "Ligat ha'Al": 383
+            "Saudi Professional League": 307, "Saudi First Division League": 308,
+            "Bundesliga Austria": 218, "2. Liga Austria": 219,
+            "Premier League Bahrein": 400, "Jupiler Pro League": 144,
+            "Challenger Pro League": 145, "Chinese Super League": 169,
+            "China League One": 170, "Cyprus League": 318,
+            "K League 1": 292, "K League 2": 293,
+            "Superliga Dinamarca": 119, "UAE League": 301,
+            "Premiership Escocia": 179, "Nike Liga": 332,
+            "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+            "Primera Federacion G1": 435, "Primera Federacion G2": 436,
+            "Liga F": 148, "Ligue 1": 61, "Ligue 2": 62,
+            "Super League Grecia": 197, "Super League 2 Grecia": 196,
+            "Premier League": 39, "NB I": 271,
+            "Super League Malasia": 278, "Championship": 40,
+            "WSL": 44, "WSL 2": 45, "Ligat ha'Al": 383,
+            "Serie A Italia": 135, "Serie B Italia": 136,
+            "J1 League": 98, "J2 League": 99,
+            "Super Liga Serbia": 286, "Botola Pro": 200,
+            "Eliteserien": 103, "Eredivisie": 88,
+            "Liga Portugal": 94, "Liga Portugal 2": 95,
+            "Taça de Portugal": 96, "Liga 1 Indonesia": 274,
+            "Liga 2 Indonesia": 276, "Thai League 1": 290,
+            "Thai League 2": 291, "Süper Lig": 203,
+            "1. Lig": 204, "V.League 1": 340
         }
-
         TEMPORADA = 2026
         req=[0]; prog=st.progress(0, text="Iniciando 26/27..."); should_stop=False
 
-        # 1. CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX NORMALIZA ANTI-DUP
-        df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", low_memory=False) if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
-        df_2627 = pd.read_csv("partidos_2627_actual.csv", low_memory=False) if os.path.exists("partidos_2627_actual.csv") else pd.DataFrame()
+        # CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX NORMALIZA ANTI-DUP
+        df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", on_bad_lines='skip', engine='python') if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
+        df_2627 = pd.read_csv("partidos_2627_actual.csv", on_bad_lines='skip', engine='python') if os.path.exists("partidos_2627_actual.csv") else pd.DataFrame()
+
         existentes_completos=set()
         for _df in [df_base, df_2627]:
             if not _df.empty:
@@ -386,7 +389,7 @@ with col_b:
         nuevos_partidos=[]; nuevos_goles=[]; nuevos_jug=[]
         st.session_state.ultima_descarga = "2627"
         total=len(MAPA_2627); step=0
-
+###############################################################
         for nom, lid in MAPA_2627.items():
             if should_stop or st.session_state.get('pausa_descarga'): break
             step+=1; prog.progress(step/total, text=f"{nom} {TEMPORADA} | Req:{req[0]} | Q:{_quedan} | Completos:{len(existentes_completos)}")
@@ -490,51 +493,108 @@ with col_b:
         trigger_2226 = st.session_state.pop("accion_continuar_2226", False)
         if trigger_2226 or st.button("🔄 Actualizar 22/23-25/26", width='stretch', key="btn_2226_final_unico"):
             import requests as _req
-            API_KEY = "9ae"
+            API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
             try:
-                if "API_KEY" in st.secrets: API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
+                if "API_KEY" in st.secrets:
+                    _k = str(st.secrets["API_KEY"]).strip()
+                    if len(_k) > 20:
+                        API_KEY = _k
             except: pass
             API_KEY = str(API_KEY).strip()
+            log_terminal(f"BTN 22/26 PULSADO KEY len={len(API_KEY)}")
+            st.toast(f"Botón pulsado KEY {len(API_KEY)} chars")
+            st.session_state.pausa_descarga = False
+            st.session_state.ultima_descarga = "2226"
+
             def _check_quota():
                 try:
                     rr = _req.get("https://v3.football.api-sports.io/status", headers={"x-apisports-key": API_KEY}, timeout=15)
                     if rr.status_code==200:
-                        j=rr.json(); gast=j.get('response',{}).get('requests',{}).get('current',0); lim=j.get('response',{}).get('requests',{}).get('limit_day',7500); return int(lim-gast)
+                        j=rr.json(); gast=j.get('response',{}).get('requests',{}).get('current',0); lim=j.get('response',{}).get('requests',{}).get('limit_day',7500); return int(lim-gast), gast
                     h=rr.headers.get('x-ratelimit-requests-remaining')
-                    if h: return int(str(h).strip())
-                except: pass
-                return 7500
-            _quedan=_check_quota()
-            if _quedan<120:
-                st.error(f"⛔ Solo {_quedan}/7500"); log_terminal(f"⛔ BLOQ 22-25 {_quedan}"); st.stop()
-            # MAPA 51 LIGAS - IDs CORREGIDOS v3 - SIN DUPLICADOS
-            MAPA_TU_LIGA = {"Bundesliga":78,"2. Bundesliga":79,"Bundesliga Femenina":82,"Saudi Professional League":307,"LaLiga EA Sports":140,"LaLiga Hypermotion":141,"Primera Federacion G1":435,"Primera Federacion G2":436,"Liga F":148,"Superliga Femenina":148,"Jupiler Pro League":144,"Challenger Pro League":145,"Serie A Brasil":71,"Brasileirao Serie B":72,"Cyprus League":318,"K League 1":292,"K League 2":293,"UAE League":301,"Premiership Escocia":179,"Nike Liga":332,"Ligue 1":61,"Ligue 2":62,"NB I":271,"Premier League":39,"Championship":40,"League One":41,"WSL":44,"WSL 2":45,"Serie A Italia":135,"Serie B Italia":136,"J1 League":98,"J2 League":99,"Botola Pro":200,"Eliteserien":103,"Eredivisie":88,"Copa de Primera Paraguay":250,"Liga Portugal":94,"Liga Portugal 2":95,"Taça de Portugal":96,"Super Liga Serbia":286,"Super League Suiza":207,"Challenge League":208,"Super League 2 Grecia":196,"Thai League 1":290,"Thai League 2":291,"Süper Lig":203,"1. Lig":204,"V.League 1":340,"Superliga Dinamarca":119,"Ligat ha'Al":383}
+                    if h: return int(str(h).strip()), 0
+                except Exception as e:
+                    log_terminal(f"QUOTA ERROR {e}")
+                    return 7500, 0
+                return 7500, 0
+
+            _quedan, _gast = _check_quota()
+            log_terminal(f"QUOTA {_quedan} restantes gastadas {_gast}")
+            st.info(f"Quota: {_quedan} restantes / Gastadas: {_gast}")
+
+            if _quedan<50:
+                st.error(f"⛔ Solo {_quedan}/7500 - resetea 02:00 Madrid")
+                st.stop()
+
+            MAPA_TU_LIGA = {"Bundesliga":78,"2. Bundesliga":79,"Bundesliga Femenina":82,"Saudi Professional League":307,"Saudi First Division League":308,"Bundesliga Austria":218,"2. Liga Austria":219,"Premier League Bahrein":400,"Jupiler Pro League":144,"Challenger Pro League":145,"Chinese Super League":169,"China League One":170,"Cyprus League":318,"K League 1":292,"K League 2":293,"J1 League":98,"J2 League":99,"Superliga Dinamarca":119,"UAE League":301,"Premiership Escocia":179,"LaLiga EA Sports":140,"LaLiga Hypermotion":141,"Primera Federacion G1":435,"Primera Federacion G2":436,"Liga F":148,"Ligue 1":61,"Ligue 2":62,"Super League Grecia":197,"Super League 2 Grecia":196,"Premier League":39,"Singapore Premier League":366,"WSL":44,"WSL 2":45,"Serie A Italia":135,"Serie B Italia":136,"Liga Portugal":94,"Eredivisie":88,"Eliteserien":103,"Liga Portugal 2":95,"Süper Lig":203,"1. Lig":204,"V.League 1":340,"NB I":271,"Super League Malasia":278,"Liga 1 Indonesia":274,"Liga 2 Indonesia":276,"Thai League 1":290,"Thai League 2":291,"Nike Liga":332,"Botola Pro":200,"Ligat ha'Al":383}
+
             TEMPORADAS = [2022,2023,2024,2025]
             req=[0]; prog=st.progress(0, text="Iniciando 22/23-25/26..."); should_stop=False
-            st.session_state.ultima_descarga = "2226"
-            df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", low_memory=False) if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
+
+            df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", on_bad_lines='skip', engine='python') if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
             existentes=set()
             if not df_base.empty:
-                try: d=df_base.copy(); d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y"); d["HomeTeam"]=d["HomeTeam"].astype(str).str.upper().str.strip(); d["AwayTeam"]=d["AwayTeam"].astype(str).str.upper().str.strip(); d["League"]=d.get("League", pd.Series([""]*len(d))).astype(str); d["Season"]=d.get("Season", pd.Series([""]*len(d))).astype(str); existentes.update(zip(d["Date"], d["HomeTeam"], d["AwayTeam"], d["League"], d["Season"]))
-                except: pass
+                try:
+                    d=df_base.copy(); d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y"); d["HomeTeam"]=d["HomeTeam"].astype(str).str.upper().str.strip(); d["AwayTeam"]=d["AwayTeam"].astype(str).str.upper().str.strip(); d["League"]=d.get("League", pd.Series([""]*len(d))).astype(str); d["Season"]=d.get("Season", pd.Series([""]*len(d))).astype(str); existentes.update(zip(d["Date"], d["HomeTeam"], d["AwayTeam"], d["League"], d["Season"]))
+                    log_terminal(f"EXISTENTES CARGADOS {len(existentes)}")
+                except Exception as e:
+                    log_terminal(f"ERROR EXISTENTES {e}")
+
+            PROG_FILE = "progreso_2226.json"
+            CACHE_FILE = "cache_fixtures_2226.json"
+            progreso = {}
+            cache_fixtures = {}
+            if os.path.exists(CACHE_FILE):
+                try: cache_fixtures = json.loads(open(CACHE_FILE, encoding="utf-8").read())
+                except: cache_fixtures = {}
+            if os.path.exists(PROG_FILE):
+                try: progreso = json.loads(open(PROG_FILE, encoding="utf-8").read())
+                except: progreso = {}
+            lista_ligas_orden = list(MAPA_TU_LIGA.keys())
+
             nuevos_partidos=[]
             total=len(MAPA_TU_LIGA)*len(TEMPORADAS); step=0
             for nom, lid in MAPA_TU_LIGA.items():
                 if should_stop: break
                 for y in TEMPORADAS:
                     if req[0]>=7400: should_stop=True; break
-                    step+=1; prog.progress(step/total, text=f"{nom} {y} {req[0]}/7500 Q:{_quedan}"); log_terminal(f"{nom} {y} START req:{req[0]}")
-                    try:
-                        time.sleep(0.35); r=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": lid, "season": y}, timeout=30); req[0]+=1
-                        if int(str(r.headers.get('x-ratelimit-requests-remaining','7500')).strip())<20: should_stop=True; break
-                        if r.status_code!=200: continue
-                        fixtures=r.json().get("response", [])
-                    except: continue
+                    if progreso:
+                        try:
+                            prog_nom = progreso.get("nom"); prog_y = progreso.get("y")
+                            if prog_nom in lista_ligas_orden:
+                                idx_actual = lista_ligas_orden.index(nom)*len(TEMPORADAS) + TEMPORADAS.index(y)
+                                idx_prog = lista_ligas_orden.index(prog_nom)*len(TEMPORADAS) + TEMPORADAS.index(prog_y)
+                                if idx_actual < idx_prog:
+                                    step+=1; prog.progress(step/total, text=f"Saltando {nom} {y} ya hecho..."); continue
+                        except: pass
+                    step+=1; prog.progress(step/total, text=f"{nom} {y} {req[0]}/7500 Q:{_quedan}")
+                    cache_key = f"{lid}_{y}"
+                    fixtures = None
+                    # Si temporada terminada y ya la tenemos en cache, no gastamos
+                    if y <= 2024 and cache_key in cache_fixtures:
+                        fixtures = cache_fixtures[cache_key]
+                        log_terminal(f"CACHE {nom} {y} -> {len(fixtures)} partidos (0 req)")
+                    else:
+                        log_terminal(f"{nom} {y} START req:{req[0]}")
+                        try:
+                            time.sleep(0.35); r=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": lid, "season": y}, timeout=30); req[0]+=1
+                            if r.status_code!=200:
+                                log_terminal(f"FIXTURES {nom} {y} status {r.status_code} {r.text[:100]}"); continue
+                            fixtures=r.json().get("response", [])
+                            log_terminal(f"FIXTURES {nom} {y} -> {len(fixtures)} partidos")
+                            if fixtures:
+                                cache_fixtures[cache_key]=fixtures
+                                try: open(CACHE_FILE,"w",encoding="utf-8").write(json.dumps(cache_fixtures))
+                                except: pass
+                        except Exception as e:
+                            log_terminal(f"FIXTURES EXC {nom} {y} {e}"); continue
                     if not fixtures: continue
                     for fx in fixtures:
                         if st.session_state.get('pausa_descarga'):
                             if nuevos_partidos:
                                 pd.DataFrame(nuevos_partidos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False); nuevos_partidos=[]
+                            try: open(PROG_FILE,"w",encoding="utf-8").write(json.dumps({"nom":nom,"y":y,"lid":lid}))
+                            except: pass
                             st.warning("⏸ Pausado - dale a Continuar"); st.stop()
                         if req[0]>=7400: should_stop=True; break
                         if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
@@ -549,9 +609,8 @@ with col_b:
                                     sd={s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
                                     if j==0: row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0; row["HF"]=sd.get("Fouls",0) or 0; row["HC"]=sd.get("Corner Kicks",0) or 0; row["HY"]=sd.get("Yellow Cards",0) or 0; row["HR"]=sd.get("Red Cards",0) or 0
                                     else: row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0; row["AF"]=sd.get("Fouls",0) or 0; row["AC"]=sd.get("Corner Kicks",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0
-                        except: pass
-                        if row["HS"]==0 and row["HST"]==0 and row["HC"]==0 and row["HF"]==0 and row["HY"]==0 and row["HR"]==0:
-                            continue
+                        except Exception as e: log_terminal(f"STATS EXC {e}")
+                        if row["HS"]==0 and row["HST"]==0 and row["HC"]==0 and row["HF"]==0 and row["HY"]==0 and row["HR"]==0: continue
                         try:
                             time.sleep(0.35); r_odds=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20); req[0]+=1
                             if r_odds.status_code==200:
@@ -565,9 +624,19 @@ with col_b:
                                                 elif val["value"]=="Away": row["B365A"]=float(val["odd"])
                         except: pass
                         nuevos_partidos.append(row); existentes.add((date_str, home, away, nom, season_str)); log_terminal(f"OK 22-25 {nom} {home}-{away} {date_str} req:{req[0]}")
-                    if nuevos_partidos:
+                    if nuevos_partidos and len(nuevos_partidos)>=10:
                         pd.DataFrame(nuevos_partidos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False); nuevos_partidos=[]
-            st.success(f"✅ 22/23-25/26 {req[0]}/7500 guardado - HS/HST/HF/HC/HY/HR + cuotas"); st.cache_data.clear(); st.rerun()
+            if nuevos_partidos:
+                pd.DataFrame(nuevos_partidos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
+            try:
+                if os.path.exists(PROG_FILE): os.remove(PROG_FILE)
+            except: pass
+            if should_stop:
+                try: open(PROG_FILE,"w",encoding="utf-8").write(json.dumps({"nom":nom,"y":y,"lid":lid}))
+                except: pass
+                st.warning("⛔ Quota casi agotada, mañana dale a Continuar y no gasta 2022-2024"); st.stop()
+            st.success(f"✅ 22/23-25/26 {req[0]}/7500 guardado - HS/HST/HF/HC/HY/HR + cuotas"); st.cache_data.clear(); time.sleep(1); st.rerun()
+##############FIN BOTON
 ##############FIN BOTON
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
     if trigger_esp or st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", width='stretch', key="btn_especificas_final_unico"):
@@ -595,11 +664,11 @@ with col_b:
         MAPA_ESPECIFICAS = {"K League 1":292,"K League 2":293,"J1 League":98,"J2 League":99,"Saudi Professional League":307,"Bundesliga":78,"2. Liga":79,"Jupiler Pro League":144,"Challenger Pro League":145,"Super League":207,"Challenge League":208,"UAE League":301,"League One":46}
         TEMPORADAS = [2022,2023,2024,2025,2026]
         req2=[0]; prog2=st.progress(0); should_stop=False
-        df_base2 = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", low_memory=False) if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
+        df_base2 = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", on_bad_lines='skip', engine='python') if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
         existentes=set()
         if not df_base2.empty:
             try:
-                d=df_base2.copy(); d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y"); d["HomeTeam"]=d["HomeTeam"].astype(str).str.upper().str.strip(); d["AwayTeam"]=d["AwayTeam"].astype(str).str.upper().str.strip(); d["League"]=d.get("League", pd.Series([""]*len(d))).astype(str); d["Season"]=d.get("Season", pd.Series([""]*len(d))).astype(str)
+                d=df_base2.copy(); d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y"); d["HomeTeam"]=d["HomeTeam"].apply(normaliza); d["AwayTeam"]=d["AwayTeam"].apply(normaliza); d["League"]=d.get("League", pd.Series([""]*len(d))).astype(str); d["Season"]=d.get("Season", pd.Series([""]*len(d))).astype(str)
                 # FIX: si tiene HS=0 lo dejamos re-bajar
                 for _, r in d.iterrows():
                     if float(r.get('HS',0))==0 and float(r.get('B365H',0))==0: continue
@@ -624,7 +693,7 @@ with col_b:
                             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False); nuevos=[]
                         st.warning("⏸️ Pausado"); st.stop()
                     if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
-                    date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=fx["teams"]["home"]["name"].upper().strip(); away=fx["teams"]["away"]["name"].upper().strip(); season_str=f"{y}/{y+1}"
+                    date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"]); season_str=f"{y}/{y+1}"
                     if (date_str, home, away, nom, season_str) in existentes: continue
                     ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0; ftr="H" if ft_h>ft_a else "A" if ft_a>ft_h else "D"
                     row={"Date":date_str,"League":nom,"Season":season_str,"HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":ftr,"B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0}
@@ -691,8 +760,8 @@ def cargar_todo():
     for p in candidatos:
         if p.exists() and p.stat().st_size > 0:
             try:
-                try: d = pd.read_csv(p, low_memory=False)
-                except: d = pd.read_csv(p, sep=';', low_memory=False)
+                try: d = pd.read_csv(p, on_bad_lines='skip', engine='python')
+                except: d = pd.read_csv(p, sep=';', on_bad_lines='skip', engine='python')
                 if not d.empty: dfs.append(d)
             except: pass
     if dfs:
@@ -769,7 +838,7 @@ def cargar_eventos(league, season):
     for _f in rutas_goles:
         if os.path.exists(_f):
             try:
-                _df = pd.read_parquet(_f) if _f.endswith('.parquet') else pd.read_csv(_f, low_memory=False)
+                _df = pd.read_parquet(_f) if _f.endswith('.parquet') else pd.read_csv(_f, on_bad_lines='skip', engine='python')
                 cols_low = [c.lower() for c in _df.columns]
                 if not _df.empty and ('goleador' in cols_low or 'minuto' in cols_low):
                     lista_dfs.append(_df)
@@ -1443,7 +1512,6 @@ with st.expander("Filtros de partidos", expanded=False):
     if len(jornadas) > 0:
         min_j = 1
         max_j = int(max(jornadas))
-        # FIX AUTOMATICO: De=1 y A=ultima jugada - sin romper nada mas
         def _safe_int(val, fallback):
             try:
                 return int(float(str(val).strip()))
@@ -1456,11 +1524,11 @@ with st.expander("Filtros de partidos", expanded=False):
             st.session_state.j_hasta = max_j
             st.session_state.firma_jornadas_auto = firma_jornadas
 
-        # Limpieza por si viene corrupto
         if 'j_desde' not in st.session_state:
             st.session_state.j_desde = min_j
         if 'j_hasta' not in st.session_state:
             st.session_state.j_hasta = max_j
+
         try:
             cur_desde = _safe_int(st.session_state.j_desde, min_j)
             if cur_desde < min_j or cur_desde > max_j:
@@ -1477,8 +1545,8 @@ with st.expander("Filtros de partidos", expanded=False):
             st.session_state.j_hasta = max_j
 
         col_j1, col_j2 = st.columns(2)
-        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, value=_safe_int(st.session_state.get('j_desde', min_j), min_j), key='j_desde', step=1)
-        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, value=_safe_int(st.session_state.get('j_hasta', max_j), max_j), key='j_hasta', step=1)
+        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1)
+        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1)
         # Validamos que De <= A
         if j_desde > j_hasta:
             st.warning("Jornada 'De' no puede ser mayor que 'A'")
