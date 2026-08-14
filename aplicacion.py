@@ -4661,6 +4661,7 @@ with st.expander("📋 DATOS", expanded=False):
         st.session_state.datos_temp_sel = []
         st.rerun()
 
+
     if st.session_state.datos_cargado:
         try:
             _df_base = df if 'df' in globals() else df_original
