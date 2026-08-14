@@ -777,7 +777,8 @@ if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 
 
 
-def cargar_todo():
+@st.cache_data(show_spinner=False)
+def cargar_todo(_cache_buster=0):
     import os, pathlib, re
     import pandas as pd
     import numpy as np
@@ -785,7 +786,7 @@ def cargar_todo():
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    st.sidebar.markdown("### DEBUG V12 - FIX DOBLE EXT")
+    st.sidebar.markdown(f"### DEBUG V12 - FIX DOBLE EXT v={_cache_buster}")
     df_completo = pd.DataFrame()
     # FIX: carga ambos y los une - por eso 26/27 ahora si se ve
     candidatos = [BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv", BASE / "partidos_2627_actual.csv"]
@@ -799,7 +800,7 @@ def cargar_todo():
             except: pass
     if dfs:
         df_completo = pd.concat(dfs, ignore_index=True)
-        st.sidebar.success(f"OK: {len(df_completo)} filas de {len(dfs)} archivos")
+        st.sidebar.success(f"OK: {len(df_completo)} filas de {len(dfs)} archivos | buster={_cache_buster}")
     if df_completo.empty:
         st.sidebar.error("No se encontro COMPLETO")
         return pd.DataFrame()
@@ -1496,8 +1497,22 @@ def limpiar_filtros():
 
 
 
+# --- FIX MOVIL: buster de cache basado en fecha/tamaño del CSV para que vea lo nuevo de GitHub ---
 try:
-    df = cargar_todo()
+    import pathlib
+    _BASE_TMP = pathlib.Path(__file__).parent.resolve()
+    _p1 = _BASE_TMP / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
+    _p2 = _BASE_TMP / "partidos_2627_actual.csv"
+    _buster = 0
+    if _p1.exists():
+        _buster = int(_p1.stat().st_mtime) + int(_p1.stat().st_size)
+    if _p2.exists():
+        _buster += int(_p2.stat().st_mtime)
+except:
+    _buster = 0
+
+try:
+    df = cargar_todo(_cache_buster=_buster)
 except Exception as e:
     st.error(f"Error carga: {e}")
     import traceback
@@ -4660,7 +4675,6 @@ with st.expander("📋 DATOS", expanded=False):
         st.session_state.datos_liga_sel = []
         st.session_state.datos_temp_sel = []
         st.rerun()
-
 
     if st.session_state.datos_cargado:
         try:
