@@ -139,8 +139,38 @@ def abreviar_equipo(nombre):
     return (n.split()[0][:3]).upper()
 
 
+PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
 def persistir():
-    pass
+    try:
+        # guarda solo lo serializable
+        data = {}
+        for k, v in st.session_state.items():
+            if k.startswith("FormSubmitter"): continue
+            if k.startswith("terminal_lines"): continue
+            if k.startswith("ultima_descarga"): continue
+            if k.startswith("pausa_descarga"): continue
+            try:
+                json.dumps(v)
+                data[k] = v
+            except:
+                pass
+        with open(PERSIST_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    except:
+        pass
+
+def cargar_persistencia():
+    try:
+        if os.path.exists(PERSIST_FILE):
+            with open(PERSIST_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for k, v in data.items():
+                    if k not in st.session_state:
+                        st.session_state[k] = v
+    except:
+        pass
+
+cargar_persistencia()
 
 ##################### H2H COMPACTO - UNICA DEFINICION #####################
 @lru_cache(maxsize=8192)
@@ -289,11 +319,11 @@ with st.expander("⚙ Opciones avanzadas"):
         st.session_state.ultima_descarga = None
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        if st.button("⏸ Pausa", width='stretch', key="btn_pausa_global"):
+        if st.button("⏸ Pausa", use_container_width=True, key="btn_pausa_global"):
             st.session_state.pausa_descarga = True
             st.toast("Pausando tras este partido...")
     with col_p2:
-        if st.button("▶ Continuar", width='stretch', key="btn_continua_global"):
+        if st.button("▶ Continuar", use_container_width=True, key="btn_continua_global"):
             st.session_state.pausa_descarga = False
             if st.session_state.ultima_descarga == "2627":
                 st.session_state["accion_continuar_2627"] = True
@@ -304,7 +334,7 @@ with st.expander("⚙ Opciones avanzadas"):
             st.rerun()
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        if st.button("🧪 Borrar cache", width='stretch', key="btn_borrar_cache_final_unico"):
+        if st.button("🧪 Borrar cache", use_container_width=True, key="btn_borrar_cache_final_unico"):
             import shutil, pathlib
             for f in ['ligas_2122_a_2526.parquet', 'ligas_2122_a_2526.parquet.lock', 'partidos_2627_actual.parquet']:
                 if os.path.exists(f):
@@ -1519,7 +1549,7 @@ with st.expander("Filtros de partidos", expanded=False):
                 return fallback
 
         firma_jornadas = f"{','.join(sorted(liga_sel))}|{','.join(sorted(temp_sel))}"
-        if st.session_state.get('firma_jornadas_auto') != firma_jornadas:
+        if st.session_state.get('firma_jornadas_auto')!= firma_jornadas:
             st.session_state.j_desde = min_j
             st.session_state.j_hasta = max_j
             st.session_state.firma_jornadas_auto = firma_jornadas
@@ -1545,8 +1575,8 @@ with st.expander("Filtros de partidos", expanded=False):
             st.session_state.j_hasta = max_j
 
         col_j1, col_j2 = st.columns(2)
-        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1)
-        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1)
+        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1, on_change=persistir)
+        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1, on_change=persistir)
         # Validamos que De <= A
         if j_desde > j_hasta:
             st.warning("Jornada 'De' no puede ser mayor que 'A'")
