@@ -389,7 +389,7 @@ with st.expander("⚙ Opciones avanzadas"):
     with col_b:
         if st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_actualizar_2627"):
             import requests as _req
-            API_KEY = "9ad18f235fecc18540aa98b959b8f1c7"
+            API_KEY = "9ad18f235fecc18540aa98b959b8f1c7fdsafdasfsda"
             try:
                 if "API_KEY" in st.secrets:
                     API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
