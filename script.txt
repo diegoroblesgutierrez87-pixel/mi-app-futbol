@@ -1,5 +1,0 @@
-Cada vez que quieras partidos nuevos:
-
-Abres CMD en C:\Users\DIEGO\OneDrive\Escritorio\Proyectos_VS
-Ejecutas: py actualizar_ligas.py
-Listo, tu CSV se actualiza y tu main3.py ya tiene los datos nuevos
