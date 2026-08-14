@@ -2384,19 +2384,7 @@ def _mask_columna(df_in, eq, col, op, val_str, alcance_str, cond_lv="Todo"):
     return pd.Series(True, index=df_in.index)
 
 def _mask_cuota(df_in, tipo, rango, eq="Ninguno", cond_lv="Todo"):
-    if df_in.empty:
-        return pd.Series(True, index=df_in.index)
-    # FIX 26/27 sin cuotas -> cuando es Todo/Ninguno no filtra nunca
-    # así no rompe visualización, lógica ni % ni nada, solo deja pasar 26/27
-    if tipo in ["Ninguno","Todo"]:
-        return pd.Series(True, index=df_in.index)
-    # Si es 1/X/2 solo filtra por resultado, no por cuota (porque 26/27 no tiene cuota)
-    if tipo=="1":
-        return df_in['FTR']=='H'
-    if tipo=="X":
-        return df_in['FTR']=='D'
-    if tipo=="2":
-        return df_in['FTR']=='A'
+    # CUOTAS DESACTIVADAS - pasa todo
     return pd.Series(True, index=df_in.index)
 
 def filtra_equipo(df_base, eq, cond_lv, res, am, parte, xx, htft, margen, marcador, col1, op1, val1, alc1, col2, op2, val2, alc2, col3, op3, val3, alc3, cuota_tipo, rango_cuotas):
