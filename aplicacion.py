@@ -15,18 +15,29 @@ import streamlit.components.v1 as components
 import pathlib
 LOG_FILE = str(pathlib.Path(__file__).parent / "descarga_log.txt")
 def log_terminal(msg):
+    line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
+    # 1. A archivo
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now().strftime('%H:%M:%S')} {msg}\n")
-    except:
-        pass
-    print(msg, flush=True)
+            f.write(line + "\n")
+    except: pass
+    # 2. A terminal VS Code - FORZADO sin buffer
     try:
+        print(line, flush=True)
         sys.stdout.flush()
-        sys.stderr.write(msg + "\n")
+        sys.stderr.write(line + "\n")
         sys.stderr.flush()
-    except:
-        pass
+        # Extra para que Streamlit lo deje pasar
+        os.system("") 
+    except: pass
+    # 3. A Streamlit tambien para que lo veas dentro de la app
+    try:
+        if 'terminal_lines' not in st.session_state:
+            st.session_state.terminal_lines = []
+        st.session_state.terminal_lines.append(line)
+        # guarda solo ultimas 100 lineas
+        st.session_state.terminal_lines = st.session_state.terminal_lines[-100:]
+    except: pass
 
 st.set_page_config(
     page_title="Filtro Jornada",
@@ -274,6 +285,10 @@ def racha_ambos_marcan_html(df_team):
 # BLOQUE LIMPIO - PEGA ESTO DONDE ESTABA TU EXPANDER DUPLICADO
 
 with st.expander("⚙ Opciones avanzadas"):
+    # LIMPIEZA DE KEYS VIEJAS QUE PETAN STREAMLIT
+    for _k in ["btn_2627_final_unico", "btn_2226_final_unico", "btn_especificas_final_unico"]:
+        if _k in st.session_state:
+            del st.session_state[_k]
     if 'pausa_descarga' not in st.session_state:
         st.session_state.pausa_descarga = False
     if 'ultima_descarga' not in st.session_state:
@@ -287,11 +302,11 @@ with st.expander("⚙ Opciones avanzadas"):
         if st.button("▶ Continuar", width='stretch', key="btn_continua_global"):
             st.session_state.pausa_descarga = False
             if st.session_state.ultima_descarga == "2627":
-                st.session_state.btn_2627_final_unico = True
+                st.session_state["accion_continuar_2627"] = True
             elif st.session_state.ultima_descarga == "2226":
-                st.session_state.btn_2226_final_unico = True
+                st.session_state["accion_continuar_2226"] = True
             elif st.session_state.ultima_descarga == "especificas":
-                st.session_state.btn_especificas_final_unico = True
+                st.session_state["accion_continuar_especificas"] = True
             st.rerun()
     col_a, col_b, col_c = st.columns(3)
     with col_a:
@@ -311,7 +326,8 @@ with st.expander("⚙ Opciones avanzadas"):
             st.rerun()
 ###################BOTON ACTUALIZAR 26 27 - FIX 1P/2P + ANTI-DUP REAL + MAPA 50 LIMPIO
 with col_b:
-    if st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_2627_final_unico"):
+    trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
+    if trigger_2627 or st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_2627_final_unico"):
         import requests as _req
         API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -352,29 +368,19 @@ with col_b:
         TEMPORADA = 2026
         req=[0]; prog=st.progress(0, text="Iniciando 26/27..."); should_stop=False
 
-        # 1. CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX DEFINITIVO
+        # 1. CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX NORMALIZA ANTI-DUP
         df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", low_memory=False) if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
         df_2627 = pd.read_csv("partidos_2627_actual.csv", low_memory=False) if os.path.exists("partidos_2627_actual.csv") else pd.DataFrame()
         existentes_completos=set()
-        # Un solo bucle, sin duplicar
         for _df in [df_base, df_2627]:
-            if not _df.empty and 'HS' in _df.columns:
+            if not _df.empty:
                 try:
                     d=_df.copy()
-                    has_1p = 'HS_1P' in d.columns
                     d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
-                    d["HomeTeam"]=d["HomeTeam"].astype(str).str.upper().str.strip()
-                    d["AwayTeam"]=d["AwayTeam"].astype(str).str.upper().str.strip()
+                    d["HomeTeam"]=d["HomeTeam"].apply(normaliza)
+                    d["AwayTeam"]=d["AwayTeam"].apply(normaliza)
                     for _, r in d.iterrows():
-                        # Solo es completo si YA tiene 1P y cuota
-                        if has_1p:
-                            if float(r.get('HS_1P',0))>0 and float(r.get('B365H',0))>0:
-                                existentes_completos.add((r["Date"], r["HomeTeam"], r["AwayTeam"]))
-                        else:
-                            # Si no tiene columna 1P, considera completo si tiene HS total para no re-bajar lo viejo del 21/22
-                            # Pero para 26/27 lo dejamos fuera para que se complete
-                            if str(r.get('Season',''))!="2026/2027" and float(r.get('HS',0))>0:
-                                existentes_completos.add((r["Date"], r["HomeTeam"], r["AwayTeam"]))
+                        existentes_completos.add((r["Date"], r["HomeTeam"], r["AwayTeam"]))
                 except: pass
 
         nuevos_partidos=[]; nuevos_goles=[]; nuevos_jug=[]
@@ -400,7 +406,7 @@ with col_b:
                 if req[0]>=7400: should_stop=True; break
                 if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
 
-                date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=fx["teams"]["home"]["name"].upper().strip(); away=fx["teams"]["away"]["name"].upper().strip()
+                date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 key_actual=(date_str, home, away)
 
                 if key_actual in existentes_completos: continue
@@ -481,7 +487,8 @@ with col_b:
     ############################### FIN BOTON 26 27
     ########################BOTON ACTUALIZAR 23 26
     with col_c:
-        if st.button("🔄 Actualizar 22/23-25/26", width='stretch', key="btn_2226_final_unico"):
+        trigger_2226 = st.session_state.pop("accion_continuar_2226", False)
+        if trigger_2226 or st.button("🔄 Actualizar 22/23-25/26", width='stretch', key="btn_2226_final_unico"):
             import requests as _req
             API_KEY = "9ae"
             try:
@@ -562,7 +569,8 @@ with col_b:
                         pd.DataFrame(nuevos_partidos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False); nuevos_partidos=[]
             st.success(f"✅ 22/23-25/26 {req[0]}/7500 guardado - HS/HST/HF/HC/HY/HR + cuotas"); st.cache_data.clear(); st.rerun()
 ##############FIN BOTON
-    if st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", width='stretch', key="btn_especificas_final_unico"):
+    trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
+    if trigger_esp or st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", width='stretch', key="btn_especificas_final_unico"):
         import requests as _req2
         API_KEY2 = "473f9bda627fdaee38b7b2319f03e0da"
         try:
