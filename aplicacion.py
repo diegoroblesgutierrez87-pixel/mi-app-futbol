@@ -43,6 +43,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+# HARD RESET MOVIL - BORRA BOOKMARK VIEJO B1,D1,E0 - NO ROMPE NADA
+try:
+    qp = st.query_params
+    if len(qp) > 0:
+        # Si la URL trae cualquier filtro_liga_main viejo, la limpiamos del todo
+        if "filtro_liga_main" in qp or "B1" in str(qp):
+            st.query_params.clear()
+            qp.clear()
+except:
+    pass
 # FIX MOVIL - SI URL TRAE B1,D1,E0 LIMPIA URL - NO ROMPE NADA
 try:
     if "filtro_liga_main" in st.query_params:
@@ -330,7 +340,7 @@ with st.expander("⚙ Opciones avanzadas"):
         st.session_state.ultima_descarga = None
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        if st.button("⏸ Pausa", use_container_width=True, key="btn_pausa_global"):
+        if st.button("⏸ Pausa", use_container_width=True, key="btn_pausa_global_widget"):
             st.session_state.pausa_descarga = True
             st.toast("Pausando tras este partido...")
     with col_p2:
@@ -1557,6 +1567,14 @@ with st.expander("Filtros de partidos", expanded=False):
     st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
+    # HARD RESET - SI SESSION TIENE B1 O MAS DE 5 LIGAS LO BORRA
+    try:
+        if 'filtro_liga_main' in st.session_state:
+            v = st.session_state['filtro_liga_main']
+            if isinstance(v, list) and (len(v) > 5 or (v and v[0] in ["B1","D1","E0","SP1"])):
+                del st.session_state['filtro_liga_main']
+    except:
+        pass
     # FIX MOVIL: traductor B1,D1,E0 -> nombre real - NO ROMPE NADA - VERSION LIMPIA
     MAPA_CODIGOS_VIEJOS = {
         "B1":"Jupiler Pro League", "D1":"Bundesliga", "D2":"2. Bundesliga",
