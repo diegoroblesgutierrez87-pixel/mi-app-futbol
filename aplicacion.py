@@ -778,6 +778,7 @@ if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 
 
 @st.cache_data(show_spinner=False)
+
 def cargar_todo(_cache_buster=0):
     import os, pathlib, re
     import pandas as pd
@@ -1548,9 +1549,28 @@ with st.expander("Filtros de partidos", expanded=False):
     st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
-    # DEFAULT: Eredivisie si existe, si no la primera
-    if 'filtro_liga_main' in st.session_state and len(st.session_state.filtro_liga_main) > 5:
-        del st.session_state['filtro_liga_main']
+    # FIX MOVIL: traductor de codigos viejos B1,D1,E0... -> nombre real - NO ROMPE NADA
+    MAPA_CODIGOS_VIEJOS = {
+        "B1":"Jupiler Pro League", "D1":"Bundesliga", "D2":"2. Bundesliga",
+        "E0":"Premier League", "E1":"Championship", "E2":"League One", "E3":"League Two", "EC":"Conference",
+        "F1":"Ligue 1", "F2":"Ligue 2", "G1":"Super League Grecia", "I1":"Serie A Italia", "I2":"Serie B Italia",
+        "N1":"Eredivisie", "P1":"Liga Portugal", "SC0":"Premiership Escocia", "SC1":"Championship Escocia",
+        "SP1":"LaLiga EA Sports", "SP2":"LaLiga Hypermotion", "T1":"Süper Lig",
+        "SC2":"Saudi Professional League", "SC3":"Saudi Second Division League"
+    }
+    # Si viene de URL vieja con B1,D1 etc, lo convertimos a nombres reales
+    if 'filtro_liga_main' in st.session_state:
+        try:
+            _val = st.session_state['filtro_liga_main']
+            if isinstance(_val, list) and len(_val) > 0 and _val[0] in MAPA_CODIGOS_VIEJOS:
+                _new = [MAPA_CODIGOS_VIEJOS.get(x, x) for x in _val]
+                _new = [x for x in _new if x in ligas_disponibles]
+                st.session_state['filtro_liga_main'] = _new if _new else st.session_state['filtro_liga_main']
+        except:
+            pass
+        # Si trae mas de 5 ligas (bookmark viejo con 22 ligas) lo resetea a Eredivisie para movil
+        if len(st.session_state['filtro_liga_main']) > 5:
+            del st.session_state['filtro_liga_main']
     _def_liga = ["Eredivisie"] if "Eredivisie" in ligas_disponibles else ([ligas_disponibles[0]] if ligas_disponibles else [])
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga,
         format_func=lambda x: '\u2060'.join(x), label_visibility="collapsed", key="filtro_liga_main", on_change=persistir)
