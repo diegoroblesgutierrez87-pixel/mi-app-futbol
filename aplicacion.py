@@ -828,7 +828,31 @@ def cargar_todo():
         if re.match(r'^\d{4}$', s): return f"20{s[:2]}/20{s[2:]}"
         return s
     df['Season'] = df['Season'].apply(norm_season)
-    mapa_ligas_todo = {'Jupiler':'Jupiler Pro League','Jupiler Pro League':'Jupiler Pro League','Eredivisie':'Eredivisie','Premier':'Premier League','LaLiga':'LaLiga EA Sports'}
+    mapa_ligas_todo = {
+        'Jupiler':'Jupiler Pro League',
+        'Jupiler Pro League':'Jupiler Pro League',
+        'Eredivisie':'Eredivisie',
+        'Premier':'Premier League',
+        'LaLiga':'LaLiga EA Sports',
+        'SC1': 'Saudi Professional League',
+        'SC2': 'Saudi First Division League',
+        'SC3': 'Saudi Second Division League',
+        'Primeira Liga': 'Liga Portugal',
+        'Serie A Betano': 'Serie A Brasil',
+        'LaLiga2': 'LaLiga Hypermotion',
+        'Copa': 'Taça de Portugal',
+        'Copa de Primera': 'Copa de Primera Paraguay',
+        'President Cup': 'UAE President Cup',
+        'T1': 'Thai League 1',
+        'Nike liga': 'Nike Liga',
+        'NB I.': 'NB I',
+        '2. Liga': '2. Liga Austria',
+        'Bundesliga - Femenina': 'Bundesliga Femenina',
+        'Super Liga': 'Super Liga Serbia',
+        'Superliga': 'Superliga Dinamarca',
+        'Super League': 'Super League Grecia',
+        'Super League 2': 'Super League 2 Grecia',
+    }
     df['League'] = df['League'].replace(mapa_ligas_todo)
     df = df[df['League'].notna() & (df['League']!='nan')]
     cols_num = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','HomePasses','AwayPasses','HomePasses_1P','AwayPasses_1P','HomePasses_2P','AwayPasses_2P','HomeSaves','AwaySaves','HomePos','AwayPos','HomePos_1P','AwayPos_1P','HomePos_2P','AwayPos_2P','HS_1P','AS_1P','HST_1P','AST_1P','HF_1P','AF_1P','HC_1P','AC_1P','HY_1P','AY_1P','HR_1P','AR_1P','HS_2P','AS_2P','HST_2P','AST_2P','HF_2P','AF_2P','HC_2P','AC_2P','HY_2P','AY_2P','HR_2P','AR_2P']
@@ -1503,7 +1527,7 @@ with st.expander("Filtros de partidos", expanded=False):
         else:
             st.sidebar.warning(f"Equipo {team} NO encontrado")
 
-    st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)}")
+    st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
     # DEFAULT: Eredivisie si existe, si no la primera
