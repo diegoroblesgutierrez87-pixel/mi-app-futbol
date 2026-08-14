@@ -149,6 +149,9 @@ def persistir():
             if k.startswith("terminal_lines"): continue
             if k.startswith("ultima_descarga"): continue
             if k.startswith("pausa_descarga"): continue
+            if k.startswith("btn_"): continue
+            if k.startswith("btn"): continue
+            if "btn_" in k: continue
             try:
                 json.dumps(v)
                 data[k] = v
