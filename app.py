@@ -194,10 +194,27 @@ def cargar_persistencia():
             with open(PERSIST_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for k, v in data.items():
-                    if k not in st.session_state:
+                    if k in st.session_state: continue
+                    if "buscar" in k.lower(): continue
+                    if k.startswith("btn_") or k.startswith("btn"): continue
+                    if k.startswith("ca_") and isinstance(v, bool): continue
+                    if k.startswith("be2_") and isinstance(v, bool): continue
+                    if k.endswith("_buscar"): continue
+                    if isinstance(v, bool): continue
+                    if k.startswith("FormSubmitter"): continue
+                    try:
                         st.session_state[k] = v
+                    except:
+                        pass
     except:
         pass
+    # limpieza extra por si quedó el bool en memoria del movil
+    for kk in list(st.session_state.keys()):
+        if "buscar" in kk.lower() and isinstance(st.session_state.get(kk), bool):
+            try:
+                del st.session_state[kk]
+            except:
+                pass
 
 cargar_persistencia()
 
