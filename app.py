@@ -16,48 +16,34 @@ import pathlib
 
 LOG_FILE = str(pathlib.Path(__file__).parent / "descarga_log.txt")
 def log_terminal(msg):
-    line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
-    # 1. A archivo
     try:
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-    except: pass
-    # 2. A terminal VS Code - FORZADO sin buffer
-    try:
+        line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
+        # FIX CLOUD: no intenta escribir archivo, en cloud da permiso denegado y peta la app
+        # Pero mantiene print y terminal_lines para que tu visualizacion siga igual
         print(line, flush=True)
-        
-        # Extra para que Streamlit lo deje pasar
-        os.system("") 
-    except: pass
-    # 3. A Streamlit tambien para que lo veas dentro de la app
-    try:
+        try:
+            os.system("")
+        except:
+            pass
         if 'terminal_lines' not in st.session_state:
             st.session_state.terminal_lines = []
         st.session_state.terminal_lines.append(line)
-        # guarda solo ultimas 100 lineas
         st.session_state.terminal_lines = st.session_state.terminal_lines[-100:]
-    except: pass
+    except:
+        pass
 
 st.set_page_config(
     page_title="Filtro Jornada",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-# HARD RESET MOVIL - BORRA BOOKMARK VIEJO B1,D1,E0 - NO ROMPE NADA
-try:
-    qp = st.query_params
-    if len(qp) > 0:
-        # Si la URL trae cualquier filtro_liga_main viejo, la limpiamos del todo
-        if "filtro_liga_main" in qp or "B1" in str(qp):
-            st.query_params.clear()
-            qp.clear()
-except:
-    pass
-# FIX MOVIL - SI URL TRAE B1,D1,E0 LIMPIA URL - NO ROMPE NADA
+# FIX MOVIL SEGURO - mantiene tu idea de borrar B1,D1,E0 pero sin borrar toda la URL y sin bucle
 try:
     if "filtro_liga_main" in st.query_params:
-        if "B1" in str(st.query_params["filtro_liga_main"]):
-            st.query_params.clear()
+        val = str(st.query_params.get("filtro_liga_main", ""))
+        if "B1" in val or "D1" in val or "E0" in val:
+            # Borra SOLO esa key, no toda la query, para no romper el resto de filtros
+            del st.query_params["filtro_liga_main"]
 except:
     pass
 
