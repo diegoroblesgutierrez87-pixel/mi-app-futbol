@@ -697,7 +697,7 @@ with col_b:
 ##############FIN BOTON
 ##############FIN BOTON
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
-    if trigger_esp or st.button("Generar partido", key="ca_gen", use_container_width=True):
+    if trigger_esp or st.button("Generar partido", key="ca_gen_especificas", use_container_width=True):
         import requests as _req2
         API_KEY2 = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -4055,7 +4055,7 @@ with st.expander("🎯 Creador Apuestas", expanded=False):
     eq1 = col_eq1.selectbox("Eq1 (local)", [""] + equipos, key="ca_eq1")
     eq2 = col_eq2.selectbox("Eq2 (visitante)", [""] + [e for e in equipos if e != eq1], key="ca_eq2")
 
-    if st.button("Generar partido", key="ca_gen", use_container_width=True) and eq1 and eq2:
+    if st.button("Generar partido", key="ca_gen_creador", use_container_width=True) and eq1 and eq2:
         df_r = df_creador[(df_creador['Jornada']>=j1) & (df_creador['Jornada']<=j2)].copy()
         m1 = df_r[(df_r['HomeTeam']==eq1)|(df_r['AwayTeam']==eq1)].sort_values('Date').tail(20)
         m2 = df_r[(df_r['HomeTeam']==eq2)|(df_r['AwayTeam']==eq2)].sort_values('Date').tail(20)
