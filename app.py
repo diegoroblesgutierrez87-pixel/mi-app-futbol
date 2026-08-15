@@ -2926,8 +2926,7 @@ with st.container(border=True):
             bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
             lista_bloques.append(bloque)
         equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
-        with st.container(border=True):
-            st.markdown(f"**🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos**")
+        with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=True):
             st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
 
         # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
