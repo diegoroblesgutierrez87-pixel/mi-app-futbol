@@ -33,12 +33,17 @@ def log_terminal(msg):
     except:
         pass
 
-# FIX MOVIL SEGURO
+# FIX MOVIL SEGURO - V2 no peta persistencia
 try:
     if "filtro_liga_main" in st.query_params:
         val = str(st.query_params.get("filtro_liga_main", ""))
-        if "B1" in val or "D1" in val or "E0" in val:
-            del st.query_params["filtro_liga_main"]
+        if any(x in val for x in ["B1","D1","E0","SC0","SP1","N1","P1","F1","I1","T1"]):
+            st.query_params.clear()
+            if os.path.exists(PERSIST_FILE):
+                try:
+                    os.remove(PERSIST_FILE)
+                except:
+                    pass
 except:
     pass
 
@@ -835,19 +840,19 @@ def cargar_todo(_cache_buster=0):
     # LIMPIEZA
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
     df = df[df['Date'].notna()]
-    if 'B365H' in df.columns:
-        df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
-        df = df.sort_values('__tiene_cuota', ascending=False)
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League'], keep='first')
-        df = df.drop(columns='__tiene_cuota')
-    else:
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League'], keep='first')
     for col in ['League','Season','HomeTeam','AwayTeam']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip().str.replace('"','').str.replace("'",'')
     for col in ['HomeTeam','AwayTeam']:
         if col in df.columns:
             df[col] = df[col].apply(normaliza)
+    if 'B365H' in df.columns:
+        df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
+        df = df.sort_values('__tiene_cuota', ascending=False)
+        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='first')
+        df = df.drop(columns='__tiene_cuota')
+    else:
+        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='first')
     mapa_unifica = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',}
     df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica)
     df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica)
@@ -1739,7 +1744,10 @@ with st.expander("Filtros de partidos", expanded=False):
         cuota_desde = cuota_hasta
 
     rango_cuotas = (float(cuota_desde), float(cuota_hasta))
-    st.session_state.rango_cuotas = rango_cuotas
+    try:
+        st.session_state.rango_cuotas = rango_cuotas
+    except:
+        pass
     # --- FIN RANGO CUOTAS ---
     # --- NUEVO: ULTIMAS JORNADAS ---
     st.markdown("**Ultimas jornadas**")
