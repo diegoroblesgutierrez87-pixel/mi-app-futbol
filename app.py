@@ -3030,7 +3030,7 @@ with st.container(border=True):
 
                 if equipos_por_liga:
                     total_eq = sum(len(set(v)) for v in equipos_por_liga.values())
-                    with st.container(border=True):
+                    with st.expander(f"📁 Equipos que pasan filtro ({total_eq} equipos)", expanded=True):
                         st.markdown(f"**📁 Equipos que pasan filtro ({total_eq} equipos)**")
                         for liga in sorted(equipos_por_liga.keys()):
                             lista = sorted(set(equipos_por_liga[liga]))
