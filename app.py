@@ -378,7 +378,7 @@ with st.expander("⚙ Opciones avanzadas"):
 ###################BOTON ACTUALIZAR 26 27 - FIX 1P/2P + ANTI-DUP REAL + MAPA 50 LIMPIO
 with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
-    if trigger_2627 or st.button("🔄 Actualizar 26/27", type="primary", width='stretch', key="btn_2627_final_unico"):
+    if trigger_2627 or st.button("🔄 Actualizar 26/27", type="primary", use_container_width=True, key="btn_2627_final_unico"):
         import requests as _req
         API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -549,7 +549,7 @@ with col_b:
     ########################BOTON ACTUALIZAR 23 26
     with col_c:
         trigger_2226 = st.session_state.pop("accion_continuar_2226", False)
-        if trigger_2226 or st.button("🔄 Actualizar 22/23-25/26", width='stretch', key="btn_2226_final_unico"):
+        if trigger_2226 or st.button("🔄 Actualizar 22/23-25/26", use_container_width=True, key="btn_2226_final_unico"):
             import requests as _req
             API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
             try:
@@ -697,7 +697,7 @@ with col_b:
 ##############FIN BOTON
 ##############FIN BOTON
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
-    if trigger_esp or st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", width='stretch', key="btn_especificas_final_unico"):
+    if trigger_esp or st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", use_container_width=True, key="btn_especificas_final_unico"):
         import requests as _req2
         API_KEY2 = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -3521,7 +3521,7 @@ with st.expander("ℹ Info jornadas", key="exp_info"):
                         st.dataframe(
                             styled,
                             hide_index=True,
-                            width='stretch',
+                            use_container_width=True,
                             height=600
                         )
 
@@ -3636,7 +3636,7 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                 json.dump(_dd, _f, ensure_ascii=False)
     except:
         pass
-    if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_search_final_2026"):
+    if st.button("🔎 Buscar equipos", type="primary", use_container_width=True, key="be2_search_final_2026"):
         equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
         resultados = []
         mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
@@ -4046,7 +4046,7 @@ with st.expander("🎯 Creador Apuestas", expanded=False):
     eq1 = col_eq1.selectbox("Eq1 (local)", [""] + equipos, key="ca_eq1")
     eq2 = col_eq2.selectbox("Eq2 (visitante)", [""] + [e for e in equipos if e != eq1], key="ca_eq2")
 
-    if st.button("Generar partido", key="ca_gen", width='stretch') and eq1 and eq2:
+    if st.button("Generar partido", key="ca_gen", use_container_width=True) and eq1 and eq2:
         df_r = df_creador[(df_creador['Jornada']>=j1) & (df_creador['Jornada']<=j2)].copy()
         m1 = df_r[(df_r['HomeTeam']==eq1)|(df_r['AwayTeam']==eq1)].sort_values('Date').tail(20)
         m2 = df_r[(df_r['HomeTeam']==eq2)|(df_r['AwayTeam']==eq2)].sort_values('Date').tail(20)
@@ -4255,17 +4255,17 @@ def mostrar_agenda():
                         liga_stats = df_analisis.groupby('liga').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),L=('resultado', lambda x: (x=='Perdida').sum()),Stake=('stake','sum'),Benef=('beneficio','sum')).reset_index()
                         liga_stats['Win%'] = (liga_stats['W']/liga_stats['Ap']*100).round(0).astype(int)
                         liga_stats['ROI%'] = (liga_stats['Benef']/liga_stats['Stake']*100).round(1)
-                        st.dataframe(liga_stats.sort_values('ROI%', ascending=False), hide_index=True, width='stretch', column_config={"liga":"Liga","Ap":"Ap","W":"✅","L":"❌","Win%":"%W","ROI%":"ROI","Benef":"€"})
+                        st.dataframe(liga_stats.sort_values('ROI%', ascending=False), hide_index=True, use_container_width=True, column_config={"liga":"Liga","Ap":"Ap","W":"✅","L":"❌","Win%":"%W","ROI%":"ROI","Benef":"€"})
                     with tab2:
                         tipo_stats = df_analisis.groupby('tipo').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),Benef=('beneficio','sum'),Stake=('stake','sum')).reset_index()
                         tipo_stats['ROI%'] = (tipo_stats['Benef']/tipo_stats['Stake']*100).round(1)
-                        st.dataframe(tipo_stats.sort_values('ROI%', ascending=False), hide_index=True, width='stretch')
+                        st.dataframe(tipo_stats.sort_values('ROI%', ascending=False), hide_index=True, use_container_width=True)
                     with tab3:
                         df_analisis['equipo'] = df_analisis['partido'].str.split(' vs ').str[0]
                         equipo_stats = df_analisis.groupby('equipo').agg(Ap=('id','count'),W=('resultado', lambda x: (x=='Ganada').sum()),Benef=('beneficio','sum')).reset_index()
                         equipo_stats = equipo_stats[equipo_stats['Ap']>=2]
                         equipo_stats['Win%'] = (equipo_stats['W']/equipo_stats['Ap']*100).round(0).astype(int)
-                        st.dataframe(equipo_stats.sort_values('Benef', ascending=False).head(10), hide_index=True, width='stretch', column_config={"equipo":"Equipo","Ap":"Ap","W":"✅","Win%":"%W","Benef":"€"})
+                        st.dataframe(equipo_stats.sort_values('Benef', ascending=False).head(10), hide_index=True, use_container_width=True, column_config={"equipo":"Equipo","Ap":"Ap","W":"✅","Win%":"%W","Benef":"€"})
                 else:
                     st.info("Cierra apuestas para ver stats")
 
@@ -4291,7 +4291,7 @@ def mostrar_agenda():
                 col_r1, col_r2 = st.columns([1,2])
                 res = col_r1.radio("Resultado", ["Ganada","Perdida","Nula"], horizontal=True, key="res_radio")
 
-                if col_r2.button("💾 Guardar resultado", width='stretch', key="btn_guardar"):
+                if col_r2.button("💾 Guardar resultado", use_container_width=True, key="btn_guardar"):
                     for a in apuestas:
                         if a['id'] == sel_id:
                             a['resultado'] = res
@@ -4845,3 +4845,4 @@ with st.expander("📋 DATOS", expanded=False):
     else:
         st.info("Selecciona Liga/Temporada y dale a Cargar")
 # ==================== FIN DATOS INDEPENDIENTE V2 ====================
+
