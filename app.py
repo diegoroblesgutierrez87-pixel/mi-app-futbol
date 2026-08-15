@@ -420,6 +420,7 @@ with col_b:
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
             "Bundesliga Austria": 218, "2. Liga Austria": 219,
+            "Super League": 207, "Challenge League": 208,
             "Premier League Bahrein": 400, "Jupiler Pro League": 144,
             "Challenger Pro League": 145, "Chinese Super League": 169,
             "China League One": 170, "Cyprus League": 318,
@@ -2835,17 +2836,25 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
     c_limp1, c_limp2 = st.columns([1,1])
     with c_limp1:
         if st.button("🧹 Limpiar vista", key="btn_limpiar_vista_final_unico_999", use_container_width=True):
-            st.session_state.num_ligas_filtro_actual = 0
+            st.session_state.num_ligas_filtro_actual = 1
+            st.session_state.firma_ligas_filtro_actual = ""
             st.session_state.dict_ultimos = {}
             if 'ver_partidos' in st.session_state:
                 st.session_state.ver_partidos = False
             st.rerun()
     with c_limp2:
         st.caption(f"Cargadas: {st.session_state.get('num_ligas_filtro_actual',0)}")
+        if st.button("🔄 Cargar", key="btn_forzar_carga_vista", use_container_width=True):
+            st.session_state.num_ligas_filtro_actual = 1
+            st.session_state.firma_ligas_filtro_actual = ""
+            st.rerun()
 
-    vista_limpia = st.session_state.get('num_ligas_filtro_actual', 1) == 0
+    vista_limpia = st.session_state.get('num_ligas_filtro_actual', 1) <= 0
     if vista_limpia:
-        st.info("Vista limpiada. Cambia ligas/jornadas arriba y vuelve a dar a Cargar.")
+        st.session_state.num_ligas_filtro_actual = 1
+        st.session_state.firma_ligas_filtro_actual = ""
+        st.info("Vista reseteada a 1. Cargando...")
+        st.rerun()
 
     ligas_ordenadas_all = sorted(df_final['League'].dropna().unique()) if len(df_final) > 0 else []
     # si solo hay 1 liga seleccionada, respeta el orden de liga_sel, si no todas las del df_final
