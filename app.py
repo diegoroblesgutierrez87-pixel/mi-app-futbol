@@ -378,7 +378,7 @@ with st.expander("⚙ Opciones avanzadas"):
 ###################BOTON ACTUALIZAR 26 27 - FIX 1P/2P + ANTI-DUP REAL + MAPA 50 LIMPIO
 with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
-    if trigger_2627 or st.button("🔄 Actualizar 26/27", type="primary", use_container_width=True, key="btn_2627_final_unico"):
+    if trigger_2627 or st.button("🔄 Actualizar 26/27", use_container_width=True, key="btn_2627_final_unico"):
         import requests as _req
         API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -549,7 +549,7 @@ with col_b:
     ########################BOTON ACTUALIZAR 23 26
     with col_c:
         trigger_2226 = st.session_state.pop("accion_continuar_2226", False)
-        if trigger_2226 or st.button("🔄 Actualizar 22/23-25/26", use_container_width=True, key="btn_2226_final_unico"):
+        if trigger_2226 or st.button("⬇ BAJAR LIGAS ESPECIFICAS", use_container_width=True, key="btn_especificas_final_unico"):
             import requests as _req
             API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
             try:
@@ -697,7 +697,7 @@ with col_b:
 ##############FIN BOTON
 ##############FIN BOTON
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
-    if trigger_esp or st.button("⬇ BAJAR LIGAS ESPECIFICAS", type="primary", use_container_width=True, key="btn_especificas_final_unico"):
+    if trigger_esp or st.button("Generar partido", key="ca_gen", use_container_width=True):
         import requests as _req2
         API_KEY2 = "473f9bda627fdaee38b7b2319f03e0da"
         try:
@@ -4845,4 +4845,3 @@ with st.expander("📋 DATOS", expanded=False):
     else:
         st.info("Selecciona Liga/Temporada y dale a Cargar")
 # ==================== FIN DATOS INDEPENDIENTE V2 ====================
-
