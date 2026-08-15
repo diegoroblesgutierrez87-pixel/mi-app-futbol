@@ -3646,7 +3646,13 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
                 pass
     try:
         if os.path.exists(PERSIST_FILE):
-            os.remove(PERSIST_FILE)
+            with open(PERSIST_FILE, "r", encoding="utf-8") as _f:
+                _dd = json.load(_f)
+            _dd.pop("be2_buscar", None)
+            _dd.pop("be2_buscar_v2", None)
+            _dd.pop("be2_search_final_2026", None)
+            with open(PERSIST_FILE, "w", encoding="utf-8") as _f:
+                json.dump(_dd, _f, ensure_ascii=False)
     except:
         pass
     if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_search_final_2026"):
