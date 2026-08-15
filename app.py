@@ -3033,7 +3033,7 @@ with st.container(border=True):
                         continue
                     # YA NO FILTRAMOS POR ligas_visibles - por eso se ve siempre
                     equipos_por_liga[_liga_eq].append(f"{eq.lower()} ({_hits_eq})")
-
+                #
                 if equipos_por_liga:
                     total_eq = sum(len(set(v)) for v in equipos_por_liga.values())
                     with st.expander(f"📁 Equipos que pasan filtro ({total_eq} equipos)", expanded=True):
@@ -4249,8 +4249,9 @@ def mostrar_agenda():
             c3.metric("Ganadas", len(df_ag[df_ag['resultado']=='Ganada']))
             c4.metric("ROI", f"{df_ag['beneficio'].sum()/df_ag['stake'].sum()*100:.1f}%" if df_ag['stake'].sum()>0 else "0%")
 
-            # === DASHBOARD EDGE ===
-            with st.expander("📊 Ver dónde tengo edge", expanded=False):
+            # === DASHBOARD EDGE === - FIX NESTED
+            with st.container(border=True):
+                st.markdown("**📊 Ver dónde tengo edge**")
                 df_analisis = df_ag[df_ag['resultado']!= 'Pendiente'].copy()
                 
                 # FILTROS DINÁMICOS
@@ -4670,7 +4671,8 @@ with st.expander("📋 Resumen", expanded=False):
                     key_j = f"ver_jor_{s['equipo']}_{s['temp']}_eq1"
                     if key_j not in st.session_state:
                         st.session_state[key_j] = False
-                    with st.expander(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False):
+                    with st.container(border=True):
+                        st.markdown(f"**Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})**")
                         if not st.session_state[key_j]:
                             if st.button(f"Cargar partidos {s['equipo'].title()}", key=f"btn_{key_j}", type="primary", use_container_width=True):
                                 st.session_state[key_j] = True
@@ -4740,7 +4742,8 @@ with st.expander("📋 Resumen", expanded=False):
                         key_j2 = f"ver_jor_{s['equipo']}_{s['temp']}_eq2"
                         if key_j2 not in st.session_state:
                             st.session_state[key_j2] = False
-                        with st.expander(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False):
+                        with st.container(border=True):
+                            st.markdown(f"**Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})**")
                             if not st.session_state[key_j2]:
                                 if st.button(f"Cargar partidos {s['equipo'].title()}", key=f"btn_{key_j2}", type="primary", use_container_width=True):
                                     st.session_state[key_j2] = True
