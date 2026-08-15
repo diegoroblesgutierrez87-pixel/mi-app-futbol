@@ -3319,40 +3319,41 @@ with st.container(border=True):
                 if 'datos_eq2' not in locals(): datos_eq2 = []
                 if 'datos_resto' not in locals(): datos_resto = []
 
-                def get_pos_pts_html(eq):
-                    d = df_clas_base[df_clas_base['Equipo']==eq]
-                    if not d.empty:
-                        d = d.sort_values('Jornada').iloc[-1]
-                        return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
-                    return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>"
+                with st.expander(f"📋 partidos filtro - {len(equipos_mostrar)} equipos", expanded=True):
+                    def get_pos_pts_html(eq):
+                        d = df_clas_base[df_clas_base['Equipo']==eq]
+                        if not d.empty:
+                            d = d.sort_values('Jornada').iloc[-1]
+                            return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
+                        return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>"
 
-                def get_liga_eq(eq):
-                    df_eq_liga = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
-                    return "|".join(sorted(df_eq_liga['League'].dropna().unique())) if not df_eq_liga.empty else ""
+                    def get_liga_eq(eq):
+                        df_eq_liga = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
+                        return "|".join(sorted(df_eq_liga['League'].dropna().unique())) if not df_eq_liga.empty else ""
 
-                if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
-                    for pct, hits, eq, html in datos_eq1:
-                        liga_eq = get_liga_eq(eq)
-                        pos_html = get_pos_pts_html(eq)
-                        st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>EQUIPO1: {pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
-                        st.markdown(html, unsafe_allow_html=True)
-                    st.markdown("---")
-                    for pct, hits, eq, html in datos_eq2:
-                        liga_eq = get_liga_eq(eq)
-                        pos_html = get_pos_pts_html(eq)
-                        st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>EQUIPO2: {pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
-                        st.markdown(html, unsafe_allow_html=True)
-                else:
-                    todos = datos_eq1 + datos_eq2 + datos_resto
-                    todos.sort(key=lambda x: (-x[0], -x[1]))
-                    if todos:
-                        for pct, hits, eq, html in todos:
+                    if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+                        for pct, hits, eq, html in datos_eq1:
                             liga_eq = get_liga_eq(eq)
                             pos_html = get_pos_pts_html(eq)
-                            st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>{pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>EQUIPO1: {pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
+                            st.markdown(html, unsafe_allow_html=True)
+                        st.markdown("---")
+                        for pct, hits, eq, html in datos_eq2:
+                            liga_eq = get_liga_eq(eq)
+                            pos_html = get_pos_pts_html(eq)
+                            st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>EQUIPO2: {pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
                             st.markdown(html, unsafe_allow_html=True)
                     else:
-                        st.warning(f"Ningún equipo llega al {pct_marcador}%")
+                        todos = datos_eq1 + datos_eq2 + datos_resto
+                        todos.sort(key=lambda x: (-x[0], -x[1]))
+                        if todos:
+                            for pct, hits, eq, html in todos:
+                                liga_eq = get_liga_eq(eq)
+                                pos_html = get_pos_pts_html(eq)
+                                st.markdown(f"<div style='font-size:9px;font-family:monospace;color:#000'>{pos_html} ({hits}) --> {liga_eq}</div>", unsafe_allow_html=True)
+                                st.markdown(html, unsafe_allow_html=True)
+                        else:
+                            st.warning(f"Ningún equipo llega al {pct_marcador}%")
             elif len(df_final) > 0 and not ligas_visibles:
                 st.info("No hay ligas visibles, dale a cargar")
             else:
