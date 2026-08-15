@@ -3629,7 +3629,23 @@ with st.expander("🔍 Buscador de Equipos", expanded=False):
     filtro_resumen = f"filtro: {lig_txt} | {temp_txt} | J{j_desde_be}-{j_hasta_be} | {modo_txt} | {lv_busca} | Res:{res_busca} | {fav_c1}:{col1_busca}{op1_busca}{vlr1_busca} | AM:{am_busca} | {parte_busca}"
     st.markdown(f"<div style='font-size:10px;font-family:monospace;background:#f3f4f6;padding:4px 6px;border-radius:6px;margin:6px 0'>{filtro_resumen}</div>", unsafe_allow_html=True)
 
-    if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar"):
+    # FIX CLOUD DEFINITIVO - borra el bool viejo que te peta en movil
+    if "be2_buscar" in st.session_state:
+        try:
+            del st.session_state["be2_buscar"]
+        except:
+            pass
+    try:
+        if os.path.exists(PERSIST_FILE):
+            with open(PERSIST_FILE, "r", encoding="utf-8") as _ff:
+                _dd = json.load(_ff)
+            if "be2_buscar" in _dd:
+                del _dd["be2_buscar"]
+                with open(PERSIST_FILE, "w", encoding="utf-8") as _ff:
+                    json.dump(_dd, _ff, ensure_ascii=False)
+    except:
+        pass
+    if st.button("🔎 Buscar equipos", type="primary", width='stretch', key="be2_buscar_v2"):
         equipos = pd.unique(df_be[['HomeTeam','AwayTeam']].values.ravel())
         resultados = []
         mapa_col = {'HS':'AS','AS':'HS','HST':'AST','AST':'HST','HF':'AF','AF':'HF','HC':'AC','AC':'HC','HY':'AY','AY':'HY','HR':'AR','AR':'HR','FTHG':'FTAG','FTAG':'FTHG','HTHG':'HTAG','HTAG':'HTHG'}
