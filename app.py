@@ -2793,7 +2793,8 @@ if len(df_final) > 0:
     conteo_j = conteo_j.sort_values(['Season', 'Jornada'], ascending=[False, False])
 
     total_jornadas = conteo_j['Jornada'].nunique()
-    with st.expander(f"📊 Repeticiones por jornada ({total_jornadas} jornadas)", expanded=False):
+    st.markdown(f"📊 Repeticiones por jornada ({total_jornadas} jornadas)", expanded=False, unsafe_allow_html=False)
+    with st.container(border=True):
             for season, grupo in conteo_j.groupby('Season', sort=False):
                 partidos_xj = grupo['PartidosXJornada'].iloc[0]
                 pct_total = grupo['PctTotal'].iloc[0]
@@ -2925,7 +2926,8 @@ if len(df_final) > 0 and ligas_visibles:
         bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
         lista_bloques.append(bloque)
     equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
-    with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=True):
+    st.markdown(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=True, unsafe_allow_html=False)
+    with st.container(border=True):
         st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
 
     # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
@@ -3029,23 +3031,23 @@ if len(df_final) > 0 and ligas_visibles:
 
             if equipos_por_liga:
                 total_eq = sum(len(set(v)) for v in equipos_por_liga.values())
-    with st.expander(f"📁 Equipos que pasan filtro ({total_eq} equipos)", expanded=True):
-                    st.markdown(f"**📁 Equipos que pasan filtro ({total_eq} equipos)**")
-                    for liga in sorted(equipos_por_liga.keys()):
-                        lista = sorted(set(equipos_por_liga[liga]))
-                        if not lista:
-                            continue
-    with st.expander(f"{liga.upper()} ({len(lista)})", expanded=False):
-                            st.markdown(
-                                f"<div style='font-size:11px;font-family:monospace;line-height:1.7;background:transparent;padding:2px 0'>"
-                                f"<b style='font-size:12px;font-weight:900'>{liga.upper()}:</b><br>{' | '.join(lista)}"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
+                st.markdown(f"**📁 Equipos que pasan filtro ({total_eq} equipos)**")
+                for liga in sorted(equipos_por_liga.keys()):
+                    lista = sorted(set(equipos_por_liga[liga]))
+                    if not lista:
+                        continue
+                    st.markdown(f"{liga.upper()} ({len(lista)})", expanded=False, unsafe_allow_html=False)
+                    with st.container(border=True):
+                        st.markdown(
+                            f"<div style='font-size:11px;font-family:monospace;line-height:1.7;background:transparent;padding:2px 0'>"
+                            f"<b style='font-size:12px;font-weight:900'>{liga.upper()}:</b><br>{' | '.join(lista)}"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
             else:
                 st.caption("Mini resumen: 0 equipos pasan el %")
     except Exception:
-        pass
+            pass
 
     if not vista_limpia:
         # --- A PARTIR DE AQUI TU CODIGO ORIGINAL PERO FILTRADO POR ligas_visibles ---
@@ -3318,7 +3320,8 @@ if len(df_final) > 0 and ligas_visibles:
             if 'datos_eq2' not in locals(): datos_eq2 = []
             if 'datos_resto' not in locals(): datos_resto = []
 
-            with st.expander(f"📋 partidos filtro - {len(equipos_mostrar)} equipos", expanded=True):
+            st.markdown(f"📋 partidos filtro - {len(equipos_mostrar)} equipos", expanded=True, unsafe_allow_html=False)
+            with st.container(border=True):
                 def get_pos_pts_html(eq):
                     d = df_clas_base[df_clas_base['Equipo']==eq]
                     if not d.empty:
@@ -4173,7 +4176,8 @@ def guardar_agenda(data):
 
 @st.fragment
 def mostrar_agenda():
-    with st.expander("🗓 Agenda Apuestas", expanded=False):
+    st.markdown("🗓 Agenda Apuestas", expanded=False, unsafe_allow_html=False)
+    with st.container(border=True):
         agenda_data = cargar_agenda()
         banca_inicial = st.number_input("💰 Banca inicial €", 0.0, 1000000.0,
                                        float(agenda_data.get("banca_inicial", 1000)), 10.0,
@@ -4243,7 +4247,8 @@ def mostrar_agenda():
             c4.metric("ROI", f"{df_ag['beneficio'].sum()/df_ag['stake'].sum()*100:.1f}%" if df_ag['stake'].sum()>0 else "0%")
 
             # === DASHBOARD EDGE ===
-    with st.expander("📊 Ver dónde tengo edge", expanded=False):
+            st.markdown("📊 Ver dónde tengo edge", expanded=False, unsafe_allow_html=False)
+            with st.container(border=True):
                 df_analisis = df_ag[df_ag['resultado']!= 'Pendiente'].copy()
                 
                 # FILTROS DINÁMICOS
@@ -4663,7 +4668,8 @@ with st.expander("📋 Resumen", expanded=False):
                     key_j = f"ver_jor_{s['equipo']}_{s['temp']}_eq1"
                     if key_j not in st.session_state:
                         st.session_state[key_j] = False
-with st.expander(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False):
+                    st.markdown(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False, unsafe_allow_html=False)
+                    with st.container(border=True):
                         if not st.session_state[key_j]:
                             if st.button(f"Cargar partidos {s['equipo'].title()}", key=f"btn_{key_j}", type="primary", use_container_width=True):
                                 st.session_state[key_j] = True
@@ -4733,7 +4739,8 @@ with st.expander(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", e
                         key_j2 = f"ver_jor_{s['equipo']}_{s['temp']}_eq2"
                         if key_j2 not in st.session_state:
                             st.session_state[key_j2] = False
-with st.expander(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False):
+                        st.markdown(f"Jornadas {s['equipo'].title()} {s['temp']} ({s['total']})", expanded=False, unsafe_allow_html=False)
+                        with st.container(border=True):
                             if not st.session_state[key_j2]:
                                 if st.button(f"Cargar partidos {s['equipo'].title()}", key=f"btn_{key_j2}", type="primary", use_container_width=True):
                                     st.session_state[key_j2] = True
