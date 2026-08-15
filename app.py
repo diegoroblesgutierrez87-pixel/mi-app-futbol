@@ -1865,10 +1865,8 @@ if len(jornadas) > 0:
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
-# COMIENZA TODO FILTROS AVANZADOS
+# COMIENZA TODO FILTROS AVANZADOS - YA FUERA, SIN NESTED
 ############filtros avanzados
-# FIX CLOUD: cerrado expander padre antes para evitar nested expander
-    # fin filtros de partidos - se cierra arriba
 
 with st.expander("🎛 Filtros avanzados", expanded=False):
         # --- LINEA 1: Eq1 Eq2 ---
