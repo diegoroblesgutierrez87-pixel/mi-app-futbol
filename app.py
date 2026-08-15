@@ -1752,6 +1752,8 @@ with st.expander("Filtros de partidos", expanded=False):
     # mantenemos rango_minutos fijo para no romper goles
     rango_minutos = (0, 120)
     st.session_state.rango_minutos = rango_minutos
+
+# --- CIERRE EXPANDER FILTROS DE PARTIDOS PARA FIX CLOUD ---
 #########filtro rango de ultimas jornadas
 if len(jornadas) > 0:
     df_final = df_final[(df_final['Jornada'] >= rango_jornadas[0]) & (df_final['Jornada'] <= rango_jornadas[1])]
@@ -1857,7 +1859,10 @@ if len(jornadas) > 0:
     ABREV_MARGEN = {"Todo":"—","Empate":"E","Gana 1":"G1","Gana 2":"G2","Gana 3+":"G3+","Pierde 1":"P1","Pierde 2":"P2","Pierde 3+":"P3+","Gana ≥2":"G2+","Pierde ≥2":"P2+"}
 # COMIENZA TODO FILTROS AVANZADOS
 ############filtros avanzados
-    with st.expander("🎛 Filtros avanzados", expanded=False):
+# FIX CLOUD: cerrado expander padre antes para evitar nested expander
+    # fin filtros de partidos - se cierra arriba
+
+with st.expander("🎛 Filtros avanzados", expanded=False):
         # --- LINEA 1: Eq1 Eq2 ---
         l1 = st.columns(2)
         equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
@@ -2769,7 +2774,8 @@ if len(df_final) > 0:
 
     # Partidos por jornada: equipos únicos / 2
     partidos_por_jornada = df_final.groupby('Season').apply(
-        lambda x: len(pd.unique(x[['HomeTeam','AwayTeam']].values.ravel())) // 2
+        lambda x: len(pd.unique(x[['HomeTeam','AwayTeam']].values.ravel())) // 2,
+        include_groups=False
     ).reset_index(name='PartidosXJornada')
 
     conteo_j = conteo_j.merge(partidos_por_jornada, on='Season')
@@ -3397,7 +3403,7 @@ with st.container(border=True):
         return df_tmp[['partidos']].to_html(escape=False, index=False, classes='dataframe')
 
     # --- Partidos plegables CON BOTON ---
-    with st.expander("📋 Partidos", expanded=False, key="exp_partidos"):
+    with st.expander("📋 Partidos", expanded=False):
         
         # Estado inicial
         if 'ver_partidos' not in st.session_state:
@@ -3474,7 +3480,7 @@ with st.container(border=True):
 
 
 ###########################################################
-with st.expander("ℹ Info jornadas", key="exp_info"):
+with st.expander("ℹ Info jornadas"):
     for liga in liga_sel:
         for temp in temp_sel:
             subset = df_fil[(df_fil['League']==liga) & (df_fil['Season']==temp)]
