@@ -52,14 +52,6 @@ except:
 
 
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
-# FIX MOVIL SCROLL RESET - no rompe nada, solo estabiliza touch
-st.markdown("""
-<style>
-/* FIX SCROLL MOVIL */
-[data-testid="stNumberInput"] input { touch-action: pan-y; }
-[data-testid="stExpander"] { transform: translateZ(0); }
-</style>
-""", unsafe_allow_html=True)
 #############################css visualizacion filtros avanzados columnas todo centrado y bien - 1 SOLO CARTEL
 st.markdown("""
 <style>
@@ -147,11 +139,7 @@ def abreviar_equipo(nombre):
 
 
 PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
-IS_CLOUD = os.path.exists("/mount/src") or os.path.exists("/mount/app")
 def persistir():
-    # FIX MOVIL: en Cloud no escribir disco, solo no-op para no disparar rerun
-    if IS_CLOUD:
-        return
     try:
         # guarda solo lo serializable - FIX DEFINITIVO no guardar NINGUN boton (bool)
         data = {}
@@ -182,16 +170,6 @@ def persistir():
         pass
 
 def cargar_persistencia():
-    if IS_CLOUD:
-        # FIX MOVIL: en Cloud no cargar de disco
-        # limpieza extra por si quedó el bool en memoria del movil
-        for kk in list(st.session_state.keys()):
-            if "buscar" in kk.lower() and isinstance(st.session_state.get(kk), bool):
-                try:
-                    del st.session_state[kk]
-                except:
-                    pass
-        return
     try:
         if os.path.exists(PERSIST_FILE):
             with open(PERSIST_FILE, "r", encoding="utf-8") as f:
@@ -834,6 +812,7 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
+    st.sidebar.markdown(f"### DEBUG V12 - FIX DOBLE EXT v={_cache_buster}")
     df_completo = pd.DataFrame()
     # FIX: carga ambos y los une - por eso 26/27 ahora si se ve
     candidatos = [BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv", BASE / "partidos_2627_actual.csv"]
@@ -1668,8 +1647,8 @@ with st.expander("Filtros de partidos", expanded=False):
             st.session_state.firma_jornadas_auto = firma_jornadas
 
         col_j1, col_j2 = st.columns(2)
-        col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1)
-        col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1)
+        col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1, on_change=persistir)
+        col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1, on_change=persistir)
 
         # Leemos del session_state que ya escribió el widget
         j_desde = int(st.session_state.j_desde)
