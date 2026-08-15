@@ -1,6 +1,5 @@
-streamlit==1.44.1
+streamlit>=1.44.1
 pandas==2.2.2
-numpy==1.26.4
+pyarrow==24.0.0
+openpyxl==3.1.5
 matplotlib==3.8.4
-requests
-openpyxl
