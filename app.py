@@ -1,6 +1,12 @@
 import re
 import unicodedata
 import streamlit as st
+# FIX MOVIL: set_page_config TIENE que ser lo primero de Streamlit
+st.set_page_config(
+    page_title="Filtro Jornada",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt # type: ignore
@@ -18,13 +24,8 @@ LOG_FILE = str(pathlib.Path(__file__).parent / "descarga_log.txt")
 def log_terminal(msg):
     try:
         line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
-        # FIX CLOUD: no intenta escribir archivo, en cloud da permiso denegado y peta la app
-        # Pero mantiene print y terminal_lines para que tu visualizacion siga igual
         print(line, flush=True)
-        try:
-            os.system("")
-        except:
-            pass
+        # FIX MOVIL: sin os.system y sin escribir archivo
         if 'terminal_lines' not in st.session_state:
             st.session_state.terminal_lines = []
         st.session_state.terminal_lines.append(line)
@@ -32,17 +33,11 @@ def log_terminal(msg):
     except:
         pass
 
-st.set_page_config(
-    page_title="Filtro Jornada",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-# FIX MOVIL SEGURO - mantiene tu idea de borrar B1,D1,E0 pero sin borrar toda la URL y sin bucle
+# FIX MOVIL SEGURO
 try:
     if "filtro_liga_main" in st.query_params:
         val = str(st.query_params.get("filtro_liga_main", ""))
         if "B1" in val or "D1" in val or "E0" in val:
-            # Borra SOLO esa key, no toda la query, para no romper el resto de filtros
             del st.query_params["filtro_liga_main"]
 except:
     pass
