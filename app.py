@@ -160,7 +160,7 @@ def abreviar_equipo(nombre):
 PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
 def persistir():
     try:
-        # guarda solo lo serializable
+        # guarda solo lo serializable - FIX DEFINITIVO no guardar NINGUN boton (bool)
         data = {}
         for k, v in st.session_state.items():
             if k.startswith("FormSubmitter"): continue
@@ -170,6 +170,14 @@ def persistir():
             if k.startswith("btn_"): continue
             if k.startswith("btn"): continue
             if "btn_" in k: continue
+            if k == "be2_buscar": continue
+            if k.startswith("be2_buscar"): continue
+            if k.endswith("_buscar"): continue
+            if k == "ca_gen": continue
+            if k.startswith("ca_gen"): continue
+            if k.startswith("ca_") and isinstance(v, bool): continue
+            if k.startswith("be2_") and isinstance(v, bool): continue
+            if isinstance(v, bool): continue
             try:
                 json.dumps(v)
                 data[k] = v
@@ -869,11 +877,8 @@ def cargar_todo(_cache_buster=0):
         'T1': 'Thai League 1',
         'Nike liga': 'Nike Liga',
         'NB I.': 'NB I',
-        '2. Liga': '2. Liga Austria',
         'Bundesliga - Femenina': 'Bundesliga Femenina',
-        'Super Liga': 'Super Liga Serbia',
         'Superliga': 'Superliga Dinamarca',
-        'Super League': 'Super League Grecia',
         'Super League 2': 'Super League 2 Grecia',
     }
     df['League'] = df['League'].replace(mapa_ligas_todo)
@@ -899,6 +904,14 @@ def cargar_todo(_cache_buster=0):
     df['tirosPuertaTot'] = df['HST']+df['AST']
     df['faltasTot'] = df['HF']+df['AF']
     df['TargRojTot'] = df['HR']+df['AR']
+    # --- PARCHE AUTO-FIX SUIZA / AUSTRIA - NO ROMPE NADA, SOLO CORRIGE CSV VIEJO ---
+    try:
+        EQUIPOS_SUIZA = {"BASEL","BASEL 1893","YOUNG BOYS","BSC YOUNG BOYS","SERVETTE","SERVETTE FC","LUZERN","FC LUZERN","ZURICH","FC ZURICH","ST GALLEN","FC ST. GALLEN","SION","FC SION","GRASSHOPPERS","GRASSHOPPER","LAUSANNE","LAUSANNE-SPORT","VADUZ","FC VADUZ","LUGANO","FC LUGANO","WINTERTHUR","YVERDON","WIL","FC WIL"}
+        mask_suiza = df['HomeTeam'].isin(EQUIPOS_SUIZA) | df['AwayTeam'].isin(EQUIPOS_SUIZA)
+        mask_mal = df['League'].astype(str).str.contains('AUSTRIA', case=False, na=False)
+        df.loc[mask_suiza & mask_mal, 'League'] = 'Super League'
+    except:
+        pass
     return df.copy()
 
 
@@ -1330,6 +1343,8 @@ def crear_columna_tarjetas_corners(row, equipo_filtro=None):
 
 @st.cache_data(show_spinner=False)
 def calcular_estado_jornada(df):
+    if df.empty or 'Date' not in df.columns:
+        return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
 ##########bloque para que las jornadas vallan de 1 en 1
 # 1) Jornada - 1 jornada = todos los equipos juegan una vez
@@ -1567,14 +1582,6 @@ with st.expander("Filtros de partidos", expanded=False):
     st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
-    # HARD RESET - SI SESSION TIENE B1 O MAS DE 5 LIGAS LO BORRA
-    try:
-        if 'filtro_liga_main' in st.session_state:
-            v = st.session_state['filtro_liga_main']
-            if isinstance(v, list) and (len(v) > 5 or (v and v[0] in ["B1","D1","E0","SP1"])):
-                del st.session_state['filtro_liga_main']
-    except:
-        pass
     # FIX MOVIL: traductor B1,D1,E0 -> nombre real - NO ROMPE NADA - VERSION LIMPIA
     MAPA_CODIGOS_VIEJOS = {
         "B1":"Jupiler Pro League", "D1":"Bundesliga", "D2":"2. Bundesliga",
@@ -1590,12 +1597,10 @@ with st.expander("Filtros de partidos", expanded=False):
             if isinstance(_val, list) and len(_val) > 0 and _val[0] in MAPA_CODIGOS_VIEJOS:
                 _new = [MAPA_CODIGOS_VIEJOS.get(x, x) for x in _val]
                 _new = [x for x in _new if x in ligas_disponibles]
-                st.session_state['filtro_liga_main'] = _new if _new else ["Eredivisie"] if "Eredivisie" in ligas_disponibles else []
-            if len(st.session_state.get('filtro_liga_main', [])) > 5:
-                del st.session_state['filtro_liga_main']
+                st.session_state['filtro_liga_main'] = _new if _new else (ligas_disponibles if ligas_disponibles else [])
         except:
             pass
-    _def_liga = ["Eredivisie"] if "Eredivisie" in ligas_disponibles else ([ligas_disponibles[0]] if ligas_disponibles else [])
+    _def_liga = ligas_disponibles if ligas_disponibles else []
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga, key="filtro_liga_main", on_change=persistir)
 
     st.markdown("**Temporada**")
@@ -1627,45 +1632,37 @@ with st.expander("Filtros de partidos", expanded=False):
     if len(jornadas) > 0:
         min_j = 1
         max_j = int(max(jornadas))
-        def _safe_int(val, fallback):
-            try:
-                return int(float(str(val).strip()))
-            except:
-                return fallback
 
-        firma_jornadas = f"{','.join(sorted(liga_sel))}|{','.join(sorted(temp_sel))}"
-        if st.session_state.get('firma_jornadas_auto')!= firma_jornadas:
-            st.session_state.j_desde = min_j
-            st.session_state.j_hasta = max_j
-            st.session_state.firma_jornadas_auto = firma_jornadas
-
+        # Solo inicializa si no existe, nunca reescribas después del widget
         if 'j_desde' not in st.session_state:
             st.session_state.j_desde = min_j
         if 'j_hasta' not in st.session_state:
             st.session_state.j_hasta = max_j
+        if 'firma_jornadas_auto' not in st.session_state:
+            st.session_state.firma_jornadas_auto = ""
 
-        try:
-            cur_desde = _safe_int(st.session_state.j_desde, min_j)
-            if cur_desde < min_j or cur_desde > max_j:
-                cur_desde = min_j
-            st.session_state.j_desde = cur_desde
-        except:
+        firma_jornadas = f"{','.join(sorted(liga_sel))}|{','.join(sorted(temp_sel))}"
+        if st.session_state.firma_jornadas_auto!= firma_jornadas:
             st.session_state.j_desde = min_j
-        try:
-            cur_hasta = _safe_int(st.session_state.j_hasta, max_j)
-            if cur_hasta < min_j or cur_hasta > max_j:
-                cur_hasta = max_j
-            st.session_state.j_hasta = cur_hasta
-        except:
             st.session_state.j_hasta = max_j
+            st.session_state.firma_jornadas_auto = firma_jornadas
 
         col_j1, col_j2 = st.columns(2)
-        j_desde = col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1, on_change=persistir)
-        j_hasta = col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1, on_change=persistir)
-        # Validamos que De <= A
+        col_j1.number_input("Jornada De", min_value=min_j, max_value=max_j, key='j_desde', step=1, on_change=persistir)
+        col_j2.number_input("Jornada A", min_value=min_j, max_value=max_j, key='j_hasta', step=1, on_change=persistir)
+
+        # Leemos del session_state que ya escribió el widget
+        j_desde = int(st.session_state.j_desde)
+        j_hasta = int(st.session_state.j_hasta)
+
         if j_desde > j_hasta:
-            st.warning("Jornada 'De' no puede ser mayor que 'A'")
             j_desde = j_hasta
+            st.session_state.j_hasta = j_desde
+
+        # Clamp por seguridad por si viene de URL vieja
+        j_desde = max(min_j, min(j_desde, max_j))
+        j_hasta = max(min_j, min(j_hasta, max_j))
+
         rango_jornadas = (int(j_desde), int(j_hasta))
     else:
         rango_jornadas = (0, 0)
@@ -2055,7 +2052,8 @@ with col_save:
         filtros_activos.append(f"Min%:{pct_marcador}%")
     if cuota_tipo not in ["Ninguno","Todo"]:
         filtros_activos.append(f"R1x2:{cuota_tipo}")
-    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0):
+    es_cuota_default = (rango_cuotas[0]<=1.01 and rango_cuotas[1]<=1.01) or (rango_cuotas[0]<=1.01 and rango_cuotas[1]>=99)
+    if cuota_tipo not in ["Ninguno","Todo"] and not es_cuota_default:
         filtros_activos.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if parte_gol!= "Todo":
         filtros_activos.append(f"Parte:{parte_gol}")
@@ -2119,7 +2117,10 @@ with col_save:
     comunes = []
     if pct_marcador>1: comunes.append(f"Min%:{pct_marcador}%")
     if cuota_tipo not in ["Ninguno","Todo"]: comunes.append(f"R1x2:{cuota_tipo}")
-    if not (rango_cuotas[0]==1.5 and rango_cuotas[1]==10.0): comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
+    # FIX: esconder cuotas cuando es el default 1.01-1.01 o 1.01-100 o Todo/Ninguno
+    es_cuota_default = (rango_cuotas[0]<=1.01 and rango_cuotas[1]<=1.01) or (rango_cuotas[0]<=1.01 and rango_cuotas[1]>=99)
+    if cuota_tipo not in ["Ninguno","Todo"] and not es_cuota_default:
+        comunes.append(f"Cuotas:{rango_cuotas[0]}-{rango_cuotas[1]}")
     if jugador_filtro!="TODOS": comunes.append(f"Jug:{jugador_filtro}")
     if str(ultimos_part_filtro)!="Todos":
         if str(st.session_state.get('margen_jornadas_filtro',"Todos"))!="Todos":
@@ -2469,8 +2470,27 @@ def _mask_columna(df_in, eq, col, op, val_str, alcance_str, cond_lv="Todo"):
     return pd.Series(True, index=df_in.index)
 
 def _mask_cuota(df_in, tipo, rango, eq="Ninguno", cond_lv="Todo"):
-    # CUOTAS DESACTIVADAS - pasa todo
-    return pd.Series(True, index=df_in.index)
+    if df_in.empty:
+        return pd.Series(True, index=df_in.index)
+    if tipo in ["Ninguno","Todo","-",""]:
+        return pd.Series(True, index=df_in.index)
+    try:
+        r0 = float(rango[0]); r1 = float(rango[1])
+        # 1.01-1.01 o 1.01-100 = SIN FILTRO
+        if (r0 <= 1.01 and r1 <= 1.01) or (r0 <= 1.01 and r1 >= 99):
+            return pd.Series(True, index=df_in.index)
+    except:
+        return pd.Series(True, index=df_in.index)
+
+    mapa_cuota = {"1":"B365H","X":"B365D","2":"B365A","Local":"B365H","Visitante":"B365A","Empate":"B365D"}
+    col = mapa_cuota.get(str(tipo).strip())
+    if not col or col not in df_in.columns:
+        return pd.Series(True, index=df_in.index)
+
+    vals = pd.to_numeric(df_in[col], errors='coerce').fillna(0)
+    # solo cuotas válidas >1.0
+    mask_rango = (vals >= float(rango[0])) & (vals <= float(rango[1])) & (vals > 1.0)
+    return pd.Series(mask_rango.values, index=df_in.index)
 
 def filtra_equipo(df_base, eq, cond_lv, res, am, parte, xx, htft, margen, marcador, col1, op1, val1, alc1, col2, op2, val2, alc2, col3, op3, val3, alc3, cuota_tipo, rango_cuotas):
     df = df_base.copy()
@@ -2790,13 +2810,11 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
         st.error(f"0 partidos - Filtros: Ligas={liga_sel} Temp={temp_sel} J={rango_jornadas if 'rango_jornadas' in locals() else '-'} Min%={pct_filtro_actual}% -> Baja Min% a 1% y pon J1-J38")
         st.caption(f"DEBUG: df_base={len(df_base) if 'df_base' in locals() else 0} | df_final={len(df_final)} | liga_sel={liga_sel} | temp_sel={temp_sel}")
 
-    # --- ESTO SIEMPRE FUERA DEL if ==0 ---
     if 'num_ligas_filtro_actual' not in st.session_state:
         st.session_state.num_ligas_filtro_actual = 1
     if 'firma_ligas_filtro_actual' not in st.session_state:
         st.session_state.firma_ligas_filtro_actual = ""
 
-    # --- BOTON LIMPIAR VISTA UNICO - NO BORRAR ---
     c_limp1, c_limp2 = st.columns([1,1])
     with c_limp1:
         if st.button("🧹 Limpiar vista", key="btn_limpiar_vista_final_unico_999", use_container_width=True):
@@ -2811,99 +2829,92 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
     vista_limpia = st.session_state.get('num_ligas_filtro_actual', 1) == 0
     if vista_limpia:
         st.info("Vista limpiada. Cambia ligas/jornadas arriba y vuelve a dar a Cargar.")
-    # --- FIN BOTON ---
 
     ligas_ordenadas_all = sorted(df_final['League'].dropna().unique()) if len(df_final) > 0 else []
-    # FIX: si solo has seleccionado 1 liga arriba (2. Bundesliga), respeta esa
-    if 'liga_sel' in locals() and len(liga_sel) == 1:
+    # si solo hay 1 liga seleccionada, respeta el orden de liga_sel, si no todas las del df_final
+    if 'liga_sel' in locals() and len(liga_sel) >= 1:
+        # ordena por liga_sel para que respete lo que has marcado
         ligas_ordenadas_all = sorted(liga_sel)
-        # FIX: si solo has seleccionado 1 liga arriba (Eredivisie), respeta esa y no cojas 1. Lig alfabéticamente
-        if 'liga_sel' in locals() and len(liga_sel) == 1:
-            ligas_ordenadas_all = sorted(liga_sel)
-        # FIRMA COMPLETA: cualquier filtro que cambies reinicia la vista automáticamente
-        firma_actual = f"{'|'.join(ligas_ordenadas_all)}|{pct_marcador}|{equipo_filtro}|{equipo2_filtro}|{margen_filtro}|{margen_filtro_eq2}|{resultado_filtro}|{resultado_filtro_eq2}|{ambos_marcan}|{ambos_marcan_eq2}|{marcador_filtro}|{marcador_filtro_eq2}|{parte_gol}|{parte_gol_eq2}|{cuota_tipo}|{rango_cuotas}|{ultimos_part_filtro}|{st.session_state.get('margen_jornadas_filtro')}|{st.session_state.get('seguidos_filtro')}|{st.session_state.get('clasif_eq1_modo')}|{len(df_final)}"
-        if firma_actual!= st.session_state.firma_ligas_filtro_actual:
-            st.session_state.num_ligas_filtro_actual = 1
-            st.session_state.firma_ligas_filtro_actual = firma_actual
-            # fuerza que se vean los partidos sin tener que dar a Limpiar
-            if 'ver_partidos' in st.session_state:
-                st.session_state.ver_partidos = True
 
-        num_a_mostrar = st.session_state.num_ligas_filtro_actual
-        ligas_visibles = ligas_ordenadas_all[:num_a_mostrar] if ligas_ordenadas_all else []
-        # FIX: si solo hay 1 liga, muéstrala entera aunque num_a_mostrar sea 1
-        if len(ligas_ordenadas_all) == 1:
-            ligas_visibles = ligas_ordenadas_all
+    firma_actual = f"{'|'.join(ligas_ordenadas_all)}|{pct_marcador}|{equipo_filtro}|{equipo2_filtro}|{margen_filtro}|{margen_filtro_eq2}|{resultado_filtro}|{resultado_filtro_eq2}|{ambos_marcan}|{ambos_marcan_eq2}|{marcador_filtro}|{marcador_filtro_eq2}|{parte_gol}|{parte_gol_eq2}|{cuota_tipo}|{rango_cuotas}|{ultimos_part_filtro}|{st.session_state.get('margen_jornadas_filtro')}|{st.session_state.get('seguidos_filtro')}|{st.session_state.get('clasif_eq1_modo')}|{len(df_final)}"
+    if firma_actual!= st.session_state.firma_ligas_filtro_actual:
+        st.session_state.num_ligas_filtro_actual = 1
+        st.session_state.firma_ligas_filtro_actual = firma_actual
+        if 'ver_partidos' in st.session_state:
+            st.session_state.ver_partidos = True
 
-        # TITULITO - FIX FINAL MINIRRESUMEN - SOLO EQUIPOS FILTRADOS
-        if len(df_final) > 0 and ligas_visibles:
-            df_visible_titulo = df_final[df_final['League'].isin(ligas_visibles)]
-            ligas_mostrar = "|".join(ligas_visibles) if ligas_visibles else "-"
+    ligas_visibles = ligas_ordenadas_all[:st.session_state.num_ligas_filtro_actual]
 
-            dict_ult = st.session_state.get('dict_ultimos', {})
-            ok_clasif = st.session_state.get('equipos_ok_clasif', set())
-
-            # --- FIX: Si filtras por nombre, coge SOLO esos nombres ---
-            if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
-                equipos_con_partidos_set = {equipo_filtro, equipo2_filtro}
-            elif equipo_filtro!="Ninguno":
-                equipos_con_partidos_set = {equipo_filtro}
-            elif equipo2_filtro!="Ninguno":
-                equipos_con_partidos_set = {equipo2_filtro}
-            elif dict_ult:
-                equipos_con_partidos_set = set(dict_ult.keys())
-                if ok_clasif:
-                    equipos_con_partidos_set = {e for e in equipos_con_partidos_set if e in ok_clasif}
+    # TITULITO - FIX FINAL MINIRRESUMEN - SOLO EQUIPOS FILTRADOS
+    if len(df_final) > 0 and ligas_visibles:
+        df_visible_titulo = df_final[df_final['League'].isin(ligas_visibles)]
+        ligas_mostrar = "|".join(ligas_visibles) if ligas_visibles else "-"
+        dict_ult = st.session_state.get('dict_ultimos', {})
+        ok_clasif = st.session_state.get('equipos_ok_clasif', set())
+        if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+            equipos_con_partidos_set = {equipo_filtro, equipo2_filtro}
+        elif equipo_filtro!="Ninguno":
+            equipos_con_partidos_set = {equipo_filtro}
+        elif equipo2_filtro!="Ninguno":
+            equipos_con_partidos_set = {equipo2_filtro}
+        elif dict_ult:
+            equipos_con_partidos_set = set(dict_ult.keys())
+            if ok_clasif:
+                equipos_con_partidos_set = {e for e in equipos_con_partidos_set if e in ok_clasif}
+        else:
+            if ok_clasif:
+                equipos_con_partidos_set = ok_clasif.intersection(set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))) if ok_clasif else set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
+                if not equipos_con_partidos_set:
+                    equipos_con_partidos_set = ok_clasif
             else:
-                # Sin equipo y sin Ult -> todos los del %Clasif si hay, si no todos los de df_visible
-                if ok_clasif:
-                    equipos_con_partidos_set = ok_clasif.intersection(set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))) if ok_clasif else set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
-                    if not equipos_con_partidos_set:
-                        equipos_con_partidos_set = ok_clasif
-                else:
-                    equipos_con_partidos_set = set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
+                equipos_con_partidos_set = set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
+        equipos_clasif = list(equipos_con_partidos_set)
+        equipos_con_partidos = equipos_con_partidos_set
+        if dict_ult:
+            partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
+        else:
+            partidos_mostrar = len(df_visible_titulo)
+        num_equipos = len(equipos_clasif)
+        from collections import defaultdict
+        equipos_por_liga = defaultdict(list)
+        
+        def get_liga_eq_fix(equipo_fix):
+            try:
+                # usa base_total que ya esta filtrada por ligas_visibles y temp
+                df_eq_liga = base_total[(base_total['HomeTeam']==equipo_fix) | (base_total['AwayTeam']==equipo_fix)]
+                if df_eq_liga.empty:
+                    # fallback a df_original
+                    df_eq_liga = df_original[(df_original['HomeTeam']==equipo_fix) | (df_original['AwayTeam']==equipo_fix)]
+                if df_eq_liga.empty:
+                    return "OTRA"
+                return df_eq_liga['League'].value_counts().idxmax()
+            except:
+                return "OTRA"
 
-            equipos_clasif = list(equipos_con_partidos_set)
-            equipos_con_partidos = equipos_con_partidos_set
-
-            if dict_ult:
-                partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
+        for eq in equipos_clasif:
+            d = df_clas_base[df_clas_base['Equipo']==eq]
+            if not d.empty:
+                d = d.sort_values('Jornada').iloc[-1]
+                pos = int(d['Pos']); pts = int(d['Pts'])
             else:
-                partidos_mostrar = len(df_visible_titulo)
+                pos = 999; pts = 0
+            
+            liga_eq = get_liga_eq_fix(eq)  # <-- AQUI ESTABA EL FALLO
+            equipos_por_liga[liga_eq].append((pos, eq, pts))
+        lista_bloques = []
+        for liga in sorted(equipos_por_liga.keys()):
+            equipos_por_liga[liga].sort(key=lambda x: x[0])
+            lista_eq_liga = []
+            for pos, eq, pts in equipos_por_liga[liga]:
+                pos_txt = f"{pos}º {pts}pts" if pos!=999 else "Xº Xpts"
+                txt = f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span>"
+                lista_eq_liga.append(txt)
+            bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
+            lista_bloques.append(bloque)
+        equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
+        with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=False):
+            st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
 
-            num_equipos = len(equipos_clasif)
-
-            from collections import defaultdict
-            equipos_por_liga = defaultdict(list)
-            for eq in equipos_clasif:
-                df_l = df_visible_titulo[(df_visible_titulo['HomeTeam']==eq) | (df_visible_titulo['AwayTeam']==eq)]
-                liga_eq = df_l['League'].iloc[0] if not df_l.empty else "OTRA"
-                d = df_clas_base[df_clas_base['Equipo']==eq]
-                if not d.empty:
-                    d = d.sort_values('Jornada').iloc[-1]
-                    pos = int(d['Pos']); pts = int(d['Pts'])
-                else:
-                    pos = 999; pts = 0
-                equipos_por_liga[liga_eq].append((pos, eq, pts))
-
-            lista_bloques = []
-            for liga in sorted(equipos_por_liga.keys()):
-                equipos_por_liga[liga].sort(key=lambda x: x[0])
-                lista_eq_liga = []
-                for pos, eq, pts in equipos_por_liga[liga]:
-                    pos_txt = f"{pos}º {pts}pts" if pos!=999 else "Xº Xpts"
-                    if eq in equipos_con_partidos:
-                        txt = f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span>"
-                    else:
-                        txt = f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{pos_txt}</span>"
-                    lista_eq_liga.append(txt)
-                bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
-                lista_bloques.append(bloque)
-
-            equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
-            with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=False):
-                st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
-       
         # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
         if ligas_ordenadas_all:
             if len(ligas_visibles) < len(ligas_ordenadas_all):
@@ -2977,7 +2988,14 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
                     _candidatos = {e for e in _candidatos if e in ok_clasif}
 
                 for eq in sorted(_candidatos):
-                    _tot_eq = len(_base_tot[(_base_tot['HomeTeam']==eq) | (_base_tot['AwayTeam']==eq)])
+                    _lv = condicion_filtro if equipo_filtro!="Ninguno" else condicion_filtro3 if equipo2_filtro!="Ninguno" else "Todo"
+                    if _lv == "Local":
+                        _base_tot_lv = _base_tot[_base_tot['HomeTeam']==eq]
+                    elif _lv == "Visitante":
+                        _base_tot_lv = _base_tot[_base_tot['AwayTeam']==eq]
+                    else:
+                        _base_tot_lv = _base_tot[(_base_tot['HomeTeam']==eq) | (_base_tot['AwayTeam']==eq)]
+                    _tot_eq = len(_base_tot_lv)
                     if _tot_eq==0:
                         continue
                     if eq in dict_ult and not dict_ult[eq].empty:
@@ -3024,30 +3042,44 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
                 if equipo2_filtro!= "Ninguno" and equipo2_filtro not in equipos_mostrar: equipos_mostrar.append(equipo2_filtro)
                 if not equipos_mostrar: equipos_mostrar = list(pd.unique(base[['HomeTeam','AwayTeam']].values.ravel()))
 
-                # --- FILTRO REAL ULT X/Y PARA COMUN (sin seguidos) ---
+                # --- FILTRO REAL ULT X/Y PARA COMUN (sin seguidos) - FIX DEFINITIVO base_total definido + incluye Col1/Col2/Col3 + GUARDA VENTANA PARA VISUAL ---
                 ult_f = str(st.session_state.get('ultimos_part_filtro', 'Todos'))
                 marg_f = str(st.session_state.get('margen_jornadas_filtro', 'Todos'))
-                if ult_f != "Todos" and marg_f != "Todos" and str(st.session_state.get('seguidos_filtro','-')) in ["-",""]:
+                if ult_f!= "Todos" and marg_f!= "Todos" and str(st.session_state.get('seguidos_filtro','-')) in ["-",""]:
                     try:
                         need = int(ult_f)
                         ventana = int(marg_f)
                         equipos_filtrados_ult = []
+                        dict_ult_real_temp = {} # NUEVO: guarda ventana
+                        # FIX: usa base (df_final filtrado por ligas_visibles) en vez de base_total que aun no existe aqui
+                        _df_base_ult = base if 'base' in locals() and not base.empty else df_final
                         for eq in equipos_mostrar:
-                            df_eq_total = base_total[(base_total['HomeTeam']==eq) | (base_total['AwayTeam']==eq)].sort_values('Date')
+                            df_eq_total = _df_base_ult[(_df_base_ult['HomeTeam']==eq) | (_df_base_ult['AwayTeam']==eq)].sort_values('Date')
                             if len(df_eq_total) < need:
                                 continue
                             df_last = df_eq_total.tail(ventana).copy()
                             if df_last.empty:
                                 continue
-                            # aplica los mismos filtros que el muro (margen, am, 1x2, etc)
+                            # aplica los mismos filtros que el muro (margen, am, 1x2, etc) + columnas
                             df_last = df_last[_mask_1x2(df_last, eq, resultado_filtro if eq!=equipo2_filtro else resultado_filtro_eq2, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
                             df_last = df_last[_mask_am(df_last, ambos_marcan if eq!=equipo2_filtro else ambos_marcan_eq2, parte_gol if eq!=equipo2_filtro else parte_gol_eq2, eq, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
                             df_last = df_last[_mask_margen(df_last, eq, margen_filtro if eq!=equipo2_filtro else margen_filtro_eq2, parte_gol if eq!=equipo2_filtro else parte_gol_eq2, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
                             df_last = df_last[_mask_marcador(df_last, eq, marcador_filtro if eq!=equipo2_filtro else marcador_filtro_eq2, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
+                            df_last = df_last[_mask_columna(df_last, eq, columna_filtro, operador_filtro, valor_filtro, alcance_filtro, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
+                            df_last = df_last[_mask_columna(df_last, eq, columna_filtro2, operador_filtro2, valor_filtro2, alcance_filtro2, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
+                            df_last = df_last[_mask_columna(df_last, eq, columna_filtro3, operador_filtro3, valor_filtro3, alcance_filtro3, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
                             if len(df_last) >= need:
                                 equipos_filtrados_ult.append(eq)
+                                dict_ult_real_temp[eq] = df_last # NUEVO
                         equipos_mostrar = equipos_filtrados_ult
-                    except:
+                        # NUEVO: guarda ventana para visual sin romper nada
+                        if dict_ult_real_temp:
+                            st.session_state.dict_ultimos = dict_ult_real_temp
+                            st.session_state.dict_ultimos_es_ventana = True
+                            st.session_state.ventana_ult = ventana
+                            st.session_state.need_ult = need
+                    except Exception as e:
+                        # no rompe, solo log
                         pass
                                 # Si Seguidos activo, solo los que tienen racha
                 if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and st.session_state.get('dict_ultimos'):
@@ -3064,8 +3096,12 @@ with st.expander(f"📊 Filtro actual ≥{pct_filtro_actual}%", expanded=True):
                 # --- FIN PARCHE ---
                 base_total = df_original.copy()
                 base_total = base_total[base_total['League'].isin(ligas_visibles) & base_total['Season'].isin(temp_sel)]
-                base_total, _ = calcular_estado_jornada(base_total)
-                base_total = base_total[(base_total['Jornada']>=rango_jornadas[0]) & (base_total['Jornada']<=rango_jornadas[1])]
+                if base_total.empty:
+                    base_total = base_total.copy()
+                else:
+                    base_total, _ = calcular_estado_jornada(base_total)
+                if not base_total.empty and 'Jornada' in base_total.columns:
+                    base_total = base_total[(base_total['Jornada']>=rango_jornadas[0]) & (base_total['Jornada']<=rango_jornadas[1])]
                 _pct_range2 = st.session_state.get('rango_jornadas_pct', None)
                 if _pct_range2 is not None:
                     base_total = base_total[(base_total['Jornada']>=_pct_range2[0]) & (base_total['Jornada']<=_pct_range2[1])]
