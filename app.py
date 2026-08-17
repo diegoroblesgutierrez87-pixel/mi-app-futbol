@@ -7,9 +7,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-import os
-if os.path.exists("filtros_guardados.json"): os.remove("filtros_guardados.json")
-if os.path.exists("progreso_2226.json"): os.remove("progreso_2226.json")
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt # type: ignore
