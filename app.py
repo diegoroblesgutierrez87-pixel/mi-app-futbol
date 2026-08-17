@@ -787,44 +787,6 @@ with col_b:
         if nuevos:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
-# ===============================
-# NUEVO DESPLEGABLE: BOTONES DESCARGAS
-# ===============================
-with st.expander("📥 Botones descargas", expanded=False):
-    st.caption("Descargas directas - no gasta API")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.write("**26/27 Actual**")
-        if os.path.exists("partidos_2627_actual.csv"):
-            with open("partidos_2627_actual.csv", "rb") as f:
-                st.download_button("⬇️ partidos_2627_actual.csv", f, "partidos_2627_actual.csv", "text/csv", key="dl_p2627_desc")
-        if os.path.exists("goles_2627_actual.csv"):
-            with open("goles_2627_actual.csv", "rb") as f:
-                st.download_button("⬇️ goles_2627_actual.csv", f, "goles_2627_actual.csv", "text/csv", key="dl_g2627_desc")
-        if os.path.exists("jugadores_2627_actual.csv"):
-            with open("jugadores_2627_actual.csv", "rb") as f:
-                st.download_button("⬇️ jugadores_2627_actual.csv", f, "jugadores_2627_actual.csv", "text/csv", key="dl_j2627_desc")
-
-    with c2:
-        st.write("**Base 22/26**")
-        if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv"):
-            with open("ligas_2122_a_2627_SIN_DUPLICADOS.csv", "rb") as f:
-                st.download_button("⬇️ ligas_2122_a_2627_SIN_DUPLICADOS.csv", f, "ligas_2122_a_2627_SIN_DUPLICADOS.csv", "text/csv", key="dl_base_desc")
-        if os.path.exists("goles_2122_a_2627_SIN_DUPLICADOS.csv"):
-            with open("goles_2122_a_2627_SIN_DUPLICADOS.csv", "rb") as f:
-                st.download_button("⬇️ goles_2122_a_2627.csv", f, "goles_2122_a_2627_SIN_DUPLICADOS.csv", "text/csv", key="dl_gbase_desc")
-
-    with c3:
-        st.write("**Logs / Progreso**")
-        if os.path.exists("descarga_log.txt"):
-            with open("descarga_log.txt", "rb") as f:
-                st.download_button("⬇️ descarga_log.txt", f, "descarga_log.txt", "text/plain", key="dl_log_desc")
-        if os.path.exists("progreso_2226.json"):
-            with open("progreso_2226.json", "rb") as f:
-                st.download_button("⬇️ progreso_2226.json", f, "progreso_2226.json", "application/json", key="dl_prog_desc")
-        if os.path.exists("cache_fixtures_2226.json"):
-            with open("cache_fixtures_2226.json", "rb") as f:
-                st.download_button("⬇️ cache_fixtures_2226.json", f, "cache_fixtures_2226.json", "application/json", key="dl_cache_desc")
 
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
