@@ -802,16 +802,15 @@ with col_b:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
 #######################################################################################
-
 with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
-    if st.button("1ª España 26/27 - BAJAR J1 FIX", use_container_width=True, key="btn_1esp_2627_fix_final"):
+    if st.button("1ª España 26/27 - BAJAR J1 FIX", use_container_width=True, key="btn_1esp_2627_fix_final_v3"):
         import requests as _req, time, pathlib, pandas as pd
         API_KEY = str(st.secrets.get("API_KEY","")).strip() or "473f9bda627fdaee38b7b2319f03e0da"
         LIGA_ID, LIGA_NOM, Y = 140, "LaLiga EA Sports", 2026
         BASE = pathlib.Path(__file__).parent
-        FILE_CUR = BASE / "partidos_2627_actual.csv" # <- FIX 1: va al archivo correcto
+        FILE_CUR = BASE / "partidos_2627_actual.csv"
 
-        # FIX 2: carga si existe y si tiene stats
+        # carga existentes para no duplicar pero deja re-bajar si no tiene stats
         existentes = {}
         set_fids = set()
         if FILE_CUR.exists():
@@ -825,13 +824,15 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
                         existentes[k] = float(r.get('HS',0)) > 0
                     except:
                         pass
-            except: pass
+            except:
+                pass
 
         prog = st.progress(0, text=f"Pidiendo fixtures {LIGA_NOM} {Y}...")
         try:
             r = _req.get("https://v3.football.api-sports.io/fixtures",
                          headers={"x-apisports-key": API_KEY},
                          params={"league": LIGA_ID, "season": Y}, timeout=30)
+            st.write(f"DEBUG API status {r.status_code} remaining {r.headers.get('x-ratelimit-requests-remaining')}")
             if r.status_code!= 200:
                 st.error(f"API {r.status_code}: {r.text[:300]}")
                 st.stop()
@@ -841,12 +842,15 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
             st.stop()
 
         if not fixtures:
-            st.warning(f"API 0 fixtures para {Y}")
+            st.warning(f"API 0 fixtures para {Y} - tu plan aún no tiene LaLiga 26/27")
             st.stop()
 
-        # FIX 3: solo FT, no saltar NS que te borra J1 futura
         fixtures_ft = [f for f in fixtures if f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
         st.info(f"{len(fixtures_ft)} FT encontrados de {len(fixtures)} totales")
+
+        if not fixtures_ft:
+            st.warning("0 FT, aún no hay J1 jugada en la API para 140/2026")
+            st.stop()
 
         nuevos = []
         for i, fx in enumerate(fixtures_ft):
@@ -856,25 +860,28 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
             away = normaliza(fx["teams"]["away"]["name"])
             k = (date_str, home, away)
 
-            # FIX 4: si ya existe con stats, saltar. Si existe sin stats, re-bajar para actualizar
             if k in existentes and existentes[k] and fid in set_fids:
                 prog.progress((i+1)/len(fixtures_ft), text=f"Ya completo {home}-{away}")
                 continue
 
             prog.progress((i+1)/len(fixtures_ft), text=f"Bajando {home} vs {away} {date_str} | nuevos {len(nuevos)}")
 
-            ft_h = fx["goals"]["home"] or 0; ft_a = fx["goals"]["away"] or 0
-            ht_h = fx["score"]["halftime"]["home"] or 0; ht_a = fx["score"]["halftime"]["away"] or 0
+            ft_h = fx["goals"]["home"] or 0
+            ft_a = fx["goals"]["away"] or 0
+            ht_h = fx["score"]["halftime"]["home"] or 0
+            ht_a = fx["score"]["halftime"]["away"] or 0
 
-            # FIX 5: row con todas las columnas del CSV para no corromperlo
+            # ROW CON LAS 65 COLUMNAS IGUAL QUE TU CSV ACTUAL - NO CORROMPE
             row = {"Date":date_str,"League":LIGA_NOM,"Season":f"{Y}/{Y+1}","HomeTeam":home,"AwayTeam":away,
                    "FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,
                    "FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D",
-                   "B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,
-                   "HY":0,"AY":0,"HR":0,"AR":0,
+                   "B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,
                    "HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,
+                   "HS_1P":0,"AS_1P":0,"HST_1P":0,"AST_1P":0,"HF_1P":0,"AF_1P":0,"HC_1P":0,"AC_1P":0,"HY_1P":0,"AY_1P":0,"HR_1P":0,"AR_1P":0,"HomePasses_1P":0,"AwayPasses_1P":0,"HomePos_1P":0,"AwayPos_1P":0,
+                   "HS_2P":0,"AS_2P":0,"HST_2P":0,"AST_2P":0,"HF_2P":0,"AF_2P":0,"HC_2P":0,"AC_2P":0,"HY_2P":0,"AY_2P":0,"HR_2P":0,"AR_2P":0,"HomePasses_2P":0,"AwayPasses_2P":0,"HomePos_2P":0,"AwayPos_2P":0,
                    "fixture_id":fx["fixture"]["id"]}
 
+            # stats - NO SALTA SI VIENE VACIO, LO GUARDA IGUAL
             try:
                 time.sleep(0.35)
                 rs = _req.get("https://v3.football.api-sports.io/fixtures/statistics",
@@ -885,11 +892,15 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
                         if j==0:
                             row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0
                             row["HC"]=sd.get("Corner Kicks",0) or 0; row["HY"]=sd.get("Yellow Cards",0) or 0
+                            row["HF"]=sd.get("Fouls",0) or 0; row["HR"]=sd.get("Red Cards",0) or 0
                         else:
                             row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0
                             row["AC"]=sd.get("Corner Kicks",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0
-            except: pass
+                            row["AF"]=sd.get("Fouls",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0
+            except:
+                pass
 
+            # cuotas
             try:
                 time.sleep(0.35)
                 ro = _req.get("https://v3.football.api-sports.io/odds",
@@ -903,7 +914,8 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
                                     if v["value"]=="Home": row["B365H"]=float(v["odd"])
                                     if v["value"]=="Draw": row["B365D"]=float(v["odd"])
                                     if v["value"]=="Away": row["B365A"]=float(v["odd"])
-            except: pass
+            except:
+                pass
 
             nuevos.append(row)
 
@@ -911,21 +923,21 @@ with st.expander("📥 Descargas 26/27 - FIX", expanded=False):
             df_new = pd.DataFrame(nuevos)
             df_new.to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
 
-            # FIX 6: dedup que conserva el que tiene stats y fecha DD/MM/YYYY
+            # dedup que conserva el que tiene stats
             df_all = pd.read_csv(FILE_CUR, on_bad_lines='skip')
             df_all['has'] = pd.to_numeric(df_all['HS'], errors='coerce').fillna(0) + pd.to_numeric(df_all['B365H'], errors='coerce').fillna(0)
             df_all = df_all.sort_values('has').drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='last').drop(columns='has')
             df_all['Date'] = pd.to_datetime(df_all['Date'], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
             df_all.to_csv(FILE_CUR, index=False)
 
-            st.success(f"✅ {len(nuevos)} nuevos de LaLiga 26/27 guardados. Total archivo: {len(df_all)}")
-            # FIX 7: botón descarga para que no desaparezcan en Streamlit Cloud
+            st.success(f"✅ {len(nuevos)} nuevos de LaLiga 26/27 guardados. Total archivo ahora: {len(df_all)}")
             st.download_button("📥 DESCARGA CSV Y SÚBELO A GITHUB", df_all.to_csv(index=False).encode('utf-8'),
-                               file_name="partidos_2627_actual.csv", mime="text/csv", key="dl_final")
+                               file_name="partidos_2627_actual.csv", mime="text/csv", key="dl_final_v3")
         else:
             st.info("Nada nuevo, ya tenías la J1 completa con stats")
 
         st.cache_data.clear()
+
 #####################################################################################
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
