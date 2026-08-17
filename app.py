@@ -801,7 +801,18 @@ with col_b:
         if nuevos:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
+#####
 
+# ==================== EXPANDER INDEPENDIENTE DESCARGAS ====================
+with st.expander("📥 Descargas", expanded=False):
+    st.caption("Gestión de descargas - independiente de todo")
+
+    # AQUI ME DICES QUE QUIERES QUE VAYA DENTRO
+    st.info("Expander creado. Dime que botones/ligas quieres aquí dentro.")
+
+# ==================== FIN DESCARGAS ====================
+
+####
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
