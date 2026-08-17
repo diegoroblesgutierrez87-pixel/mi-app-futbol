@@ -803,193 +803,101 @@ with col_b:
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
 #####
 
-# ==================== DESCARGAS - 1ª ESPAÑA 26/27 - V3 CORREGIDO NO PETA ====================
-with st.expander("📥 Descargas", expanded=False):
-    st.caption("1ª España 26/27 - Baja todo lo que tenga API aunque no tenga stats")
-
-    if st.button("1ª España 26/27 - BAJAR TODO", use_container_width=True, key="btn_1esp_2627_v3_final"):
-        import requests as _req, time, os, pathlib
-        import pandas as pd
-
-        API_KEY = str(st.secrets.get("API_KEY", "")).strip()
-        if len(API_KEY) < 20:
-            API_KEY = "473f9bda627fdaee38b7b2319f03e0da" # fallback
-        API_KEY = API_KEY.strip()
-
-        LIGA_ID, LIGA_NOM = 140, "LaLiga EA Sports"
-        Y = 2026
+with st.expander("📥 Descargas 26/27", expanded=False):
+    if st.button("1ª España 26/27 - BAJAR J1", use_container_width=True, key="btn_esp_2627_fix_final"):
+        import requests, time, pathlib, pandas as pd
+        API_KEY = str(st.secrets.get("API_KEY","")).strip() or "473f9bda627fdaee38b7b2319f03e0da"
         BASE = pathlib.Path(__file__).parent
-        FILE_BASE = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
+        FILE_CUR = BASE / "partidos_2627_actual.csv"
+        FILE_HIST = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
 
-        # --- Carga existentes para no duplicar, pero deja re-bajar si está vacío ---
-        set_fid = set()
-        set_fecha_incompleto = set() # fecha que ya tenemos pero sin stats/cuota -> deja re-bajar
-        set_fecha_completo = set()
-        if FILE_BASE.exists():
+        # lee que existe y si tiene stats
+        existentes = {}
+        if FILE_CUR.exists():
             try:
-                d = pd.read_csv(FILE_BASE, usecols=lambda c: c in ['Date','HomeTeam','AwayTeam','fixture_id','B365H','HS'], low_memory=False, on_bad_lines='skip', engine='python')
-                if 'fixture_id' in d.columns:
-                    set_fid.update(d['fixture_id'].dropna().astype(str).str.replace('.0','').tolist())
-                if all(x in d.columns for x in ['Date','HomeTeam','AwayTeam']):
-                    d["Date"] = pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
-                    d["HomeTeam"] = d["HomeTeam"].apply(normaliza)
-                    d["AwayTeam"] = d["AwayTeam"].apply(normaliza)
-                    d["B365H"] = pd.to_numeric(d.get("B365H",0), errors='coerce').fillna(0)
-                    d["HS"] = pd.to_numeric(d.get("HS",0), errors='coerce').fillna(0)
-                    for _, r in d.iterrows():
-                        if pd.isna(r["Date"]): continue
-                        key = (r["Date"], r["HomeTeam"], r["AwayTeam"])
-                        if r["B365H"] > 0 and r["HS"] > 0:
-                            set_fecha_completo.add(key)
-                        else:
-                            set_fecha_incompleto.add(key)
-            except Exception as e:
-                st.warning(f"Error leyendo base: {e}")
+                dfc = pd.read_csv(FILE_CUR, usecols=['Date','HomeTeam','AwayTeam','HS','fixture_id'], on_bad_lines='skip')
+                for _,r in dfc.iterrows():
+                    k=(str(r['Date']), normaliza(r['HomeTeam']), normaliza(r['AwayTeam']))
+                    existentes[k]= float(r.get('HS',0))>0
+            except: pass
 
-        prog = st.progress(0, text=f"{LIGA_NOM} {Y}/{Y+1} pidiendo fixtures...")
-        nuevos_part, nuevos_goles, nuevos_jug = [], [], []
-        req = [0]
-
-        try:
-            time.sleep(0.4)
-            r = _req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": LIGA_ID, "season": Y}, timeout=30)
-            req[0] += 1
-            if r.status_code!= 200:
-                st.error(f"API Error {r.status_code}: {r.text[:200]}")
-                st.stop()
-            fixtures = r.json().get("response", [])
-        except Exception as e:
-            st.error(f"Error API fixtures: {e}")
-            st.stop()
+        # pide fixtures 2026 = 26/27
+        r = requests.get("https://v3.football.api-sports.io/fixtures",
+                         headers={"x-apisports-key": API_KEY},
+                         params={"league":140, "season":2026}, timeout=30)
+        if r.status_code!=200:
+            st.error(f"API error {r.status_code}"); st.stop()
+        fixtures = r.json().get("response",[])
+        fixtures = [f for f in fixtures if f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
 
         if not fixtures:
-            st.warning(f"API devolvió 0 fixtures para {LIGA_NOM} {Y}. Aún no están subidos en tu plan.")
+            st.warning("API devuelve 0 FT para 2026. Es que aún no está la J1 en tu plan. Prueba mañana.")
             st.stop()
 
-        st.info(f"Fixtures encontrados: {len(fixtures)} - Empezando descarga...")
-
-        for i, fx in enumerate(fixtures):
-            fid = str(fx["fixture"]["id"])
-            status = fx["fixture"]["status"]["short"]
-            # AHORA BAJA TODO lo que no sea NS/PST/CANC, no solo FT
-            if status in ["NS","PST","CANC","ABD","AWD","WO"]:
-                continue
-
+        st.info(f"{len(fixtures)} FT encontrados")
+        prog = st.progress(0)
+        nuevos=[]
+        for i,fx in enumerate(fixtures):
+            prog.progress((i+1)/len(fixtures))
             date_str = pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
             home = normaliza(fx["teams"]["home"]["name"])
             away = normaliza(fx["teams"]["away"]["name"])
-            key_fecha = (date_str, home, away)
+            k=(date_str,home,away)
+            if k in existentes and existentes[k]:
+                continue # ya lo tenemos completo
 
-            # Si ya está completo, saltar. Si está incompleto, re-bajar
-            if fid in set_fid and key_fecha in set_fecha_completo:
-                continue
-            if key_fecha in set_fecha_completo:
-                continue
+            row={"Date":date_str,"League":"LaLiga EA Sports","Season":"2026/2027",
+                 "HomeTeam":home,"AwayTeam":away,
+                 "FTHG":fx["goals"]["home"] or 0,"FTAG":fx["goals"]["away"] or 0,
+                 "HTHG":fx["score"]["halftime"]["home"] or 0,"HTAG":fx["score"]["halftime"]["away"] or 0,
+                 "FTR":"H" if (fx["goals"]["home"] or 0)>(fx["goals"]["away"] or 0) else "A" if (fx["goals"]["away"] or 0)>(fx["goals"]["home"] or 0) else "D",
+                 "B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,
+                 "HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,
+                 "fixture_id":fx["fixture"]["id"]}
 
-            prog.progress((i+1)/len(fixtures), text=f"{home} vs {away} {date_str} {status} | Req:{req[0]} | Nuevos:{len(nuevos_part)}")
-
-            ft_h = fx["goals"]["home"]
-            ft_a = fx["goals"]["away"]
-            # Si aún no empezó, ft puede ser None
-            ft_h = 0 if ft_h is None else ft_h
-            ft_a = 0 if ft_a is None else ft_a
-            ht_h = fx["score"]["halftime"]["home"] or 0
-            ht_a = fx["score"]["halftime"]["away"] or 0
-
-            row = {"Date": date_str, "League": LIGA_NOM, "Season": f"{Y}/{Y+1}", "HomeTeam": home, "AwayTeam": away,
-                   "FTHG": ft_h, "FTAG": ft_a, "HTHG": ht_h, "HTAG": ht_a, "FTR": "H" if ft_h > ft_a else "A" if ft_a > ft_h else "D",
-                   "B365H": 0, "B365D": 0, "B365A": 0, "HS": 0, "AS": 0, "HST": 0, "AST": 0, "HF": 0, "AF": 0, "HC": 0, "AC": 0, "HY": 0, "AY": 0, "HR": 0, "AR": 0,
-                   "HomePasses": 0, "AwayPasses": 0, "HomeSaves": 0, "AwaySaves": 0, "HomePos": 0, "AwayPos": 0,
-                   "HS_1P": 0, "AS_1P": 0, "HST_1P": 0, "AST_1P": 0, "HF_1P": 0, "AF_1P": 0, "HC_1P": 0, "AC_1P": 0, "HY_1P": 0, "AY_1P": 0, "HR_1P": 0, "AR_1P": 0, "HomePasses_1P": 0, "AwayPasses_1P": 0, "HomePos_1P": 0, "AwayPos_1P": 0,
-                   "HS_2P": 0, "AS_2P": 0, "HST_2P": 0, "AST_2P": 0, "HF_2P": 0, "AF_2P": 0, "HC_2P": 0, "AC_2P": 0, "HY_2P": 0, "AY_2P": 0, "HR_2P": 0, "AR_2P": 0, "HomePasses_2P": 0, "AwayPasses_2P": 0, "HomePos_2P": 0, "AwayPos_2P": 0,
-                   "fixture_id": fx["fixture"]["id"]}
-
-            # 1. Stats totales - si falla no pasa nada
+            # stats
             try:
                 time.sleep(0.35)
-                rs = _req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                req[0] += 1
-                if rs.status_code == 200 and len(rs.json().get("response", [])) == 2:
-                    for j, td in enumerate(rs.json()["response"]):
-                        sd = {s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
-                        if j == 0:
-                            row["HS"] = sd.get("Total Shots", 0) or 0; row["HST"] = sd.get("Shots on Goal", 0) or 0; row["HF"] = sd.get("Fouls", 0) or 0; row["HC"] = sd.get("Corner Kicks", 0) or 0; row["HY"] = sd.get("Yellow Cards", 0) or 0; row["HR"] = sd.get("Red Cards", 0) or 0
-                            row["HomePasses"] = sd.get("Total passes", 0) or 0; row["HomePos"] = str(sd.get("Ball Possession", "")).replace("%", "") or 0; row["HomeSaves"] = sd.get("Goalkeeper Saves", 0) or 0
+                rs=requests.get("https://v3.football.api-sports.io/fixtures/statistics",
+                                headers={"x-apisports-key":API_KEY}, params={"fixture":fx["fixture"]["id"]}, timeout=20)
+                if rs.status_code==200 and len(rs.json().get("response",[]))==2:
+                    for j,td in enumerate(rs.json()["response"]):
+                        sd={s["type"]:s["value"] for s in td["statistics"] if s["value"] is not None}
+                        if j==0:
+                            row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0
+                            row["HC"]=sd.get("Corner Kicks",0) or 0
                         else:
-                            row["AS"] = sd.get("Total Shots", 0) or 0; row["AST"] = sd.get("Shots on Goal", 0) or 0; row["AF"] = sd.get("Fouls", 0) or 0; row["AC"] = sd.get("Corner Kicks", 0) or 0; row["AY"] = sd.get("Yellow Cards", 0) or 0; row["AR"] = sd.get("Red Cards", 0) or 0
-                            row["AwayPasses"] = sd.get("Total passes", 0) or 0; row["AwayPos"] = str(sd.get("Ball Possession", "")).replace("%", "") or 0; row["AwaySaves"] = sd.get("Goalkeeper Saves", 0) or 0
-            except:
-                pass
+                            row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0
+                            row["AC"]=sd.get("Corner Kicks",0) or 0
+            except: pass
 
-            # 2. Stats 1P/2P - opcional
+            # cuotas
             try:
                 time.sleep(0.35)
-                rs_h = _req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
-                req[0] += 1
-                if rs_h.status_code == 200:
-                    for td in rs_h.json().get("response", []):
-                        is_home = td["team"]["id"] == fx["teams"]["home"]["id"]
-                        suf = "_1P" if str(td.get("half")).lower() in ["1", "first", "1st"] else "_2P"
-                        sd = {s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
-                        if is_home:
-                            row[f"HS{suf}"] = sd.get("Total Shots", 0) or 0; row[f"HST{suf}"] = sd.get("Shots on Goal", 0) or 0
-                        else:
-                            row[f"AS{suf}"] = sd.get("Total Shots", 0) or 0; row[f"AST{suf}"] = sd.get("Shots on Goal", 0) or 0
-            except:
-                pass
-
-            # 3. Cuotas B365
-            try:
-                time.sleep(0.35)
-                ro = _req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20)
-                req[0] += 1
-                if ro.status_code == 200:
-                    resp = ro.json().get("response", [])
+                ro=requests.get("https://v3.football.api-sports.io/odds",
+                                headers={"x-apisports-key":API_KEY}, params={"fixture":fx["fixture"]["id"],"bookmaker":8}, timeout=20)
+                if ro.status_code==200:
+                    resp=ro.json().get("response",[])
                     if resp and resp[0].get("bookmakers"):
-                        for bet in resp[0]["bookmakers"][0].get("bets", []):
-                            if bet["name"] == "Match Winner":
-                                for val in bet["values"]:
-                                    if val["value"] == "Home": row["B365H"] = float(val["odd"])
-                                    elif val["value"] == "Draw": row["B365D"] = float(val["odd"])
-                                    elif val["value"] == "Away": row["B365A"] = float(val["odd"])
-            except:
-                pass
+                        for bet in resp[0]["bookmakers"][0].get("bets",[]):
+                            if bet["name"]=="Match Winner":
+                                for v in bet["values"]:
+                                    if v["value"]=="Home": row["B365H"]=float(v["odd"])
+                                    elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
+                                    elif v["value"]=="Away": row["B365A"]=float(v["odd"])
+            except: pass
 
-            # 4. Goles con minuto
-            try:
-                time.sleep(0.35)
-                re_ = _req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                req[0] += 1
-                if re_.status_code == 200:
-                    for ev in re_.json().get("response", []):
-                        if ev["type"] == "Goal":
-                            nuevos_goles.append({"Date": date_str, "League": LIGA_NOM, "Season": f"{Y}/{Y+1}", "HomeTeam": home, "AwayTeam": away, "minuto": ev["time"]["elapsed"], "minuto_str": ev["time"]["elapsed"], "parte": "1P" if (ev["time"]["elapsed"] or 0) <= 45 else "2P", "goleador": ev["player"]["name"], "asistente": ev["assist"]["name"] or "", "equipo": ev["team"]["name"].upper(), "tipo": ev["detail"], "fixture_id": fx["fixture"]["id"]})
-            except:
-                pass
+            nuevos.append(row)
 
-            # YA NO FILTRAMOS POR HS==0 - GUARDAMOS SIEMPRE
-            nuevos_part.append(row)
-            set_fid.add(fid)
-            set_fecha_completo.add(key_fecha)
-
-            # Guardado parcial cada 10 para no perder si peta quota
-            if len(nuevos_part) >= 10:
-                pd.DataFrame(nuevos_part).to_csv(FILE_BASE, mode='a', header=not FILE_BASE.exists() or FILE_BASE.stat().st_size == 0, index=False)
-                nuevos_part = []
-                if nuevos_goles:
-                    pd.DataFrame(nuevos_goles).to_csv(BASE / "goles_2627_actual.csv", mode='a', header=not (BASE / "goles_2627_actual.csv").exists() or (BASE / "goles_2627_actual.csv").stat().st_size == 0, index=False)
-                    nuevos_goles = []
-
-        # Guardado final
-        if nuevos_part:
-            pd.DataFrame(nuevos_part).to_csv(FILE_BASE, mode='a', header=not FILE_BASE.exists() or FILE_BASE.stat().st_size == 0, index=False)
-        if nuevos_goles:
-            pd.DataFrame(nuevos_goles).to_csv(BASE / "goles_2627_actual.csv", mode='a', header=not (BASE / "goles_2627_actual.csv").exists() or (BASE / "goles_2627_actual.csv").stat().st_size == 0, index=False)
-
-        st.success(f"✅ {LIGA_NOM} {Y}/{Y+1} | Bajados {len(nuevos_part)} nuevos + {len(set_fecha_completo)} totales | Req: {req[0]} | Ya los verás en Filtros")
-        st.cache_data.clear()
-        time.sleep(1)
-        st.rerun()
+        if nuevos:
+            pd.DataFrame(nuevos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
+            # dedup que conserva el que tiene stats
+            df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip')
+            df_all['score']=pd.to_numeric(df_all['HS'],errors='coerce').fillna(0)+pd.to_numeric(df_all['B365H'],errors='coerce').fillna(0)
+            df_all=df_all.sort_values('score').drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='last').drop(columns='score')
+            df_all.to_csv(FILE_CUR, index=False)
+            st.success(f"✅ {len(nuevos)} partidos J1 26/27 guardados. Total ahora {len(df_all)}")
+            st.cache_data.clear(); time.sleep(1); st.rerun()
 ####
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
