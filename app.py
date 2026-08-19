@@ -416,7 +416,7 @@ with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
     if trigger_2627 or st.button("🔄 Actualizar 26/27", use_container_width=True, key="btn_2627_final_unico"):
         import requests as _req
-                try:
+        try:
             API_KEY = str(st.secrets["API_KEY"]).strip()
         except:
             st.error("Falta API_KEY en Secrets")
@@ -734,7 +734,7 @@ with col_b:
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
     if trigger_esp or st.button("Generar partido", key="ca_gen_especificas", use_container_width=True):
         import requests as _req2
-                try:
+        try:
             API_KEY2 = str(st.secrets["API_KEY"]).strip()
         except:
             st.error("Falta API_KEY en Secrets")
