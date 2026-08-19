@@ -382,15 +382,14 @@ with st.expander("⚙ Opciones avanzadas"):
    
  #################################################################################################   
 ###########################################################################borrar cache nuevo            
+
 with col_a:
-    ###### boton borrar mejorado
     if st.button("🧹 Borrar cache / cookies (40kb)", use_container_width=True, key="btn_borrar_cache_final_unico"):
-        for f in ['filtros_guardados.json', 'ligas_2122_a_2526.parquet', 'partidos_2627_actual.parquet']:
-            if os.path.exists(f):
-                try:
-                    os.remove(f)
-                except:
-                    pass
+        if os.path.exists("filtros_guardados.json"):
+            try:
+                os.remove("filtros_guardados.json")
+            except:
+                pass
         for root, dirs, files in os.walk('.', topdown=False):
             for name in dirs:
                 if name == '__pycache__':
@@ -409,7 +408,6 @@ with col_a:
         except:
             pass
         st.rerun()
-
 ##############################################
 #############################################
 #############################################
