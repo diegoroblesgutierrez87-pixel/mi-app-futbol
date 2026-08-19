@@ -416,10 +416,11 @@ with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
     if trigger_2627 or st.button("🔄 Actualizar 26/27", use_container_width=True, key="btn_2627_final_unico"):
         import requests as _req
-        API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
-        try:
-            if "API_KEY" in st.secrets: API_KEY = str(st.secrets["API_KEY"]).strip() or API_KEY
-        except: pass
+                try:
+            API_KEY = str(st.secrets["API_KEY"]).strip()
+        except:
+            st.error("Falta API_KEY en Secrets")
+            st.stop()
 
         def _check_quota():
             try:
@@ -587,13 +588,11 @@ with col_b:
         trigger_2226 = st.session_state.pop("accion_continuar_2226", False)
         if trigger_2226 or st.button("⬇ BAJAR LIGAS ESPECIFICAS", use_container_width=True, key="btn_especificas_final_unico"):
             import requests as _req
-            API_KEY = "473f9bda627fdaee38b7b2319f03e0da"
             try:
-                if "API_KEY" in st.secrets:
-                    _k = str(st.secrets["API_KEY"]).strip()
-                    if len(_k) > 20:
-                        API_KEY = _k
-            except: pass
+                API_KEY = str(st.secrets["API_KEY"]).strip()
+            except:
+                st.error("Falta API_KEY en Secrets")
+                st.stop()
             API_KEY = str(API_KEY).strip()
             log_terminal(f"BTN 22/26 PULSADO KEY len={len(API_KEY)}")
             st.toast(f"Botón pulsado KEY {len(API_KEY)} chars")
@@ -735,10 +734,11 @@ with col_b:
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
     if trigger_esp or st.button("Generar partido", key="ca_gen_especificas", use_container_width=True):
         import requests as _req2
-        API_KEY2 = "473f9bda627fdaee38b7b2319f03e0da"
-        try:
-            if "API_KEY" in st.secrets: API_KEY2 = str(st.secrets["API_KEY"]).strip() or API_KEY2
-        except: pass
+                try:
+            API_KEY2 = str(st.secrets["API_KEY"]).strip()
+        except:
+            st.error("Falta API_KEY en Secrets")
+            st.stop()
         def _check_quota():
             try:
                 rr = _req2.get("https://v3.football.api-sports.io/status", headers={"x-apisports-key": API_KEY2}, timeout=15)
@@ -822,7 +822,7 @@ with col_b:
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
     if st.button("1ª España 26/27 - BAJAR Y SUBIR A GITHUB", use_container_width=True, key="btn_1esp_2627_github"):
         import requests as _req, time, pathlib, pandas as pd, base64
-        API_KEY = str(st.secrets.get("API_KEY","")).strip() or "473f9bda627fdaee38b7b2319f03e0da"
+                API_KEY = str(st.secrets["API_KEY"]).strip()
         LIGA_ID, LIGA_NOM, Y = 140, "LaLiga EA Sports", 2026
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
