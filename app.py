@@ -748,6 +748,7 @@ with col_b:
             st.success(f"✅ 22/23-25/26 {req[0]}/7500 guardado - HS/HST/HF/HC/HY/HR + cuotas"); st.cache_data.clear(); time.sleep(1); st.rerun()
 ##############FIN BOTON
 ##############FIN BOTON
+
     trigger_esp = st.session_state.pop("accion_continuar_especificas", False)
     if trigger_esp or st.button("Generar partido", key="ca_gen_especificas", use_container_width=True):
         import requests as _req2
@@ -780,7 +781,6 @@ with col_b:
         if not df_base2.empty:
             try:
                 d=df_base2.copy(); d["Date"]=pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y"); d["HomeTeam"]=d["HomeTeam"].apply(normaliza); d["AwayTeam"]=d["AwayTeam"].apply(normaliza); d["League"]=d.get("League", pd.Series([""]*len(d))).astype(str); d["Season"]=d.get("Season", pd.Series([""]*len(d))).astype(str)
-                # FIX: si tiene HS=0 lo dejamos re-bajar
                 for _, r in d.iterrows():
                     if float(r.get('HS',0))==0 and float(r.get('B365H',0))==0: continue
                     existentes.add((r["Date"], r["HomeTeam"], r["AwayTeam"], r["League"], r["Season"]))
@@ -802,7 +802,7 @@ with col_b:
                     if st.session_state.get('pausa_descarga'):
                         if nuevos:
                             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False); nuevos=[]
-                        st.warning("⏸️ Pausado"); st.stop()
+                        st.warning("⏸ Pausado"); st.stop()
                     if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
                     date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"]); season_str=f"{y}/{y+1}"
                     if (date_str, home, away, nom, season_str) in existentes: continue
@@ -816,7 +816,6 @@ with col_b:
                                 if j==0: row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0; row["HF"]=sd.get("Fouls",0) or 0; row["HC"]=sd.get("Corner Kicks",0) or 0; row["HY"]=sd.get("Yellow Cards",0) or 0; row["HR"]=sd.get("Red Cards",0) or 0
                                 else: row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0; row["AF"]=sd.get("Fouls",0) or 0; row["AC"]=sd.get("Corner Kicks",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0
                     except: pass
-                    # --- FIX CLAVE: SI SIGUE A 0 NO LO GUARDA ---
                     if row["HS"]==0 and row["HST"]==0 and row["HC"]==0:
                         continue
                     try:
@@ -834,12 +833,13 @@ with col_b:
                     nuevos.append(row)
         if nuevos:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
-        st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
-#######################################################################################
-    ############
-##########
+        st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados")
+        st.cache_data.clear()
+        st.rerun()
 
- with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
+with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
+    
+   ############################
     if st.button("1ª España 26/27 - BAJAR Y SUBIR A GITHUB", use_container_width=True, key="btn_1esp_2627_github_FINAL_V4"):
         import requests as _req, time, pathlib, pandas as pd, base64
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
