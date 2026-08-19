@@ -819,14 +819,17 @@ with col_b:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados"); st.cache_data.clear(); st.rerun()
 #######################################################################################
+    ############
+##########
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
-        if st.button("1ª España 26/27 - BAJAR Y SUBIR A GITHUB", use_container_width=True, key="btn_1esp_2627_github"):
-            import requests as _req, time, pathlib, pandas as pd, base64
-            try:
-               API_KEY = str(st.secrets["API_KEY"]).strip()
-            except:
-                st.error("Falta API_KEY en Secrets")
-                st.stop()
+    if st.button("1ª España 26/27 - BAJAR Y SUBIR A GITHUB", use_container_width=True, key="btn_1esp_2627_github"):
+        import requests as _req, time, pathlib, pandas as pd, base64
+        try:
+            API_KEY = str(st.secrets["API_KEY"]).strip()
+        except:
+            st.error("Falta API_KEY en Secrets")
+            st.stop()
+
         LIGA_ID, LIGA_NOM, Y = 140, "LaLiga EA Sports", 2026
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
@@ -859,7 +862,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"Error GitHub push: {e}")
                 return False
 
-        # --- mismo código de descarga que arriba ---
+        # --- descarga ---
         existentes = {}; set_fids = set()
         if FILE_CUR.exists():
             try:
@@ -871,6 +874,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                         existentes[k] = float(r.get('HS',0)) > 0
                     except: pass
             except: pass
+
         prog = st.progress(0, text=f"Pidiendo {LIGA_NOM} {Y}...")
         r = _req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": LIGA_ID, "season": Y}, timeout=30)
         fixtures = r.json().get("response", [])
@@ -923,12 +927,12 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             if nuevos_goles_total:
                 pd.DataFrame(nuevos_goles_total).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
             st.success(f"✅ {len(nuevos)} partidos + {len(nuevos_goles_total)} goles guardados. Total: {len(df_all)}")
-            # PUSH AUTO
             push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
             push_csv_a_github(FILE_GOLES, "goles_2627_actual.csv")
         else:
             st.info("Nada nuevo - ya están completos")
         st.cache_data.clear()
+
 #####################################################################################
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
