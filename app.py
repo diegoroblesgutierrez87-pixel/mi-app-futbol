@@ -821,12 +821,12 @@ with col_b:
 #######################################################################################
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         if st.button("1ª España 26/27 - BAJAR Y SUBIR A GITHUB", use_container_width=True, key="btn_1esp_2627_github"):
-        import requests as _req, time, pathlib, pandas as pd, base64
-        try:
-            API_KEY = str(st.secrets["API_KEY"]).strip()
-        except:
-            st.error("Falta API_KEY en Secrets")
-            st.stop()
+            import requests as _req, time, pathlib, pandas as pd, base64
+            try:
+               API_KEY = str(st.secrets["API_KEY"]).strip()
+            except:
+                st.error("Falta API_KEY en Secrets")
+                st.stop()
         LIGA_ID, LIGA_NOM, Y = 140, "LaLiga EA Sports", 2026
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
