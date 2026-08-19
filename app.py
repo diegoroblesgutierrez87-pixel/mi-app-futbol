@@ -379,21 +379,40 @@ with st.expander("⚙ Opciones avanzadas"):
                 st.session_state["accion_continuar_especificas"] = True
             st.rerun()
     col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        if st.button("🧪 Borrar cache", use_container_width=True, key="btn_borrar_cache_final_unico"):
-            import shutil, pathlib
-            for f in ['ligas_2122_a_2526.parquet', 'ligas_2122_a_2526.parquet.lock', 'partidos_2627_actual.parquet']:
-                if os.path.exists(f):
-                    try: os.remove(f)
-                    except: pass
-            try: st.cache_data.clear()
-            except: pass
-            try: st.cache_resource.clear()
-            except: pass
-            for p in pathlib.Path('.').rglob('__pycache__'):
-                try: shutil.rmtree(p)
-                except: pass
-            st.rerun()
+   
+ #################################################################################################   
+###########################################################################borrar cache nuevo            
+with col_a:
+    ###### boton borrar mejorado
+    if st.button("🧹 Borrar cache / cookies (40kb)", use_container_width=True, key="btn_borrar_cache_final_unico"):
+        for f in ['filtros_guardados.json', 'ligas_2122_a_2526.parquet', 'partidos_2627_actual.parquet']:
+            if os.path.exists(f):
+                try:
+                    os.remove(f)
+                except:
+                    pass
+        for root, dirs, files in os.walk('.', topdown=False):
+            for name in dirs:
+                if name == '__pycache__':
+                    try:
+                        import shutil
+                        shutil.rmtree(os.path.join(root, name))
+                    except:
+                        pass
+        st.query_params.clear()
+        try:
+            st.cache_data.clear()
+        except:
+            pass
+        try:
+            st.cache_resource.clear()
+        except:
+            pass
+        st.rerun()
+
+##############################################
+#############################################
+#############################################
 ###################BOTON ACTUALIZAR 26 27 - FIX 1P/2P + ANTI-DUP REAL + MAPA 50 LIMPIO
 with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
