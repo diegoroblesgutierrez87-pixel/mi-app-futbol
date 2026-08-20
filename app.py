@@ -836,7 +836,10 @@ with col_b:
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados")
         st.cache_data.clear()
         st.rerun()
-
+#####
+#######
+########
+##########
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
     if st.button("1ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
