@@ -992,8 +992,30 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                         if j==0: row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0; row["HC"]=sd.get("Corner Kicks",0) or 0; row["HF"]=sd.get("Fouls",0) or 0; row["HY"]=sd.get("Yellow Cards",0) or 0; row["HR"]=sd.get("Red Cards",0) or 0; row["HomePasses"]=passes; row["HomePos"]=pos; row["HomeSaves"]=sd.get("Goalkeeper Saves",0) or 0
                         else: row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0; row["AC"]=sd.get("Corner Kicks",0) or 0; row["AF"]=sd.get("Fouls",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0; row["AwayPasses"]=passes; row["AwayPos"]=pos; row["AwaySaves"]=sd.get("Goalkeeper Saves",0) or 0
             except: pass
+           ####
             try:
-                time.sleep(0.35); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
+                time.sleep(0.4); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
+                if rs_h.status_code==200:
+                    resp_h = rs_h.json().get("response", [])
+                    log_terminal(f"HALF {fid} len={len(resp_h)} sample_half={str(resp_h[0].get('half') if resp_h else 'vacio')[:20]}")
+                    for td in resp_h:
+                        is_home=td["team"]["id"]==fx["teams"]["home"]["id"]
+                        half_raw=str(td.get("half","")).lower()
+                        if "1st" in half_raw or "first" in half_raw: suf="_1P"
+                        elif "2nd" in half_raw or "second" in half_raw: suf="_2P"
+                        else: continue
+                        sd={s["type"]:s["value"] for s in td["statistics"] if s["value"] is not None}
+                        passes=sd.get("Total passes") or sd.get("Passes accurate") or 0
+                        pos=str(sd.get("Ball Possession","")).replace("%","") or 0
+                        if is_home:
+                            row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HR{suf}"]=sd.get("Red Cards",0) or 0; row[f"HomePasses{suf}"]=passes; row[f"HomePos{suf}"]=pos
+                        else:
+                            row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AR{suf}"]=sd.get("Red Cards",0) or 0; row[f"AwayPasses{suf}"]=passes; row[f"AwayPos{suf}"]=pos
+                else:
+                    log_terminal(f"HALF {fid} status {rs_h.status_code}")
+            except Exception as e:
+                log_terminal(f"HALF EXC {fid} {e}")
+                #####
                 if rs_h.status_code==200:
                     for td in rs_h.json().get("response", []):
                         is_home=td["team"]["id"]==fx["teams"]["home"]["id"]
