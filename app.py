@@ -867,17 +867,24 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             except: return False
 
         # --- NUEVO: FUNCION 100% COMPLETO ---
-        def esta_completo_row(row_dict):
-            try:
-                # Si HS, HC, HY todos 0 -> incompleto (no bajó stats)
-                hs = int(row_dict.get('HS',0) or 0); hc = int(row_dict.get('HC',0) or 0); ac = int(row_dict.get('AC',0) or 0)
-                hy = int(row_dict.get('HY',0) or 0); ay = int(row_dict.get('AY',0) or 0)
-                # Consideramos incompleto si no hay corners ni tarjetas ni tiros
-                if hs==0 and hc==0 and ac==0 and hy==0 and ay==0:
-                    return False, ['stats_vacios']
-                return True, []
-            except:
-                return False, ['error_parse']
+def esta_completo_row(row_dict):
+    try:
+        hs = int(row_dict.get('HS',0) or 0)
+        hc = int(row_dict.get('HC',0) or 0)
+        hs1 = int(row_dict.get('HS_1P',0) or 0)
+        hs2 = int(row_dict.get('HS_2P',0) or 0)
+        hc1 = int(row_dict.get('HC_1P',0) or 0)
+        hc2 = int(row_dict.get('HC_2P',0) or 0)
+        # incompleto si falta total O falta 1P o 2P
+        if hs==0 and hc==0:
+            return False, ['stats_vacios']
+        if hs1==0 and hc1==0: # no tiene 1P
+            return False, ['falta_1P']
+        if hs2==0 and hc2==0: # no tiene 2P
+            return False, ['falta_2P']
+        return True, []
+    except:
+        return False, ['error']
 
         existentes = {}; set_fids = set(); df_exist_map = {}
         if FILE_CUR.exists():
@@ -989,7 +996,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         else:
             st.info("No hay partidos nuevos para 1ª o todos ya están 100% completos")
         st.cache_data.clear()
-
+###segunda españa
 
     if st.button("2ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_2esp_2627_FIX_TOTAL_V5"):
         import requests as _req, time, pathlib, pandas as pd, base64
@@ -1013,16 +1020,26 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 r_put = _req.put(url, headers=h, json=pay, timeout=20); return r_put.status_code in [200,201]
             except: return False
 
-        def esta_completo_row(row_dict):
-            try:
-                hs = int(row_dict.get('HS',0) or 0); hc = int(row_dict.get('HC',0) or 0); ac = int(row_dict.get('AC',0) or 0)
-                hy = int(row_dict.get('HY',0) or 0); ay = int(row_dict.get('AY',0) or 0)
-                if hs==0 and hc==0 and ac==0 and hy==0 and ay==0:
-                    return False, ['stats_vacios']
-                return True, []
-            except:
-                return False, ['error_parse']
-
+        
+def esta_completo_row(row_dict):
+    try:
+        hs = int(row_dict.get('HS',0) or 0)
+        hc = int(row_dict.get('HC',0) or 0)
+        hs1 = int(row_dict.get('HS_1P',0) or 0)
+        hs2 = int(row_dict.get('HS_2P',0) or 0)
+        hc1 = int(row_dict.get('HC_1P',0) or 0)
+        hc2 = int(row_dict.get('HC_2P',0) or 0)
+        # incompleto si falta total O falta 1P o 2P
+        if hs==0 and hc==0:
+            return False, ['stats_vacios']
+        if hs1==0 and hc1==0: # no tiene 1P
+            return False, ['falta_1P']
+        if hs2==0 and hc2==0: # no tiene 2P
+            return False, ['falta_2P']
+        return True, []
+    except:
+        return False, ['error']
+        
         existentes = {}; set_fids = set(); df_exist_map = {}
         if FILE_CUR.exists():
             try:
