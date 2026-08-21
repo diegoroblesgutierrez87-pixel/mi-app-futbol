@@ -843,12 +843,9 @@ with col_b:
 
 def esta_completo_row(row_dict):
     try:
+        # Solo exige totales, 1P/2P opcional en 26/27 porque API no lo da aun
         if int(row_dict.get('HS',0) or 0)==0 and int(row_dict.get('HC',0) or 0)==0:
             return False, ['sin_stats']
-        falta_1p = sum(int(row_dict.get(c,0) or 0) for c in ['HS_1P','HC_1P','HST_1P'])==0
-        falta_2p = sum(int(row_dict.get(c,0) or 0) for c in ['HS_2P','HC_2P','HST_2P'])==0
-        if falta_1p or falta_2p:
-            return False, ['falta_1P_2P']
         return True, []
     except:
         return False, ['error']
