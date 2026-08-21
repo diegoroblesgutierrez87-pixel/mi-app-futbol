@@ -925,7 +925,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             if k in existentes and fid in set_fids:
                 completo,faltan=esta_completo_row(df_exist_map.get(k,{}))
                 if completo:
-                    prog.progress((i+1)/len(fixtures), text=f"Ya 100% {home}-{away}"); continue
+                    continue  # sin progress
                 else:
                     log_terminal(f"RE-BAJAR 1ª {fid} {home}-{away} {faltan}"); existentes.pop(k,None)
 
@@ -1013,7 +1013,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             fid=str(fx["fixture"]["id"]); date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"]); k=(date_str,home,away)
             if k in existentes and fid in set_fids:
                 completo,faltan=esta_completo_row(df_exist_map.get(k,{}))
-                if completo: prog.progress((i+1)/len(fixtures), text=f"Ya 100% {home}-{away}"); continue
+                if completo:
+                    continue  # sin progress
                 else: log_terminal(f"RE-BAJAR 2ª {fid} {home}-{away} {faltan}"); existentes.pop(k,None)
             prog.progress((i+1)/len(fixtures), text=f"Bajando {home} vs {away}")
             ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
