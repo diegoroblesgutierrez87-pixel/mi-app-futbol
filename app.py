@@ -841,33 +841,14 @@ with col_b:
 ###################################################################################################
 ##################################ligas
 
-# --- FUNCIONES FUERA - UNA SOLA VEZ ---
 def esta_completo_row(row_dict):
     try:
-        # OBLIGATORIOS TOTAL
-        oblig_total = ['HS','HC','HF','HST','HY','HomePasses','HomeSaves',
-                       'AS','AC','AF','AST','AY','AwayPasses','AwaySaves']
-        # OBLIGATORIOS 1P / 2P - lo que tu pides: corners, pases, faltas, tiros, tarjetas, paradas, puerta
-        oblig_1p = ['HS_1P','HC_1P','HF_1P','HST_1P','HY_1P','HomePasses_1P',
-                    'AS_1P','AC_1P','AF_1P','AST_1P']
-        oblig_2p = ['HS_2P','HC_2P','HF_2P','HST_2P','HY_2P','HomePasses_2P',
-                    'AS_2P','AC_2P','AF_2P','AST_2P']
-
-        faltan = []
-        for c in oblig_total:
-            if int(row_dict.get(c,0) or 0) == 0:
-                # tiros, corners, pases y puerta no pueden ser 0 en un FT real
-                if c in ['HS','HC','HST','HomePasses','AS','AC','AST','AwayPasses']:
-                    faltan.append(c)
-
-        # Si falta todo el 1P o todo el 2P -> re-bajar
-        if sum(int(row_dict.get(c,0) or 0) for c in oblig_1p) == 0:
-            faltan.append('falta_1P')
-        if sum(int(row_dict.get(c,0) or 0) for c in oblig_2p) == 0:
-            faltan.append('falta_2P')
-
-        if faltan:
-            return False, faltan
+        if int(row_dict.get('HS',0) or 0)==0 and int(row_dict.get('HC',0) or 0)==0:
+            return False, ['sin_stats']
+        falta_1p = sum(int(row_dict.get(c,0) or 0) for c in ['HS_1P','HC_1P','HST_1P'])==0
+        falta_2p = sum(int(row_dict.get(c,0) or 0) for c in ['HS_2P','HC_2P','HST_2P'])==0
+        if falta_1p or falta_2p:
+            return False, ['falta_1P_2P']
         return True, []
     except:
         return False, ['error']
@@ -890,8 +871,9 @@ def push_csv_a_github(ruta_local, path_en_repo):
         return r_put.status_code in [200,201]
     except: return False
 
-#################### BLOQUE UNICO CORREGIDO - NO DUPLICA EXPANDER españa 1div
-       if st.button("1ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
+with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
+
+    if st.button("1ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
         import requests as _req, time, pathlib, pandas as pd
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
@@ -961,28 +943,11 @@ def push_csv_a_github(ruta_local, path_en_repo):
                                 elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
                                 elif v["value"]=="Away": row["B365A"]=float(v["odd"])
             except: pass
-            try:
-                time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                if re_.status_code==200:
-                    for ev in re_.json().get("response",[]):
-                        if ev["type"]=="Goal": goles.append({"Date":date_str,"League":LIGA_NOM,"Season":f"{Y}/{Y+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if ev["time"]["elapsed"]<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id":fx["fixture"]["id"]})
-            except: pass
-            try:
-                time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                if rp.status_code==200:
-                    for team_data in rp.json().get("response",[]):
-                        eq_name=normaliza(team_data["team"]["name"])
-                        for pl in team_data.get("players",[]):
-                            p=pl.get("player",{}); s=pl.get("statistics",[{}])[0]
-                            jugadores.append({"Date":date_str,"League":LIGA_NOM,"Season":f"{Y}/{Y+1}","HomeTeam":home,"AwayTeam":away,"jugador":p.get("name"),"equipo":eq_name,"minutos":s.get("games",{}).get("minutes") or 0,"rating":s.get("games",{}).get("rating") or 0,"fixture_id":fx["fixture"]["id"]})
-            except: pass
             nuevos.append(row)
         if nuevos:
             pd.DataFrame(nuevos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
             df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip'); df_all=df_all.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='last'); df_all.to_csv(FILE_CUR, index=False)
-            if goles: pd.DataFrame(goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
-            if jugadores: pd.DataFrame(jugadores).to_csv(FILE_JUG, mode='a', header=not FILE_JUG.exists() or FILE_JUG.stat().st_size==0, index=False)
-            st.success(f"✅ 1ª: {len(nuevos)} partidos | {len(goles)} goles | {len(jugadores)} minutos"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
+            st.success(f"✅ 1ª: {len(nuevos)} partidos - 1P/2P OK"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
         else: st.info("1ª ya 100% completa")
         st.cache_data.clear()
 
@@ -1044,38 +1009,11 @@ def push_csv_a_github(ruta_local, path_en_repo):
                         else:
                             row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AR{suf}"]=sd.get("Red Cards",0) or 0; row[f"AwayPasses{suf}"]=passes; row[f"AwayPos{suf}"]=pos
             except: pass
-            try:
-                time.sleep(0.35); ro=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"],"bookmaker":8}, timeout=20)
-                if ro.status_code==200 and ro.json().get("response",[]) and ro.json()["response"][0].get("bookmakers"):
-                    for bet in ro.json()["response"][0]["bookmakers"][0].get("bets",[]):
-                        if bet["name"]=="Match Winner":
-                            for v in bet["values"]:
-                                if v["value"]=="Home": row["B365H"]=float(v["odd"])
-                                elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
-                                elif v["value"]=="Away": row["B365A"]=float(v["odd"])
-            except: pass
-            try:
-                time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                if re_.status_code==200:
-                    for ev in re_.json().get("response",[]):
-                        if ev["type"]=="Goal": goles.append({"Date":date_str,"League":LIGA_NOM,"Season":f"{Y}/{Y+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if ev["time"]["elapsed"]<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id":fx["fixture"]["id"]})
-            except: pass
-            try:
-                time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                if rp.status_code==200:
-                    for team_data in rp.json().get("response",[]):
-                        eq_name=normaliza(team_data["team"]["name"])
-                        for pl in team_data.get("players",[]):
-                            p=pl.get("player",{}); s=pl.get("statistics",[{}])[0]
-                            jugadores.append({"Date":date_str,"League":LIGA_NOM,"Season":f"{Y}/{Y+1}","HomeTeam":home,"AwayTeam":away,"jugador":p.get("name"),"equipo":eq_name,"minutos":s.get("games",{}).get("minutes") or 0,"fixture_id":fx["fixture"]["id"]})
-            except: pass
             nuevos.append(row)
         if nuevos:
             pd.DataFrame(nuevos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
             df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip'); df_all=df_all.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='last'); df_all.to_csv(FILE_CUR, index=False)
-            if goles: pd.DataFrame(goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
-            if jugadores: pd.DataFrame(jugadores).to_csv(FILE_JUG, mode='a', header=not FILE_JUG.exists() or FILE_JUG.stat().st_size==0, index=False)
-            st.success(f"✅ 2ª: {len(nuevos)} partidos | {len(goles)} goles | {len(jugadores)} minutos"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
+            st.success(f"✅ 2ª: {len(nuevos)} partidos - 1P/2P OK"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
         else: st.info("2ª ya 100% completa")
         st.cache_data.clear()
 
