@@ -867,6 +867,13 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             except: return False
 
         # --- NUEVO: FUNCION 100% COMPLETO ---
+###
+
+
+with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
+    if st.button("1ª España 26/27..."):
+        # tu codigo sin definir la funcion dentro
+##
 def esta_completo_row(row_dict):
     try:
         hs = int(row_dict.get('HS',0) or 0)
@@ -875,12 +882,11 @@ def esta_completo_row(row_dict):
         hs2 = int(row_dict.get('HS_2P',0) or 0)
         hc1 = int(row_dict.get('HC_1P',0) or 0)
         hc2 = int(row_dict.get('HC_2P',0) or 0)
-        # incompleto si falta total O falta 1P o 2P
         if hs==0 and hc==0:
             return False, ['stats_vacios']
-        if hs1==0 and hc1==0: # no tiene 1P
+        if hs1==0 and hc1==0:
             return False, ['falta_1P']
-        if hs2==0 and hc2==0: # no tiene 2P
+        if hs2==0 and hc2==0:
             return False, ['falta_2P']
         return True, []
     except:
@@ -1020,7 +1026,6 @@ def esta_completo_row(row_dict):
                 r_put = _req.put(url, headers=h, json=pay, timeout=20); return r_put.status_code in [200,201]
             except: return False
 
-        
 def esta_completo_row(row_dict):
     try:
         hs = int(row_dict.get('HS',0) or 0)
@@ -1038,8 +1043,7 @@ def esta_completo_row(row_dict):
             return False, ['falta_2P']
         return True, []
     except:
-        return False, ['error']
-        
+        return False, ['error'] 
         existentes = {}; set_fids = set(); df_exist_map = {}
         if FILE_CUR.exists():
             try:
