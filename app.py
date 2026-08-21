@@ -890,7 +890,7 @@ def push_csv_a_github(ruta_local, path_en_repo):
         return r_put.status_code in [200,201]
     except: return False
 
-#################### BLOQUE UNICO CORREGIDO - NO DUPLICA EXPANDER
+#################### BLOQUE UNICO CORREGIDO - NO DUPLICA EXPANDER españa 1div
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
     if st.button("1ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
@@ -945,7 +945,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 time.sleep(0.35); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
                 if rs_h.status_code==200:
                     for td in rs_h.json().get("response",[]):
-                        is_home=td["team"]["id"]==fx["teams"]["home"]["id"]; suf="_1P" if str(td.get("half")).lower() in ["1","first","1st"] else "_2P"; sd={s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
+                        half=str(td.get("half","")).lower(); suf="_1P" if "1st" in half or half=="1" or "first" in half else "_2P"; is_home=td["team"]["id"]==fx["teams"]["home"]["id"]
                         if is_home:
                             row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HR{suf}"]=sd.get("Red Cards",0) or 0; row[f"HomePasses{suf}"]=sd.get("Total passes",0) or 0; row[f"HomePos{suf}"]=str(sd.get("Ball Possession","")).replace("%","") or 0
                         else:
@@ -986,7 +986,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             st.success(f"✅ 1ª: {len(nuevos)} partidos | {len(goles)} goles | {len(jugadores)} minutos"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
         else: st.info("1ª ya 100% completa")
         st.cache_data.clear()
-
+#####españa 2div.
     if st.button("2ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_2esp_2627_FIX_TOTAL_V5"):
         import requests as _req, time, pathlib, pandas as pd
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -1031,7 +1031,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 time.sleep(0.35); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
                 if rs_h.status_code==200:
                     for td in rs_h.json().get("response",[]):
-                        is_home=td["team"]["id"]==fx["teams"]["home"]["id"]; suf="_1P" if str(td.get("half")).lower() in ["1","first","1st"] else "_2P"; sd={s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
+                        half=str(td.get("half","")).lower(); suf="_1P" if "1st" in half or half=="1" or "first" in half else "_2P"; is_home=td["team"]["id"]==fx["teams"]["home"]["id"]
                         if is_home: row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HomePasses{suf}"]=sd.get("Total passes",0) or 0
                         else: row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AwayPasses{suf}"]=sd.get("Total passes",0) or 0
             except: pass
