@@ -1305,7 +1305,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY en Secrets"); st.stop()
 
-        # MISMAS LIGAS que tenias en 26/27
         MAPA_2226 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
@@ -1326,27 +1325,23 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         BASE = pathlib.Path(__file__).parent
         FILE_OLD = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
 
-        # Cargar existentes para anti-duplicado real
         existentes=set()
         columnas_existentes=[]
         if FILE_OLD.exists() and FILE_OLD.stat().st_size>0:
             try:
-                d_old = pd.read_csv(FILE_OLD, on_bad_lines='skip', engine='python', nrows=200)
+                d_old = pd.read_csv(FILE_OLD, on_bad_lines='skip', engine='python', nrows=5)
                 columnas_existentes = list(d_old.columns)
-                d_old = pd.read_csv(FILE_OLD, on_bad_lines='skip', engine='python')
-                d_old["Date"]=pd.to_datetime(d_old["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
-                d_old["HomeTeam"]=d_old["HomeTeam"].apply(normaliza)
-                d_old["AwayTeam"]=d_old["AwayTeam"].apply(normaliza)
-                d_old["League"]=d_old["League"].astype(str).str.strip()
-                d_old["Season"]=d_old["Season"].astype(str).str.strip()
-                for _, r in d_old.iterrows():
+                d_full = pd.read_csv(FILE_OLD, on_bad_lines='skip', engine='python')
+                d_full["Date"]=pd.to_datetime(d_full["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
+                d_full["HomeTeam"]=d_full["HomeTeam"].apply(normaliza)
+                d_full["AwayTeam"]=d_full["AwayTeam"].apply(normaliza)
+                d_full["League"]=d_full["League"].astype(str).str.strip()
+                d_full["Season"]=d_full["Season"].astype(str).str.strip()
+                for _, r in d_full.iterrows():
                     existentes.add((r["Date"], r["HomeTeam"], r["AwayTeam"], r["League"], r["Season"]))
-            except Exception as e:
-                log_terminal(f"WARN OLD CSV {e}")
-                columnas_existentes=[]
+            except: pass
 
         if not columnas_existentes:
-            # columnas base por si no existe aún
             columnas_existentes = ["Date","League","Season","HomeTeam","AwayTeam","FTHG","FTAG","HTHG","HTAG","FTR","fixture_id"]
 
         req=[0]
@@ -1363,24 +1358,18 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     time.sleep(0.35)
                     r=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": lid, "season": y}, timeout=30)
                     req[0]+=1
-                    if r.status_code!=200:
-                        log_terminal(f"FIXT {nom} {y} {r.status_code}")
-                        continue
+                    if r.status_code!=200: continue
                     fixtures=r.json().get("response", [])
-                except Exception as e:
-                    log_terminal(f"FIXT EXC {nom} {y} {e}")
-                    continue
+                except: continue
 
                 for fx in fixtures:
-                    if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]:
-                        continue
+                    if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
                     date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
                     home=normaliza(fx["teams"]["home"]["name"])
                     away=normaliza(fx["teams"]["away"]["name"])
                     season_str=f"{y}/{y+1}"
                     key=(date_str, home, away, nom, season_str)
-                    if key in existentes:
-                        continue
+                    if key in existentes: continue
 
                     ft_h=fx["goals"]["home"] or 0
                     ft_a=fx["goals"]["away"] or 0
@@ -1388,74 +1377,46 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     ht_a=fx["score"]["halftime"]["away"] or 0
                     ftr="H" if ft_h>ft_a else "A" if ft_a>ft_h else "D"
 
-                    # Row minimalista pero compatible con tu CSV viejo
-                    row_base = {
-                        "Date": date_str,
-                        "League": nom,
-                        "Season": season_str,
-                        "HomeTeam": home,
-                        "AwayTeam": away,
-                        "FTHG": ft_h,
-                        "FTAG": ft_a,
-                        "HTHG": ht_h,
-                        "HTAG": ht_a,
-                        "FTR": ftr,
-                        "fixture_id": fx["fixture"]["id"],
-                        # 2P calculado solo para visual, lo guardamos en columnas 2P si existen
-                        "HS_2P": 0, "AS_2P": 0, "HST_2P": 0, "AST_2P": 0,
-                    }
-                    # Rellena todas las columnas que tenga tu CSV antiguo a 0 para no petar
-                    row_full = {}
+                    row_full={}
                     for c in columnas_existentes:
-                        if c in row_base:
-                            row_full[c]=row_base[c]
-                        else:
-                            # si es columna de goles 1P/2P calculada, rellena
-                            if c=="HS_1P" or c=="FTHG": row_full[c]=row_full.get(c,0)
-                            row_full[c]=0 if c not in ["Date","League","Season","HomeTeam","AwayTeam","FTR"] else row_base.get(c, "")
-                            if c in row_base:
-                                row_full[c]=row_base[c]
-                            elif c=="B365H": row_full[c]=0
-                            elif c=="B365D": row_full[c]=0
-                            elif c=="B365A": row_full[c]=0
-                            else:
-                                if c not in row_full:
-                                    row_full[c]=0
-                    # asegura los 4 campos clave siempre
-                    row_full["Date"]=date_str; row_full["League"]=nom; row_full["Season"]=season_str
-                    row_full["HomeTeam"]=home; row_full["AwayTeam"]=away
-                    row_full["FTHG"]=ft_h; row_full["FTAG"]=ft_a; row_full["HTHG"]=ht_h; row_full["HTAG"]=ht_a
-                    row_full["FTR"]=ftr; row_full["fixture_id"]=fx["fixture"]["id"]
+                        row_full[c]=0
+                    row_full["Date"]=date_str
+                    row_full["League"]=nom
+                    row_full["Season"]=season_str
+                    row_full["HomeTeam"]=home
+                    row_full["AwayTeam"]=away
+                    row_full["FTHG"]=ft_h
+                    row_full["FTAG"]=ft_a
+                    row_full["HTHG"]=ht_h
+                    row_full["HTAG"]=ht_a
+                    row_full["FTR"]=ftr
+                    row_full["fixture_id"]=fx["fixture"]["id"]
 
                     nuevos.append(row_full)
                     existentes.add(key)
 
-                # guarda cada liga/temp para no perder
-                if len(nuevos)>=100:
+                if len(nuevos)>=200:
                     pd.DataFrame(nuevos).to_csv(FILE_OLD, mode='a', header=not FILE_OLD.exists() or FILE_OLD.stat().st_size==0, index=False)
-                    log_terminal(f"GUARDADO {len(nuevos)} en {FILE_OLD.name}")
                     nuevos=[]
 
         if nuevos:
             pd.DataFrame(nuevos).to_csv(FILE_OLD, mode='a', header=not FILE_OLD.exists() or FILE_OLD.stat().st_size==0, index=False)
 
-        # Dedup final sin perder columnas
         try:
             if FILE_OLD.exists():
                 df_all=pd.read_csv(FILE_OLD, on_bad_lines='skip', engine='python')
-                # anti dup real por 5 claves
                 df_all["Date"]=pd.to_datetime(df_all["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
                 df_all["HomeTeam"]=df_all["HomeTeam"].apply(normaliza)
                 df_all["AwayTeam"]=df_all["AwayTeam"].apply(normaliza)
                 df_all=df_all.drop_duplicates(subset=["Date","HomeTeam","AwayTeam","League","Season"], keep='last')
                 df_all.to_csv(FILE_OLD, index=False)
-        except Exception as e:
-            log_terminal(f"DEDUP ERR {e}")
+        except: pass
 
-        st.success(f"✅ 22/23-25/26 SOLO RESULTADOS {req[0]} req | Guardado en {FILE_OLD.name} | 0 stats extra")
+        st.success(f"✅ 22/23-25/26 SOLO RESULTADOS {req[0]} req | Guardado en ligas_2122_a_2627_SIN_DUPLICADOS.csv")
         st.cache_data.clear()
         time.sleep(1)
         st.rerun()
+##############################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
