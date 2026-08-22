@@ -990,6 +990,7 @@ def push_csv_a_github(ruta_local, path_en_repo):
         r_put = _req.put(url, headers=h, json=pay, timeout=20)
         return r_put.status_code in [200,201]
     except: return False
+        ####################3expander descargas 26 27###########################################################################################################
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
     if st.button("Ligas 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
@@ -1219,54 +1220,10 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
     if nuevos_partidos: pd.DataFrame(nuevos_partidos).to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False)
     if nuevos_goles: pd.DataFrame(nuevos_goles).to_csv("goles_2627_actual.csv", mode='a', header=not os.path.exists("goles_2627_actual.csv") or os.path.getsize("goles_2627_actual.csv")==0, index=False)
     if nuevos_jug: pd.DataFrame(nuevos_jug).to_csv("jugadores_2627_actual.csv", mode='a', header=not os.path.exists("jugadores_2627_actual.csv") or os.path.getsize("jugadores_2627_actual.csv")==0, index=False)
+###################################################
+       st.success(f"✅ 26/27 {req[0]}/7500 | Guardados"); st.cache_data.clear(); time.sleep(1); st.rerun()
 
-    st.success(f"✅ 26/27 {req[0]}/7500 | Guardados | FIX: re-baja si falta pases/posesion/cuotas + ahorro 1P/2P"); st.cache_data.clear(); time.sleep(1); st.rerun()
-    
-            ####
-            try:
-                time.sleep(0.35); rs=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20)
-                if rs.status_code==200 and len(rs.json().get("response",[]))==2:
-                    for j,td in enumerate(rs.json()["response"]):
-                        sd={s["type"]:s["value"] for s in td["statistics"] if s["value"] is not None}
-                        passes=sd.get("Total passes") or sd.get("Passes accurate") or 0
-                        pos=str(sd.get("Ball Possession","")).replace("%","") or 0
-                        if j==0: row["HS"]=sd.get("Total Shots",0) or 0; row["HST"]=sd.get("Shots on Goal",0) or 0; row["HC"]=sd.get("Corner Kicks",0) or 0; row["HF"]=sd.get("Fouls",0) or 0; row["HY"]=sd.get("Yellow Cards",0) or 0; row["HR"]=sd.get("Red Cards",0) or 0; row["HomePasses"]=passes; row["HomePos"]=pos; row["HomeSaves"]=sd.get("Goalkeeper Saves",0) or 0
-                        else: row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0; row["AC"]=sd.get("Corner Kicks",0) or 0; row["AF"]=sd.get("Fouls",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0; row["AwayPasses"]=passes; row["AwayPos"]=pos; row["AwaySaves"]=sd.get("Goalkeeper Saves",0) or 0
-            except: pass
-            try:
-                time.sleep(0.35); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20)
-                if rs_h.status_code==200:
-                    for td in rs_h.json().get("response", []):
-                        is_home=td["team"]["id"]==fx["teams"]["home"]["id"]
-                        half_raw=str(td.get("half","")).lower()
-                        if "1st" in half_raw: suf="_1P"
-                        elif "2nd" in half_raw: suf="_2P"
-                        else: continue
-                        sd={s["type"]:s["value"] for s in td["statistics"] if s["value"] is not None}
-                        passes=sd.get("Total passes") or sd.get("Passes accurate") or 0
-                        pos=str(sd.get("Ball Possession","")).replace("%","") or 0
-                        if is_home:
-                            row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HR{suf}"]=sd.get("Red Cards",0) or 0; row[f"HomePasses{suf}"]=passes; row[f"HomePos{suf}"]=pos
-                        else:
-                            row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AR{suf}"]=sd.get("Red Cards",0) or 0; row[f"AwayPasses{suf}"]=passes; row[f"AwayPos{suf}"]=pos
-            except: pass
-            try:
-                time.sleep(0.35); ro=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"],"bookmaker":8}, timeout=20)
-                if ro.status_code==200 and ro.json().get("response",[]) and ro.json()["response"][0].get("bookmakers"):
-                    for bet in ro.json()["response"][0]["bookmakers"][0].get("bets",[]):
-                        if bet["name"]=="Match Winner":
-                            for v in bet["values"]:
-                                if v["value"]=="Home": row["B365H"]=float(v["odd"])
-                                elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
-                                elif v["value"]=="Away": row["B365A"]=float(v["odd"])
-            except: pass
-            nuevos.append(row)
-        if nuevos:
-            pd.DataFrame(nuevos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
-            df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip'); df_all=df_all.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='last'); df_all.to_csv(FILE_CUR, index=False)
-            st.success(f"✅ 1ª: {len(nuevos)} partidos - 1P/2P OK"); push_csv_a_github(FILE_CUR, "partidos_2627_actual.csv")
-        else: st.info("1ª ya 100% completa")
-        st.cache_data.clear()
+##############boton 2
 #############################################################################
 ###############################################################################
 ##############boton 2
