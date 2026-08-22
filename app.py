@@ -1041,8 +1041,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 elif c.startswith('B365') and float(v or 0) <=1: faltan.append(c)
             return (len(faltan)==0), faltan
 
-        # 3. EXISTENTES CON normaliza ANTI-DUP
-        existentes={}; df_exist_map={}
+        # 3. EXISTENTES CON normaliza ANTI-DUP + GOLES
+        existentes={}; df_exist_map={}; existentes_goles=set()
         for p in [BASE/"ligas_2122_a_2627_SIN_DUPLICADOS.csv", FILE_CUR]:
             if p.exists() and p.stat().st_size>0:
                 try:
@@ -1054,6 +1054,16 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                             if k not in df_exist_map: df_exist_map[k]=r.to_dict()
                         except: pass
                 except: pass
+        # carga goles existentes para saber si falta minuto/jugador/asistente
+        if FILE_GOLES.exists() and FILE_GOLES.stat().st_size>0:
+            try:
+                dg=pd.read_csv(FILE_GOLES, on_bad_lines='skip', engine='python')
+                for _,r in dg.iterrows():
+                    try:
+                        k=(pd.to_datetime(r['Date'], dayfirst=True, errors='coerce').strftime("%d/%m/%Y"), normaliza(r['HomeTeam']), normaliza(r['AwayTeam']))
+                        existentes_goles.add(k)
+                    except: pass
+            except: pass
 
         req=[0]; prog=st.progress(0.0); nuevos_p=[]; nuevos_g=[]; nuevos_j=[]
         total=len(MAPA_2627); step=0
@@ -1071,8 +1081,14 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 key_actual=(date_str, home, away)
                 if key_actual in existentes:
                     comp, falt = _esta_completo(df_exist_map.get(key_actual, {}))
-                    if comp: continue
-                    else: existentes.pop(key_actual, None)
+                    # FIX GOLES: si tiene stats pero no hay datos de gol con minuto/jugador/asistente y hubo goles, lo re-baja
+                    row_saved = df_exist_map.get(key_actual, {})
+                    total_goles_saved = int(float(row_saved.get('FTHG',0) or 0)) + int(float(row_saved.get('FTAG',0) or 0))
+                    falta_goles = (total_goles_saved>0 and key_actual not in existentes_goles)
+                    if comp and not falta_goles: continue
+                    else:
+                        existentes.pop(key_actual, None)
+                        if falta_goles: existentes_goles.discard(key_actual)
 
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 row={"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"HS_1P":0,"AS_1P":0,"HST_1P":0,"AST_1P":0,"HF_1P":0,"AF_1P":0,"HC_1P":0,"AC_1P":0,"HY_1P":0,"AY_1P":0,"HR_1P":0,"AR_1P":0,"HomePasses_1P":0,"AwayPasses_1P":0,"HomePos_1P":0,"AwayPos_1P":0,"HS_2P":0,"AS_2P":0,"HST_2P":0,"AST_2P":0,"HF_2P":0,"AF_2P":0,"HC_2P":0,"AC_2P":0,"HY_2P":0,"AY_2P":0,"HR_2P":0,"AR_2P":0,"HomePasses_2P":0,"AwayPasses_2P":0,"HomePos_2P":0,"AwayPos_2P":0,"fixture_id": fx["fixture"]["id"]}
