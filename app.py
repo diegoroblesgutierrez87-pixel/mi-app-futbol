@@ -990,11 +990,10 @@ def push_csv_a_github(ruta_local, path_en_repo):
         r_put = _req.put(url, headers=h, json=pay, timeout=20)
         return r_put.status_code in [200,201]
     except: return False
-#######################expander descargas 26 27########################################################################################################
 with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
-###############################################################################################################################
-if st.button("Ligas 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
+    if st.button("Ligas 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
+
     import requests as _req, time, pathlib, pandas as pd
     try: API_KEY = str(st.secrets["API_KEY"]).strip()
     except: st.error("Falta API_KEY"); st.stop()
