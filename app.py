@@ -998,7 +998,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
 
-    # === CAMBIO 1: AHORA ES UN MAPA CON TODAS LAS LIGAS ===
+        MAPA_2627 = {
     MAPA_2627 = {
     # AlIemania
     "Bundesliga": 78,
@@ -1221,7 +1221,10 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
     if nuevos_goles: pd.DataFrame(nuevos_goles).to_csv("goles_2627_actual.csv", mode='a', header=not os.path.exists("goles_2627_actual.csv") or os.path.getsize("goles_2627_actual.csv")==0, index=False)
     if nuevos_jug: pd.DataFrame(nuevos_jug).to_csv("jugadores_2627_actual.csv", mode='a', header=not os.path.exists("jugadores_2627_actual.csv") or os.path.getsize("jugadores_2627_actual.csv")==0, index=False)
 ###################################################
-       st.success(f"✅ 26/27 {req[0]}/7500 | Guardados"); st.cache_data.clear(); time.sleep(1); st.rerun()
+        st.success(f"✅ 26/27 {req[0]}/7500 | Guardados")
+        st.cache_data.clear()
+        time.sleep(1)
+        st.rerun()
 
 ##############boton 2
 #############################################################################
@@ -1341,7 +1344,6 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    st.sidebar.markdown(f"### DEBUG V12 - FIX DOBLE EXT v={_cache_buster}")
     df_completo = pd.DataFrame()
     # FIX: carga ambos y los une - por eso 26/27 ahora si se ve
     candidatos = [BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv", BASE / "partidos_2627_actual.csv"]
@@ -1355,9 +1357,7 @@ def cargar_todo(_cache_buster=0):
             except: pass
     if dfs:
         df_completo = pd.concat(dfs, ignore_index=True)
-        st.sidebar.success(f"OK: {len(df_completo)} filas de {len(dfs)} archivos | buster={_cache_buster}")
     if df_completo.empty:
-        st.sidebar.error("No se encontro COMPLETO")
         return pd.DataFrame()
     df = df_completo.copy()
 
@@ -4600,7 +4600,8 @@ with st.expander("🎯 Creador Apuestas", expanded=False):
         home_adv = lg_home / max(lg_away, 0.1)
 
         def fuerza(eq, df_eq):
-            w = np.exp(np.linspace(-0.5,0,len(df_eq))); w/=w.sum()
+            w = np.exp(np.linspace(-0.5,0,len(df_eq)))
+            w/=w.sum()
             loc = df_eq['HomeTeam']==eq
             gf = np.average(np.where(loc, df_eq['FTHG'], df_eq['FTAG']), weights=w)
             gc = np.average(np.where(loc, df_eq['FTAG'], df_eq['FTHG']), weights=w)
