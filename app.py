@@ -429,6 +429,8 @@ with col_a:
 #############################################
 #############################################
 ###################BOTON ACTUALIZAR 26 27 - FIX 1P/2P + ANTI-DUP REAL + MAPA 50 LIMPIO
+
+
 with col_b:
     trigger_2627 = st.session_state.pop("accion_continuar_2627", False)
     if trigger_2627 or st.button("🔄 Actualizar 26/27", use_container_width=True, key="btn_2627_final_unico"):
@@ -450,6 +452,31 @@ with col_b:
         _quedan=_check_quota()
         if _quedan<150:
             st.error(f"⛔ Solo {_quedan}/7500 - resetea 02:00 Madrid"); log_terminal(f"⛔ BLOQ 26/27 {_quedan}"); st.stop()
+
+        # ===== FIX CHECKLIST - QUE FALTA =====
+        def esta_completo_row_2627(row):
+            faltan=[]
+            # no incluimos 1P/2P porque en 2026 viene vacio
+            oblig = ['HS','AS','HST','AST','HC','AC','HF','AF','HomePasses','AwayPasses','HomePos','B365H','B365D','B365A']
+            # vacio total
+            if int(float(row.get('HS',0) or 0))==0 and int(float(row.get('HC',0) or 0))==0 and int(float(row.get('HomePasses',0) or 0))==0:
+                return False, ['vacio_total']
+            for c in oblig:
+                try:
+                    v=row.get(c,0)
+                    if c=='HomePos':
+                        if str(v).replace('%','').strip() in ['','0','0%','0.0']: faltan.append(c)
+                    elif c.startswith('B365'):
+                        if float(v or 0)<=1: faltan.append(c)
+                    else:
+                        # pases, tiros, corners no pueden ser 0 si ya hay stats
+                        if c in ['HomePasses','AwayPasses','HS','AS','HC','AC','HST','AST'] and int(float(v or 0))==0:
+                            faltan.append(c)
+                except:
+                    faltan.append(c)
+            if faltan:
+                return False, faltan
+            return True, []
 
         MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
@@ -482,11 +509,12 @@ with col_b:
         TEMPORADA = 2026
         req=[0]; prog=st.progress(0, text="Iniciando 26/27..."); should_stop=False
 
-        # CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX NORMALIZA ANTI-DUP
+        # CARGAR EXISTENTES PARA NO QUEMAR REQUESTS - FIX NORMALIZA ANTI-DUP + MAPA PARA RE-BAJAR
         df_base = pd.read_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", on_bad_lines='skip', engine='python') if os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") else pd.DataFrame()
         df_2627 = pd.read_csv("partidos_2627_actual.csv", on_bad_lines='skip', engine='python') if os.path.exists("partidos_2627_actual.csv") else pd.DataFrame()
 
         existentes_completos=set()
+        df_exist_map={} # NUEVO: guardamos el row para revisar que falta
         for _df in [df_base, df_2627]:
             if not _df.empty:
                 try:
@@ -495,7 +523,10 @@ with col_b:
                     d["HomeTeam"]=d["HomeTeam"].apply(normaliza)
                     d["AwayTeam"]=d["AwayTeam"].apply(normaliza)
                     for _, r in d.iterrows():
-                        existentes_completos.add((r["Date"], r["HomeTeam"], r["AwayTeam"]))
+                        k=(r["Date"], r["HomeTeam"], r["AwayTeam"])
+                        existentes_completos.add(k)
+                        if k not in df_exist_map:
+                            df_exist_map[k]=r.to_dict()
                 except: pass
 
         nuevos_partidos=[]; nuevos_goles=[]; nuevos_jug=[]
@@ -524,7 +555,16 @@ with col_b:
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 key_actual=(date_str, home, away)
 
-                if key_actual in existentes_completos: continue
+                # ===== FIX RE-BAJA SI FALTA ALGO =====
+                if key_actual in existentes_completos:
+                    row_guardado = df_exist_map.get(key_actual, {})
+                    completo, faltan = esta_completo_row_2627(row_guardado)
+                    if not completo:
+                        existentes_completos.remove(key_actual)
+                        log_terminal(f"🔄 RE-BAJAR {nom} {home}-{away} {date_str} FALTA: {','.join(faltan)}")
+                    else:
+                        continue
+                # ===== FIN FIX =====
 
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 ftr="H" if ft_h>ft_a else "A" if ft_a>ft_h else "D"
@@ -545,17 +585,19 @@ with col_b:
                 except: pass
                 if row["HS"]==0 and row["HST"]==0 and row["HC"]==0: continue
 
-                try:
-                    time.sleep(0.4); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20); req[0]+=1
-                    if rs_h.status_code==200:
-                        for td in rs_h.json().get("response",[]):
-                            is_home=td["team"]["id"]==fx["teams"]["home"]["id"]; half=str(td.get("half") or "1").lower(); suf="_1P" if half in ["1","first","1st"] else "_2P"
-                            sd={s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
-                            if is_home:
-                                row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HR{suf}"]=sd.get("Red Cards",0) or 0; row[f"HomePasses{suf}"]=sd.get("Total passes",0) or 0; row[f"HomePos{suf}"]=str(sd.get("Ball Possession","")).replace("%","") or 0
-                            else:
-                                row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AR{suf}"]=sd.get("Red Cards",0) or 0; row[f"AwayPasses{suf}"]=sd.get("Total passes",0) or 0; row[f"AwayPos{suf}"]=str(sd.get("Ball Possession","")).replace("%","") or 0
-                except: pass
+                # SKIP 1P/2P en 2026 para ahorrar quota
+                if TEMPORADA!= 2026:
+                    try:
+                        time.sleep(0.4); rs_h=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "half": "true"}, timeout=20); req[0]+=1
+                        if rs_h.status_code==200:
+                            for td in rs_h.json().get("response",[]):
+                                is_home=td["team"]["id"]==fx["teams"]["home"]["id"]; half=str(td.get("half") or "1").lower(); suf="_1P" if half in ["1","first","1st"] else "_2P"
+                                sd={s["type"]: s["value"] for s in td["statistics"] if s["value"] is not None}
+                                if is_home:
+                                    row[f"HS{suf}"]=sd.get("Total Shots",0) or 0; row[f"HST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"HF{suf}"]=sd.get("Fouls",0) or 0; row[f"HC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"HY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"HR{suf}"]=sd.get("Red Cards",0) or 0; row[f"HomePasses{suf}"]=sd.get("Total passes",0) or 0; row[f"HomePos{suf}"]=str(sd.get("Ball Possession","")).replace("%","") or 0
+                                else:
+                                    row[f"AS{suf}"]=sd.get("Total Shots",0) or 0; row[f"AST{suf}"]=sd.get("Shots on Goal",0) or 0; row[f"AF{suf}"]=sd.get("Fouls",0) or 0; row[f"AC{suf}"]=sd.get("Corner Kicks",0) or 0; row[f"AY{suf}"]=sd.get("Yellow Cards",0) or 0; row[f"AR{suf}"]=sd.get("Red Cards",0) or 0; row[f"AwayPasses{suf}"]=sd.get("Total passes",0) or 0; row[f"AwayPos{suf}"]=str(sd.get("Ball Possession","")).replace("%","") or 0
+                    except: pass
 
                 try:
                     time.sleep(0.4); r_odds=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20); req[0]+=1
@@ -587,7 +629,7 @@ with col_b:
                             elif ev["type"]=="Card": nuevos_goles.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"", "jugador_tarjeta":ev["player"]["name"], "equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
 
-                nuevos_partidos.append(row); existentes_completos.add(key_actual); log_terminal(f" OK {nom} {home}-{away} {date_str} req:{req[0]}")
+                nuevos_partidos.append(row); existentes_completos.add(key_actual); df_exist_map[key_actual]=row; log_terminal(f" OK {nom} {home}-{away} {date_str} req:{req[0]}")
 
                 if len(nuevos_partidos)>=20:
                     pd.DataFrame(nuevos_partidos).to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False); nuevos_partidos=[]
@@ -598,7 +640,10 @@ with col_b:
         if nuevos_goles: pd.DataFrame(nuevos_goles).to_csv("goles_2627_actual.csv", mode='a', header=not os.path.exists("goles_2627_actual.csv") or os.path.getsize("goles_2627_actual.csv")==0, index=False)
         if nuevos_jug: pd.DataFrame(nuevos_jug).to_csv("jugadores_2627_actual.csv", mode='a', header=not os.path.exists("jugadores_2627_actual.csv") or os.path.getsize("jugadores_2627_actual.csv")==0, index=False)
 
-        st.success(f"✅ 26/27 {req[0]}/7500 | Guardados | 1P/2P + pases/posesion + cuotas + goles + tarjetas + minutos"); st.cache_data.clear(); time.sleep(1); st.rerun()
+        st.success(f"✅ 26/27 {req[0]}/7500 | Guardados | FIX: re-baja si falta pases/posesion/cuotas + ahorro 1P/2P"); st.cache_data.clear(); time.sleep(1); st.rerun()
+    ############################### FIN BOTON 26 27
+
+
     ############################### FIN BOTON 26 27
     ########################BOTON ACTUALIZAR 23 26
     with col_c:
