@@ -999,167 +999,53 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         except: st.error("Falta API_KEY"); st.stop()
 
         MAPA_2627 = {
-            # AlIemania
             "Bundesliga": 78,
             "2. Bundesliga": 79,
             "Bundesliga Femenina": 82,
-            # Arabia Saudi
             "Saudi Professional League": 307,
             "Saudi First Division League": 308,
-            # Austria
             "Bundesliga Austria": 218,
             "2. Liga Austria": 219,
-            # Suiza
             "Super League": 207,
             "Challenge League": 208,
-            # Bahrein
             "Premier League Bahrein": 400,
-            # Belgica
             "Jupiler Pro League": 144,
             "Challenger Pro League": 145,
             "Superliga Femenina Belgica": 146,
-            # China
             "Chinese Super League": 169,
             "China League One": 170,
-            # Chipre
             "Cyprus League": 318,
-            # Corea del Sur
             "K League 1": 292,
             "K League 2": 293,
-            # Dinamarca
             "Superliga Dinamarca": 119,
-            # Emiratos Arabes
             "UAE League": 301,
-            # Escocia
             "Premiership Escocia": 179,
-            # Espana
             "LaLiga EA Sports": 140,
             "LaLiga Hypermotion": 141,
             "Primera Federacion G1": 435,
             "Primera Federacion G2": 436,
             "Liga F": 148,
-            # Francia
             "Ligue 1": 61,
             "Ligue 2": 62,
-            # Grecia
             "Super League Grecia": 197,
             "Super League 2 Grecia": 196,
-            # Inglaterra
             "Premier League": 39,
             "Championship": 40,
             "WSL": 44,
             "WSL 2": 45,
-            # Italia
             "Serie A Italia": 135,
             "Serie B Italia": 136,
-            # Japon
             "J1 League": 98,
             "J2 League": 99,
-            # Paises Bajos
             "Eredivisie": 88,
             "Eerste Divisie": 89,
-            # Portugal
             "Liga Portugal": 94,
             "Liga Portugal 2": 95,
             "Taça de Portugal": 96,
-            # Turquia
             "Süper Lig": 203,
             "1. Lig": 204,
         }
-    # AlIemania
-    "Bundesliga": 78,
-    "2. Bundesliga": 79,
-    "Bundesliga Femenina": 82,
-
-    # Arabia Saudi
-    "Saudi Professional League": 307,
-    "Saudi First Division League": 308,
-
-    # Austria
-    "Bundesliga Austria": 218,
-    "2. Liga Austria": 219,
-
-    # Suiza
-    "Super League": 207,
-    "Challenge League": 208,
-
-    # Bahrein
-    "Premier League Bahrein": 400,
-
-    # Belgica
-    "Jupiler Pro League": 144,
-    "Challenger Pro League": 145,
-    "Superliga Femenina Belgica": 146,
-
-    # China
-    "Chinese Super League": 169,
-    "China League One": 170,
-
-    # Chipre
-    "Cyprus League": 318,
-
-    # Corea del Sur
-    "K League 1": 292,
-    "K League 2": 293,
-
-    # Dinamarca
-    "Superliga Dinamarca": 119,
-
-    # Emiratos Arabes
-    "UAE League": 301,
-
-    # Escocia
-    "Premiership Escocia": 179,
-
-    # Espana
-    "LaLiga EA Sports": 140,
-    "LaLiga Hypermotion": 141,
-    "Primera Federacion G1": 435,
-    "Primera Federacion G2": 436,
-    "Liga F": 148,
-
-    # Francia
-    "Ligue 1": 61,
-    "Ligue 2": 62,
-
-    # Grecia
-    "Super League Grecia": 197,
-    "Super League 2 Grecia": 196,
-
-    # nglaterra
-    "Premier League": 39,
-    "Championship": 40,
-    "WSL": 44,
-    "WSL 2": 45,
-
-    # Italia
-    "Serie A Italia": 135,
-    "Serie B Italia": 136,
-
-    # Japon
-    "J1 League": 98,
-    "J2 League": 99,
-
-    
-
-    # Paises Bajos
-    "Eredivisie": 88,
-    "Eerste Divisie": 89,
-
-    # Portugal
-    "Liga Portugal": 94,
-    "Liga Portugal 2": 95,
-    "Taça de Portugal": 96,
-
-
-
-    # Turquia
-    "Süper Lig": 203,
-    "1. Lig": 204,
-
-   
-}
-    TEMPORADA = 2026
+        TEMPORADA = 2026
 
     BASE = pathlib.Path(__file__).parent
     FILE_CUR = BASE / "partidos_2627_actual.csv"
