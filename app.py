@@ -477,35 +477,113 @@ with col_b:
             if faltan:
                 return False, faltan
             return True, []
-
+        ######
         MAPA_2627 = {
-            "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
-            "Saudi Professional League": 307, "Saudi First Division League": 308,
-            "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208,
-            "Premier League Bahrein": 400, "Jupiler Pro League": 144,
-            "Challenger Pro League": 145, "Chinese Super League": 169,
-            "China League One": 170, "Cyprus League": 318,
-            "K League 1": 292, "K League 2": 293,
-            "Superliga Dinamarca": 119, "UAE League": 301,
-            "Premiership Escocia": 179, "Nike Liga": 332,
-            "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
-            "Primera Federacion G1": 435, "Primera Federacion G2": 436,
-            "Liga F": 148, "Ligue 1": 61, "Ligue 2": 62,
-            "Super League Grecia": 197, "Super League 2 Grecia": 196,
-            "Premier League": 39, "NB I": 271,
-            "Super League Malasia": 278, "Championship": 40,
-            "WSL": 44, "WSL 2": 45, "Ligat ha'Al": 383,
-            "Serie A Italia": 135, "Serie B Italia": 136,
-            "J1 League": 98, "J2 League": 99,
-            "Super Liga Serbia": 286, "Botola Pro": 200,
-            "Eliteserien": 103, "Eredivisie": 88,
-            "Liga Portugal": 94, "Liga Portugal 2": 95,
-            "Taça de Portugal": 96, "Liga 1 Indonesia": 274,
-            "Liga 2 Indonesia": 276, "Thai League 1": 290,
-            "Thai League 2": 291, "Süper Lig": 203,
-            "1. Lig": 204, "V.League 1": 340
-        }
+    # Alemania
+    "Bundesliga": 78,
+    "2. Bundesliga": 79,
+    "Bundesliga Femenina": 82,
+
+    # Arabia Saudi
+    "Saudi Professional League": 307,
+    "Saudi First Division League": 308,
+
+    # Austria
+    "Bundesliga Austria": 218,
+    "2. Liga Austria": 219,
+
+    # Suiza
+    "Super League": 207,
+    "Challenge League": 208,
+
+    # Bahrein
+    "Premier League Bahrein": 400,
+
+    # Belgica
+    "Jupiler Pro League": 144,
+    "Challenger Pro League": 145,
+    "Superliga Femenina Belgica": 146,
+
+    # China
+    "Chinese Super League": 169,
+    "China League One": 170,
+
+    # Chipre
+    "Cyprus League": 318,
+
+    # Corea del Sur
+    "K League 1": 292,
+    "K League 2": 293,
+
+    # Dinamarca
+    "Superliga Dinamarca": 119,
+
+    # Emiratos Arabes
+    "UAE League": 301,
+
+    # Escocia
+    "Premiership Escocia": 179,
+
+    # Espana
+    "LaLiga EA Sports": 140,
+    "LaLiga Hypermotion": 141,
+    "Primera Federacion G1": 435,
+    "Primera Federacion G2": 436,
+    "Liga F": 148,
+
+    # Francia
+    "Ligue 1": 61,
+    "Ligue 2": 62,
+
+    # Grecia
+    "Super League Grecia": 197,
+    "Super League 2 Grecia": 196,
+
+    # Inglaterra
+    "Premier League": 39,
+    "Championship": 40,
+    "WSL": 44,
+    "WSL 2": 45,
+
+    # Italia
+    "Serie A Italia": 135,
+    "Serie B Italia": 136,
+
+    # Japon
+    "J1 League": 98,
+    "J2 League": 99,
+
+    # Malasia
+    "Super Liga Malasia": 278,
+
+    # Paises Bajos
+    "Eredivisie": 88,
+    "Eerste Divisie": 89,
+
+    # Portugal
+    "Liga Portugal": 94,
+    "Liga Portugal 2": 95,
+    "Taça de Portugal": 96,
+
+    # Singapur
+    "Premier League Singapur": 332,
+
+    # Hong Kong
+    "Hong Kong Premier League": 339,
+
+    # Tailandia
+    "Thai League 1": 290,
+    "Thai League 2": 291,
+
+    # Turquia
+    "Süper Lig": 203,
+    "1. Lig": 204,
+
+    # Vietnam
+    "V.League 1": 340
+}
+        ######
+        
         TEMPORADA = 2026
         req=[0]; prog=st.progress(0, text="Iniciando 26/27..."); should_stop=False
 
