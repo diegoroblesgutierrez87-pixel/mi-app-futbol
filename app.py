@@ -1010,11 +1010,37 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"⛔ Solo {quedan}/7500 - espera 02:00 Madrid"); st.stop()
         except: pass
 
-        MAPA_2627 = {
+              MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
             "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208, "Premier League Bahrein": 400,    if st.button("2ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_2esp_2627_FIX_TOTAL_V5"):
+            "Super League": 207, "Challenge League": 208, 
+            "Premier League Bahrein": 400,
+            "Jupiler Pro League": 144, "Challenger Pro League": 145,
+            "Chinese Super League": 169, "China League One": 170, "Cyprus League": 318,
+            "K League 1": 292, "K League 2": 293, "Superliga Dinamarca": 119, "UAE League": 301,
+            "Premiership Escocia": 179, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+            "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
+            "Ligue 1": 61, "Ligue 2": 62, "Super League Grecia": 197, "Super League 2 Grecia": 196,
+            "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
+            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
+            "Eredivisie": 88, "Eerste Divisie": 89, "Liga Portugal": 94, "Liga Portugal 2": 95,
+            "Süper Lig": 203, "1. Lig": 204,
+        }
+        TEMPORADA = 2026
+        BASE = pathlib.Path(__file__).parent
+        FILE_CUR = BASE / "partidos_2627_actual.csv"
+        # ... sigue tu codigo normal ...
+
+    # ESTE BOTON VA FUERA, NO DENTRO DEL EXPANDER DE ARRIBA
+    if st.button("2ª España 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_2esp_2627_FIX_TOTAL_V5"):
+        import requests as _req, time, pathlib, pandas as pd
+        try: 
+            API_KEY = str(st.secrets["API_KEY"]).strip()
+        except: 
+            st.error("Falta API_KEY"); st.stop()
+        LIGA_ID, LIGA_NOM, Y = 141, "LaLiga Hypermotion", 2026
+        # ... resto de tu logica de 2a españa ...
         import requests as _req, time, pathlib, pandas as pd
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
