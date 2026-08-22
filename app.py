@@ -22,19 +22,7 @@ import os
 import pathlib
 import json
 
-# --- FIX 26/27 - BORRA EL JSON VIEJO QUE TE PETA LA LIGA ---
-PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
-try:
-    if os.path.exists(PERSIST_FILE):
-        txt = open(PERSIST_FILE, "r", encoding="utf-8").read()
-        # si guarda códigos viejos B1,E0,SP1 o LaLiga 26/27 vacía, lo borramos
-        if any(x in txt for x in ["B1","D1","E0","SC0","SP1","N1","P1","F1","I1","T1"]):
-            os.remove(PERSIST_FILE)
-        # si el archivo tiene más de 30 días o está corrupto, también
-        if os.path.exists(PERSIST_FILE) and os.path.getsize(PERSIST_FILE) > 50000:
-            os.remove(PERSIST_FILE)
-except:
-    pass
+
 
 st.set_page_config(
     page_title="Filtro Jornada",
