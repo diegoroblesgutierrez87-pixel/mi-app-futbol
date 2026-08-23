@@ -1274,6 +1274,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         st.cache_data.clear()
         time.sleep(1)
         st.rerun()
+
+
+################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
 
