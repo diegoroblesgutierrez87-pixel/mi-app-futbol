@@ -480,7 +480,7 @@ with col_b:
     "Bundesliga Austria": 218,
     "2. Liga Austria": 219,
 
-    # Suiza
+    # Suiza - YA LA TENIAS
     "Super League": 207,
     "Challenge League": 208,
 
@@ -527,7 +527,7 @@ with col_b:
     "Super League Grecia": 197,
     "Super League 2 Grecia": 196,
 
-    # nglaterra
+    # Inglaterra
     "Premier League": 39,
     "Championship": 40,
     "WSL": 44,
@@ -548,13 +548,12 @@ with col_b:
     "Eredivisie": 88,
     "Eerste Divisie": 89,
 
-    # Portugal
+    # Portugal - QUITADA TACA
     "Liga Portugal": 94,
     "Liga Portugal 2": 95,
-    "Taça de Portugal": 96,
 
-    # Singapur
-    "Premier League Singapur": 332,
+    # Singapur - CORREGIDO ID BUENO
+    "Singapore Premier League": 366,
 
     # Hong Kong
     "Hong Kong Premier League": 339,
@@ -568,7 +567,12 @@ with col_b:
     "1. Lig": 204,
 
     # Vietnam
-    "V.League 1": 340
+    "V.League 1": 340,
+
+    # NUEVAS QUE PEDISTE
+    "Liga 1 Indonesia": 274,
+    "Liga 2 Indonesia": 276,
+    "NB I Hungria": 271
 }
         ######
         
