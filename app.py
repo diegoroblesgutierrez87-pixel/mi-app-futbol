@@ -1236,7 +1236,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
         }
 
-        # FIX nombres viejos -> nombres nuevos para no duplicar
         mapa_unifica_viejo = {
             'Jupiler':'Jupiler Pro League',
             'LaLiga':'LaLiga EA Sports',
@@ -1353,8 +1352,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         st.cache_data.clear()
         time.sleep(1)
         st.rerun()
-
-#########################
 ###################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
