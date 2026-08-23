@@ -1211,7 +1211,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 ##############boton 2
 #######################
 ###########################
-    if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES"):
+    if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: 
             API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -1236,11 +1236,19 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
         }
 
-        TEMPORADAS = [2022, 2023, 2024, 2025]  # 22/23 hasta 25/26
+        # FIX nombres viejos -> nombres nuevos para no duplicar
+        mapa_unifica_viejo = {
+            'Jupiler':'Jupiler Pro League',
+            'LaLiga':'LaLiga EA Sports',
+            'LaLiga2':'LaLiga Hypermotion',
+            'Premier':'Premier League',
+            'Eredivisie':'Eredivisie'
+        }
+
+        TEMPORADAS = [2022, 2023, 2024, 2025]
         BASE = pathlib.Path(__file__).parent
         FILE_VIEJO = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
 
-        # Cargar existentes para no duplicar
         existentes = set()
         if FILE_VIEJO.exists() and FILE_VIEJO.stat().st_size > 0:
             try:
@@ -1248,12 +1256,13 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 d["Date"] = pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
                 d["HomeTeam"] = d["HomeTeam"].astype(str).apply(normaliza)
                 d["AwayTeam"] = d["AwayTeam"].astype(str).apply(normaliza)
-                d["League"] = d["League"].astype(str)
+                d["League"] = d["League"].astype(str).replace(mapa_unifica_viejo)
                 d["Season"] = d["Season"].astype(str)
                 existentes.update(zip(d["Date"], d["HomeTeam"], d["AwayTeam"], d["League"], d["Season"]))
-            except: pass
+            except:
+                pass
 
-        prog = st.progress(0.0, text="Iniciando...")
+        prog = st.progress(0.0, text="Iniciando 22/23 a 25/26...")
         total = len(MAPA_2627) * len(TEMPORADAS)
         step = 0
         nuevos_total = 0
@@ -1289,7 +1298,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     home = normaliza(fx["teams"]["home"]["name"])
                     away = normaliza(fx["teams"]["away"]["name"])
                     season_str = f"{Y}/{Y+1}"
-                    
                     key = (date_str, home, away, nom, season_str)
                     if key in existentes:
                         continue
@@ -1327,23 +1335,26 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     )
                     nuevos_total += len(nuevos_liga)
 
-        # Dedup final
         try:
             if FILE_VIEJO.exists():
                 df_all = pd.read_csv(FILE_VIEJO, on_bad_lines='skip', engine='python')
                 df_all["Date"] = pd.to_datetime(df_all["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
+                df_all["League"] = df_all["League"].astype(str).replace(mapa_unifica_viejo)
                 df_all = df_all.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='last')
                 df_all.to_csv(FILE_VIEJO, index=False)
         except Exception as e:
             st.warning(f"Dedup error: {e}")
 
-        st.success(f"✅ CSV VIEJO 22/23-25/26: {nuevos_total} nuevos | {req_gastados} requests | 39 ligas x 4 temps")
+        st.success(f"✅ CSV VIEJO 22/23-25/26: {nuevos_total} nuevos | {req_gastados} requests")
         try: 
             push_csv_a_github(str(FILE_VIEJO), "ligas_2122_a_2627_SIN_DUPLICADOS.csv")
         except: pass
 
         st.cache_data.clear()
+        time.sleep(1)
         st.rerun()
+
+#########################
 ###################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
