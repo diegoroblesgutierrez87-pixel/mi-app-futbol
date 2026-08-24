@@ -695,8 +695,8 @@ with col_b:
                     time.sleep(0.4); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if re_.status_code==200:
                         for ev in re_.json().get("response", []):
-                            if ev["type"]=="Goal": nuevos_goles.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
-                            elif ev["type"]=="Card": nuevos_goles.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"", "jugador_tarjeta":ev["player"]["name"], "equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                            if ev["type"]=="Goal": nuevos_goles.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","jugador_tarjeta":"","equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                            elif ev["type"]=="Card": nuevos_goles.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
 
                 nuevos_partidos.append(row); existentes_completos.add(key_actual); df_exist_map[key_actual]=row; log_terminal(f" OK {nom} {home}-{away} {date_str} req:{req[0]}")
@@ -1157,9 +1157,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     if re_.status_code==200:
                         for ev in re_.json().get("response", []):
                             if ev["type"]=="Goal":
-                                nuevos_g.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                                nuevos_g.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","jugador_tarjeta":"","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                             elif ev["type"]=="Card":
-                                nuevos_g.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","jugador_tarjeta":ev["player"]["name"],"equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                                nuevos_g.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
                 try:
                     time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
