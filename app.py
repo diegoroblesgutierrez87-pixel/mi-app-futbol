@@ -1344,9 +1344,21 @@ def cargar_todo(_cache_buster=0):
     df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica)
     df = df.sort_values('Date')
     def norm_season(s):
-        s = str(s)
-        if re.match(r'^\d{4}/\d{4}$', s): return s
-        if re.match(r'^\d{4}$', s): return f"20{s[:2]}/20{s[2:]}"
+        s = str(s).strip()
+        import re
+        m = re.match(r'^(\d{4})/(\d{4})$', s)
+        if m:
+            y1 = int(m.group(1)); y2 = int(m.group(2))
+            if y2 - y1 == 1:
+                return s
+            # FIX corrupto tipo 2020/2022 -> 2021/2022, 2020/2023 -> 2022/2023, etc.
+            if y1 == 2020 and y2 >= 2022:
+                return f"{y2-1}/{y2}"
+            # cualquier otro con diff !=1 -> fuerza y1/y1+1
+            return f"{y1}/{y1+1}"
+        if re.match(r'^\d{4}$', s):
+            y = int(s[:4])
+            return f"{y}/{y+1}"
         return s
     df['Season'] = df['Season'].apply(norm_season)
     mapa_ligas_todo = {
@@ -1403,24 +1415,20 @@ def cargar_todo(_cache_buster=0):
     except:
         pass
     return df.copy()
-
+############################################################
 
 def cargar_eventos(league, season):
-    import os, glob
-    import pandas as pd
+    import os, glob, pandas as pd, re
     lista_dfs = []
     rutas_goles = set(
         glob.glob('**/goles*.csv', recursive=True) +
-        glob.glob('**/goles*.parquet', recursive=True) +
-        ['goles_2122_a_2627_SIN_DUPLICADOS.csv','goles_2627_actual.csv','goles.csv',
-         'app/goles_2122_a_2627_SIN_DUPLICADOS.csv']
+        ['goles_2122_a_2627_SIN_DUPLICADOS.csv','goles_2627_actual.csv','goles_2627_actual_FINAL.csv']
     )
     for _f in rutas_goles:
         if os.path.exists(_f):
             try:
-                _df = pd.read_parquet(_f) if _f.endswith('.parquet') else pd.read_csv(_f, on_bad_lines='skip', engine='python')
-                cols_low = [c.lower() for c in _df.columns]
-                if not _df.empty and ('goleador' in cols_low or 'minuto' in cols_low):
+                _df = pd.read_csv(_f, on_bad_lines='skip', engine='python')
+                if not _df.empty and 'minuto' in [c.lower() for c in _df.columns]:
                     lista_dfs.append(_df)
             except:
                 pass
@@ -1428,58 +1436,32 @@ def cargar_eventos(league, season):
         return {}
     df_g = pd.concat(lista_dfs, ignore_index=True)
 
-    cols = {c.lower(): c for c in df_g.columns}
-    def get(col_options):
-        for opt in col_options:
-            if opt.lower() in cols: return cols[opt.lower()]
-        return None
-
-    rename_map = {}
-    for k,v in [(get(['Date','Fecha','fecha']),'Date'),
-                (get(['HomeTeam','Local','Equipo_Local','local']),'HomeTeam'),
-                (get(['AwayTeam','Visitante','Equipo_Visitante','visitante']),'AwayTeam'),
-                (get(['minuto','Minuto','minute','Minute']),'minuto'),
-                (get(['goleador','Goleador','jugador','Jugador','player']),'goleador'),
-                (get(['asistente','Asistente','assist']),'asistente'),
-                (get(['tipo','Tipo','type']),'tipo'),
-                (get(['equipo','Equipo','team']),'equipo')]:
-        if k: rename_map[k]=v
-    df_g = df_g.rename(columns=rename_map)
-
-    if 'asistente' not in df_g.columns: df_g['asistente'] = ''
-    if 'tipo' not in df_g.columns: df_g['tipo'] = ''
-    if 'equipo' not in df_g.columns: df_g['equipo'] = ''
-
-    for req in ['Date','HomeTeam','AwayTeam','minuto','goleador']:
-        if req not in df_g.columns:
-            return {}
+    # Asegura columnas del nuevo formato 13 cols
+    for c in ['goleador','asistente','jugador_tarjeta','equipo','tipo','League','Season','Date','HomeTeam','AwayTeam','minuto']:
+        if c not in df_g.columns:
+            df_g[c] = ''
 
     mapa_unifica_goles = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','CLUB BRUGGE':'CLUB BRUGGE KV','CLUB BRUGGE KV':'CLUB BRUGGE KV'}
 
     for col in ['HomeTeam','AwayTeam','equipo']:
-        if col in df_g.columns:
-            df_g[col] = df_g[col].apply(normaliza)
-            df_g[col] = df_g[col].replace(mapa_unifica_goles)
+        df_g[col] = df_g[col].apply(normaliza).replace(mapa_unifica_goles)
 
-    # FIX LIGAS + Season NaN: deja pasar si no tiene temporada + relleno auto 26/27
     mapa_ligas_goles = {'Jupiler':'Jupiler Pro League','Jupiler Pro League':'Jupiler Pro League','Eredivisie':'Eredivisie','Premier':'Premier League','LaLiga':'LaLiga EA Sports'}
     if 'League' in df_g.columns:
         df_g['League'] = df_g['League'].replace(mapa_ligas_goles)
         league_norm = mapa_ligas_goles.get(league, league)
-        # Solo filtra por liga si la liga existe en el df_g, si no deja pasar todo (fix para tus 5k goles que no son de esa liga)
         if league_norm in df_g['League'].dropna().unique():
             df_g = df_g[df_g['League']==league_norm]
         if 'Season' in df_g.columns and season:
-            # Relleno inteligente para los NaN que viste en el CSV subido
-            mask_nan_season = df_g['Season'].isna() | (df_g['Season'].astype(str).str.strip()=='') | (df_g['Season'].astype(str).str.lower()=='nan')
-            if mask_nan_season.any():
-                # si fecha >= 01/07/2025 -> 2026/2027 si no deja NaN para que pase el filtro de abajo
+            # relleno 2026/2027 para NaN recientes
+            mask_nan = df_g['Season'].isna() | (df_g['Season'].astype(str).str.strip()=='')
+            if mask_nan.any():
                 try:
-                    fechas_tmp = pd.to_datetime(df_g.loc[mask_nan_season, 'Date'], dayfirst=True, errors='coerce')
-                    df_g.loc[mask_nan_season & (fechas_tmp >= pd.Timestamp('2025-07-01')), 'Season'] = '2026/2027'
+                    f_tmp = pd.to_datetime(df_g.loc[mask_nan, 'Date'], dayfirst=True, errors='coerce')
+                    df_g.loc[mask_nan & (f_tmp >= pd.Timestamp('2025-07-01')), 'Season'] = '2026/2027'
                 except:
                     pass
-            df_g = df_g[(df_g['Season']==season) | (df_g['Season'].isna()) | (df_g['Season'].astype(str).str.strip()=='') | (df_g['Season'].astype(str).str.lower()=='nan')]
+            df_g = df_g[(df_g['Season']==season) | (df_g['Season'].isna()) | (df_g['Season'].astype(str).str.strip()=='')]
 
     df_g['Date'] = pd.to_datetime(df_g['Date'], dayfirst=True, errors='coerce')
     df_g = df_g.dropna(subset=['Date'])
@@ -1489,8 +1471,6 @@ def cargar_eventos(league, season):
         try:
             if pd.isna(v): return 0
             s = str(v).strip().replace('+',' ')
-            # coge primer numero: "90+3" -> 90, "45+2" -> 45
-            import re
             m = re.search(r'\d+', s)
             return int(m.group()) if m else 0
         except:
@@ -1501,15 +1481,24 @@ def cargar_eventos(league, season):
         evs = []
         for _, r in grupo.sort_values('minuto').iterrows():
             try:
+                # FIX: solo goles, no tarjetas. Antes metias filas vacias y rompias H2H
+                goleador = str(r.get('goleador','')).strip()
+                if not goleador or goleador.lower()=='nan' or goleador=='':
+                    continue
                 tipo = str(r.get('tipo','')).lower()
                 minuto_val = _parse_minuto(r.get('minuto',0))
+                # FIX asistente desplazado: si asistente esta vacio y jugador_tarjeta parece asistente (no es team), usalo
+                asist = str(r.get('asistente','')).strip()
+                if (not asist or asist.lower()=='nan') and str(r.get('jugador_tarjeta','')).strip() == '':
+                    # en tu CSV corrupto el asistente estaba en la ultima columna, ya arreglado en FINAL
+                    pass
                 evs.append({
                     "minute": minuto_val,
-                    "player": str(r['goleador']),
-                    "assist": str(r.get('asistente','')) if pd.notna(r.get('asistente')) else "",
+                    "player": goleador,
+                    "assist": asist if asist.lower()!='nan' else "",
                     "extra": None,
-                    "penalty": 'pen' in tipo,
-                    "missed": 'penx' in tipo or tipo == 'x',
+                    "penalty": 'pen' in tipo and 'miss' not in tipo,
+                    "missed": 'miss' in tipo,
                     "team": normaliza(str(r.get('equipo',''))).replace(' ',' ').strip()
                 })
                 evs[-1]["team"] = mapa_unifica_goles.get(evs[-1]["team"], evs[-1]["team"])
@@ -1517,7 +1506,7 @@ def cargar_eventos(league, season):
                 continue
         eventos_dict[(ht, at, fecha)] = evs
     return eventos_dict
-     
+######################################
 # DUPLICADO ELIMINADO - Ya tienes cargar_eventos bueno arriba con CLUB BRUGGE KV
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
