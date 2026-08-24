@@ -1362,10 +1362,13 @@ def cargar_todo(_cache_buster=0):
     df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica).replace(mapa_bundes)
     df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica).replace(mapa_bundes)
 
-    # FIX 2 - DEDUP REAL ANTI 2 VIÑETAS Y 121PTS - ESTE ES EL QUE ARREGLA JORNADA 1 = 1 VIÑETA
+    # FIX 2 - DEDUP REAL - NO BORRES NaN
     if 'fixture_id' in df.columns:
         df = df.sort_values('Date')
-        df = df.drop_duplicates(subset=['fixture_id'], keep='first')
+        df_notna = df[df['fixture_id'].notna()].copy()
+        df_na = df[df['fixture_id'].isna()].copy()
+        df_notna = df_notna.drop_duplicates(subset=['fixture_id'], keep='first')
+        df = pd.concat([df_notna, df_na], ignore_index=True)
     if 'B365H' in df.columns:
         df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
         df = df.sort_values('__tiene_cuota', ascending=False)
