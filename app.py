@@ -1296,6 +1296,10 @@ if 'pct_marcador' not in st.session_state:
     st.session_state.pct_marcador = 1
 if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 
+
+#########################################
+########################################
+##########################################
 @st.cache_data(show_spinner=False)
 
 def cargar_todo(_cache_buster=0):
@@ -1307,7 +1311,6 @@ def cargar_todo(_cache_buster=0):
     except:
         BASE = pathlib.Path.cwd().resolve()
     df_completo = pd.DataFrame()
-    # FIX: carga ambos y los une - por eso 26/27 ahora si se ve
     candidatos = [BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv", BASE / "partidos_2627_actual.csv"]
     dfs = []
     for p in candidatos:
@@ -1332,16 +1335,45 @@ def cargar_todo(_cache_buster=0):
     for col in ['HomeTeam','AwayTeam']:
         if col in df.columns:
             df[col] = df[col].apply(normaliza)
+
+    # FIX 1 - MAPA BUNDESLIGA PARA UNIFICAR DUPLICADOS (ESTO QUITA 34 EQ -> 18)
+    mapa_bundes = {
+        'B LEIPZIG':'RB LEIPZIG', 'RB LEIPZIG':'RB LEIPZIG',
+        'BAYERN MUNCHEN':'BAYERN MUNICH', 'BAYERN MUNICH':'BAYERN MUNICH',
+        'BORUSSIA DORTMUND':'DORTMUND', 'DORTMUND':'DORTMUND',
+        'VFB STUTTGART':'STUTTGART', 'STUTTGART':'STUTTGART',
+        '1899 HOFFENHEIM':'HOFFENHEIM', 'HOFFENHEIM':'HOFFENHEIM',
+        'BAYER LEVERKUSEN':'LEVERKUSEN', 'LEVERKUSEN':'LEVERKUSEN',
+        'SC FREIBURG':'FREIBURG', 'FREIBURG':'FREIBURG',
+        'EIN FRANKFURT':'EINTRACHT FRANKFURT', 'EINTRACHT FRANKFURT':'EINTRACHT FRANKFURT',
+        'FC AUGSBURG':'AUGSBURG', 'AUGSBURG':'AUGSBURG',
+        'FSV MAINZ 05':'MAINZ', 'MAINZ':'MAINZ',
+        'BORUSSIA MONCHENGLADBACH':'MGLADBACH', 'MGLADBACH':'MGLADBACH',
+        'HAMBURGER SV':'HAMBURG', 'HAMBURG':'HAMBURG',
+        '1. FC KOLN':'KOLN', 'FC KOLN':'KOLN', 'KOLN':'KOLN',
+        'VFL WOLFSBURG':'WOLFSBURG', 'WOLFSBURG':'WOLFSBURG',
+        '1. FC HEIDENHEIM':'HEIDENHEIM', 'HEIDENHEIM':'HEIDENHEIM',
+        'FC ST. PAULI':'ST PAULI', 'ST PAULI':'ST PAULI',
+        'SC PADERBORN 07':'PADERBORN'
+    }
+
+    mapa_unifica = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',}
+    # aplica primero holanda/espana luego bundes
+    df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica).replace(mapa_bundes)
+    df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica).replace(mapa_bundes)
+
+    # FIX 2 - DEDUP REAL ANTI 2 VIÑETAS Y 121PTS - ESTE ES EL QUE ARREGLA JORNADA 1 = 1 VIÑETA
+    if 'fixture_id' in df.columns:
+        df = df.sort_values('Date')
+        df = df.drop_duplicates(subset=['fixture_id'], keep='first')
     if 'B365H' in df.columns:
         df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
         df = df.sort_values('__tiene_cuota', ascending=False)
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='first')
+        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
         df = df.drop(columns='__tiene_cuota')
     else:
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam'], keep='first')
-    mapa_unifica = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',}
-    df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica)
-    df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica)
+        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
+
     df = df.sort_values('Date')
     def norm_season(s):
         s = str(s).strip()
@@ -1351,10 +1383,8 @@ def cargar_todo(_cache_buster=0):
             y1 = int(m.group(1)); y2 = int(m.group(2))
             if y2 - y1 == 1:
                 return s
-            # FIX corrupto tipo 2020/2022 -> 2021/2022, 2020/2023 -> 2022/2023, etc.
             if y1 == 2020 and y2 >= 2022:
                 return f"{y2-1}/{y2}"
-            # cualquier otro con diff !=1 -> fuerza y1/y1+1
             return f"{y1}/{y1+1}"
         if re.match(r'^\d{4}$', s):
             y = int(s[:4])
@@ -1406,7 +1436,6 @@ def cargar_todo(_cache_buster=0):
     df['tirosPuertaTot'] = df['HST']+df['AST']
     df['faltasTot'] = df['HF']+df['AF']
     df['TargRojTot'] = df['HR']+df['AR']
-    # --- PARCHE AUTO-FIX SUIZA / AUSTRIA - NO ROMPE NADA, SOLO CORRIGE CSV VIEJO ---
     try:
         EQUIPOS_SUIZA = {"BASEL","BASEL 1893","YOUNG BOYS","BSC YOUNG BOYS","SERVETTE","SERVETTE FC","LUZERN","FC LUZERN","ZURICH","FC ZURICH","ST GALLEN","FC ST. GALLEN","SION","FC SION","GRASSHOPPERS","GRASSHOPPER","LAUSANNE","LAUSANNE-SPORT","VADUZ","FC VADUZ","LUGANO","FC LUGANO","WINTERTHUR","YVERDON","WIL","FC WIL"}
         mask_suiza = df['HomeTeam'].isin(EQUIPOS_SUIZA) | df['AwayTeam'].isin(EQUIPOS_SUIZA)
@@ -1415,7 +1444,7 @@ def cargar_todo(_cache_buster=0):
     except:
         pass
     return df.copy()
-############################################################
+######################################################
 
 def cargar_eventos(league, season):
     import os, glob, pandas as pd, re
