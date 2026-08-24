@@ -1257,7 +1257,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     ft_a = fx["goals"]["away"] or 0
                     ht_h = fx["score"]["halftime"]["home"] or 0
                     ht_a = fx["score"]["halftime"]["away"] or 0
-                    row = {"Date": date_str,"League": nom,"Season": season_str,"HomeTeam": home,"AwayTeam": away,"FTHG": ft_h,"FTAG": ft_a,"HTHG": ht_h,"HTAG": ht_a,"FTR": "H" if ft_h > ft_a else "A" if ft_a > ft_h else "D","B365H": 0, "B365D": 0, "B365A": 0,"HS": 0, "AS": 0, "HST": 0, "AST": 0, "HF": 0, "AF": 0, "HC": 0, "AC": 0,"HY": 0, "AY": 0, "HR": 0, "AR": 0,"fixture_id": fx["fixture"]["id"]}
+                    row={"Date":date_str,"League":nom,"Season":season_str,"HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"HS_1P":0,"AS_1P":0,"HST_1P":0,"AST_1P":0,"HF_1P":0,"AF_1P":0,"HC_1P":0,"AC_1P":0,"HY_1P":0,"AY_1P":0,"HR_1P":0,"AR_1P":0,"HomePasses_1P":0,"AwayPasses_1P":0,"HomePos_1P":0,"AwayPos_1P":0,"HS_2P":0,"AS_2P":0,"HST_2P":0,"AST_2P":0,"HF_2P":0,"AF_2P":0,"HC_2P":0,"AC_2P":0,"HY_2P":0,"AY_2P":0,"HR_2P":0,"AR_2P":0,"HomePasses_2P":0,"AwayPasses_2P":0,"HomePos_2P":0,"AwayPos_2P":0,"fixture_id": fx["fixture"]["id"]}
                     nuevos_liga.append(row)
                     existentes.add(key)
                 if nuevos_liga:
