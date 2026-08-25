@@ -1870,21 +1870,15 @@ def calcular_estado_jornada(df):
     if df.empty or 'Date' not in df.columns:
         return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
-##########bloque para que las jornadas vallan de 1 en 1
-# 1) Jornada por FECHA REAL - FIX J39 (era >4, fusionaba jornadas entre semana)
+    # 1) Jornada FIX DEFINITIVO J38 - 10 partidos por jornada, no por dias
     for (l, s), g in df.groupby(['League','Season'], sort=False):
         g = g.sort_values('Date')
         if g.empty:
             continue
-        jornadas = []
-        jornada_actual = 1
-        fecha_ref = g.iloc[0]['Date']
-        for idx_row in g.index:
-            fecha_actual = df.loc[idx_row, 'Date']
-            if (fecha_actual - fecha_ref).days > 2:
-                jornada_actual += 1
-                fecha_ref = fecha_actual
-            jornadas.append(jornada_actual)
+        teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
+        n_teams = len(teams)
+        partidos_por_jornada = n_teams // 2 if n_teams >= 4 else 10
+        jornadas = [(i // partidos_por_jornada) + 1 for i in range(len(g))]
         df.loc[g.index, 'Jornada'] = jornadas
     df['Jornada'] = df['Jornada'].astype(int)
     
