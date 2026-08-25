@@ -1013,7 +1013,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             st.session_state.pausa_2627 = False
             st.toast("Continuando...")
             st.rerun()
-
+###############################boton2627actual
     if st.button("Ligas 26/27 - FIX TOTAL 1P/2P + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
         import requests as _req, time, pathlib, pandas as pd, os, json
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -1025,22 +1025,40 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             if quedan < 100:
                 st.error(f"⛔ Solo {quedan}/7500 - espera 02:00 Madrid"); st.stop()
         except: pass
-        MAPA_2627 = {
-            "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
-            "Saudi Professional League": 307, "Saudi First Division League": 308,
-            "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208, "Premier League Bahrein": 400,
-            "Jupiler Pro League": 144, "Challenger Pro League": 145,
-            "Chinese Super League": 169, "China League One": 170, "Cyprus League": 318,
-            "K League 1": 292, "K League 2": 293, "Superliga Dinamarca": 119, "UAE League": 301,
-            "Premiership Escocia": 179, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
-            "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
-            "Ligue 1": 61, "Ligue 2": 62, "Super League Grecia": 197, "Super League 2 Grecia": 196,
-            "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
-            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
-            "Eredivisie": 88, "Eerste Divisie": 89, "Liga Portugal": 94, "Liga Portugal 2": 95,
-            "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
-        }
+        ###################################################mapa2627
+      MAPA_2627 = {
+    "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
+    "Saudi Professional League": 307, "Saudi First Division League": 308,
+    "Bundesliga Austria": 218, "2. Liga Austria": 219,
+    "Super League": 207, "Challenge League": 208, 
+    "Premier League Bahrein": 400,
+    "Jupiler Pro League": 144, "Challenger Pro League": 145,
+    "Chinese Super League": 169, "China League One": 170, 
+    "Cyprus League": 318,
+    "K League 1": 292, "K League 2": 293, 
+    "Superliga Dinamarca": 119, 
+    "UAE League": 301,
+    "Premiership Escocia": 179, 
+    "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+    "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
+    "Ligue 1": 61, "Ligue 2": 62, 
+    "Super League Grecia": 197, "Super League 2 Grecia": 196,
+    "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
+    "Serie A Italia": 135, "Serie B Italia": 136, 
+    "J1 League": 98, "J2 League": 99,
+    "Eredivisie": 88, "Eerste Divisie": 89, 
+    "Liga Portugal": 94, "Liga Portugal 2": 95,
+    "Süper Lig": 203, "1. Lig": 204,
+    # Añadidas
+    "Thai League 1": 290, "Thai League 2": 291,
+    "Liga 1 Indonesia": 274,
+    "Allsvenskan Suecia": 113,
+    "Super Liga Malasia": 278,
+    "Hong Kong Premier League": 339,
+    "V.League 1": 340,
+    "NB I Hungria": 271,
+}
+        #######################################################
         TEMPORADA = 2026
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
@@ -1207,27 +1225,45 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             push_csv_a_github(str(FILE_JUG), "jugadores_2627_actual.csv")
         except: pass
         st.success(f"✅ 26/27 {req[0]} req | FIX TOTAL OK | 1P/2P + goles + minutos + PUSH"); st.cache_data.clear(); time.sleep(1); st.rerun()
-
+###############################boton2526
     if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY en Secrets"); st.stop()
-        MAPA_2627 = {
-            "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
-            "Saudi Professional League": 307, "Saudi First Division League": 308,
-            "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208, "Premier League Bahrein": 400,
-            "Jupiler Pro League": 144, "Challenger Pro League": 145,
-            "Chinese Super League": 169, "China League One": 170, "Cyprus League": 318,
-            "K League 1": 292, "K League 2": 293, "Superliga Dinamarca": 119, "UAE League": 301,
-            "Premiership Escocia": 179, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
-            "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
-            "Ligue 1": 61, "Ligue 2": 62, "Super League Grecia": 197, "Super League 2 Grecia": 196,
-            "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
-            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
-            "Eredivisie": 88, "Eerste Divisie": 89, "Liga Portugal": 94, "Liga Portugal 2": 95,
-            "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
-        }
+        ######################################mapa2226csvviejo
+       MAPA_2627 = {
+    "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
+    "Saudi Professional League": 307, "Saudi First Division League": 308,
+    "Bundesliga Austria": 218, "2. Liga Austria": 219,
+    "Super League": 207, "Challenge League": 208, 
+    "Premier League Bahrein": 400,
+    "Jupiler Pro League": 144, "Challenger Pro League": 145,
+    "Chinese Super League": 169, "China League One": 170, 
+    "Cyprus League": 318,
+    "K League 1": 292, "K League 2": 293, 
+    "Superliga Dinamarca": 119, 
+    "UAE League": 301,
+    "Premiership Escocia": 179, 
+    "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+    "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
+    "Ligue 1": 61, "Ligue 2": 62, 
+    "Super League Grecia": 197, "Super League 2 Grecia": 196,
+    "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
+    "Serie A Italia": 135, "Serie B Italia": 136, 
+    "J1 League": 98, "J2 League": 99,
+    "Eredivisie": 88, "Eerste Divisie": 89, 
+    "Liga Portugal": 94, "Liga Portugal 2": 95,
+    "Süper Lig": 203, "1. Lig": 204,
+    # Añadidas
+    "Thai League 1": 290, "Thai League 2": 291,
+    "Liga 1 Indonesia": 274,
+    "Allsvenskan Suecia": 113,
+    "Super Liga Malasia": 278,
+    "Hong Kong Premier League": 339,
+    "V.League 1": 340,
+    "NB I Hungria": 271,
+}
+        ############################
         mapa_unifica_viejo = {'Jupiler':'Jupiler Pro League','LaLiga':'LaLiga EA Sports','LaLiga2':'LaLiga Hypermotion','Premier':'Premier League','Eredivisie':'Eredivisie'}
         TEMPORADAS = [2022, 2023, 2024, 2025]
         BASE = pathlib.Path(__file__).parent
