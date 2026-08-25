@@ -1721,9 +1721,10 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     hst, ast = int(row['HST']), int(row['AST']); hf, af = int(row['HF']), int(row['AF'])
     hthg, htag = int(row['HTHG']), int(row['HTAG'])
     h2tg = hg_num - hthg; a2tg = ag_num - htag
-    # NUEVO: pases y posesión si existen - FIX 1P/2P
+    # FIX 26/27 - solo hay totales, 1P/2P viene a 0
     hp = int(row.get('HomePasses',0) or 0); ap = int(row.get('AwayPasses',0) or 0)
-    hp_ht = int(row.get('HomePassesHT',0) or 0); ap_ht = int(row.get('AwayPassesHT',0) or 0)
+    hp_1p = int(row.get('HomePasses_1P',0) or 0); ap_1p = int(row.get('AwayPasses_1P',0) or 0)
+    hp_2p = int(row.get('HomePasses_2P',0) or 0); ap_2p = int(row.get('AwayPasses_2P',0) or 0)
     hsav = int(row.get('HomeSaves',0) or 0); asav = int(row.get('AwaySaves',0) or 0)
     hpos_pct = row.get('HomePos',''); apos_pct = row.get('AwayPos','')
 
@@ -1823,15 +1824,19 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     stats_html = f"<div style='font-size:7.5px'>{h1_g}</div><div style='font-size:7.5px'>{a1_g}</div><div style='font-size:7.5px'>{h2_g}</div><div style='font-size:7.5px'>{a2_g}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
     # NUEVO: pases/posesión/paradas
     extras = []
-    if hp_ht or ap_ht:
-        extras.append(f"1P:{hp_ht}P-{ap_ht}P")
-        extras.append(f"2P:{hp-hp_ht}P-{ap-ap_ht}P")
+    # Si hay 1P/2P (ligas viejas) muestro desglose, si no solo totales (26/27)
+    if hp_1p or ap_1p or hp_2p or ap_2p:
+        extras.append(f"1P:{hp_1p}P-{ap_1p}P")
+        extras.append(f"2P:{hp_2p}P-{ap_2p}P")
     elif hp or ap:
         extras.append(f"{hp}P-{ap}P")
-    if hpos_pct!='' and str(hpos_pct)!='0' and str(hpos_pct)!='':
+
+    if str(hpos_pct).strip() not in ['', '0', '0.0', 'nan', 'None']:
         extras.append(f"{hpos_pct}% Pos {apos_pct}%")
     if hsav or asav:
-        extras.append(f"{hsav}Par-{asav}Par")
+        # 0 paradas es real, lo mostramos igual si hay pases para no confundir con falta de datos
+        if hp or ap:
+            extras.append(f"{hsav}Par-{asav}Par")
     extras_html = f"<div style='font-size:7px;color:#000'>{' | '.join(extras)}</div>" if extras else ""
 
     goles_html = f"<div style='font-size:9px;color:{NAVY};line-height:1.2;margin-top:2px'>{goles_txt}</div>" if goles_txt else ""
