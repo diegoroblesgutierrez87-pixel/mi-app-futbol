@@ -1026,7 +1026,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"⛔ Solo {quedan}/7500 - espera 02:00 Madrid"); st.stop()
         except: pass
         ###################################################mapa2627
-             MAPA_2627 = {
+                    MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
             "Bundesliga Austria": 218, "2. Liga Austria": 219,
