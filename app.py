@@ -321,7 +321,7 @@ def formatear_h2h_compacto(row, equipo_ref=None):
 def racha_comprimida_html(df_team, equipo):
     if df_team.empty:
         return ""
-    df_team = df_team.sort_values('Date')
+    df_team = df_team.drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
     res = []
     for _, r in df_team.iterrows():
         is_home = r['HomeTeam'] == equipo
@@ -330,34 +330,37 @@ def racha_comprimida_html(df_team, equipo):
             res.append('G' if hg>ag else 'P' if hg<ag else 'E')
         else:
             res.append('G' if ag>hg else 'P' if ag<hg else 'E')
+    if not res:
+        return ""
     comp = []
     cnt = 1
     for i in range(1, len(res)):
         if res[i]==res[i-1]: cnt+=1
         else: comp.append((cnt,res[i-1])); cnt=1
     comp.append((cnt,res[-1]))
-
-    sep = "<span style='color:#bbb;font-size:11px;margin:0 1px'>|</span>"
+    sep = "<span style='color:#bbb;font-size:11px;margin:0 3px'>|</span>"
     parts = []
     for c, letra in comp:
         col = "#0f8105" if letra=='G' else "#f31818" if letra=='P' else "#0A2342"
         parts.append(f"<span style='color:{col};font-weight:700;font-size:11px;line-height:1.1'>{c}{letra}</span>")
-    return sep.join(parts)
+    # FIX: inline y nowrap para que no se rompa en vertical
+    return f"<span style='display:inline;white-space:nowrap'>{sep.join(parts)}</span>"
 ############################################
 def racha_ambos_marcan_html(df_team):
     if df_team.empty:
         return ""
-    df_team = df_team.sort_values('Date')
+    df_team = df_team.drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
     res = ['si' if int(r['FTHG'])>0 and int(r['FTAG'])>0 else 'no' for _,r in df_team.iterrows()]
+    if not res:
+        return ""
     comp = []
     cnt=1
     for i in range(1,len(res)):
         if res[i]==res[i-1]: cnt+=1
         else: comp.append(f"{cnt}{res[i-1]}"); cnt=1
     comp.append(f"{cnt}{res[-1]}")
-
-    sep = "<span style='color:#bbb;font-size:7px;margin:0 1px'>|</span>"
-    return sep.join([f"<span style='font-size:11px;font-weight:700;color:#000;line-height:1.1'>{x}</span>" for x in comp])
+    sep = "<span style='color:#bbb;font-size:11px;margin:0 3px'>|</span>"
+    return f"<span style='display:inline;white-space:nowrap'>{sep.join([f'<span style=\"font-size:11px;font-weight:700;color:#000;line-height:1.1\">{x}</span>' for x in comp])}</span>"
     ##############
 # --- PRIMER EXPANDER DUPLICADO ELIMINADO - SE MANTIENE SOLO FINAL UNICO ---
 #################script
@@ -1579,6 +1582,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
     df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)] if len(df_ref) > 300 else df_ref
     if df_eq.empty: return ""
+    # FIX 1: quita duplicados reales que te creaban J39 y doble viñeta
+    df_eq = df_eq.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'])
     is_home_s = (df_eq['HomeTeam']==equipo)
     final_gf_arr = np.where(is_home_s, df_eq['FTHG'].to_numpy(), df_eq['FTAG'].to_numpy())
     final_gc_arr = np.where(is_home_s, df_eq['FTAG'].to_numpy(), df_eq['FTHG'].to_numpy())
@@ -1586,6 +1591,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     loss_s = pd.Series(final_gf_arr < final_gc_arr, index=df_eq.index)
     partes = []
     for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
+        g = g.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'])
+        if g.empty: continue
+        # FIX 2: si por duplicado quedan 2 filas en la misma jornada, quédate con 1 -> 1 sola viñeta
+        if len(g) > 1:
+            g = g.sort_values('Date').head(1)
         if g.empty: continue
         if win_s.loc[g.index].all(): color = '#0f8105'
         elif loss_s.loc[g.index].all(): color = '#f31818'
@@ -1633,14 +1643,12 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         try:
             ev_dict = globals().get('todos_eventos', None)
             if ev_dict is None:
-                # intenta cogerlo del scope local si existe
                 ev_dict = locals().get('todos_eventos', {})
             if ev_dict:
                 gt = buscar_goles_partido(first_row, ev_dict, 0, 120, parte, equipo)
-                if gt: 
+                if gt:
                     goles_inline = f"<span style='font-size:10px;font-weight:400;margin-left:3px;white-space:normal'>{gt}</span>"
                 else:
-                    # si no hay evento en el dict, no pinta nada, pero no peta
                     goles_inline = ""
         except: pass
         es_h2h = False
@@ -1656,6 +1664,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     # Ahora cada partido en su propia linea
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
 
+#############################################
+######################################
 ###################def formatear_partido
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht, at = row['HomeTeam'], row['AwayTeam']
