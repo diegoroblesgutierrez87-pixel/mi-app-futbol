@@ -1368,20 +1368,27 @@ def cargar_todo(_cache_buster=0):
     df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica).replace(mapa_bundes)
     df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica).replace(mapa_bundes)
 
-    # FIX 2 - DEDUP REAL - NO BORRES NaN
+    # FIX 2 - DEDUP REAL V6 - fecha sin hora + season normalizada
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    df = df[df['Date'].notna()].copy()
+    df['Date_only'] = df['Date'].dt.strftime('%Y-%m-%d')
+
     if 'fixture_id' in df.columns:
-        df = df.sort_values('Date')
-        df_notna = df[df['fixture_id'].notna()].copy()
-        df_na = df[df['fixture_id'].isna()].copy()
-        df_notna = df_notna.drop_duplicates(subset=['fixture_id'], keep='first')
-        df = pd.concat([df_notna, df_na], ignore_index=True)
+        df = df.sort_values(['Date','fixture_id'], na_position='last')
+        # 1º por fixture_id
+        mask_id = df['fixture_id'].notna()
+        df_id = df[mask_id].drop_duplicates(subset=['fixture_id'], keep='last')
+        df_noid = df[~mask_id]
+        df = pd.concat([df_id, df_noid], ignore_index=True)
+
+    # 2º por clave real, prioriza el que tiene cuota
     if 'B365H' in df.columns:
-        df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
-        df = df.sort_values('__tiene_cuota', ascending=False)
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
-        df = df.drop(columns='__tiene_cuota')
-    else:
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
+        df['__tiene_cuota'] = pd.to_numeric(df['B365H'], errors='coerce').fillna(0) > 1.0
+        df = df.sort_values(['__tiene_cuota','Date'], ascending=[False, True])
+    # clave definitiva sin hora
+    df = df.drop_duplicates(subset=['Date_only','HomeTeam','AwayTeam','League','Season'], keep='first')
+    df = df.drop(columns=[c for c in ['__tiene_cuota','Date_only'] if c in df.columns])
+    df = df.sort_values('Date')
 
     df = df.sort_values('Date')
     def norm_season(s):
