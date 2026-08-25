@@ -705,10 +705,19 @@ with col_b:
                             elif ev["type"]=="Card": nuevos_goles.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
 
+                # BLINDAJE: normaliza antes de guardar para que no entre SANTANDER + RACING
+                row['HomeTeam'] = normaliza(row['HomeTeam']).replace(mapa_unifica).replace(mapa_bundes)
+                row['AwayTeam'] = normaliza(row['AwayTeam']).replace(mapa_unifica).replace(mapa_bundes)
                 nuevos_partidos.append(row); existentes_completos.add(key_actual); df_exist_map[key_actual]=row; log_terminal(f" OK {nom} {home}-{away} {date_str} req:{req[0]}")
 
                 if len(nuevos_partidos)>=20:
-                    pd.DataFrame(nuevos_partidos).to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False); nuevos_partidos=[]
+                    df_tmp = pd.DataFrame(nuevos_partidos)
+                    df_tmp['HomeTeam'] = df_tmp['HomeTeam'].apply(normaliza).replace(mapa_unifica).replace(mapa_bundes)
+                    df_tmp['AwayTeam'] = df_tmp['AwayTeam'].apply(normaliza).replace(mapa_unifica).replace(mapa_bundes)
+                    df_tmp['Date_only'] = pd.to_datetime(df_tmp['Date'], dayfirst=True, errors='coerce').dt.strftime('%Y-%m-%d')
+                    df_tmp = df_tmp.drop_duplicates(subset=['Date_only','HomeTeam','AwayTeam','League','Season'], keep='last')
+                    df_tmp = df_tmp.drop(columns=['Date_only'], errors='ignore')
+                    df_tmp.to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False); nuevos_partidos=[]
                     if nuevos_goles: pd.DataFrame(nuevos_goles).to_csv("goles_2627_actual.csv", mode='a', header=not os.path.exists("goles_2627_actual.csv") or os.path.getsize("goles_2627_actual.csv")==0, index=False); nuevos_goles=[]
                     if nuevos_jug: pd.DataFrame(nuevos_jug).to_csv("jugadores_2627_actual.csv", mode='a', header=not os.path.exists("jugadores_2627_actual.csv") or os.path.getsize("jugadores_2627_actual.csv")==0, index=False); nuevos_jug=[]
 
