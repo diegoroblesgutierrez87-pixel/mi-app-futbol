@@ -1870,41 +1870,37 @@ def calcular_estado_jornada(df):
     if df.empty or 'Date' not in df.columns:
         return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
-    # 1) Jornada FIX DEFINITIVO V4 - por equipos vistos, no por division
+    # 1) Jornada FIX V5 DEFINITIVO - por duplicado de equipo, no por division
+    df['Jornada'] = 0
     for (l, s), g in df.groupby(['League','Season'], sort=False):
-        g = g.sort_values('Date')
+        g = g.sort_values(['Date','HomeTeam','AwayTeam'])
         if g.empty:
             continue
         teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
         n_teams = len(teams)
-        partidos_por_jornada = n_teams // 2 if n_teams >= 4 else 10
+        if n_teams == 0:
+            continue
 
-        # Fix: asigna jornada cuando todos los equipos han jugado
-        jornada_actual = 1
-        equipos_vistos = set()
-        jornadas_map = {}
+        jornada = 1
+        vistos = set()
 
-        for idx, row in g.iterrows():
-            ht = row['HomeTeam']
-            at = row['AwayTeam']
-            # Si ya vimos a alguno de los dos en esta jornada, es que es jornada nueva
-            # Esto pasa cuando hay duplicado o cuando ya completamos la vuelta
-            if (ht in equipos_vistos or at in equipos_vistos) and len(equipos_vistos) >= partidos_por_jornada:
-                # Solo sube si ya tenemos al menos la mitad de la jornada
-                jornada_actual += 1
-                equipos_vistos = set()
+        for idx in g.index:
+            ht = df.loc[idx, 'HomeTeam']
+            at = df.loc[idx, 'AwayTeam']
 
-            jornadas_map[idx] = jornada_actual
-            equipos_vistos.add(ht)
-            equipos_vistos.add(at)
+            # Si alguno de los dos ya jugó esta jornada -> jornada nueva
+            if ht in vistos or at in vistos:
+                jornada += 1
+                vistos = set()
 
-            # Si ya completamos todos los equipos, siguiente fila es nueva jornada
-            if len(equipos_vistos) >= n_teams:
-                jornada_actual += 1
-                equipos_vistos = set()
+            df.loc[idx, 'Jornada'] = jornada
+            vistos.add(ht)
+            vistos.add(at)
 
-        for idx, j in jornadas_map.items():
-            df.loc[idx, 'Jornada'] = j
+            # Jornada completa = todos los equipos han jugado
+            if len(vistos) >= n_teams:
+                jornada += 1
+                vistos = set()
     df['Jornada'] = df['Jornada'].astype(int)
     
 
