@@ -360,7 +360,10 @@ def racha_ambos_marcan_html(df_team):
         else: comp.append(f"{cnt}{res[i-1]}"); cnt=1
     comp.append(f"{cnt}{res[-1]}")
     sep = "<span style='color:#bbb;font-size:11px;margin:0 3px'>|</span>"
-    return f"<span style='display:inline;white-space:nowrap'>{sep.join([f'<span style=\"font-size:11px;font-weight:700;color:#000;line-height:1.1\">{x}</span>' for x in comp])}</span>"
+    inner = []
+    for x in comp:
+        inner.append(f"<span style='font-size:11px;font-weight:700;color:#000;line-height:1.1'>{x}</span>")
+    return f"<span style='display:inline;white-space:nowrap'>{sep.join(inner)}</span>"
     ##############
 # --- PRIMER EXPANDER DUPLICADO ELIMINADO - SE MANTIENE SOLO FINAL UNICO ---
 #################script
