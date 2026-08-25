@@ -1877,7 +1877,7 @@ def calcular_estado_jornada(df):
     if df.empty or 'Date' not in df.columns:
         return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
-    # 1) Jornada FIX V5 DEFINITIVO - por duplicado de equipo, no por division
+    # 1) Jornada FIX V6 DEFINITIVO - esperado + tope real
     df['Jornada'] = 0
     for (l, s), g in df.groupby(['League','Season'], sort=False):
         g = g.sort_values(['Date','HomeTeam','AwayTeam'])
@@ -1885,8 +1885,15 @@ def calcular_estado_jornada(df):
             continue
         teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
         n_teams = len(teams)
-        if n_teams == 0:
+        if n_teams < 2:
             continue
+
+        # Jornadas reales de esa liga
+        exp_jornadas = (n_teams - 1) * 2
+        # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
+        if exp_jornadas < 10:
+            exp_jornadas = 38
+        partidos_por_jornada = n_teams // 2
 
         jornada = 1
         vistos = set()
@@ -1895,18 +1902,19 @@ def calcular_estado_jornada(df):
             ht = df.loc[idx, 'HomeTeam']
             at = df.loc[idx, 'AwayTeam']
 
-            # Si alguno de los dos ya jugó esta jornada -> jornada nueva
             if ht in vistos or at in vistos:
                 jornada += 1
+                if jornada > exp_jornadas:
+                    jornada = exp_jornadas
                 vistos = set()
 
             df.loc[idx, 'Jornada'] = jornada
             vistos.add(ht)
             vistos.add(at)
 
-            # Jornada completa = todos los equipos han jugado
             if len(vistos) >= n_teams:
-                jornada += 1
+                if jornada < exp_jornadas:
+                    jornada += 1
                 vistos = set()
     df['Jornada'] = df['Jornada'].astype(int)
     
