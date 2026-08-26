@@ -1373,6 +1373,95 @@ def push_csv_a_github(ruta_local, path_en_repo):
         except: pass
         st.success(f"✅ ASIA 2026 {req[0]} req OK"); st.cache_data.clear(); time.sleep(1); st.rerun()
 ###########################################################################
+
+
+    if st.button("🌏 ASIA 21-25 SOLO RESULTADO 1P/2P", use_container_width=True, key="btn_asia_2125_V1"):
+        import requests as _req, time, pathlib, pandas as pd
+        try: API_KEY = str(st.secrets["API_KEY"]).strip()
+        except: st.error("Falta API_KEY"); st.stop()
+
+        MAPA_ASIA = {
+            "K League 1": 292, "K League 2": 293,
+            "J1 League": 98, "J2 League": 99,
+            "Chinese Super League": 169, "China League One": 170,
+            "Thai League 1": 290, "Thai League 2": 291,
+            "Super Liga Malasia": 278, "V.League 1": 340, "Liga 1 Indonesia": 274,
+        }
+        TEMPORADAS = [2021,2022,2023,2024,2025]
+        BASE = pathlib.Path(__file__).parent
+        FILE_HIST = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
+
+        try: normaliza
+        except NameError:
+            def normaliza(x): return str(x).strip()
+
+        fids = set()
+        if FILE_HIST.exists() and FILE_HIST.stat().st_size>0:
+            try:
+                d = pd.read_csv(FILE_HIST, on_bad_lines='skip', engine='python')
+                if 'fixture_id' in d.columns:
+                    fids.update(d['fixture_id'].dropna().astype(str).tolist())
+            except: pass
+
+        req=[0]; nuevos=[]
+        prog=st.progress(0.0, text="ASIA 21-25 RESULTADO...")
+
+        for idx, (nom, lid) in enumerate(MAPA_ASIA.items()):
+            prog.progress(idx/len(MAPA_ASIA), text=f"{nom} | req:{req[0]}")
+            for TEMP in TEMPORADAS:
+                try:
+                    time.sleep(0.3)
+                    r = _req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": lid, "season": TEMP}, timeout=30)
+                    req[0]+=1
+                    fixtures = r.json().get("response", [])
+                except: continue
+                for fx in fixtures:
+                    if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
+                    fid = str(fx["fixture"]["id"])
+                    if fid in fids: continue
+
+                    ft_h = fx["goals"]["home"] or 0
+                    ft_a = fx["goals"]["away"] or 0
+                    ht_h = fx["score"]["halftime"]["home"] or 0
+                    ht_a = fx["score"]["halftime"]["away"] or 0
+
+                    # EQ1 EQ2 3-1 y 1P/2P local/visitante
+                    nuevos.append({
+                        "Date": pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"),
+                        "League": nom,
+                        "Season": f"{TEMP}",
+                        "HomeTeam": normaliza(fx["teams"]["home"]["name"]),
+                        "AwayTeam": normaliza(fx["teams"]["away"]["name"]),
+                        "FTHG": ft_h,
+                        "FTAG": ft_a,
+                        "HTHG": ht_h,
+                        "HTAG": ht_a,
+                        "HomeGoals_1P": ht_h,
+                        "AwayGoals_1P": ht_a,
+                        "HomeGoals_2P": ft_h - ht_h,
+                        "AwayGoals_2P": ft_a - ht_a,
+                        "FTR": "H" if ft_h>ft_a else "A" if ft_a>ft_h else "D",
+                        "fixture_id": fx["fixture"]["id"]
+                    })
+                    fids.add(fid)
+
+                if len(nuevos)>=50:
+                    pd.DataFrame(nuevos).to_csv(FILE_HIST, mode='a', header=not FILE_HIST.exists() or FILE_HIST.stat().st_size==0, index=False, encoding='utf-8-sig')
+                    nuevos=[]
+
+        if nuevos:
+            pd.DataFrame(nuevos).to_csv(FILE_HIST, mode='a', header=not FILE_HIST.exists() or FILE_HIST.stat().st_size==0, index=False, encoding='utf-8-sig')
+
+        try:
+            if FILE_HIST.exists():
+                df=pd.read_csv(FILE_HIST, on_bad_lines='skip', engine='python')
+                df=df.drop_duplicates(subset=['fixture_id'], keep='last')
+                df.to_csv(FILE_HIST, index=False, encoding='utf-8-sig')
+        except: pass
+        st.success(f"✅ ASIA 21-25 {req[0]} req | EQ1 EQ2 3-1 + 1P/2P | {len(fids)} fids"); st.cache_data.clear(); st.rerun()
+
+
+
 ############################################################################
     if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
         import requests as _req, time, pathlib, pandas as pd, os
