@@ -959,7 +959,7 @@ with col_b:
                                             if val["value"]=="Home": row["B365H"]=float(val["odd"])
                                             elif val["value"]=="Draw": row["B365D"]=float(val["odd"])
                                             elif val["value"]=="Away": row["B365A"]=float(val["odd"])
-                     except: pass
+    except: pass
                     nuevos.append(row)
         if nuevos:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
