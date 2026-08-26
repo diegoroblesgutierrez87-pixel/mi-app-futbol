@@ -885,7 +885,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         st.rerun()
 ##############################################
 ########################################boton liga asia 2627
-        if st.button("Ligas ASIATICAS 2026 COMPLETO", use_container_width=True, key="btn_asiaticas_2026_completo_v2"):
+       ##############################################
+########################################boton liga asia 2627
+    if st.button("Ligas ASIATICAS 2026 COMPLETO", use_container_width=True, key="btn_asiaticas_2026_completo_v2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
@@ -893,7 +895,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
-        # --- ANTI-DUPLICADO ---
         existentes=set()
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
             try: existentes=set(pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')["fixture_id"].astype(str).tolist())
@@ -912,7 +913,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 row={"Date":date_str,"League":nom,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
                 for c in ["HS_1P","AS_1P","HST_1P","AST_1P","HF_1P","AF_1P","HC_1P","AC_1P","HY_1P","AY_1P","HR_1P","AR_1P","HomePasses_1P","AwayPasses_1P","HomePos_1P","AwayPos_1P","HS_2P","AS_2P","HST_2P","AST_2P","HF_2P","AF_2P","HC_2P","AC_2P","HY_2P","AY_2P","HR_2P","AR_2P","HomePasses_2P","AwayPasses_2P","HomePos_2P","AwayPos_2P"]: row[c]=0
-                # 1) ESTADISTICAS TOTALES - a prueba de fallos
                 try:
                     time.sleep(0.35); rs=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture":fid}, timeout=20); req[0]+=1
                     if rs.status_code==200:
@@ -929,7 +929,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                 else:
                                     row["AS"]=get_int("Total Shots"); row["AST"]=get_int("Shots on Goal"); row["AF"]=get_int("Fouls"); row["AC"]=get_int("Corner Kicks"); row["AY"]=get_int("Yellow Cards"); row["AR"]=get_int("Red Cards"); row["AwayPasses"]=get_int("Total passes"); row["AwaySaves"]=get_int("Goalkeeper Saves"); row["AwayPos"]=get_int("Ball Possession")
                 except: pass
-                # 2) GOLES - mismo formato que tu botón grande (minuto, parte, goleador...)
                 try:
                     time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture":fid}, timeout=20); req[0]+=1
                     if re_.status_code==200:
