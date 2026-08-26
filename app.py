@@ -574,9 +574,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 #############3BOTON ligas2627 #####################################
 ###########################################################################
 ###############################################################################
-
-
-    if st.button("Ligas 26/27 - FIX TOTAL + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V5"):
+    if st.button("Ligas 26/27 - FIX TOTAL + GOLES + MINUTOS", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_V6_COMPAT"):
         import requests as _req, time, pathlib, pandas as pd, os, json
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY en Secrets"); st.stop()
@@ -657,6 +655,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         nuevos_p, nuevos_g, nuevos_j = [], [], []
         lista_ligas = list(MAPA_2627.items())
 
+        # PARA COMPATIBILIDAD CON TU CSV DE 64 COLS - NO BORRA NADA
+        COLS_EXTRA_1P2P = ["HS_1P","AS_1P","HST_1P","AST_1P","HF_1P","AF_1P","HC_1P","AC_1P","HY_1P","AY_1P","HR_1P","AR_1P","HomePasses_1P","AwayPasses_1P","HomePos_1P","AwayPos_1P","HS_2P","AS_2P","HST_2P","AST_2P","HF_2P","AF_2P","HC_2P","AC_2P","HY_2P","AY_2P","HR_2P","AR_2P","HomePasses_2P","AwayPasses_2P","HomePos_2P","AwayPos_2P"]
+
         for idx_liga in range(liga_start_idx, len(lista_ligas)):
             nom, lid = lista_ligas[idx_liga]
             prog.progress(idx_liga/len(lista_ligas), text=f"{nom} | req:{req[0]} | fids:{len(fids_existentes)}")
@@ -686,7 +687,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 ht_h, ht_a = fx["score"]["halftime"]["home"] or 0, fx["score"]["halftime"]["away"] or 0
                 total_goles = ft_h + ft_a
 
-                # LOGICA 3 CASOS - FIX 1 REQ SOLO GOLES
                 if fid in fids_existentes:
                     completo = _esta_completo(map_fid_to_row.get(fid, {}))
                     falta_gol = total_goles>0 and fid not in goles_fids
@@ -716,6 +716,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     "HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,
                     "fixture_id": fx["fixture"]["id"]
                 }
+                # COMPAT: rellena 32 cols extra a 0 para no petar tu CSV de 64 cols
+                for c in COLS_EXTRA_1P2P: row[c]=0
+
                 try:
                     time.sleep(0.35); rs=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if rs.status_code==200 and len(rs.json().get("response",[]))==2:
@@ -732,12 +735,14 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 try:
                     time.sleep(0.35); ro=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20); req[0]+=1
                     if ro.status_code==200:
-                        for bet in ro.json().get("response",[{}])[0].get("bookmakers",[{}])[0].get("bets",[]):
-                            if bet["name"]=="Match Winner":
-                                for v in bet["values"]:
-                                    if v["value"]=="Home": row["B365H"]=float(v["odd"])
-                                    elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
-                                    elif v["value"]=="Away": row["B365A"]=float(v["odd"])
+                        resp = ro.json().get("response", [])
+                        if resp and resp[0].get("bookmakers"):
+                            for bet in resp[0]["bookmakers"][0].get("bets",[]):
+                                if bet["name"]=="Match Winner":
+                                    for v in bet["values"]:
+                                        if v["value"]=="Home": row["B365H"]=float(v["odd"])
+                                        elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
+                                        elif v["value"]=="Away": row["B365A"]=float(v["odd"])
                 except: pass
                 try:
                     time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
@@ -778,10 +783,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
             push_csv_a_github(str(FILE_JUG), "jugadores_2627_actual.csv")
         except: pass
-        st.success(f"✅ 26/27 EUROPA {req[0]} req | 0 req si completo, 1 req si solo falta gol, 4 si nuevo | PUSH"); st.cache_data.clear(); time.sleep(1); st.rerun()
-
-
-#################################################################2226
+        st.success(f"✅ 26/27 EUROPA {req[0]} req | 0 req si completo, 1 req si solo falta gol, 4 si nuevo | COMPAT 64 cols"); st.cache_data.clear(); time.sleep(1); st.rerun()
 #################################################################2226
 #################################################################2226
 #################################################################2226
