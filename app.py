@@ -948,17 +948,22 @@ with col_b:
                     except: pass
                     if row["HS"]==0 and row["HST"]==0 and row["HC"]==0:
                         continue
-                    try:
-                        time.sleep(0.35); ro=_req2.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY2}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20); req2[0]+=1
-                        if ro.status_code==200:
-                            resp=ro.json().get("response",[])
+                                       try:
+                        time.sleep(0.35)
+                        ro = _req2.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY2}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20)
+                        req2[0] += 1
+                        if ro.status_code == 200:
+                            resp = ro.json().get("response", [])
                             if resp and resp[0].get("bookmakers"):
-                                for bet in resp[0]["bookmakers"][0].get("bets",[]):
-                                    if bet["name"]=="Match Winner":
+                                for bet in resp[0]["bookmakers"][0].get("bets", []):
+                                    if bet["name"] == "Match Winner":
                                         for val in bet["values"]:
-                                            if val["value"]=="Home": row["B365H"]=float(val["odd"])
-                            elif val["value"]=="Draw": row["B365D"]=float(val["odd"])
-                                                                        elif val["value"]=="Away": row["B365A"]=float(val["odd"])
+                                            if val["value"] == "Home":
+                                                row["B365H"] = float(val["odd"])
+                                            elif val["value"] == "Draw":
+                                                row["B365D"] = float(val["odd"])
+                                            elif val["value"] == "Away":
+                                                row["B365A"] = float(val["odd"])
                     except:
                         pass
                     nuevos.append(row)
