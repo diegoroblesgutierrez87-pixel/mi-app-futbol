@@ -1063,7 +1063,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
-        FILE_JUG = BASE / "jugadores_2627_actual.csv"
         PROG_FILE = BASE / "progreso_2627_fix.json"
         def _esta_completo(rd):
             if not rd: return False
@@ -1238,8 +1237,12 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             try: PROG_FILE.write_text(json.dumps({"liga_idx": idx_liga+1}), encoding='utf-8')
             except: pass
         if nuevos_p: pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
-        if nuevos_g: pd.DataFrame(nuevos_g).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
-        if nuevos_j: pd.DataFrame(nuevos_j).to_csv(FILE_JUG, mode='a', header=not FILE_JUG.exists() or FILE_JUG.stat().st_size==0, index=False)
+        if nuevos_g:
+            df_g = pd.DataFrame(nuevos_g)
+            for c in COLS_GOLES_2EN1:
+                if c not in df_g.columns: df_g[c]=""
+            df_g = df_g[COLS_GOLES_2EN1]
+            df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
         try:
             if FILE_CUR.exists():
                 df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip'); df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last'); df_all.to_csv(FILE_CUR, index=False)
@@ -1250,7 +1253,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         try:
             push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv")
             push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
-            push_csv_a_github(str(FILE_JUG), "jugadores_2627_actual.csv")
         except: pass
         st.success(f"✅ 26/27 {req[0]} req | FIX TOTAL OK | 1P/2P + goles + minutos + PUSH"); st.cache_data.clear(); time.sleep(1); st.rerun()
 #################################################################2226
