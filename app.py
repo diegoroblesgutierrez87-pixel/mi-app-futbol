@@ -1178,35 +1178,63 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                     elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
                                     elif v["value"]=="Away": row["B365A"]=float(v["odd"])
                 except: pass
+                COLS_GOLES_2EN1 = ["Date","League","Season","HomeTeam","AwayTeam","minuto","parte","goleador","asistente","jugador_tarjeta","equipo","tipo","fixture_id","jugador_sale","jugador_entra","jugador","minutos","rating"]
                 try:
                     time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if re_.status_code==200:
                         for ev in re_.json().get("response", []):
-                            base = {"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]}
+                            minuto = ev["time"]["elapsed"] or 0
+                            parte = "1P" if minuto <=45 else "2P"
+                            base = {
+                                "Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,
+                                "minuto":minuto,"parte":parte,
+                                "goleador":"","asistente":"","jugador_tarjeta":"",
+                                "equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id":fx["fixture"]["id"],
+                                "jugador_sale":"","jugador_entra":"",
+                                "jugador":"","minutos":"","rating":""
+                            }
                             if ev["type"]=="Goal":
-                                # incluye penalti marcado si detail contiene Penalty
-                                nuevos_g.append({**base, "goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","jugador_tarjeta":"","jugador_sale":"","jugador_entra":""})
+                                base.update({"goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or ""})
+                                nuevos_g.append(base)
                             elif ev["type"]=="Card":
-                                nuevos_g.append({**base, "goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"jugador_sale":"","jugador_entra":""})
+                                base.update({"jugador_tarjeta":ev["player"]["name"]})
+                                nuevos_g.append(base)
                             elif ev["type"]=="subst":
-                                nuevos_g.append({**base, "goleador":"","asistente":"","jugador_tarjeta":"","jugador_sale":ev["player"]["name"],"jugador_entra":ev["assist"]["name"] or ""})
-                            elif "missed penalty" in str(ev["detail"]).lower() or "penalty" in str(ev["detail"]).lower() and ev["type"]!="Goal":
-                                nuevos_g.append({**base, "goleador":ev["player"]["name"],"asistente":"","jugador_tarjeta":"","jugador_sale":"","jugador_entra":"", "tipo":ev["detail"] + " - FALLADO"})
+                                base.update({"tipo":"subst","jugador_sale":ev["player"]["name"],"jugador_entra":ev["assist"]["name"] or ""})
+                                nuevos_g.append(base)
+                            elif "missed penalty" in str(ev["detail"]).lower():
+                                base.update({"tipo":"Missed Penalty","goleador":ev["player"]["name"]})
+                                nuevos_g.append(base)
                 except: pass
+                # JUGADORES AHORA AL MISMO CSV 2EN1
                 try:
                     time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if rp.status_code==200:
                         for team_data in rp.json().get("response",[]):
                             for pl in team_data.get("players",[]):
                                 p=pl.get("player",{}); s=pl.get("statistics",[{}])[0]
-                                rating = s.get("games",{}).get("rating") or s.get("games",{}).get("rating") or 0
-                                nuevos_j.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"jugador":p.get("name"),"equipo":normaliza(team_data["team"]["name"]),"minutos":s.get("games",{}).get("minutes") or 0,"rating": float(str(rating)[:4]) if rating else 0,"fixture_id": fx["fixture"]["id"]})
+                                rating = s.get("games",{}).get("rating") or 0
+                                try: rating = float(str(rating)[:4])
+                                except: rating = 0
+                                nuevos_g.append({
+                                    "Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,
+                                    "minuto":0,"parte":"",
+                                    "goleador":"","asistente":"","jugador_tarjeta":"",
+                                    "equipo":normaliza(team_data["team"]["name"]),"tipo":"PlayerStats","fixture_id":fx["fixture"]["id"],
+                                    "jugador_sale":"","jugador_entra":"",
+                                    "jugador":p.get("name"),"minutos":s.get("games",{}).get("minutes") or 0,"rating":rating
+                                })
                 except: pass
                 nuevos_p.append(row); fids_existentes.add(fid); map_fid_to_row[fid]=row
                 if len(nuevos_p)>=1:
                     pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False); nuevos_p=[]
-                    if nuevos_g: pd.DataFrame(nuevos_g).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False); nuevos_g=[]
-                    if nuevos_j: pd.DataFrame(nuevos_j).to_csv(FILE_JUG, mode='a', header=not FILE_JUG.exists() or FILE_JUG.stat().st_size==0, index=False); nuevos_j=[]
+                    if nuevos_g:
+                        df_g = pd.DataFrame(nuevos_g)
+                        for c in COLS_GOLES_2EN1:
+                            if c not in df_g.columns: df_g[c]=""
+                        df_g = df_g[COLS_GOLES_2EN1]
+                        df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
+                        nuevos_g=[]
             try: PROG_FILE.write_text(json.dumps({"liga_idx": idx_liga+1}), encoding='utf-8')
             except: pass
         if nuevos_p: pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
