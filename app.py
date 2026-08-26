@@ -1534,10 +1534,48 @@ def cargar_eventos(league, season):
         if c not in df_g.columns:
             df_g[c] = ''
 
-    mapa_unifica_goles = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','CLUB BRUGGE':'CLUB BRUGGE KV','CLUB BRUGGE KV':'CLUB BRUGGE KV'}
+    # --- FIX: MISMO MAPA QUE EN cargar_todo ---
+    mapa_bundes = {
+        'B LEIPZIG':'RB LEIPZIG', 'RB LEIPZIG':'RB LEIPZIG',
+        'BAYERN MUNCHEN':'BAYERN MUNICH', 'BAYERN MUNICH':'BAYERN MUNICH',
+        'BORUSSIA DORTMUND':'DORTMUND', 'DORTMUND':'DORTMUND',
+        'VFB STUTTGART':'STUTTGART', 'STUTTGART':'STUTTGART',
+        '1899 HOFFENHEIM':'HOFFENHEIM', 'HOFFENHEIM':'HOFFENHEIM',
+        'BAYER LEVERKUSEN':'LEVERKUSEN', 'LEVERKUSEN':'LEVERKUSEN',
+        'SC FREIBURG':'FREIBURG', 'FREIBURG':'FREIBURG',
+        'EIN FRANKFURT':'EINTRACHT FRANKFURT', 'EINTRACHT FRANKFURT':'EINTRACHT FRANKFURT',
+        'FC AUGSBURG':'AUGSBURG', 'AUGSBURG':'AUGSBURG',
+        'FSV MAINZ 05':'MAINZ', 'MAINZ':'MAINZ',
+        'BORUSSIA MONCHENGLADBACH':'MGLADBACH', 'MGLADBACH':'MGLADBACH',
+        'HAMBURGER SV':'HAMBURG', 'HAMBURG':'HAMBURG',
+        '1. FC KOLN':'KOLN', 'FC KOLN':'KOLN', 'KOLN':'KOLN',
+        'VFL WOLFSBURG':'WOLFSBURG', 'WOLFSBURG':'WOLFSBURG',
+        '1. FC HEIDENHEIM':'HEIDENHEIM', 'HEIDENHEIM':'HEIDENHEIM',
+        'FC ST. PAULI':'ST PAULI', 'ST PAULI':'ST PAULI',
+        'SC PADERBORN 07':'PADERBORN'
+    }
+    mapa_unifica = {
+        'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES',
+        'FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR',
+        'ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES',
+        'AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD',
+        'ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',
+        'RACING SANTANDER':'RACING SANTANDER','RACING DE SANTANDER':'RACING SANTANDER','SANTANDER':'RACING SANTANDER','RAC':'RACING SANTANDER','SAN':'RACING SANTANDER',
+        'DEPORTIVO LA CORUNA':'DEPORTIVO LA CORUNA','LA CORUNA':'DEPORTIVO LA CORUNA','DEP':'DEPORTIVO LA CORUNA','DEPORTIVO':'DEPORTIVO LA CORUNA','CORUNA':'DEPORTIVO LA CORUNA','DEPORTIVO A CORUNA':'DEPORTIVO LA CORUNA','RC DEPORTIVO':'DEPORTIVO LA CORUNA',
+        'SPORTING GIJON':'SPORTING GIJON','SP GIJON':'SPORTING GIJON','SPO':'SPORTING GIJON','SPORTING DE GIJON':'SPORTING GIJON','REAL SPORTING':'SPORTING GIJON','SP':'SPORTING GIJON',
+        'AD CEUTA FC':'CEUTA','CEUTA':'CEUTA','AD CEUTA':'CEUTA','CEUTA FC':'CEUTA','AD':'CEUTA','CEU':'CEUTA',
+        'FC ANDORRA':'FC ANDORRA','ANDORRA':'FC ANDORRA','AND':'FC ANDORRA','F C ANDORRA':'FC ANDORRA',
+        'GRANADA':'GRANADA','GRANADA CF':'GRANADA','GRANADA CLUB DE FUTBOL':'GRANADA','GRA':'GRANADA',
+        'REAL SOCIEDAD B':'REAL SOCIEDAD B','REAL SOCIEDAD II':'REAL SOCIEDAD B','SOCIEDAD B':'REAL SOCIEDAD B','RSO B':'REAL SOCIEDAD B','SOC B':'REAL SOCIEDAD B','SOC':'REAL SOCIEDAD B','REAL SOCIEDAD DE FUTBOL B':'REAL SOCIEDAD B',
+        'CORDOBA':'CORDOBA','COR':'CORDOBA','CORDOBA CF':'CORDOBA',
+        'LAS PALMAS':'LAS PALMAS','LPA':'LAS PALMAS','UD LAS PALMAS':'LAS PALMAS',
+        'CULTURAL LEONESA':'CULTURAL LEONESA','CUL':'CULTURAL LEONESA','CULTURAL Y DEPORTIVA LEONESA':'CULTURAL LEONESA',
+        'SP G':'SPORTING GIJON',
+        'CLUB BRUGGE':'CLUB BRUGGE KV','CLUB BRUGGE KV':'CLUB BRUGGE KV'
+    }
 
     for col in ['HomeTeam','AwayTeam','equipo']:
-        df_g[col] = df_g[col].apply(normaliza).replace(mapa_unifica_goles)
+        df_g[col] = df_g[col].apply(normaliza).replace(mapa_unifica).replace(mapa_bundes)
 
     mapa_ligas_goles = {'Jupiler':'Jupiler Pro League','Jupiler Pro League':'Jupiler Pro League','Eredivisie':'Eredivisie','Premier':'Premier League','LaLiga':'LaLiga EA Sports'}
     if 'League' in df_g.columns:
@@ -1546,7 +1584,6 @@ def cargar_eventos(league, season):
         if league_norm in df_g['League'].dropna().unique():
             df_g = df_g[df_g['League']==league_norm]
         if 'Season' in df_g.columns and season:
-            # relleno 2026/2027 para NaN recientes
             mask_nan = df_g['Season'].isna() | (df_g['Season'].astype(str).str.strip()=='')
             if mask_nan.any():
                 try:
@@ -1574,17 +1611,12 @@ def cargar_eventos(league, season):
         evs = []
         for _, r in grupo.sort_values('minuto').iterrows():
             try:
-                # FIX: solo goles, no tarjetas. Antes metias filas vacias y rompias H2H
                 goleador = str(r.get('goleador','')).strip()
                 if not goleador or goleador.lower()=='nan' or goleador=='':
                     continue
                 tipo = str(r.get('tipo','')).lower()
                 minuto_val = _parse_minuto(r.get('minuto',0))
-                # FIX asistente desplazado: si asistente esta vacio y jugador_tarjeta parece asistente (no es team), usalo
                 asist = str(r.get('asistente','')).strip()
-                if (not asist or asist.lower()=='nan') and str(r.get('jugador_tarjeta','')).strip() == '':
-                    # en tu CSV corrupto el asistente estaba en la ultima columna, ya arreglado en FINAL
-                    pass
                 evs.append({
                     "minute": minuto_val,
                     "player": goleador,
@@ -1594,11 +1626,14 @@ def cargar_eventos(league, season):
                     "missed": 'miss' in tipo,
                     "team": normaliza(str(r.get('equipo',''))).replace(' ',' ').strip()
                 })
-                evs[-1]["team"] = mapa_unifica_goles.get(evs[-1]["team"], evs[-1]["team"])
+                evs[-1]["team"] = mapa_unifica.get(evs[-1]["team"], evs[-1]["team"])
+                evs[-1]["team"] = mapa_bundes.get(evs[-1]["team"], evs[-1]["team"])
             except:
                 continue
         eventos_dict[(ht, at, fecha)] = evs
     return eventos_dict
+#########################################
+#############################################
 ######################################
 # DUPLICADO ELIMINADO - Ya tienes cargar_eventos bueno arriba con CLUB BRUGGE KV
 
