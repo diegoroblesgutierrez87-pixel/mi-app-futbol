@@ -887,6 +887,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 ########################################boton liga asia 2627
        ##############################################
 ########################################boton liga asia 2627
+ ########################################boton liga asia 2627 FIX
     if st.button("Ligas ASIATICAS 2026 COMPLETO", use_container_width=True, key="btn_asiaticas_2026_completo_v2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -897,7 +898,11 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         FILE_GOLES = BASE / "goles_2627_actual.csv"
         existentes=set()
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
-            try: existentes=set(pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')["fixture_id"].astype(str).tolist())
+            try:
+                df_ex = pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')
+                df_ex = df_ex[df_ex["fixture_id"]!=0] # FIX: limpia los 0 viejos
+                df_ex.to_csv(FILE_CUR, index=False) # sobrescribe limpio
+                existentes=set(df_ex["fixture_id"].astype(str).tolist())
             except: pass
         req=[0]; prog=st.progress(0.0); todos_partidos=[]; todos_goles=[]
         for nom,lid in MAPA_ASIA.items():
@@ -909,6 +914,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             for fx in fixtures:
                 if req[0]>=490: break
                 fid=fx["fixture"]["id"]
+                if fid==0 or str(fid)=="0": continue # FIX: nunca guardes 0
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 row={"Date":date_str,"League":nom,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
@@ -941,7 +947,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 todos_partidos.append(row); existentes.add(str(fid))
                 prog.progress(min(req[0]/490,0.99), text=f"{nom} {len(todos_partidos)} partidos {req[0]}/490 req")
         if todos_partidos:
-            pd.DataFrame(todos_partidos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
+            df_new = pd.DataFrame(todos_partidos)
+            df_new = df_new[df_new["fixture_id"]!=0].drop_duplicates(subset=["fixture_id"])
+            df_new.to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
         if todos_goles:
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
         try: push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv"); push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
