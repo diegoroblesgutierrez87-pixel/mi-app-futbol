@@ -1129,61 +1129,17 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                     st.stop()
                 if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
                 fid = str(fx["fixture"]["id"])
-                # --- PLC INTELIGENTE: detecta que falta y solo rellena eso ---
-                es_existente = fid in fids_existentes
-                row_existente = map_fid_to_row.get(fid, {})
-
-                # 1. Chequea si le faltan datos nuevos (como no existen columnas, la primera vez dará True y los rellenará)
-                try: df_goles_check = pd.read_csv(FILE_GOLES, nrows=1) if FILE_GOLES.exists() else None
-                except: df_goles_check = None
-                try: df_jug_check = pd.read_csv(FILE_JUG, nrows=1) if FILE_JUG.exists() else None
-                except: df_jug_check = None
-
-                tiene_col_sale = df_goles_check is not None and 'jugador_sale' in df_goles_check.columns
-                tiene_col_rating = df_jug_check is not None and 'rating' in df_jug_check.columns
-
-                falta_relleno = False
-                if es_existente:
-                    # Si CSV aún no tiene columnas nuevas, obliga a rellenar
-                    if not tiene_col_sale or not tiene_col_rating:
-                        falta_relleno = True
-                    # Si ya tiene columnas pero este partido no está en goles/jugadores
-                    if fid not in goles_fids:
-                        falta_relleno = True
-
-                if es_existente and not falta_relleno:
-                    completo = _esta_completo(row_existente)
-                    if completo:
-                        continue
-                    # Si no está completo, lo borra para re-bajarlo entero (4 req)
-                    fids_existentes.discard(fid)
-                elif es_existente and falta_relleno:
-                    # --- MODO RELLENO: solo 2 req, no 4 ---
-                    try:
-                        # Solo events para sustituciones y penaltis fallados
-                        time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
-                        if re_.status_code==200:
-                            for ev in re_.json().get("response", []):
-                                base = {"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]}
-                                if ev["type"]=="subst":
-                                    nuevos_g.append({**base, "goleador":"","asistente":"","jugador_tarjeta":"","jugador_sale":ev["player"]["name"],"jugador_entra":ev["assist"]["name"] or ""})
-                                elif "missed penalty" in str(ev["detail"]).lower():
-                                    nuevos_g.append({**base, "goleador":ev["player"]["name"],"asistente":"","jugador_tarjeta":"","jugador_sale":"","jugador_entra":"", "tipo":ev["detail"] + " - FALLADO"})
-                    except: pass
-                    try:
-                        # Solo players para rating
-                        time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
-                        if rp.status_code==200:
-                            for team_data in rp.json().get("response",[]):
-                                for pl in team_data.get("players",[]):
-                                    p=pl.get("player",{}); s=pl.get("statistics",[{}])[0]
-                                    rating = s.get("games",{}).get("rating") or 0
-                                    nuevos_j.append({"Date":date_str,"League":nom,"HomeTeam":home,"AwayTeam":away,"jugador":p.get("name"),"equipo":normaliza(team_data["team"]["name"]),"minutos":s.get("games",{}).get("minutes") or 0,"rating": float(str(rating)[:4]) if rating else 0,"fixture_id": fx["fixture"]["id"]})
-                    except: pass
-                    continue # ya lo rellenó, no baja las 4
                 date_str = pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
                 home = normaliza(fx["teams"]["home"]["name"])
                 away = normaliza(fx["teams"]["away"]["name"])
+
+                if fid in fids_existentes:
+                    completo = _esta_completo(map_fid_to_row.get(fid, {}))
+                    total_goles = (fx["goals"]["home"] or 0) + (fx["goals"]["away"] or 0)
+                    falta_gol = total_goles>0 and fid not in goles_fids
+                    if completo and not falta_gol:
+                        continue
+                    fids_existentes.discard(fid)
                 ft_h, ft_a = fx["goals"]["home"] or 0, fx["goals"]["away"] or 0
                 ht_h, ht_a = fx["score"]["halftime"]["home"] or 0, fx["score"]["halftime"]["away"] or 0
                 row = {
