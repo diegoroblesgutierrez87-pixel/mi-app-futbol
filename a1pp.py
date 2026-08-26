@@ -705,10 +705,19 @@ with col_b:
                             elif ev["type"]=="Card": nuevos_goles.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":ev["team"]["name"].upper(),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
 
+                # BLINDAJE: normaliza antes de guardar para que no entre SANTANDER + RACING
+                row['HomeTeam'] = normaliza(row['HomeTeam']).replace(mapa_unifica).replace(mapa_bundes)
+                row['AwayTeam'] = normaliza(row['AwayTeam']).replace(mapa_unifica).replace(mapa_bundes)
                 nuevos_partidos.append(row); existentes_completos.add(key_actual); df_exist_map[key_actual]=row; log_terminal(f" OK {nom} {home}-{away} {date_str} req:{req[0]}")
 
                 if len(nuevos_partidos)>=20:
-                    pd.DataFrame(nuevos_partidos).to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False); nuevos_partidos=[]
+                    df_tmp = pd.DataFrame(nuevos_partidos)
+                    df_tmp['HomeTeam'] = df_tmp['HomeTeam'].apply(normaliza).replace(mapa_unifica).replace(mapa_bundes)
+                    df_tmp['AwayTeam'] = df_tmp['AwayTeam'].apply(normaliza).replace(mapa_unifica).replace(mapa_bundes)
+                    df_tmp['Date_only'] = pd.to_datetime(df_tmp['Date'], dayfirst=True, errors='coerce').dt.strftime('%Y-%m-%d')
+                    df_tmp = df_tmp.drop_duplicates(subset=['Date_only','HomeTeam','AwayTeam','League','Season'], keep='last')
+                    df_tmp = df_tmp.drop(columns=['Date_only'], errors='ignore')
+                    df_tmp.to_csv("partidos_2627_actual.csv", mode='a', header=not os.path.exists("partidos_2627_actual.csv") or os.path.getsize("partidos_2627_actual.csv")==0, index=False); nuevos_partidos=[]
                     if nuevos_goles: pd.DataFrame(nuevos_goles).to_csv("goles_2627_actual.csv", mode='a', header=not os.path.exists("goles_2627_actual.csv") or os.path.getsize("goles_2627_actual.csv")==0, index=False); nuevos_goles=[]
                     if nuevos_jug: pd.DataFrame(nuevos_jug).to_csv("jugadores_2627_actual.csv", mode='a', header=not os.path.exists("jugadores_2627_actual.csv") or os.path.getsize("jugadores_2627_actual.csv")==0, index=False); nuevos_jug=[]
 
@@ -1016,21 +1025,39 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             if quedan < 100:
                 st.error(f"⛔ Solo {quedan}/7500 - espera 02:00 Madrid"); st.stop()
         except: pass
+
+####################################################botonnmapa2627
+        ############################
         MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
             "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208, "Premier League Bahrein": 400,
+            "Super League": 207, "Challenge League": 208,
+            "Premier League Bahrein": 400,
             "Jupiler Pro League": 144, "Challenger Pro League": 145,
-            "Chinese Super League": 169, "China League One": 170, "Cyprus League": 318,
-            "K League 1": 292, "K League 2": 293, "Superliga Dinamarca": 119, "UAE League": 301,
-            "Premiership Escocia": 179, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+            "Chinese Super League": 169, "China League One": 170,
+            "Cyprus League": 318,
+            "K League 1": 292, "K League 2": 293,
+            "Superliga Dinamarca": 119,
+            "UAE League": 301,
+            "Premiership Escocia": 179,
+            "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
             "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
-            "Ligue 1": 61, "Ligue 2": 62, "Super League Grecia": 197, "Super League 2 Grecia": 196,
+            "Ligue 1": 61, "Ligue 2": 62,
+            "Super League Grecia": 197, "Super League 2 Grecia": 196,
             "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
-            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
-            "Eredivisie": 88, "Eerste Divisie": 89, "Liga Portugal": 94, "Liga Portugal 2": 95,
-            "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
+            "Serie A Italia": 135, "Serie B Italia": 136,
+            "J1 League": 98, "J2 League": 99,
+            "Eredivisie": 88, "Eerste Divisie": 89,
+            "Liga Portugal": 94, "Liga Portugal 2": 95,
+            "Süper Lig": 203, "1. Lig": 204,
+            "Thai League 1": 290, "Thai League 2": 291,
+            "Liga 1 Indonesia": 274,
+            "Allsvenskan Suecia": 113,
+            "Super Liga Malasia": 278,
+            "Hong Kong Premier League": 339,
+            "V.League 1": 340,
+            "NB I Hungria": 271,
         }
         TEMPORADA = 2026
         BASE = pathlib.Path(__file__).parent
@@ -1198,7 +1225,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             push_csv_a_github(str(FILE_JUG), "jugadores_2627_actual.csv")
         except: pass
         st.success(f"✅ 26/27 {req[0]} req | FIX TOTAL OK | 1P/2P + goles + minutos + PUSH"); st.cache_data.clear(); time.sleep(1); st.rerun()
-
+#################################################################2226
     if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -1207,17 +1234,32 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
             "Bundesliga Austria": 218, "2. Liga Austria": 219,
-            "Super League": 207, "Challenge League": 208, "Premier League Bahrein": 400,
+            "Super League": 207, "Challenge League": 208,
+            "Premier League Bahrein": 400,
             "Jupiler Pro League": 144, "Challenger Pro League": 145,
-            "Chinese Super League": 169, "China League One": 170, "Cyprus League": 318,
-            "K League 1": 292, "K League 2": 293, "Superliga Dinamarca": 119, "UAE League": 301,
-            "Premiership Escocia": 179, "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
+            "Chinese Super League": 169, "China League One": 170,
+            "Cyprus League": 318,
+            "K League 1": 292, "K League 2": 293,
+            "Superliga Dinamarca": 119,
+            "UAE League": 301,
+            "Premiership Escocia": 179,
+            "LaLiga EA Sports": 140, "LaLiga Hypermotion": 141,
             "Primera Federacion G1": 435, "Primera Federacion G2": 436, "Liga F": 148,
-            "Ligue 1": 61, "Ligue 2": 62, "Super League Grecia": 197, "Super League 2 Grecia": 196,
+            "Ligue 1": 61, "Ligue 2": 62,
+            "Super League Grecia": 197, "Super League 2 Grecia": 196,
             "Premier League": 39, "Championship": 40, "WSL": 44, "WSL 2": 45,
-            "Serie A Italia": 135, "Serie B Italia": 136, "J1 League": 98, "J2 League": 99,
-            "Eredivisie": 88, "Eerste Divisie": 89, "Liga Portugal": 94, "Liga Portugal 2": 95,
-            "Taça de Portugal": 96, "Süper Lig": 203, "1. Lig": 204,
+            "Serie A Italia": 135, "Serie B Italia": 136,
+            "J1 League": 98, "J2 League": 99,
+            "Eredivisie": 88, "Eerste Divisie": 89,
+            "Liga Portugal": 94, "Liga Portugal 2": 95,
+            "Süper Lig": 203, "1. Lig": 204,
+            "Thai League 1": 290, "Thai League 2": 291,
+            "Liga 1 Indonesia": 274,
+            "Allsvenskan Suecia": 113,
+            "Super Liga Malasia": 278,
+            "Hong Kong Premier League": 339,
+            "V.League 1": 340,
+            "NB I Hungria": 271,
         }
         mapa_unifica_viejo = {'Jupiler':'Jupiler Pro League','LaLiga':'LaLiga EA Sports','LaLiga2':'LaLiga Hypermotion','Premier':'Premier League','Eredivisie':'Eredivisie'}
         TEMPORADAS = [2022, 2023, 2024, 2025]
@@ -1363,25 +1405,52 @@ def cargar_todo(_cache_buster=0):
         'SC PADERBORN 07':'PADERBORN'
     }
 
-    mapa_unifica = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',}
+    mapa_unifica = {
+        # Holanda
+        'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES',
+        'FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR',
+        'ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES',
+        'AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD',
+        # España general
+        'ATLETICO DE MADRID':'ATLETICO MADRID','ATH MADRID':'ATLETICO MADRID','ATH. MADRID':'ATLETICO MADRID','AT MADRID':'ATLETICO MADRID','ATHLETIC CLUB':'ATHLETIC BILBAO','VALLECANO':'RAYO VALLECANO','RAYO VALLECANO MADRID':'RAYO VALLECANO','DEPORTIVO ALAVES':'ALAVES','LEVANTE UD':'LEVANTE','ELCHE CF':'ELCHE','REAL OVIEDO':'OVIEDO',
+        # FIX HYPERMOTION 25/26 - ESTO TE ARREGLA EL 720 -> 462 y 29 -> 22
+        'RACING SANTANDER':'RACING SANTANDER','RACING DE SANTANDER':'RACING SANTANDER','SANTANDER':'RACING SANTANDER','RAC':'RACING SANTANDER','SAN':'RACING SANTANDER',
+        'DEPORTIVO LA CORUNA':'DEPORTIVO LA CORUNA','LA CORUNA':'DEPORTIVO LA CORUNA','DEP':'DEPORTIVO LA CORUNA','DEPORTIVO':'DEPORTIVO LA CORUNA','CORUNA':'DEPORTIVO LA CORUNA','DEPORTIVO A CORUNA':'DEPORTIVO LA CORUNA','RC DEPORTIVO':'DEPORTIVO LA CORUNA',
+        'SPORTING GIJON':'SPORTING GIJON','SP GIJON':'SPORTING GIJON','SPO':'SPORTING GIJON','SPORTING DE GIJON':'SPORTING GIJON','REAL SPORTING':'SPORTING GIJON','SP':'SPORTING GIJON',
+        'AD CEUTA FC':'CEUTA','CEUTA':'CEUTA','AD CEUTA':'CEUTA','CEUTA FC':'CEUTA','AD':'CEUTA','CEU':'CEUTA',
+        'FC ANDORRA':'FC ANDORRA','ANDORRA':'FC ANDORRA','AND':'FC ANDORRA','F C ANDORRA':'FC ANDORRA',
+        'GRANADA':'GRANADA','GRANADA CF':'GRANADA','GRANADA CLUB DE FUTBOL':'GRANADA','GRA':'GRANADA',
+        'REAL SOCIEDAD B':'REAL SOCIEDAD B','REAL SOCIEDAD II':'REAL SOCIEDAD B','SOCIEDAD B':'REAL SOCIEDAD B','RSO B':'REAL SOCIEDAD B','SOC B':'REAL SOCIEDAD B','SOC':'REAL SOCIEDAD B','REAL SOCIEDAD DE FUTBOL B':'REAL SOCIEDAD B',
+        'CORDOBA':'CORDOBA','COR':'CORDOBA','CORDOBA CF':'CORDOBA',
+        'LAS PALMAS':'LAS PALMAS','LPA':'LAS PALMAS','UD LAS PALMAS':'LAS PALMAS',
+        'CULTURAL LEONESA':'CULTURAL LEONESA','CUL':'CULTURAL LEONESA','CULTURAL Y DEPORTIVA LEONESA':'CULTURAL LEONESA',
+        'SP G':'SPORTING GIJON',
+    }
     # aplica primero holanda/espana luego bundes
     df['HomeTeam'] = df['HomeTeam'].replace(mapa_unifica).replace(mapa_bundes)
     df['AwayTeam'] = df['AwayTeam'].replace(mapa_unifica).replace(mapa_bundes)
 
-    # FIX 2 - DEDUP REAL - NO BORRES NaN
+    # FIX 2 - DEDUP REAL V6 - fecha sin hora + season normalizada
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    df = df[df['Date'].notna()].copy()
+    df['Date_only'] = df['Date'].dt.strftime('%Y-%m-%d')
+
     if 'fixture_id' in df.columns:
-        df = df.sort_values('Date')
-        df_notna = df[df['fixture_id'].notna()].copy()
-        df_na = df[df['fixture_id'].isna()].copy()
-        df_notna = df_notna.drop_duplicates(subset=['fixture_id'], keep='first')
-        df = pd.concat([df_notna, df_na], ignore_index=True)
+        df = df.sort_values(['Date','fixture_id'], na_position='last')
+        # 1º por fixture_id
+        mask_id = df['fixture_id'].notna()
+        df_id = df[mask_id].drop_duplicates(subset=['fixture_id'], keep='last')
+        df_noid = df[~mask_id]
+        df = pd.concat([df_id, df_noid], ignore_index=True)
+
+    # 2º por clave real, prioriza el que tiene cuota
     if 'B365H' in df.columns:
-        df['__tiene_cuota'] = df['B365H'].astype(str).str.strip().ne('') & df['B365H'].notna()
-        df = df.sort_values('__tiene_cuota', ascending=False)
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
-        df = df.drop(columns='__tiene_cuota')
-    else:
-        df = df.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='first')
+        df['__tiene_cuota'] = pd.to_numeric(df['B365H'], errors='coerce').fillna(0) > 1.0
+        df = df.sort_values(['__tiene_cuota','Date'], ascending=[False, True])
+    # clave definitiva sin hora
+    df = df.drop_duplicates(subset=['Date_only','HomeTeam','AwayTeam','League','Season'], keep='first')
+    df = df.drop(columns=[c for c in ['__tiene_cuota','Date_only'] if c in df.columns])
+    df = df.sort_values('Date')
 
     df = df.sort_values('Date')
     def norm_season(s):
@@ -1685,9 +1754,10 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     hst, ast = int(row['HST']), int(row['AST']); hf, af = int(row['HF']), int(row['AF'])
     hthg, htag = int(row['HTHG']), int(row['HTAG'])
     h2tg = hg_num - hthg; a2tg = ag_num - htag
-    # NUEVO: pases y posesión si existen - FIX 1P/2P
+    # FIX 26/27 - solo hay totales, 1P/2P viene a 0
     hp = int(row.get('HomePasses',0) or 0); ap = int(row.get('AwayPasses',0) or 0)
-    hp_ht = int(row.get('HomePassesHT',0) or 0); ap_ht = int(row.get('AwayPassesHT',0) or 0)
+    hp_1p = int(row.get('HomePasses_1P',0) or 0); ap_1p = int(row.get('AwayPasses_1P',0) or 0)
+    hp_2p = int(row.get('HomePasses_2P',0) or 0); ap_2p = int(row.get('AwayPasses_2P',0) or 0)
     hsav = int(row.get('HomeSaves',0) or 0); asav = int(row.get('AwaySaves',0) or 0)
     hpos_pct = row.get('HomePos',''); apos_pct = row.get('AwayPos','')
 
@@ -1787,15 +1857,19 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     stats_html = f"<div style='font-size:7.5px'>{h1_g}</div><div style='font-size:7.5px'>{a1_g}</div><div style='font-size:7.5px'>{h2_g}</div><div style='font-size:7.5px'>{a2_g}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
     # NUEVO: pases/posesión/paradas
     extras = []
-    if hp_ht or ap_ht:
-        extras.append(f"1P:{hp_ht}P-{ap_ht}P")
-        extras.append(f"2P:{hp-hp_ht}P-{ap-ap_ht}P")
+    # Si hay 1P/2P (ligas viejas) muestro desglose, si no solo totales (26/27)
+    if hp_1p or ap_1p or hp_2p or ap_2p:
+        extras.append(f"1P:{hp_1p}P-{ap_1p}P")
+        extras.append(f"2P:{hp_2p}P-{ap_2p}P")
     elif hp or ap:
         extras.append(f"{hp}P-{ap}P")
-    if hpos_pct!='' and str(hpos_pct)!='0' and str(hpos_pct)!='':
+
+    if str(hpos_pct).strip() not in ['', '0', '0.0', 'nan', 'None']:
         extras.append(f"{hpos_pct}% Pos {apos_pct}%")
     if hsav or asav:
-        extras.append(f"{hsav}Par-{asav}Par")
+        # 0 paradas es real, lo mostramos igual si hay pases para no confundir con falta de datos
+        if hp or ap:
+            extras.append(f"{hsav}Par-{asav}Par")
     extras_html = f"<div style='font-size:7px;color:#000'>{' | '.join(extras)}</div>" if extras else ""
 
     goles_html = f"<div style='font-size:9px;color:{NAVY};line-height:1.2;margin-top:2px'>{goles_txt}</div>" if goles_txt else ""
@@ -1870,22 +1944,45 @@ def calcular_estado_jornada(df):
     if df.empty or 'Date' not in df.columns:
         return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
-##########bloque para que las jornadas vallan de 1 en 1
-# 1) Jornada por FECHA REAL - FIX DINAMARCA / BELGICA / ESCOCIA
+    # 1) Jornada FIX V6 DEFINITIVO - esperado + tope real
+    df['Jornada'] = 0
     for (l, s), g in df.groupby(['League','Season'], sort=False):
-        g = g.sort_values('Date')
+        g = g.sort_values(['Date','HomeTeam','AwayTeam'])
         if g.empty:
             continue
-        jornadas = []
-        jornada_actual = 1
-        fecha_ref = g.iloc[0]['Date']
-        for idx_row in g.index:
-            fecha_actual = df.loc[idx_row, 'Date']
-            if (fecha_actual - fecha_ref).days > 4:
-                jornada_actual += 1
-                fecha_ref = fecha_actual
-            jornadas.append(jornada_actual)
-        df.loc[g.index, 'Jornada'] = jornadas
+        teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
+        n_teams = len(teams)
+        if n_teams < 2:
+            continue
+
+        # Jornadas reales de esa liga
+        exp_jornadas = (n_teams - 1) * 2
+        # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
+        if exp_jornadas < 10:
+            exp_jornadas = 38
+        partidos_por_jornada = n_teams // 2
+
+        jornada = 1
+        vistos = set()
+
+        for idx in g.index:
+            ht = df.loc[idx, 'HomeTeam']
+            at = df.loc[idx, 'AwayTeam']
+
+            if ht in vistos or at in vistos:
+                jornada += 1
+                if jornada > exp_jornadas:
+                    jornada = exp_jornadas
+                vistos = set()
+
+            df.loc[idx, 'Jornada'] = jornada
+            vistos.add(ht)
+            vistos.add(at)
+
+            if len(vistos) >= n_teams:
+                if jornada < exp_jornadas:
+                    jornada += 1
+                vistos = set()
     df['Jornada'] = df['Jornada'].astype(int)
     
 
