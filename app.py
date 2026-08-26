@@ -945,6 +945,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             pd.DataFrame(todos_partidos).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
         if todos_goles:
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
+        try: push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv"); push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
+        except: pass
         st.success(f"ASIATICAS 2026 COMPLETO {len(todos_partidos)} partidos {len(todos_goles)} goles {req[0]} req"); st.cache_data.clear(); st.rerun()
 ################################################
 #####################fin ligas especificas 26 27
