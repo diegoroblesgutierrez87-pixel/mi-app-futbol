@@ -965,12 +965,22 @@ with col_b:
             pd.DataFrame(nuevos).to_csv("ligas_2122_a_2627_SIN_DUPLICADOS.csv", mode='a', header=not os.path.exists("ligas_2122_a_2627_SIN_DUPLICADOS.csv") or os.path.getsize("ligas_2122_a_2627_SIN_DUPLICADOS.csv")==0, index=False)
         st.success(f"✅ ESPECIFICAS {req2[0]}/7500 - {len(nuevos)} partidos completos guardados")
         st.cache_data.clear()
-        st.rerun()
+        st.rerun()        def falta_goles_detalle(fid):
+            rows = map_goles_por_fid.get(str(fid), [])
+            if not rows: return True
+            # si es gol, exige goleador y minuto
+            for r in rows:
+                t = str(r.get('tipo','')).lower()
+                if t in ['normal goal','penalty','own goal']:
+                    if not str(r.get('goleador','')).strip() or str(r.get('minuto','')).strip() in ['','0','None','nan']:
+                        return True
+            return False
 #####
 #######
 ###################################################################################################
 ##################################ligas
-
+#########################################################################
+#####################################################################
 def esta_completo_row(row_dict):
     try:
         # Solo exige totales, 1P/2P opcional en 26/27 porque API no lo da aun
@@ -1026,8 +1036,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"⛔ Solo {quedan}/7500 - espera 02:00 Madrid"); st.stop()
         except: pass
 
-####################################################botonnmapa2627
-        ############################
         MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
             "Saudi Professional League": 307, "Saudi First Division League": 308,
@@ -1064,22 +1072,31 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
         PROG_FILE = BASE / "progreso_2627_fix.json"
+        COLS_GOLES_2EN1 = ["Date","League","Season","HomeTeam","AwayTeam","minuto","parte","goleador","asistente","jugador_tarjeta","equipo","tipo","fixture_id","jugador_sale","jugador_entra","jugador","minutos","rating"]
+
+        try:
+            normaliza
+        except NameError:
+            def normaliza(x):
+                return str(x).strip()
+
         def _esta_completo(rd):
             if not rd: return False
-            # SOLO TOTALES - 1P/2P no se exigen en 26/27 por bug half=true
             try:
-                hs = int(float(rd.get('HS',0) or 0))
-                hc = int(float(rd.get('HC',0) or 0))
-                hp = int(float(rd.get('HomePasses',0) or 0))
+                hs = int(float(str(rd.get('HS',0) or 0).replace('%','') or 0))
+                hc = int(float(str(rd.get('HC',0) or 0).replace('%','') or 0))
+                hp = int(float(str(rd.get('HomePasses',0) or 0).replace('%','') or 0))
                 if hs==0 and hc==0 and hp==0:
                     return False
-                # B365 opcional, no bloquea si es 0
                 return True
             except:
                 return False
+
         fids_existentes = set()
         map_fid_to_row = {}
-        goles_fids = set()
+        goles_fids_reales = set()
+        map_goles_por_fid = {}
+
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
             try:
                 d = pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')
@@ -1093,8 +1110,34 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             try:
                 dg = pd.read_csv(FILE_GOLES, on_bad_lines='skip', engine='python')
                 if 'fixture_id' in dg.columns:
-                    goles_fids.update(dg['fixture_id'].dropna().astype(str).tolist())
+                    for _, r in dg.iterrows():
+                        try:
+                            fid = str(r['fixture_id'])
+                            map_goles_por_fid.setdefault(fid, []).append(r.to_dict())
+                            if str(r.get('tipo','')).lower() in ['normal goal','penalty','own goal','missed penalty']:
+                                goles_fids_reales.add(fid)
+                            if str(r.get('tipo','')).lower() == 'playerstats':
+                                goles_fids_reales.add(fid) # tambien cuenta para no re-bajar jugadores
+                        except: pass
             except: pass
+
+        def falta_goles_detalle(fid):
+            rows = map_goles_por_fid.get(str(fid), [])
+            if not rows: return True
+            for r in rows:
+                t = str(r.get('tipo','')).lower()
+                if t in ['normal goal','penalty','own goal']:
+                    gol = str(r.get('goleador','')).strip()
+                    # si es nan lo dejamos pasar, no re-baja
+                    if gol.lower() == 'nan':
+                        continue
+                    if not gol or gol.lower() == 'none':
+                        return True
+                    minu = str(r.get('minuto','')).strip()
+                    if minu in ['','0','None']:
+                        return True
+            return False
+
         liga_start_idx = 0
         if PROG_FILE.exists():
             try:
@@ -1104,7 +1147,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         st.session_state.pausa_2627 = False
         req=[0]
         prog=st.progress(0.0, text="Iniciando 26/27...")
-        nuevos_p, nuevos_g, nuevos_j = [], [], []
+        nuevos_p, nuevos_g = [], []
         lista_ligas = list(MAPA_2627.items())
         for idx_liga in range(liga_start_idx, len(lista_ligas)):
             nom, lid = lista_ligas[idx_liga]
@@ -1135,10 +1178,11 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 if fid in fids_existentes:
                     completo = _esta_completo(map_fid_to_row.get(fid, {}))
                     total_goles = (fx["goals"]["home"] or 0) + (fx["goals"]["away"] or 0)
-                    falta_gol = total_goles>0 and fid not in goles_fids
+                    falta_gol = (total_goles>0 and fid not in goles_fids_reales) or falta_goles_detalle(fid)
                     if completo and not falta_gol:
                         continue
                     fids_existentes.discard(fid)
+
                 ft_h, ft_a = fx["goals"]["home"] or 0, fx["goals"]["away"] or 0
                 ht_h, ht_a = fx["score"]["halftime"]["home"] or 0, fx["score"]["halftime"]["away"] or 0
                 row = {
@@ -1163,10 +1207,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                 row["AS"]=sd.get("Total Shots",0) or 0; row["AST"]=sd.get("Shots on Goal",0) or 0; row["AF"]=sd.get("Fouls",0) or 0; row["AC"]=sd.get("Corner Kicks",0) or 0; row["AY"]=sd.get("Yellow Cards",0) or 0; row["AR"]=sd.get("Red Cards",0) or 0; row["AwayPasses"]=passes; row["AwayPos"]=pos; row["AwaySaves"]=sd.get("Goalkeeper Saves",0) or 0
                 except: pass
                 if row["HS"]==0 and row["HC"]==0 and row["HomePasses"]==0: continue
-                # --- 26/27 FIX: NO PEDIMOS half=true porque API no lo da (307,308,78,79 etc) ---
-                # Dejamos _1P y _2P a 0 como ya inicializaste en row = {...}
-                # Así no gastas y no peta visualización
-                pass
+                # 26/27 FIX: NO PEDIMOS half=true
                 try:
                     time.sleep(0.35); ro=_req.get("https://v3.football.api-sports.io/odds", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"], "bookmaker": 8}, timeout=20); req[0]+=1
                     if ro.status_code==200:
@@ -1177,7 +1218,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                     elif v["value"]=="Draw": row["B365D"]=float(v["odd"])
                                     elif v["value"]=="Away": row["B365A"]=float(v["odd"])
                 except: pass
-                COLS_GOLES_2EN1 = ["Date","League","Season","HomeTeam","AwayTeam","minuto","parte","goleador","asistente","jugador_tarjeta","equipo","tipo","fixture_id","jugador_sale","jugador_entra","jugador","minutos","rating"]
                 try:
                     time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if re_.status_code==200:
@@ -1205,7 +1245,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                 base.update({"tipo":"Missed Penalty","goleador":ev["player"]["name"]})
                                 nuevos_g.append(base)
                 except: pass
-                # JUGADORES AHORA AL MISMO CSV 2EN1
                 try:
                     time.sleep(0.35); rp=_req.get("https://v3.football.api-sports.io/fixtures/players", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
                     if rp.status_code==200:
@@ -1226,26 +1265,28 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 except: pass
                 nuevos_p.append(row); fids_existentes.add(fid); map_fid_to_row[fid]=row
                 if len(nuevos_p)>=1:
-                    pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False); nuevos_p=[]
+                    pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False, encoding='utf-8-sig'); nuevos_p=[]
                     if nuevos_g:
                         df_g = pd.DataFrame(nuevos_g)
                         for c in COLS_GOLES_2EN1:
                             if c not in df_g.columns: df_g[c]=""
                         df_g = df_g[COLS_GOLES_2EN1]
-                        df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
+                        df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False, encoding='utf-8-sig')
                         nuevos_g=[]
             try: PROG_FILE.write_text(json.dumps({"liga_idx": idx_liga+1}), encoding='utf-8')
             except: pass
-        if nuevos_p: pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
+        if nuevos_p: pd.DataFrame(nuevos_p).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False, encoding='utf-8-sig')
         if nuevos_g:
             df_g = pd.DataFrame(nuevos_g)
             for c in COLS_GOLES_2EN1:
                 if c not in df_g.columns: df_g[c]=""
             df_g = df_g[COLS_GOLES_2EN1]
-            df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
+            df_g.to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False, encoding='utf-8-sig')
         try:
             if FILE_CUR.exists():
-                df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip'); df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last'); df_all.to_csv(FILE_CUR, index=False)
+                df_all=pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python'); df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last'); df_all.to_csv(FILE_CUR, index=False, encoding='utf-8-sig')
+            if FILE_GOLES.exists():
+                df_gall=pd.read_csv(FILE_GOLES, on_bad_lines='skip', engine='python'); df_gall=df_gall.drop_duplicates(keep='last'); df_gall.to_csv(FILE_GOLES, index=False, encoding='utf-8-sig')
         except: pass
         if PROG_FILE.exists():
             try: os.remove(PROG_FILE)
@@ -1255,7 +1296,10 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
         except: pass
         st.success(f"✅ 26/27 {req[0]} req | FIX TOTAL OK | 1P/2P + goles + minutos + PUSH"); st.cache_data.clear(); time.sleep(1); st.rerun()
-#################################################################2226
+##################################################################
+######################################################################
+###########################################################################
+############################################################################
     if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
