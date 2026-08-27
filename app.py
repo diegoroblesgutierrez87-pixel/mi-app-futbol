@@ -807,15 +807,12 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
 ######################################## FIN CHECKLIST KOREA
 
-######################################## BOTON KOREA K1+K2 2026 ESTE AÑO - FINAL PUZZLE
 if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key="btn_korea_fixed_final"):
     import requests as _req, time, pathlib, pandas as pd, io
     try: API_KEY = str(st.secrets["API_KEY"]).strip()
     except: st.error("Falta API_KEY en secrets"); st.stop()
 
-    def normaliza(s): return str(s).upper().strip()
     BASE = pathlib.Path(__file__).parent
-    # Busca el csv bueno donde sea
     FILE_CUR = None
     for name in ["partidos_2627_actual.csv","partidos_2627_actual_3.csv","partidos_2627_actual_4.csv"]:
         p = BASE / name
@@ -861,7 +858,7 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
                 fid=fx["fixture"]["id"]
                 try: date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
                 except: date_str=fx["fixture"]["date"][:10]
-                home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
+                home=str(fx["teams"]["home"]["name"]).upper().strip(); away=str(fx["teams"]["away"]["name"]).upper().strip()
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0
                 ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 row={"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
@@ -885,7 +882,7 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
                 if re_.status_code==200:
                     for ev in re_.json().get("response",[]):
                         if ev["type"] in ["Goal","Card"]:
-                            todos_goles.append({"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"] if ev["type"]=="Goal" else "","asistente":ev["assist"]["name"] or "" if ev["type"]=="Goal" else "","jugador_tarjeta":ev["player"]["name"] if ev["type"]=="Card" else "","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fid})
+                            todos_goles.append({"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"] if ev["type"]=="Goal" else "","asistente":ev["assist"]["name"] or "" if ev["type"]=="Goal" else "","jugador_tarjeta":ev["player"]["name"] if ev["type"]=="Card" else "","equipo":str(ev["team"]["name"]).upper().strip(),"tipo":ev["detail"],"fixture_id": fid})
                 todos_partidos.append(row); existentes.add(str(fid))
                 status.text(f"{NOMBRE} | {len(todos_partidos)} nuevos | {home} {ft_h}-{ft_a} {away} | req {req[0]}")
                 prog.progress(min(req[0]/2000,0.99))
@@ -895,14 +892,12 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
     st.write(f"### Total nuevos bajados: {len(todos_partidos)}")
     if todos_partidos:
         df_new = pd.DataFrame(todos_partidos)
-        # Guardar definitivo
         target = BASE / "partidos_2627_actual.csv"
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
             df_old = pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')
             df_final = pd.concat([df_old, df_new], ignore_index=True).drop_duplicates(subset=["fixture_id"])
         else: df_final = df_new
         df_final.to_csv(target, index=False)
-        df_final.to_csv(BASE / "partidos_2627_actual_3.csv", index=False) # backup
         st.success(f"Guardado local: {target.name} -> {len(df_final)} filas totales")
         st.download_button("📥 DESCARGAR partidos_2627_actual.csv", data=df_final.to_csv(index=False).encode('utf-8'), file_name="partidos_2627_actual.csv", mime="text/csv")
 
@@ -915,16 +910,19 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
             df_g_final.to_csv(FILE_GOLES, index=False)
             st.download_button("📥 DESCARGAR goles_2627_actual.csv", data=df_g_final.to_csv(index=False).encode('utf-8'), file_name="goles_2627_actual.csv", mime="text/csv")
 
-        # Intento push pero no es bloqueante
         try:
             push_csv_a_github(str(target), "partidos_2627_actual.csv")
             st.success("Push a GitHub OK")
         except Exception as e:
-            st.warning(f"Push falló (no pasa nada, descarga el csv manual y súbelo): {e}")
-    else: st.error("No se bajó nada - revisa API_KEY o límite")
-    st.cache_data.clear())} partidos {len(todos_goles)} eventos {req[0]} req"); st.cache_data.clear(); st.rerun()
-######################################## FIN KOREA PUZZLE
-
+            st.warning(f"Push falló (descarga manual y súbelo): {e}")
+        st.success(f"KOREA K1+K2 -> {len(todos_partidos)} partidos {len(todos_goles)} eventos {req[0]} req")
+        st.cache_data.clear()
+        st.rerun()
+    else:
+        st.error("No se bajó nada - revisa API_KEY o límite")
+        st.cache_data.clear()
+        st.rerun()
+####################################################################
 ######################################## FIN CHECKLIST
 
 ######################################## BOTON CHINA 1+2 NUEVA 2026/27 DEBAJO DEL CHECKLIST
