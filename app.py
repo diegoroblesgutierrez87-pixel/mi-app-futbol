@@ -852,7 +852,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"{NOMBRE} error {e}"); continue
 
             for fx in fixtures:
-                if req[0]>=490: break
+                if req[0]>=2000: break
                 fid=fx["fixture"]["id"]
                 if fid==0 or str(fid)=="0" or str(fid) in existentes: continue
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
@@ -943,7 +943,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.error(f"{NOMBRE} error {e}"); continue
 
             for fx in fixtures:
-                if req[0]>=490: break
+                if req[0]>=2000: break
                 fid=fx["fixture"]["id"]
                 if fid==0 or str(fid)=="0" or str(fid) in existentes: continue
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
