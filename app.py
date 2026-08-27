@@ -892,11 +892,14 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 ########################################boton liga asia 2627
        ##############################################
 ########################################boton liga asia 2627
- ########################################boton liga asia 2627 FIX
-    if st.button("Ligas ASIATICAS 2026 COMPLETO", use_container_width=True, key="btn_asiaticas_2026_completo_v2"):
+ ########################################boton liga asia 2627 FIX V3 BLINDADO
+    if st.button("Ligas ASIATICAS 2026 COMPLETO", use_container_width=True, key="btn_asiaticas_2026_completo_v3"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
+        # fallback por si normaliza no esta definida arriba
+        if 'normaliza' not in globals():
+            def normaliza(s): return str(s).upper().strip()
         MAPA_ASIA = {"K League 1":292,"K League 2":293,"J1 League":98,"J2 League":99,"Chinese Super League":169,"China League One":170}
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
@@ -905,10 +908,13 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
             try:
                 df_ex = pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')
-                df_ex = df_ex[df_ex["fixture_id"]!=0] # FIX: limpia los 0 viejos
-                df_ex.to_csv(FILE_CUR, index=False) # sobrescribe limpio
-                existentes=set(df_ex["fixture_id"].astype(str).tolist())
-            except: pass
+                # limpia ceros viejos de forma segura
+                if "fixture_id" in df_ex.columns:
+                    df_ex = df_ex[pd.to_numeric(df_ex["fixture_id"], errors='coerce').fillna(0).astype(int)!=0]
+                    df_ex.to_csv(FILE_CUR, index=False)
+                    existentes=set(df_ex["fixture_id"].astype(str).tolist())
+            except Exception as e:
+                st.warning(f"Aviso limpiando CSV viejo: {e}")
         req=[0]; prog=st.progress(0.0); todos_partidos=[]; todos_goles=[]
         for nom,lid in MAPA_ASIA.items():
             if req[0]>=490: break
@@ -919,7 +925,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             for fx in fixtures:
                 if req[0]>=490: break
                 fid=fx["fixture"]["id"]
-                if fid==0 or str(fid)=="0": continue # FIX: nunca guardes 0
+                if fid==0 or str(fid)=="0" or str(fid) in existentes: continue
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
                 row={"Date":date_str,"League":nom,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
@@ -953,7 +959,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 prog.progress(min(req[0]/490,0.99), text=f"{nom} {len(todos_partidos)} partidos {req[0]}/490 req")
         if todos_partidos:
             df_new = pd.DataFrame(todos_partidos)
-            df_new = df_new[df_new["fixture_id"]!=0].drop_duplicates(subset=["fixture_id"])
+            df_new = df_new[pd.to_numeric(df_new["fixture_id"], errors='coerce').fillna(0).astype(int)!=0].drop_duplicates(subset=["fixture_id"])
             df_new.to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
         if todos_goles:
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
