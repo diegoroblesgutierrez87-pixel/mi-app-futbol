@@ -781,7 +781,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 #################################################################2226
 #################################################################2226
 ########################################boton J1 2026/27 ESTE AÑO - SOLO JAPON NUEVA TEMPORADA
-    if st.button("J1 2026/27 ESTE AÑO - SOLO JAPON", use_container_width=True, key="btn_j1_2027_solo_este_anio_final"):
+########################################boton J1 2026/27 FORZADO - SIN FILTRO STATS
+    if st.button("J1 2026/27 FORZADO - JAPON", use_container_width=True, key="btn_j1_2027_forzado"):
         import requests as _req, time, pathlib, pandas as pd
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
@@ -790,7 +791,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 
         LIGA_ID = 98
         NOMBRE_LIGA = "J1 League"
-        SEASON = 2027 # J1 nueva que empezó 07/08/2026
+        SEASON = 2027
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
@@ -809,7 +810,10 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         req=[0]; prog=st.progress(0.0); todos_partidos=[]; todos_goles=[]
         try:
             time.sleep(0.4); r=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league":LIGA_ID,"season":SEASON}, timeout=30); req[0]+=1
-            fixtures=[f for f in r.json().get("response",[]) if str(f["fixture"]["id"]) not in existentes and f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
+            data=r.json().get("response",[])
+            st.write(f"API devuelve {len(data)} fixtures totales para J1 season 2027")
+            fixtures=[f for f in data if str(f["fixture"]["id"]) not in existentes and f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
+            st.write(f"De esos, {len(fixtures)} son FT y nuevos")
         except Exception as e:
             st.error(f"Error API fixtures: {e}"); fixtures=[]
 
@@ -822,7 +826,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             row={"Date":date_str,"League":NOMBRE_LIGA,"Season":"2026/27","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
             for c in ["HS_1P","AS_1P","HST_1P","AST_1P","HF_1P","AF_1P","HC_1P","AC_1P","HY_1P","AY_1P","HR_1P","AR_1P","HomePasses_1P","AwayPasses_1P","HomePos_1P","AwayPos_1P","HS_2P","AS_2P","HST_2P","AST_2P","HF_2P","AF_2P","HC_2P","AC_2P","HY_2P","AY_2P","HR_2P","AR_2P","HomePasses_2P","AwayPasses_2P","HomePos_2P","AwayPos_2P"]: row[c]=0
 
-            tiene_stats=False
+            # intenta stats pero NO bloquea si no hay
             try:
                 time.sleep(0.35); rs=_req.get("https://v3.football.api-sports.io/fixtures/statistics", headers={"x-apisports-key": API_KEY}, params={"fixture":fid}, timeout=20); req[0]+=1
                 if rs.status_code==200:
@@ -838,12 +842,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                 row["HS"]=get_int("Total Shots"); row["HST"]=get_int("Shots on Goal"); row["HF"]=get_int("Fouls"); row["HC"]=get_int("Corner Kicks"); row["HY"]=get_int("Yellow Cards"); row["HR"]=get_int("Red Cards"); row["HomePasses"]=get_int("Total passes"); row["HomeSaves"]=get_int("Goalkeeper Saves"); row["HomePos"]=get_int("Ball Possession")
                             else:
                                 row["AS"]=get_int("Total Shots"); row["AST"]=get_int("Shots on Goal"); row["AF"]=get_int("Fouls"); row["AC"]=get_int("Corner Kicks"); row["AY"]=get_int("Yellow Cards"); row["AR"]=get_int("Red Cards"); row["AwayPasses"]=get_int("Total passes"); row["AwaySaves"]=get_int("Goalkeeper Saves"); row["AwayPos"]=get_int("Ball Possession")
-                        if row["HS"]!=0 or row["HC"]!=0 or row["HomePasses"]!=0:
-                            tiene_stats=True
             except: pass
-            if not tiene_stats:
-                prog.progress(min(req[0]/490,0.99), text=f"J1 SIN STATS {home} vs {away} {date_str} -> SKIP {req[0]}/490")
-                continue
 
             try:
                 time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture":fid}, timeout=20); req[0]+=1
@@ -865,7 +864,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
         try: push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv"); push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
         except: pass
-        st.success(f"J1 2026/27 {len(todos_partidos)} partidos REALES J1-J4 {len(todos_goles)} eventos {req[0]} req"); st.cache_data.clear(); st.rerun()
+        st.success(f"J1 2026/27 FORZADO {len(todos_partidos)} partidos REALES {len(todos_goles)} eventos {req[0]} req"); st.cache_data.clear(); st.rerun()
 ################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
