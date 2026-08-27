@@ -111,6 +111,11 @@ def normaliza(nombre: str) -> str:
     n = n.encode('ASCII', 'ignore').decode('ASCII')
     n = n.upper().strip()
     n = re.sub(r'\s+', ' ', n)
+    # FIX PUZZLE GOLES - B = II
+    n = n.replace("REAL SOCIEDAD B", "REAL SOCIEDAD II")
+    n = n.replace("CELTA DE VIGO B", "CELTA DE VIGO II")
+    n = n.replace("SOC B", "REAL SOCIEDAD II")
+    n = n.replace("RSO B", "REAL SOCIEDAD II")
     return n
 @lru_cache(maxsize=2048)
 def abreviar_equipo(nombre):
@@ -1047,7 +1052,7 @@ def cargar_todo(_cache_buster=0):
         'AD CEUTA FC':'CEUTA','CEUTA':'CEUTA','AD CEUTA':'CEUTA','CEUTA FC':'CEUTA','AD':'CEUTA','CEU':'CEUTA',
         'FC ANDORRA':'FC ANDORRA','ANDORRA':'FC ANDORRA','AND':'FC ANDORRA','F C ANDORRA':'FC ANDORRA',
         'GRANADA':'GRANADA','GRANADA CF':'GRANADA','GRANADA CLUB DE FUTBOL':'GRANADA','GRA':'GRANADA',
-        'REAL SOCIEDAD B':'REAL SOCIEDAD B','REAL SOCIEDAD II':'REAL SOCIEDAD B','SOCIEDAD B':'REAL SOCIEDAD B','RSO B':'REAL SOCIEDAD B','SOC B':'REAL SOCIEDAD B','SOC':'REAL SOCIEDAD B','REAL SOCIEDAD DE FUTBOL B':'REAL SOCIEDAD B',
+        'REAL SOCIEDAD B':'REAL SOCIEDAD II','REAL SOCIEDAD II':'REAL SOCIEDAD II','SOCIEDAD B':'REAL SOCIEDAD II','RSO B':'REAL SOCIEDAD II','SOC B':'REAL SOCIEDAD II','SOC':'REAL SOCIEDAD II','REAL SOCIEDAD DE FUTBOL B':'REAL SOCIEDAD II',
         'CORDOBA':'CORDOBA','COR':'CORDOBA','CORDOBA CF':'CORDOBA',
         'LAS PALMAS':'LAS PALMAS','LPA':'LAS PALMAS','UD LAS PALMAS':'LAS PALMAS',
         'CULTURAL LEONESA':'CULTURAL LEONESA','CUL':'CULTURAL LEONESA','CULTURAL Y DEPORTIVA LEONESA':'CULTURAL LEONESA',
@@ -1169,6 +1174,11 @@ def cargar_eventos(league, season):
     if not lista_dfs:
         return {}
     df_g = pd.concat(lista_dfs, ignore_index=True)
+    # FIX PUZZLE - quita duplicados de API que te creaban Andorra x2
+    try:
+        df_g = df_g.drop_duplicates(subset=["fixture_id","minuto","goleador","tipo","equipo"])
+    except:
+        pass
 
     # Asegura columnas del nuevo formato 13 cols
     for c in ['goleador','asistente','jugador_tarjeta','equipo','tipo','League','Season','Date','HomeTeam','AwayTeam','minuto']:
