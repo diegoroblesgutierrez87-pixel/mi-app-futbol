@@ -780,127 +780,15 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         st.success(f"✅ 26/27 EUROPA {req[0]} req | 0 req si completo, 1 req si solo falta gol, 4 si nuevo | COMPAT 64 cols"); st.cache_data.clear(); time.sleep(1); st.rerun()
 #################################################################2226
 #################################################################2226
-#################################################################2226
-    if st.button("Ligas 22/23 a 25/26 -> CSV VIEJO (solo resultado + 1P/2P)", use_container_width=True, key="btn_2226_A_CSV_VIEJO_SOLO_RES_FINAL_V2"):
-        import requests as _req, time, pathlib, pandas as pd, os
-        try: API_KEY = str(st.secrets["API_KEY"]).strip()
-        except: st.error("Falta API_KEY en Secrets"); st.stop()
-        #################
-        MAPA_2627 = {
-            "Bundesliga": 78, 
-            "2. Bundesliga": 79, 
-            "Bundesliga Femenina": 82,
-            "Bundesliga Austria": 218, 
-            "2. Liga Austria": 219,
-            "Super League": 207, 
-            "Challenge League": 208,
-            "Jupiler Pro League": 144, 
-            "Challenger Pro League": 145,
-            "Superliga Dinamarca": 119,
-            "Premiership Escocia": 179,
-            "LaLiga EA Sports": 140, 
-            "LaLiga Hypermotion": 141,
-            "Primera Federacion G1": 435, 
-            "Primera Federacion G2": 436, 
-            "Liga F": 148,
-            "Ligue 1": 61, 
-            "Ligue 2": 62,
-            "Super League Grecia": 197, 
-            "Super League 2 Grecia": 196,
-            "Premier League": 39, 
-            "Championship": 40, 
-            "WSL": 44, 
-            "WSL 2": 45,
-            "Serie A Italia": 135, 
-            "Serie B Italia": 136,
-            "Eredivisie": 88, 
-            "Eerste Divisie": 89,
-            "Liga Portugal": 94, 
-            "Liga Portugal 2": 95,
-            "Süper Lig": 203, 
-            "1. Lig": 204,
-            "Allsvenskan Suecia": 113,
-            "NB I Hungria": 271,
-            "Cyprus League": 318,
-        }
-        mapa_unifica_viejo = {'Jupiler':'Jupiler Pro League','LaLiga':'LaLiga EA Sports','LaLiga2':'LaLiga Hypermotion','Premier':'Premier League','Eredivisie':'Eredivisie'}
-        TEMPORADAS = [2022, 2023, 2024, 2025]
-        BASE = pathlib.Path(__file__).parent
-        FILE_VIEJO = BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
-        existentes = set()
-        if FILE_VIEJO.exists() and FILE_VIEJO.stat().st_size > 0:
-            try:
-                d = pd.read_csv(FILE_VIEJO, on_bad_lines='skip', engine='python')
-                d["Date"] = pd.to_datetime(d["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
-                d["HomeTeam"] = d["HomeTeam"].astype(str).apply(normaliza)
-                d["AwayTeam"] = d["AwayTeam"].astype(str).apply(normaliza)
-                d["League"] = d["League"].astype(str).replace(mapa_unifica_viejo)
-                d["Season"] = d["Season"].astype(str)
-                existentes.update(zip(d["Date"], d["HomeTeam"], d["AwayTeam"], d["League"], d["Season"]))
-            except: pass
-        prog = st.progress(0.0, text="Iniciando 22/23 a 25/26...")
-        total = len(MAPA_2627) * len(TEMPORADAS)
-        step = 0
-        nuevos_total = 0
-        req_gastados = 0
-        for nom, lid in MAPA_2627.items():
-            for Y in TEMPORADAS:
-                step += 1
-                prog.progress(step/total, text=f"[{step}/{total}] {nom} {Y} | Nuevos: {nuevos_total} | Req: {req_gastados}")
-                try:
-                    time.sleep(0.4)
-                    r = _req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league": lid, "season": Y}, timeout=30)
-                    req_gastados += 1
-                except: continue
-                if r.status_code!= 200: continue
-                fixtures = [f for f in r.json().get("response",[]) if f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
-                if not fixtures: continue
-                nuevos_liga = []
-                for fx in fixtures:
-                    date_str = pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
-                    home = normaliza(fx["teams"]["home"]["name"])
-                    away = normaliza(fx["teams"]["away"]["name"])
-                    season_str = f"{Y}/{Y+1}"
-                    key = (date_str, home, away, nom, season_str)
-                    if key in existentes: continue
-                    ft_h = fx["goals"]["home"] or 0
-                    ft_a = fx["goals"]["away"] or 0
-                    ht_h = fx["score"]["halftime"]["home"] or 0
-                    ht_a = fx["score"]["halftime"]["away"] or 0
-                    row={"Date":date_str,"League":nom,"Season":season_str,"HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"HS_1P":0,"AS_1P":0,"HST_1P":0,"AST_1P":0,"HF_1P":0,"AF_1P":0,"HC_1P":0,"AC_1P":0,"HY_1P":0,"AY_1P":0,"HR_1P":0,"AR_1P":0,"HomePasses_1P":0,"AwayPasses_1P":0,"HomePos_1P":0,"AwayPos_1P":0,"HS_2P":0,"AS_2P":0,"HST_2P":0,"AST_2P":0,"HF_2P":0,"AF_2P":0,"HC_2P":0,"AC_2P":0,"HY_2P":0,"AY_2P":0,"HR_2P":0,"AR_2P":0,"HomePasses_2P":0,"AwayPasses_2P":0,"HomePos_2P":0,"AwayPos_2P":0,"fixture_id": fx["fixture"]["id"]}
-                    nuevos_liga.append(row)
-                    existentes.add(key)
-                if nuevos_liga:
-                    pd.DataFrame(nuevos_liga).to_csv(FILE_VIEJO, mode='a', header=not FILE_VIEJO.exists() or FILE_VIEJO.stat().st_size == 0, index=False)
-                    nuevos_total += len(nuevos_liga)
-        try:
-            if FILE_VIEJO.exists():
-                df_all = pd.read_csv(FILE_VIEJO, on_bad_lines='skip', engine='python')
-                df_all["Date"] = pd.to_datetime(df_all["Date"], dayfirst=True, errors='coerce').dt.strftime("%d/%m/%Y")
-                df_all["League"] = df_all["League"].astype(str).replace(mapa_unifica_viejo)
-                df_all = df_all.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'], keep='last')
-                df_all.to_csv(FILE_VIEJO, index=False)
-        except Exception as e:
-            st.warning(f"Dedup error: {e}")
-        st.success(f"✅ CSV VIEJO 22/23-25/26: {nuevos_total} nuevos | {req_gastados} requests")
-        try: push_csv_a_github(str(FILE_VIEJO), "ligas_2122_a_2627_SIN_DUPLICADOS.csv")
-        except: pass
-        st.cache_data.clear()
-        time.sleep(1)
-        st.rerun()
-##############################################
-########################################boton liga asia 2627
-       ##############################################
-########################################boton liga asia 2627
-########################################boton CSL 2026 - SOLO CHINA SUPER LEAGUE
-    if st.button("CHINA SUPER LEAGUE 2026 - SOLO CSL", use_container_width=True, key="btn_csl_2026_solo_fix_v4"):
+########################################boton J1 2026 - SOLO J1 LEAGUE
+    if st.button("J1 LEAGUE 2026 - SOLO J1", use_container_width=True, key="btn_j1_2026_solo_fix_v4"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
         if 'normaliza' not in globals():
             def normaliza(s): return str(s).upper().strip()
 
-        MAPA_ASIA = {"Chinese Super League":169}
+        MAPA_ASIA = {"J1 League":98}
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
@@ -976,7 +864,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
         try: push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv"); push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
         except: pass
-        st.success(f"CSL 2026 {len(todos_partidos)} partidos REALES {len(todos_goles)} goles {req[0]} req"); st.cache_data.clear(); st.rerun()
+        st.success(f"J1 2026 {len(todos_partidos)} partidos REALES {len(todos_goles)} goles {req[0]} req"); st.cache_data.clear(); st.rerun()
 ################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
