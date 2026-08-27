@@ -853,8 +853,9 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
             fixtures=[f for f in data if str(f["fixture"]["id"]) not in existentes and f["fixture"]["status"]["short"] in ["FT","AET","PEN"]]
             st.write(f"**{NOMBRE}** TOTAL API={len(data)} | FT NUEVOS filtrados={len(fixtures)}")
 
+###############################meter limite de llamadas1/3
             for fx in fixtures:
-                if req[0]>=2000: st.warning("Límite 2000 req alcanzado"); break
+                if req[0]>=800: st.warning("Límite 800 req alcanzado"); break
                 fid=fx["fixture"]["id"]
                 try: date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
                 except: date_str=fx["fixture"]["date"][:10]
@@ -885,7 +886,8 @@ if st.button("🇰🇷 KOREA K1+K2 2026 FT - FIX", use_container_width=True, key
                             todos_goles.append({"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"] if ev["type"]=="Goal" else "","asistente":ev["assist"]["name"] or "" if ev["type"]=="Goal" else "","jugador_tarjeta":ev["player"]["name"] if ev["type"]=="Card" else "","equipo":str(ev["team"]["name"]).upper().strip(),"tipo":ev["detail"],"fixture_id": fid})
                 todos_partidos.append(row); existentes.add(str(fid))
                 status.text(f"{NOMBRE} | {len(todos_partidos)} nuevos | {home} {ft_h}-{ft_a} {away} | req {req[0]}")
-                prog.progress(min(req[0]/2000,0.99))
+                ####################limite de llamadeas 2/3
+                prog.progress(min(req[0]/800,0.99))
         except Exception as e:
             st.error(f"Fallo {NOMBRE}: {e}"); import traceback; st.code(traceback.format_exc())
 
