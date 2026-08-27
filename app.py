@@ -782,22 +782,26 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 #################################################################2226
 ########################################boton J1 2026/27 ESTE AÑO - SOLO JAPON NUEVA TEMPORADA
 ########################################boton J1 2026/27 FORZADO - SIN FILTRO STATS
-######################################## VERIFICAR J1 - QUE SEASONS TIENE API
-    if st.button("VERIFICAR J1 - SEASONS DISPONIBLES", use_container_width=True, key="btn_verif_j1"):
+######################################## CHECKLIST CHINA 1 + 2 - ESTE AÑO NUEVO
+    if st.button("✅ CHECKLIST CHINA 1+2 ESTE AÑO", use_container_width=True, key="btn_check_china"):
         import requests as _req
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
-        r=_req.get("https://v3.football.api-sports.io/leagues", headers={"x-apisports-key": API_KEY}, params={"id":98}, timeout=20)
-        data=r.json().get("response",[])
-        if data:
-            seasons=data[0].get("seasons",[])
-            st.write(seasons)
-            for s in seasons:
-                st.write(f"Year: {s['year']} Start: {s['start']} End: {s['end']} Current: {s['current']}")
-        # prueba fixtures count
-        for year in [2024,2025,2026,2027]:
-            rr=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league":98,"season":year}, timeout=20)
-            st.write(f"season {year} -> {len(rr.json().get('response',[]))} fixtures en API")
+
+        for LIGA_ID, NOMBRE in [(88,"China League One"), (89,"China League Two"), (77,"CSL para comparar")]:
+            r=_req.get("https://v3.football.api-sports.io/leagues", headers={"x-apisports-key": API_KEY}, params={"id":LIGA_ID}, timeout=20)
+            data=r.json().get("response",[])
+            if data:
+                seasons=data[0].get("seasons",[])
+                curr=[s for s in seasons if s.get("current")]
+                st.write(f"--- {NOMBRE} ID={LIGA_ID} ---")
+                st.write(f"Seasons en API: {[s['year'] for s in seasons[-5:]]}")
+                if curr:
+                    st.write(f"CURRENT -> Year: {curr[0]['year']} Start: {curr[0]['start']} End: {curr[0]['end']}")
+
+            for year in [2025,2026,2027]:
+                rr=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league":LIGA_ID,"season":year}, timeout=20)
+                st.write(f" fixtures season {year} -> {len(rr.json().get('response',[]))} en API")
 ################################################
 ###############################################
 #############################################
