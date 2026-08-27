@@ -4152,7 +4152,8 @@ with st.expander("🔍 Buscador de Equipos + IA (sin cuota)", expanded=False):
             # IA TABLA
             st.markdown("**🤖 IA Score (solo stats):**")
             for _, r in df_res.iterrows():
-                score_ia = min(95, max
+                score_ia = int(min(95, max(5, float(r['%']) * 0.7 + float(r['GF'])*10 + float(r['HS']))))
+                st.markdown(f"<div style='font-size:10px;font-family:monospace'>🤖 {r['Equipo'].lower()} | {r['Cumple']}#{r['%']}% | IA {score_ia}% | {r['GF']:.1f}GF {r['HS']:.0f}T | {r['Jornadas']}</div>", unsafe_allow_html=True)
 #################generador de apuesta
 ###################################
 #######################################
