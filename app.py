@@ -4076,7 +4076,7 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
                 score_ia = int(min(95, max(5, float(pct)*0.7 + gf_avg*10 + hs_avg)))
                 resultados.append({'Equipo':eq,'Liga':df_eq['League'].iloc[0],'PJ':total,'Cumple':hits,'%':round(pct,1),'Jornadas':jors_html,'HS':hs_avg,'GF':gf_avg,'IA':score_ia})
 
-            if resultados:
+                       if resultados:
                 df_res = pd.DataFrame(resultados).sort_values(['%','Cumple'], ascending=False)
                 from collections import defaultdict
                 por_liga = defaultdict(list)
@@ -4109,12 +4109,12 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
 
                 restantes = len(df_res) - len(df_mostrar)
                 if restantes > 0:
-                    if st.button(f"📄 Cargar 100 más ({restantes} restantes)", use_container_width=True, key="be_cargar_mas"):
+                    if st.button(f"📄 Cargar 100 más ({restantes} restantes)", use_container_width=True, key=f"be_cargar_mas_{st.session_state.be_pag}_{len(df_res)}"):
                         st.session_state.be_pag += 1
                         st.rerun()
                 else:
                     if len(df_res) > POR_PAG:
-                        if st.button("🔝 Volver al inicio (100)", use_container_width=True, key="be_reset_pag"):
+                        if st.button("🔝 Volver al inicio (100)", use_container_width=True, key=f"be_reset_pag_{len(df_res)}"):
                             st.session_state.be_pag = 1
                             st.rerun()
             else:
