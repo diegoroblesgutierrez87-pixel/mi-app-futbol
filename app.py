@@ -4067,11 +4067,8 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
                 for _, rr in df_cumple.iterrows():
                     suf = 'c' if rr['HomeTeam']==eq else 'f'
                     rh = int(rr['FTHG']); ra = int(rr['FTAG'])
-                    gano = (rr['HomeTeam']==eq and rh>ra) or (rr['AwayTeam']==eq and ra>rh)
-                    perdio = (rr['HomeTeam']==eq and rh<ra) or (rr['AwayTeam']==eq and ra<rh)
-                    col = "#0f8105" if gano else "#f31818" if perdio else "#0A2342"
                     am = " ▪" if rh>0 and ra>0 else ""
-                    partes.append(f"<span style='color:{col};font-weight:700'>J{int(rr['Jornada'])}{suf} {rh}-{ra}{am}</span>")
+                    partes.append(f"<b>J{int(rr['Jornada'])}{suf} {rh}-{ra}{am}</b>")
                 jors_html = " | ".join(partes)
                 hs_avg = float(df_cumple['HS'].mean()) if 'HS' in df_cumple.columns else 0.0
                 gf_avg = float(gf[cumple].mean()) if len(gf[cumple])>0 else 0.0
@@ -4090,18 +4087,41 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
                 eqs = sorted(set(por_liga[liga]))
                 leyenda_ligas.append(f"<div style='font-size:10px;font-family:monospace;line-height:1.2'><b>{liga.upper()}:</b> {', '.join(eqs)}</div>")
             st.markdown(f"<div style='font-size:10px;font-family:monospace;background:#f3f4f6;padding:6px;border-radius:6px;margin:6px 0'><b>Encontrados {len(df_res)} equipos en {len(por_liga)} ligas - Optimizado + IA</b><br>{''.join(leyenda_ligas)}</div>", unsafe_allow_html=True)
+
+            # --- PAGINACION 100 EN 100 ---
+            if 'be_pag' not in st.session_state:
+                st.session_state.be_pag = 1
+
+            POR_PAG = 100
+            limite = st.session_state.be_pag * POR_PAG
+            df_mostrar = df_res.head(limite)
+
             lineas_html=[]
-            for _, r in df_res.iterrows():
-                linea=f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:6px 0; border-bottom:1px solid #eee;'>
-                    <span style='color:#555; font-weight:700'>{r['Liga'][:3].upper()}</span> |
-                    <span style='font-weight:900; color:#0A2342'>{r['Equipo']}</span>
-                    <span style='background:#581C87;color:#fff;padding:1px 4px;border-radius:4px;font-size:9px'>IA {r['IA']}%</span><br>
-                    <span style='color:#0f8105; font-weight:700'>{r['Cumple']}# {r['%']}%</span> - {r['GF']:.1f}GF {r['HS']:.0f}T — {r['Jornadas']}
+            for _, r in df_mostrar.iterrows():
+                linea=f"""<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:8px 0; border-bottom:1px solid #ddd;'>
+                    <div style='font-size:12px; font-weight:900; color:#0A2342;'>
+                        {r['Equipo'].upper()} <span style='color:#555; font-weight:400; font-size:10px;'>{r['Liga'][:3].upper()}</span> <span style='background:#581C87;color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;'>IA {r['IA']}%</span> <span style='color:#0f8105; font-weight:700; font-size:10px;'>{r['Cumple']}# {r['%']}%</span> <span style='color:#555; font-weight:400; font-size:10px;'>{r['GF']:.1f}GF {r['HS']:.0f}T</span>
+                    </div>
+                    <div style='margin-top:4px; font-size:11px;'>
+                        {r['Jornadas']}
+                    </div>
                 </div>"""
                 lineas_html.append(linea)
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+
+            restantes = len(df_res) - len(df_mostrar)
+            if restantes > 0:
+                if st.button(f"📄 Cargar 100 más ({restantes} restantes)", use_container_width=True, key="be_cargar_mas"):
+                    st.session_state.be_pag += 1
+                    st.rerun()
+            else:
+                if len(df_res) > POR_PAG:
+                    if st.button("🔝 Volver al inicio (100)", use_container_width=True, key="be_reset_pag"):
+                        st.session_state.be_pag = 1
+                        st.rerun()
         else:
             st.warning("Ningún equipo cumple esas condiciones")
+            st.session_state.be_pag = 1
 ###################################
 #######################################
 
