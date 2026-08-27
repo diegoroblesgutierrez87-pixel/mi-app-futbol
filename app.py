@@ -849,7 +849,7 @@ if st.button("🇰🇷 KOREA K1+K2 2026 - GUARDA AUTOMATICO", use_container_widt
             #... aqui tu mismo codigo de stats y events...
             home=str(fx["teams"]["home"]["name"]).upper(); away=str(fx["teams"]["away"]["name"]).upper()
             date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
-            row={"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":fx["goals"]["home"] or 0,"FTAG":fx["goals"]["away"] or 0,"fixture_id":fid,"HS":0,"AS":0}
+            row={"Date":date_str,"League":NOMBRE,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":fx["goals"]["home"] or 0,"FTAG":fx["goals"]["away"] or 0,"HTHG":fx["score"]["halftime"]["home"] or 0,"HTAG":fx["score"]["halftime"]["away"] or 0,"FTR":"H" if (fx["goals"]["home"] or 0)>(fx["goals"]["away"] or 0) else "A" if (fx["goals"]["away"] or 0)>(fx["goals"]["home"] or 0) else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"HS_1P":0,"AS_1P":0,"HST_1P":0,"AST_1P":0,"HF_1P":0,"AF_1P":0,"HC_1P":0,"AC_1P":0,"HY_1P":0,"AY_1P":0,"HR_1P":0,"AR_1P":0,"HomePasses_1P":0,"AwayPasses_1P":0,"HomePos_1P":0,"AwayPos_1P":0,"HS_2P":0,"AS_2P":0,"HST_2P":0,"AST_2P":0,"HF_2P":0,"AF_2P":0,"HC_2P":0,"AC_2P":0,"HY_2P":0,"AY_2P":0,"HR_2P":0,"AR_2P":0,"HomePasses_2P":0,"AwayPasses_2P":0,"HomePos_2P":0,"AwayPos_2P":0,"fixture_id":fid}
             pd.DataFrame([row]).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
             existentes.add(fid); total_nuevos+=1; req[0]+=3
             st.write(f"GUARDADO {total_nuevos} - {home} vs {away}")
