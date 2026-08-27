@@ -892,15 +892,15 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 ########################################boton liga asia 2627
        ##############################################
 ########################################boton liga asia 2627
-########################################boton K2 LEAGUE 2026 - SOLO K2 - FIX DEFINITIVO
-    if st.button("K2 LEAGUE 2026 - SOLO K2", use_container_width=True, key="btn_k2_2026_solo_fix_v4"):
+########################################boton CSL 2026 - SOLO CHINA SUPER LEAGUE
+    if st.button("CHINA SUPER LEAGUE 2026 - SOLO CSL", use_container_width=True, key="btn_csl_2026_solo_fix_v4"):
         import requests as _req, time, pathlib, pandas as pd, os
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
         if 'normaliza' not in globals():
             def normaliza(s): return str(s).upper().strip()
 
-        MAPA_ASIA = {"K League 2":293} # SOLO K2
+        MAPA_ASIA = {"Chinese Super League":169}
         BASE = pathlib.Path(__file__).parent
         FILE_CUR = BASE / "partidos_2627_actual.csv"
         FILE_GOLES = BASE / "goles_2627_actual.csv"
@@ -928,10 +928,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 if req[0]>=490: break
                 fid=fx["fixture"]["id"]
                 if fid==0 or str(fid)=="0" or str(fid) in existentes: continue
-
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y"); home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 ft_h=fx["goals"]["home"] or 0; ft_a=fx["goals"]["away"] or 0; ht_h=fx["score"]["halftime"]["home"] or 0; ht_a=fx["score"]["halftime"]["away"] or 0
-
                 row={"Date":date_str,"League":nom,"Season":"2026","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id":fid}
                 for c in ["HS_1P","AS_1P","HST_1P","AST_1P","HF_1P","AF_1P","HC_1P","AC_1P","HY_1P","AY_1P","HR_1P","AR_1P","HomePasses_1P","AwayPasses_1P","HomePos_1P","AwayPos_1P","HS_2P","AS_2P","HST_2P","AST_2P","HF_2P","AF_2P","HC_2P","AC_2P","HY_2P","AY_2P","HR_2P","AR_2P","HomePasses_2P","AwayPasses_2P","HomePos_2P","AwayPos_2P"]: row[c]=0
 
@@ -951,12 +949,9 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                                     row["HS"]=get_int("Total Shots"); row["HST"]=get_int("Shots on Goal"); row["HF"]=get_int("Fouls"); row["HC"]=get_int("Corner Kicks"); row["HY"]=get_int("Yellow Cards"); row["HR"]=get_int("Red Cards"); row["HomePasses"]=get_int("Total passes"); row["HomeSaves"]=get_int("Goalkeeper Saves"); row["HomePos"]=get_int("Ball Possession")
                                 else:
                                     row["AS"]=get_int("Total Shots"); row["AST"]=get_int("Shots on Goal"); row["AF"]=get_int("Fouls"); row["AC"]=get_int("Corner Kicks"); row["AY"]=get_int("Yellow Cards"); row["AR"]=get_int("Red Cards"); row["AwayPasses"]=get_int("Total passes"); row["AwaySaves"]=get_int("Goalkeeper Saves"); row["AwayPos"]=get_int("Ball Possession")
-                            # CHECK REAL: si sigue a 0, no hay stats
                             if row["HS"]!=0 or row["HC"]!=0 or row["HomePasses"]!=0:
                                 tiene_stats = True
                 except: pass
-
-                # FIX CLAVE: si no hay stats, NO LO GUARDES, deja para otro día
                 if not tiene_stats:
                     prog.progress(min(req[0]/490,0.99), text=f"{nom} SIN STATS {home} vs {away} fid {fid} -> SKIP {req[0]}/490")
                     continue
@@ -970,7 +965,6 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                             elif ev["type"]=="Card":
                                 todos_goles.append({"Date":date_str,"League":nom,"Season":"2026","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fid})
                 except: pass
-
                 todos_partidos.append(row); existentes.add(str(fid))
                 prog.progress(min(req[0]/490,0.99), text=f"{nom} {len(todos_partidos)} partidos OK {req[0]}/490 req")
 
@@ -982,7 +976,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             pd.DataFrame(todos_goles).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
         try: push_csv_a_github(str(FILE_CUR), "partidos_2627_actual.csv"); push_csv_a_github(str(FILE_GOLES), "goles_2627_actual.csv")
         except: pass
-        st.success(f"K2 LEAGUE 2026 {len(todos_partidos)} partidos REALES con stats {len(todos_goles)} goles {req[0]} req"); st.cache_data.clear(); st.rerun()
+        st.success(f"CSL 2026 {len(todos_partidos)} partidos REALES {len(todos_goles)} goles {req[0]} req"); st.cache_data.clear(); st.rerun()
 ################################################
 #####################fin ligas especificas 26 27
 # FIX: si viene del valor viejo 1.5-10.0 lo reseteamos a 1.01-100
