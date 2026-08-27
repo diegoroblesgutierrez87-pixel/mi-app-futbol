@@ -783,12 +783,13 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
 ########################################boton J1 2026/27 ESTE AÑO - SOLO JAPON NUEVA TEMPORADA
 ########################################boton J1 2026/27 FORZADO - SIN FILTRO STATS
 ######################################## CHECKLIST CHINA 1 + 2 - ESTE AÑO NUEVO - NO PETE
-    if st.button("✅ CHECKLIST CHINA 1+2 ESTE AÑO", use_container_width=True, key="btn_check_china"):
+######################################## CHECKLIST KOREA K1 - K LEAGUE 1
+    if st.button("✅ CHECKLIST KOREA K1 K2 ESTE AÑO", use_container_width=True, key="btn_check_korea_k1_k2"):
         import requests as _req
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
         except: st.error("Falta API_KEY"); st.stop()
 
-        for LIGA_ID, NOMBRE in [(88,"China League One"), (89,"China League Two"), (77,"CSL para comparar")]:
+        for LIGA_ID, NOMBRE in [(292,"K League 1"), (293,"K League 2")]:
             r=_req.get("https://v3.football.api-sports.io/leagues", headers={"x-apisports-key": API_KEY}, params={"id":LIGA_ID}, timeout=20)
             data=r.json().get("response",[])
             if data:
@@ -797,11 +798,12 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 st.write(f"--- {NOMBRE} ID={LIGA_ID} ---")
                 st.write(f"Seasons en API: {[s['year'] for s in seasons[-5:]]}")
                 if curr:
-                    st.write(f"CURRENT -> Year: {curr[0]['year']} Start: {curr[0]['start']} End: {curr[0]['end']}")
+                    st.success(f"CURRENT -> Year: {curr[0]['year']} Start: {curr[0]['start']} End: {curr[0]['end']}")
 
             for year in [2025,2026,2027]:
                 rr=_req.get("https://v3.football.api-sports.io/fixtures", headers={"x-apisports-key": API_KEY}, params={"league":LIGA_ID,"season":year}, timeout=20)
                 st.write(f" fixtures season {year} -> {len(rr.json().get('response',[]))} en API")
+######################################## FIN CHECKLIST KOREA
 ######################################## FIN CHECKLIST
 
 ######################################## BOTON CHINA 1+2 NUEVA 2026/27 DEBAJO DEL CHECKLIST
