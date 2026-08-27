@@ -1259,6 +1259,41 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
     try:
         key = (row['HomeTeam'], row['AwayTeam'], row['Date'].strftime('%Y-%m-%d'))
         evs = eventos_dict.get(key, [])
+        # FALLBACK SI API NO DIO GOLES PERO HAY RESULTADO
+        if not evs and (int(row['FTHG']) + int(row['FTAG'])) > 0:
+            return f"<span style='color:#581C87;font-weight:700'>{int(row['FTHG'])}-{int(row['FTAG'])} (API sin eventos)</span>"
+        if not evs: return ""
+        hg = int(row['FTHG']); ag = int(row['FTAG'])
+        ganador = row['HomeTeam'] if hg > ag else row['AwayTeam'] if ag > hg else None
+        filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!= "Ninguno" else None
+        txt = []
+        for ev in evs:
+            if ev.get('missed'): continue
+            minuto = int(ev.get('minute',0) or 0)
+            if parte == "1T" and minuto > 45: continue
+            if parte == "2T" and minuto <= 45: continue
+            if not (min_min <= minuto <= max_min): continue
+            team = ev.get('team','')
+            minuto_txt = f"{minuto}'(pen)" if ev.get('penalty') else f"{minuto}'"
+            minuto_morado = f"<span style='color:#581C87;font-weight:900'>{minuto_txt}</span>"
+            gol_text = f"{minuto_morado} {ev.get('player','')}"
+            if ev.get('assist'): gol_text += f" ({ev['assist']})"
+            estilos = []
+            if ganador and team == ganador: estilos.append("font-weight:900;color:#000")
+            else: estilos.append("font-weight:600;color:#444")
+            if filtro_norm and team == filtro_norm: estilos.append("text-decoration:underline;text-decoration-thickness:2px")
+            txt.append(f"<span style=\"{';'.join(estilos)}\">{gol_text}</span>")
+        # SI SIGUE VACIO PERO HAY GOLES, MUESTRA FALLBACK
+        if not txt and (hg+ag)>0:
+            return f"<span style='color:#581C87;font-weight:700'>{hg}-{ag} (sin detalle)</span>"
+        return " | ".join(txt)
+    except:
+        return ""
+    if pd.isna(row['Date']):
+        return ""
+    try:
+        key = (row['HomeTeam'], row['AwayTeam'], row['Date'].strftime('%Y-%m-%d'))
+        evs = eventos_dict.get(key, [])
         if not evs: return ""
         hg = int(row['FTHG']); ag = int(row['FTAG'])
         ganador = row['HomeTeam'] if hg > ag else row['AwayTeam'] if ag > hg else None
