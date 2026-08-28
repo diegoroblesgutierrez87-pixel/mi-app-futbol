@@ -577,6 +577,8 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             st.rerun()
 ######################################################################
 ############# BOTON ligas2627 AUTO ##################################
+ ############# BOTON ligas2627 AUTO - A PRUEBA DE REINICIOS ##################################
+############# BOTON ligas2627 AUTO - A PRUEBA DE REINICIOS ##################################
     if st.button("Ligas 26/27 - FIX TOTAL + GOLES + MINUTOS - AUTO", use_container_width=True, key="btn_1esp_2627_FIX_TOTAL_AUTO"):
         import requests as _req, time, pathlib, pandas as pd, os, json, base64
         try: API_KEY = str(st.secrets["API_KEY"]).strip()
@@ -585,19 +587,23 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         GITHUB_REPO = str(st.secrets.get("GITHUB_REPO","")).strip()
 
         def push_a_github():
-            if not GITHUB_TOKEN or not GITHUB_REPO: return
+            if not GITHUB_TOKEN or not GITHUB_REPO: return False
             try:
-                for fp in [FILE_CUR, FILE_GOLES, FILE_JUG]:
-                    if not fp.exists(): continue
+                for fp in [FILE_CUR, FILE_GOLES]:
+                    if not fp.exists() or fp.stat().st_size==0: continue
                     r = _req.get(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{fp.name}", headers={"Authorization": f"token {GITHUB_TOKEN}"}, timeout=20)
                     sha = r.json().get("sha") if r.status_code==200 else None
                     content = base64.b64encode(fp.read_bytes()).decode()
-                    data = {"message": f"auto {fp.name} {len(fids_existentes)}","content": content}
+                    data = {"message": f"auto {fp.name} {len(fids_existentes)} partidos","content": content}
                     if sha: data["sha"]=sha
-                    _req.put(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{fp.name}", headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=data, timeout=20)
-                st.success("SUBIDO A GITHUB AUTOMATICO")
+                    pr = _req.put(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{fp.name}", headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=data, timeout=30)
+                    if pr.status_code not in [200,201]:
+                        st.warning(f"Github {fp.name} fallo: {pr.status_code} {pr.text[:200]}")
+                        return False
+                return True
             except Exception as e:
                 st.error(f"Error Github: {e}")
+                return False
 
         MAPA_2627 = {
             "Bundesliga": 78, "2. Bundesliga": 79, "Bundesliga Femenina": 82,
@@ -630,12 +636,14 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
         if FILE_CUR.exists() and FILE_CUR.stat().st_size>0:
             try:
                 d=pd.read_csv(FILE_CUR, on_bad_lines='skip', engine='python')
+                d = d[pd.to_numeric(d['fixture_id'], errors='coerce').fillna(0).astype(int)!=0]
                 fids_existentes.update(d['fixture_id'].dropna().astype(str).tolist())
                 for _, r in d.iterrows(): map_fid_to_row[str(r['fixture_id'])]=r.to_dict()
             except: pass
         if FILE_GOLES.exists() and FILE_GOLES.stat().st_size>0:
             try:
                 dg=pd.read_csv(FILE_GOLES, on_bad_lines='skip', engine='python')
+                dg = dg[pd.to_numeric(dg['fixture_id'], errors='coerce').fillna(0).astype(int)!=0]
                 goles_fids.update(dg['fixture_id'].dropna().astype(str).tolist())
             except: pass
 
@@ -645,7 +653,7 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             except: pass
 
         req=[0]; prog=st.progress(0.0)
-        nuevos_p=[]; nuevos_g=[]; nuevos_j=[]
+        nuevos_g=[]
         lista_ligas=list(MAPA_2627.items())
 
         for idx_liga in range(liga_start_idx, len(lista_ligas)):
@@ -658,8 +666,12 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
             except: continue
 
             for fx in fixtures:
+                if st.session_state.get('pausa_2627', False):
+                    st.warning("PAUSADO - dale a Continuar")
+                    st.stop()
                 if fx["fixture"]["status"]["short"] not in ["FT","AET","PEN"]: continue
                 fid=str(fx["fixture"]["id"])
+                if fid=="0" or fid=="0.0" or fx["fixture"]["id"]==0: continue
                 date_str=pd.to_datetime(fx["fixture"]["date"][:10]).strftime("%d/%m/%Y")
                 home=normaliza(fx["teams"]["home"]["name"]); away=normaliza(fx["teams"]["away"]["name"])
                 ft_h,ft_a=fx["goals"]["home"] or 0, fx["goals"]["away"] or 0
@@ -669,7 +681,27 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                 if fid in fids_existentes:
                     completo=_esta_completo(map_fid_to_row.get(fid, {}))
                     falta_gol=total_goles>0 and fid not in goles_fids
-                    if completo and not falta_gol: continue
+                    if completo and not falta_gol:
+                        continue
+                    if completo and falta_gol:
+                        try:
+                            time.sleep(0.35); re_=_req.get("https://v3.football.api-sports.io/fixtures/events", headers={"x-apisports-key": API_KEY}, params={"fixture": fx["fixture"]["id"]}, timeout=20); req[0]+=1
+                            if re_.status_code==200:
+                                tmp=[]
+                                for ev in re_.json().get("response", []):
+                                    if ev["type"]=="Goal":
+                                        tmp.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":ev["player"]["name"],"asistente":ev["assist"]["name"] or "","jugador_tarjeta":"","equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                                    elif ev["type"]=="Card":
+                                        tmp.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
+                                if tmp:
+                                    pd.DataFrame(tmp).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False)
+                                    ok = push_a_github()
+                                    if ok:
+                                        goles_fids.add(fid)
+                                        st.toast(f"Goles subidos {home} vs {away}")
+                        except: pass
+                        continue
+                    fids_existentes.discard(fid)
 
                 row={"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"FTHG":ft_h,"FTAG":ft_a,"HTHG":ht_h,"HTAG":ht_a,"FTR":"H" if ft_h>ft_a else "A" if ft_a>ft_h else "D","B365H":0,"B365D":0,"B365A":0,"HS":0,"AS":0,"HST":0,"AST":0,"HF":0,"AF":0,"HC":0,"AC":0,"HY":0,"AY":0,"HR":0,"AR":0,"HomePasses":0,"AwayPasses":0,"HomeSaves":0,"AwaySaves":0,"HomePos":0,"AwayPos":0,"fixture_id": fx["fixture"]["id"]}
                 for c in COLS_EXTRA_1P2P: row[c]=0
@@ -693,13 +725,23 @@ with st.expander("📥 Descargas 26/27 - FIX + AUTO GITHUB", expanded=False):
                             elif ev["type"]=="Card": nuevos_g.append({"Date":date_str,"League":nom,"Season":f"{TEMPORADA}/{TEMPORADA+1}","HomeTeam":home,"AwayTeam":away,"minuto":ev["time"]["elapsed"],"parte":"1P" if (ev["time"]["elapsed"] or 0)<=45 else "2P","goleador":"","asistente":"","jugador_tarjeta":ev["player"]["name"],"equipo":normaliza(ev["team"]["name"]),"tipo":ev["detail"],"fixture_id": fx["fixture"]["id"]})
                 except: pass
 
-                # GUARDA 1 A 1 - YA NO SE BORRA
+                # GUARDA LOCAL Y SUBE A GITHUB EN EL MOMENTO
                 pd.DataFrame([row]).to_csv(FILE_CUR, mode='a', header=not FILE_CUR.exists() or FILE_CUR.stat().st_size==0, index=False)
                 if nuevos_g: pd.DataFrame(nuevos_g).to_csv(FILE_GOLES, mode='a', header=not FILE_GOLES.exists() or FILE_GOLES.stat().st_size==0, index=False); nuevos_g=[]
-                fids_existentes.add(fid); st.write(f"GUARDADO {len(fids_existentes)} - {home} vs {away}")
+
+                # PUSH INMEDIATO - 1 A 1
+                subido = push_a_github()
+                if subido:
+                    fids_existentes.add(fid)
+                    st.write(f"✅ GUARDADO Y SUBIDO {len(fids_existentes)} - {home} vs {away}")
+                else:
+                    st.error(f"❌ Fallo Github en {home} vs {away} - reintentando...")
+                    time.sleep(2)
+                    push_a_github()
+                    fids_existentes.add(fid)
 
                 if req[0]>=900:
-                    push_a_github(); st.warning("Limite 900, dale otra vez"); st.stop()
+                    st.warning("Limite 900, dale otra vez"); st.stop()
 
             try: PROG_FILE.write_text(json.dumps({"liga_idx": idx_liga+1}), encoding='utf-8')
             except: pass
