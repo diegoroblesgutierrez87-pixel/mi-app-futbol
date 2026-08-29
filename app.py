@@ -1215,6 +1215,15 @@ def cargar_todo(_cache_buster=0):
         'Super League 2': 'Super League 2 Grecia',
     }
     df['League'] = df['League'].replace(mapa_ligas_todo)
+        # FIX LIGA MAL ETIQUETADA 26/27 - si es Hypermotion pero tiene equipos de Primera, corrige a EA Sports
+    try:
+        EQUIPOS_PRIMERA = {"REAL MADRID","BARCELONA","ATLETICO MADRID","SEVILLA","BETIS","VILLARREAL","VALENCIA","ATHLETIC BILBAO","REAL SOCIEDAD","MALLORCA","GIRONA","OSASUNA","CELTA","RAYO VALLECANO","GETAFE","ALAVES","LAS PALMAS","ESPANYOL","ELCHE","LEVANTE","OVIEDO","VALLADOLID"}
+        mask_hyper = df['League'].astype(str).str.contains('Hypermotion', case=False, na=False)
+        mask_primera_team = df['HomeTeam'].isin(EQUIPOS_PRIMERA) | df['AwayTeam'].isin(EQUIPOS_PRIMERA)
+        # Si en 2026/2027 Hypermotion aparece un equipo de primera, era Primera realmente
+        df.loc[mask_hyper & mask_primera_team & (df['Season']=='2026/2027'), 'League'] = 'LaLiga EA Sports'
+    except:
+        pass
     df = df[df['League'].notna() & (df['League']!='nan')]
     cols_num = ['FTHG','FTAG','HTHG','HTAG','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','HomePasses','AwayPasses','HomePasses_1P','AwayPasses_1P','HomePasses_2P','AwayPasses_2P','HomeSaves','AwaySaves','HomePos','AwayPos','HomePos_1P','AwayPos_1P','HomePos_2P','AwayPos_2P','HS_1P','AS_1P','HST_1P','AST_1P','HF_1P','AF_1P','HC_1P','AC_1P','HY_1P','AY_1P','HR_1P','AR_1P','HS_2P','AS_2P','HST_2P','AST_2P','HF_2P','AF_2P','HC_2P','AC_2P','HY_2P','AY_2P','HR_2P','AR_2P']
     for col in cols_num:
@@ -3277,10 +3286,12 @@ with st.container(border=True):
         from collections import defaultdict
         equipos_por_liga = defaultdict(list)
         
-        def get_liga_eq_fix(equipo_fix):
+    return         def get_liga_eq_fix(equipo_fix):
             try:
-                # usa base_total que ya esta filtrada por ligas_visibles y temp
-                df_eq_liga = base_total[(base_total['HomeTeam']==equipo_fix) | (base_total['AwayTeam']==equipo_fix)]
+                # FIX: usa df_visible_titulo que sí existe en el muro, no base_total
+                df_eq_liga = df_visible_titulo[(df_visible_titulo['HomeTeam']==equipo_fix) | (df_visible_titulo['AwayTeam']==equipo_fix)]
+                if df_eq_liga.empty:
+                    df_eq_liga = df_final[(df_final['HomeTeam']==equipo_fix) | (df_final['AwayTeam']==equipo_fix)]eventos_dict
                 if df_eq_liga.empty:
                     # fallback a df_original
                     df_eq_liga = df_original[(df_original['HomeTeam']==equipo_fix) | (df_original['AwayTeam']==equipo_fix)]
