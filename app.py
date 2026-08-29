@@ -1255,97 +1255,71 @@ def cargar_todo(_cache_buster=0):
         pass
     return df.copy()
 ######################################################
-def cargar_eventos(league, season):
-    import os, glob, pandas as pd, re
-    lista_dfs = []
-    rutas_goles = set(
-        glob.glob('**/goles*.csv', recursive=True) +
-        ['goles_2122_a_2627_SIN_DUPLICADOS.csv','goles_2627_actual.csv','goles_2627_actual_FINAL.csv']
-    )
-    for _f in rutas_goles:
-        if os.path.exists(_f):
+def cargar_eventos(league=None, season=None):
+    import os, glob, pandas as pd
+    rutas = glob.glob('**/goles*.csv', recursive=True) + ['goles_2627_actual.csv','goles_2627_actual_PUZZLE.csv','goles_2627_actual_LIMPIO.csv']
+    dfs=[]
+    for f in set(rutas):
+        if os.path.exists(f):
             try:
-                _df = pd.read_csv(_f, on_bad_lines='skip', engine='python')
-                if not _df.empty and 'minuto' in [c.lower() for c in _df.columns]:
-                    lista_dfs.append(_df)
-            except:
-                pass
-    if not lista_dfs:
-        return {}
-    df_g = pd.concat(lista_dfs, ignore_index=True)
-    try:
-        df_g['parte'] = df_g['parte'].astype(str).str.strip()
-        df_g = df_g[df_g['parte'].isin(['1P','2P'])]
-        df_g = df_g.drop_duplicates(subset=["fixture_id","minuto","goleador","tipo","equipo"])
-    except:
-        pass
-    for c in ['goleador','asistente','jugador_tarjeta','equipo','tipo','League','Season','Date','HomeTeam','AwayTeam','minuto']:
-        if c not in df_g.columns:
-            df_g[c] = ''
-    mapa_unifica_goles = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','CLUB BRUGGE':'CLUB BRUGGE KV','CLUB BRUGGE KV':'CLUB BRUGGE KV'}
-    for col in ['HomeTeam','AwayTeam','equipo']:
-        df_g[col] = df_g[col].apply(normaliza).replace(mapa_unifica_goles)
-    mapa_ligas_goles = {'Jupiler':'Jupiler Pro League','Jupiler Pro League':'Jupiler Pro League','Eredivisie':'Eredivisie','Premier':'Premier League','LaLiga':'LaLiga EA Sports'}
-    if 'League' in df_g.columns:
-        df_g['League'] = df_g['League'].replace(mapa_ligas_goles)
-        league_norm = mapa_ligas_goles.get(league, league)
-        if league_norm in df_g['League'].dropna().unique():
-            df_g = df_g[df_g['League']==league_norm]
-        if 'Season' in df_g.columns and season:
-            mask_nan = df_g['Season'].isna() | (df_g['Season'].astype(str).str.strip()=='')
-            if mask_nan.any():
-                try:
-                    f_tmp = pd.to_datetime(df_g.loc[mask_nan, 'Date'], dayfirst=True, errors='coerce')
-                    df_g.loc[mask_nan & (f_tmp >= pd.Timestamp('2025-07-01')), 'Season'] = '2026/2027'
-                except:
-                    pass
-            df_g = df_g[(df_g['Season']==season) | (df_g['Season'].isna()) | (df_g['Season'].astype(str).str.strip()=='')]
-    df_g['Date'] = pd.to_datetime(df_g['Date'], dayfirst=True, errors='coerce')
-    df_g = df_g.dropna(subset=['Date'])
-    df_g['Date'] = df_g['Date'].dt.strftime('%Y-%m-%d')
-    def _parse_minuto(v):
-        try:
-            if pd.isna(v):
-                return 0
-            s = str(v).strip().replace('+',' ')
-            m = re.search(r'\d+', s)
-            return int(m.group()) if m else 0
-        except:
-            return 0
-    eventos_dict = {}
-    for (ht, at, fecha), grupo in df_g.groupby(['HomeTeam','AwayTeam','Date']):
-        evs = []
-        for _, r in grupo.sort_values('minuto').iterrows():
+                df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
+                if not df.empty and any('minuto' in c.lower() for c in df.columns):
+                    dfs.append(df)
+            except: pass
+    if not dfs: return {}
+    df_g=pd.concat(dfs, ignore_index=True)
+    try: df_g=df_g.drop_duplicates(subset=['fixture_id','minuto','goleador','tipo','equipo'], keep='first')
+    except: pass
+    eventos={}
+    for fid, g in df_g.groupby('fixture_id'):
+        try: fid_c=str(int(float(str(fid))))
+        except: continue
+        evs=[]
+        for _,r in g.sort_values('minuto').iterrows():
             try:
-                parte = str(r.get('parte','')).strip()
-                if parte not in ('1P','2P'):
-                    continue
-                goleador = str(r.get('goleador','')).strip()
-                if not goleador or goleador.lower() == 'nan' or goleador == '':
-                    continue
-                if goleador.upper() == str(r.get('equipo','')).upper():
-                    continue
-                tipo = str(r.get('tipo','')).lower()
-                minuto_val = _parse_minuto(r.get('minuto',0))
-                asist = str(r.get('asistente','')).strip()
-                if asist.upper() == str(r.get('equipo','')).upper():
-                    asist = ''
-                evs.append({
-                    "minute": minuto_val,
-                    "player": goleador,
-                    "assist": asist if asist.lower()!= 'nan' else "",
-                    "extra": None,
-                    "penalty": 'pen' in tipo and 'miss' not in tipo,
-                    "missed": 'miss' in tipo,
-                    "team": normaliza(str(r.get('equipo',''))).replace(' ',' ').strip()
-                })
-                evs[-1]["team"] = mapa_unifica_goles.get(evs[-1]["team"], evs[-1]["team"])
-            except:
-                continue
-        eventos_dict[(ht, at, fecha)] = evs
-    return eventos_dict
+                m=int(float(str(r.get('minuto','0')).split('+')[0] or 0))
+                gol=str(r.get('goleador','')).strip()
+                if not gol or gol.lower() in ['nan','']: continue
+                tipo=str(r.get('tipo','')).lower()
+                evs.append({"minute":m,"player":gol,"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in tipo and 'miss' not in tipo,"missed":'miss' in tipo})
+            except: continue
+        eventos[fid_c]=evs
+        eventos[str(fid)]=evs
+    return eventos
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
+    import pandas as pd
+    if pd.isna(row['Date']): return ""
+    try:
+        fid=str(row.get('fixture_id','')).strip()
+        fid_c=str(int(float(fid))) if fid not in ['','nan','0','0.0','None'] else ""
+        evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid,[]) or []
+        if not evs:
+            try:
+                fthg=int(float(row['FTHG'])); ftag=int(float(row['FTAG']))
+                if fthg+ftag>0:
+                    return f"<span style='color:#581C87;font-weight:700'>{fthg}-{ftag} (sin detalle)</span>"
+            except: pass
+            return ""
+        txt=[]
+        for ev in evs:
+            if ev.get('missed'): continue
+            m=ev.get('minute',0)
+            if parte=="1T" and m>45: continue
+            if parte=="2T" and m<=45: continue
+            if not (min_min <= m <= max_min): continue
+            minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
+            minuto_morado=f"<span style='color:#581C87;font-weight:900'>{minuto_txt}</span>"
+            gol_text=f"{minuto_morado} {ev.get('player','')}"
+            assist=ev.get('assist','')
+            if assist and assist.lower()!='nan' and assist!="":
+                gol_text+=f" ({assist})"
+            txt.append(f"<span style='font-weight:600;color:#000'>{gol_text}</span>")
+        return " | ".join(txt)
+    except:
+        return ""
+
+def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
     if pd.isna(row['Date']):
         return ""
     try:
@@ -3285,7 +3259,7 @@ with st.container(border=True):
         num_equipos = len(equipos_clasif)
         from collections import defaultdict
         equipos_por_liga = defaultdict(list)
-
+        
         def get_liga_eq_fix(equipo_fix):
             try:
                 # FIX: usa df_visible_titulo que sí existe en el muro, no base_total
