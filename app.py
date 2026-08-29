@@ -1074,9 +1074,24 @@ def cargar_todo(_cache_buster=0):
             except: pass
     if dfs:
         df_completo = pd.concat(dfs, ignore_index=True)
-    if df_completo.empty:
-        return pd.DataFrame()
-    df = df_completo.copy()
+    # FIX COLUMNAS ALTERNATIVAS - tu SOLO_RESULTADO usa GolLocal_FT
+    mapa_cols = {
+        'GolLocal_FT':'FTHG', 'GolVisitante_FT':'FTAG',
+        'GolLocal_1P':'HTHG', 'GolVisitante_1P':'HTAG',
+        'GolLocal_2P':'FTHG_2P', 'GolVisitante_2P':'FTAG_2P'
+    }
+    for old,new in mapa_cols.items():
+        if old in df.columns and new not in df.columns:
+            df[new] = df[old]
+    # si aún no hay FTHG intenta desde Resultado tipo "2-1"
+    if 'FTHG' not in df.columns or df['FTHG'].sum()==0:
+        if 'Resultado' in df.columns:
+            try:
+                tmp = df['Resultado'].astype(str).str.extract(r'(\d+)\s*-\s*(\d+)')
+                df['FTHG'] = pd.to_numeric(tmp[0], errors='coerce')
+                df['FTAG'] = pd.to_numeric(tmp[1], errors='coerce')
+            except:
+                pass
 
     # LIMPIEZA
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
