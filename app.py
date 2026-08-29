@@ -1246,11 +1246,85 @@ def cargar_eventos(league, season):
     if not lista_dfs:
         return {}
     df_g = pd.concat(lista_dfs, ignore_index=True)
-    # FIX PUZZLE - quita duplicados de API que te creaban Andorra x2
+
+    # FIX DEFINITIVO - filtra solo filas buenas con parte 1P/2P (las viejas tenían goleador en columna parte)
     try:
+        df_g['parte'] = df_g['parte'].astype(str).str.strip()
+        df_g = df_g[df_g['parte'].isin(['1P','2P'])]
         df_g = df_g.drop_duplicates(subset=["fixture_id","minuto","goleador","tipo","equipo"])
     except:
         pass
+
+    for c in ['goleador','asistente','jugador_tarjeta','equipo','tipo','League','Season','Date','HomeTeam','AwayTeam','minuto']:
+        if c not in df_g.columns:
+            df_g[c] = ''
+
+    mapa_unifica_goles = {'HERACLES ALMELO':'HERACLES','SC HERACLES ALMELO':'HERACLES','SC HERACLES':'HERACLES','FC GRONINGEN':'GRONINGEN','PEC ZWOLLE':'ZWOLLE','FC ZWOLLE':'ZWOLLE','FC VOLENDAM':'VOLENDAM','SC TELSTAR':'TELSTAR','TELSTAR':'TELSTAR','ADO DEN HAAG':'ADO DEN HAAG','CAMBUUR':'CAMBUUR','WILLEM II':'WILLEM II','NEC NIJMEGEN':'NEC','GO AHEAD EAGLES':'GO AHEAD EAGLES','AFC AJAX':'AJAX','AJAX AMSTERDAM':'AJAX','AZ ALKMAAR':'AZ','PSV EINDHOVEN':'PSV','FC TWENTE':'TWENTE','FC TWENTE ENSCHEDE':'TWENTE','FC UTRECHT':'UTRECHT','SC HEERENVEEN':'HEERENVEEN','SBV EXCELSIOR':'EXCELSIOR','EXCELSIOR ROTTERDAM':'EXCELSIOR','SPARTA ROTTERDAM':'SPARTA','FORTUNA SITTARD':'FORTUNA SITTARD','CLUB BRUGGE':'CLUB BRUGGE KV','CLUB BRUGGE KV':'CLUB BRUGGE KV'}
+
+    for col in ['HomeTeam','AwayTeam','equipo']:
+        df_g[col] = df_g[col].apply(normaliza).replace(mapa_unifica_goles)
+
+    mapa_ligas_goles = {'Jupiler':'Jupiler Pro League','Jupiler Pro League':'Jupiler Pro League','Eredivisie':'Eredivisie','Premier':'Premier League','LaLiga':'LaLiga EA Sports'}
+    if 'League' in df_g.columns:
+        df_g['League'] = df_g['League'].replace(mapa_ligas_goles)
+        league_norm = mapa_ligas_goles.get(league, league)
+        if league_norm in df_g['League'].dropna().unique():
+            df_g = df_g[df_g['League']==league_norm]
+        if 'Season' in df_g.columns and season:
+            mask_nan = df_g['Season'].isna() | (df_g['Season'].astype(str).str.strip()=='')
+            if mask_nan.any():
+                try:
+                    f_tmp = pd.to_datetime(df_g.loc[mask_nan, 'Date'], dayfirst=True, errors='coerce')
+                    df_g.loc[mask_nan & (f_tmp >= pd.Timestamp('2025-07-01')), 'Season'] = '2026/2027'
+                except:
+                    pass
+            df_g = df_g[(df_g['Season']==season) | (df_g['Season'].isna()) | (df_g['Season'].astype(str).str.strip()=='')]
+
+    df_g['Date'] = pd.to_datetime(df_g['Date'], dayfirst=True, errors='coerce')
+    df_g = df_g.dropna(subset=['Date'])
+    df_g['Date'] = df_g['Date'].dt.strftime('%Y-%m-%d')
+
+    def _parse_minuto(v):
+        try:
+            if pd.isna(v): return 0
+            s = str(v).strip().replace('+',' ')
+            m = re.search(r'\d+', s)
+            return int(m.group()) if m else 0
+        except:
+            return 0
+
+    eventos_dict = {}
+    for (ht, at, fecha), grupo in df_g.groupby(['HomeTeam','AwayTeam','Date']):
+        evs = []
+        for _, r in grupo.sort_values('minuto').iterrows():
+            try:
+                parte = str(r.get('parte','')).strip()
+                if parte not in ('1P','2P'):
+                    continue
+                goleador = str(r.get('goleador','')).strip()
+                if not goleador or goleador.lower()=='nan' or goleador=='':
+                    continue
+                if goleador.upper() == str(r.get('equipo','')).upper():
+                    continue
+                tipo = str(r.get('tipo','')).lower()
+                minuto_val = _parse_minuto(r.get('minuto',0))
+                asist = str(r.get('asistente','')).strip()
+                if asist.upper() == str(r.get('equipo','')).upper():
+                    asist = ''
+                evs.append({
+                    "minute": minuto_val,
+                    "player": goleador,
+                    "assist": asist if asist.lower()!='nan' else "",
+                    "extra": None,
+                    "penalty": 'pen' in tipo and 'miss' not in tipo,
+                    "missed": 'miss' in tipo,
+                    "team": normaliza(str(r.get('equipo',''))).replace(' ',' ').strip()
+                })
+                evs[-1]["team"] = mapa_unifica_goles.get(evs[-1]["team"], evs[-1]["team"])
+            except:
+                continue
+        eventos_dict[(ht, at, fecha)] = evs
+    return eventos_dict
 
     # Asegura columnas del nuevo formato 13 cols
     for c in ['goleador','asistente','jugador_tarjeta','equipo','tipo','League','Season','Date','HomeTeam','AwayTeam','minuto']:
