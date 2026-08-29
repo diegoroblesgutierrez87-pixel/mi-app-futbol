@@ -2356,7 +2356,14 @@ with st.expander("🎛 Filtros avanzados", expanded=False):
         # --- LINEA 9: Jugador ---
         from collections import defaultdict, Counter
         player_teams = defaultdict(Counter)
-        for (ht, at, fecha), evs in todos_eventos.items():
+        for fid, evs in todos_eventos.items():
+            for ev in evs:
+                if ev.get('missed') or not ev.get('player'):
+                    continue
+                team = ev.get('team')
+                if team:
+                    player_teams[ev['player']][team] += 1
+        # FIN FIX
             for ev in evs:
                 if ev.get('missed') or not ev.get('player'):
                     continue
