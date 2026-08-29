@@ -1074,6 +1074,10 @@ def cargar_todo(_cache_buster=0):
             except: pass
     if dfs:
         df_completo = pd.concat(dfs, ignore_index=True)
+    if df_completo.empty:
+        return pd.DataFrame()
+    df = df_completo.copy()
+
     # FIX COLUMNAS ALTERNATIVAS - tu SOLO_RESULTADO usa GolLocal_FT
     mapa_cols = {
         'GolLocal_FT':'FTHG', 'GolVisitante_FT':'FTAG',
@@ -1330,7 +1334,7 @@ def cargar_eventos(league, season):
             except:
                 continue
         eventos_dict[(ht, at, fecha)] = evs
-    return eventos_dicto arriba con CLUB BRUGGE KV
+    return eventos_dict
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     if pd.isna(row['Date']):
