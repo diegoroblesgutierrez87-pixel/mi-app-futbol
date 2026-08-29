@@ -1386,10 +1386,33 @@ def cargar_eventos(league, season):
         evs = []
         for _, r in grupo.sort_values('minuto').iterrows():
             try:
-                # FIX: solo goles, no tarjetas. Antes metias filas vacias y rompias H2H
+                parte = str(r.get('parte','')).strip()
+                if parte not in ('1P','2P'):
+                    continue
                 goleador = str(r.get('goleador','')).strip()
                 if not goleador or goleador.lower()=='nan' or goleador=='':
                     continue
+                if goleador.upper() == str(r.get('equipo','')).upper():
+                    continue
+                tipo = str(r.get('tipo','')).lower()
+                minuto_val = _parse_minuto(r.get('minuto',0))
+                asist = str(r.get('asistente','')).strip()
+                if asist.upper() == str(r.get('equipo','')).upper():
+                    asist = ''
+                evs.append({
+                    "minute": minuto_val,
+                    "player": goleador,
+                    "assist": asist if asist.lower()!='nan' else "",
+                    "extra": None,
+                    "penalty": 'pen' in tipo and 'miss' not in tipo,
+                    "missed": 'miss' in tipo,
+                    "team": normaliza(str(r.get('equipo',''))).replace(' ',' ').strip()
+                })
+                evs[-1]["team"] = mapa_unifica_goles.get(evs[-1]["team"], evs[-1]["team"])
+            except:
+                continue
+        eventos_dict[(ht, at, fecha)] = evs
+    return eventos_dict
                 tipo = str(r.get('tipo','')).lower()
                 minuto_val = _parse_minuto(r.get('minuto',0))
                 # FIX asistente desplazado: si asistente esta vacio y jugador_tarjeta parece asistente (no es team), usalo
