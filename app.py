@@ -3285,13 +3285,13 @@ with st.container(border=True):
         num_equipos = len(equipos_clasif)
         from collections import defaultdict
         equipos_por_liga = defaultdict(list)
-        
-    return         def get_liga_eq_fix(equipo_fix):
+
+        def get_liga_eq_fix(equipo_fix):
             try:
                 # FIX: usa df_visible_titulo que sí existe en el muro, no base_total
                 df_eq_liga = df_visible_titulo[(df_visible_titulo['HomeTeam']==equipo_fix) | (df_visible_titulo['AwayTeam']==equipo_fix)]
                 if df_eq_liga.empty:
-                    df_eq_liga = df_final[(df_final['HomeTeam']==equipo_fix) | (df_final['AwayTeam']==equipo_fix)]eventos_dict
+                    df_eq_liga = df_final[(df_final['HomeTeam']==equipo_fix) | (df_final['AwayTeam']==equipo_fix)]
                 if df_eq_liga.empty:
                     # fallback a df_original
                     df_eq_liga = df_original[(df_original['HomeTeam']==equipo_fix) | (df_original['AwayTeam']==equipo_fix)]
