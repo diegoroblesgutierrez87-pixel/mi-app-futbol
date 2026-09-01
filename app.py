@@ -1063,17 +1063,46 @@ def cargar_todo(_cache_buster=0):
     except:
         BASE = pathlib.Path.cwd().resolve()
     df_completo = pd.DataFrame()
-    candidatos = [BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv", BASE / "partidos_2627_actual.csv"]
+    candidatos = [
+        # ACTUALES 26/27 - 2026 - TUS NOMBRES NUEVOS
+        BASE / "din1_suec1_26_27.csv",              # din1 suec1 actual 2627
+        BASE / "europa_actual.csv",                 # ligas europeas 2627
+        BASE / "asia_actual_j1j2k1k2csl1.csv",       # temp actual 2026 k1k2j1j2 china1
+        # HISTORICOS 22-25 - TUS NOMBRES NUEVOS
+        BASE / "j1j2k1k2csl1_22_25.csv",             # j1j2k1k2china1 2022-2025
+        BASE / "ligas_escandinavas_22_26.csv",      # din1 suec1 2022/21 a 2025/26
+        BASE / "ligas_europa22_26.csv",             # ligas europeas 2022-2025
+        BASE / "sudasia_22_26.csv",                 # sudeste asiatico 2022-2025
+        # FALLBACK - nombres viejos que ya tienes en disco (no petan si no existen)
+        BASE / "partidos_2627_actual.csv",
+        BASE / "Partidos-2627-Asia.csv",
+        BASE / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
+        BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv",
+        BASE / "ligas_2122_a_2627_17_LIGAS_LIMPIO.csv",
+    ]
     dfs = []
     for p in candidatos:
-        if p.exists() and p.stat().st_size > 0:
+        if p.exists() and p.stat().st_size > 168:
             try:
                 try: d = pd.read_csv(p, on_bad_lines='skip', engine='python')
                 except: d = pd.read_csv(p, sep=';', on_bad_lines='skip', engine='python')
-                if not d.empty: dfs.append(d)
+                if not d.empty and 'fixture_id' in d.columns:
+                    d['fixture_id'] = pd.to_numeric(d['fixture_id'], errors='coerce')
+                    d = d.dropna(subset=['fixture_id'])
+                    if not d.empty:
+                        dfs.append(d)
+                elif not d.empty:
+                    dfs.append(d)
             except: pass
     if dfs:
         df_completo = pd.concat(dfs, ignore_index=True)
+        if 'fixture_id' in df_completo.columns and 'HS' in df_completo.columns:
+            df_completo['__has_stats'] = pd.to_numeric(df_completo['HS'], errors='coerce').fillna(0) > 0
+            df_completo = df_completo.sort_values(['__has_stats','Date'], ascending=[False, True])
+            df_completo = df_completo.drop_duplicates(subset=['fixture_id'], keep='first')
+            df_completo = df_completo.drop(columns=['__has_stats'])
+        elif 'fixture_id' in df_completo.columns:
+            df_completo = df_completo.drop_duplicates(subset=['fixture_id'], keep='last')
     if df_completo.empty:
         return pd.DataFrame()
     df = df_completo.copy()
@@ -1257,7 +1286,7 @@ def cargar_todo(_cache_buster=0):
 ######################################################
 def cargar_eventos(league=None, season=None):
     import os, glob, pandas as pd
-    rutas = glob.glob('**/goles*.csv', recursive=True) + ['goles_2627_actual.csv','goles_2627_actual_PUZZLE.csv','goles_2627_actual_LIMPIO.csv']
+    rutas = glob.glob('**/goles*.csv', recursive=True) + ['goles_actual.csv','goles_2627_actual.csv','goles_2627_actual_LIMPIO.csv','goles_2627_actual_LIMPIO_28.csv']
     dfs=[]
     for f in set(rutas):
         if os.path.exists(f):
@@ -1901,13 +1930,22 @@ def limpiar_filtros():
 try:
     import pathlib
     _BASE_TMP = pathlib.Path(__file__).parent.resolve()
-    _p1 = _BASE_TMP / "ligas_2122_a_2627_SIN_DUPLICADOS.csv"
-    _p2 = _BASE_TMP / "partidos_2627_actual.csv"
+    _lista_csv = [
+        _BASE_TMP / "din1_suec1_26_27.csv",
+        _BASE_TMP / "europa_actual.csv",
+        _BASE_TMP / "asia_actual_j1j2k1k2csl1.csv",
+        _BASE_TMP / "j1j2k1k2csl1_22_25.csv",
+        _BASE_TMP / "ligas_escandinavas_22_26.csv",
+        _BASE_TMP / "ligas_europa22_26.csv",
+        _BASE_TMP / "sudasia_22_26.csv",
+        _BASE_TMP / "goles_actual.csv",
+        _BASE_TMP / "partidos_2627_actual.csv",
+        _BASE_TMP / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
+    ]
     _buster = 0
-    if _p1.exists():
-        _buster = int(_p1.stat().st_mtime) + int(_p1.stat().st_size)
-    if _p2.exists():
-        _buster += int(_p2.stat().st_mtime)
+    for _pp in _lista_csv:
+        if _pp.exists():
+            _buster += int(_pp.stat().st_mtime) + int(_pp.stat().st_size)
 except:
     _buster = 0
 
@@ -1921,7 +1959,11 @@ except Exception as e:
 df_original = df.copy() if not df.empty else pd.DataFrame()
 
 if df.empty or 'League' not in df.columns:
-    st.error("DF vacio - pon ligas_2122_a_2526.csv + partidos_2627_actual.csv o ligas_2122_a_2627_COMPLETO.csv en app/")
+    try:
+        existentes = [p.name for p in pathlib.Path(__file__).parent.glob("*.csv")]
+    except:
+        existentes = []
+    st.error(f"DF vacio - no encontró tus 7 CSV nuevos. En carpeta hay: {existentes}. Necesitas: din1_suec1_26_27.csv + europa_actual.csv + asia_actual_j1j2k1k2csl1.csv + j1j2k1k2csl1_22_25.csv + ligas_escandinavas_22_26.csv + ligas_europa22_26.csv + sudasia_22_26.csv")
     st.stop()
 
 with st.expander("Filtros de partidos", expanded=False):
