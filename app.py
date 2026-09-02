@@ -1424,12 +1424,29 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
         if not evs: return ""
         filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
+
+        def _es_mismo_equipo(f_norm, t_norm):
+            if not f_norm or not t_norm: return False
+            if f_norm == t_norm: return True
+            if f_norm in t_norm: return True
+            if t_norm in f_norm: return True
+            # az vs az alkmaar, fey vs feyenoord, psv vs psv eindhoven
+            if f_norm[:3] == t_norm[:3] and len(f_norm) <= 3:
+                return True
+            # compara primera palabra: ado vs ado den haag, fortuna vs fortuna sittard
+            f0 = f_norm.split()[0] if f_norm.split() else ""
+            t0 = t_norm.split()[0] if t_norm.split() else ""
+            if f0 and t0 and f0 == t0:
+                return True
+            return False
+
         def _abrev(nombre):
             n=str(nombre).strip()
-            if not n: return ""
+            if not n or n.lower()=='nan': return ""
             parts=n.split()
             if len(parts)==1: return n[:14]
-            return f"{parts[0][0]}. {' '.join(parts[1:])}"[:18]
+            return f"{parts[0][0]}. {' '.join(parts[1:])}"[:20]
+
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -1437,15 +1454,26 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="1T" and m>45: continue
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
-            try: es_mio = filtro_norm and normaliza(ev.get('team','')) == filtro_norm
+            team_raw = ev.get('team','') or ev.get('equipo','') or ''
+            team_norm = normaliza(team_raw)
+            try: es_mio = _es_mismo_equipo(filtro_norm, team_norm)
             except: es_mio=False
+
             minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             minuto_html=f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto_txt}</span>"
-            jug_abrev=_abrev(ev.get('player',''))
+
+            jug_abrev=_abrev(ev.get('player','') or ev.get('goleador',''))
+            assist_raw = ev.get('assist','') or ev.get('asistente','') or ''
+            assist_txt = ""
+            if assist_raw and str(assist_raw).lower() not in ['nan','none','']:
+                assist_abrev = _abrev(assist_raw)
+                assist_txt = f" <span style='font-weight:400;color:#666;font-size:10px'>({assist_abrev})</span>"
+
             if es_mio:
-                jug_html=f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug_abrev}</span>"
+                jug_html=f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug_abrev}</span>{assist_txt}"
             else:
-                jug_html=f"<span style='font-weight:600;color:#444'>{jug_abrev}</span>"
+                jug_html=f"<span style='font-weight:600;color:#444'>{jug_abrev}</span>{assist_txt}"
+
             txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
         return "".join(txt)
     except:
