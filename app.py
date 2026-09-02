@@ -1428,7 +1428,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     win_s = pd.Series(final_gf_arr > final_gc_arr, index=df_eq.index)
     loss_s = pd.Series(final_gf_arr < final_gc_arr, index=df_eq.index)
     partes = []
-    for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=True):
+    for (season, j), g in sorted(df_eq.groupby(['Season','Jornada']), key=lambda x: x[0][1], reverse=True):
         g = g.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'])
         if g.empty: continue
         # FIX 2: si por duplicado quedan 2 filas en la misma jornada, quédate con 1 -> 1 sola viñeta
@@ -2033,7 +2033,7 @@ with st.expander("Filtros de partidos", expanded=False):
     df_final = df_base.copy()
     df_clasificacion = df_clas_base.copy()
     
-    jornadas = sorted(df_final['Jornada'].unique())  # <-- ESTA LÍNEA FALTABA
+        jornadas = sorted(df_final['Jornada'].unique(), reverse=True) # DESC: J28 -> J1  # <-- ESTA LÍNEA FALTABA
     
 
     if len(jornadas) > 0:
@@ -3666,7 +3666,7 @@ with st.container(border=True):
                         texto_seg = f"<div style='font-size:9px;font-weight:900;margin-top:4px;color:#0A2342;line-height:1.2'>1# {partes_txt}</div>"
 
                     # --- NUEVO: DIVIDIDO POR TEMPORADA CON POS/PTS POR TEMP ---
-                    seasons_list = sorted(base_total_team['Season'].dropna().unique().tolist())
+                    seasons_list = sorted(base_total_team['Season'].dropna().unique().tolist(), reverse=True)
                     if 'temp_sel' in locals() and temp_sel:
                         seasons_list = [s for s in temp_sel if s in seasons_list]
 
