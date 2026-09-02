@@ -1412,126 +1412,72 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         partes.append(jx_html)
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
 
-def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
-    import pandas as pd
-    if pd.isna(row.get('Date')): return ""
-    try:
-        fid_raw=str(row.get('fixture_id','')).strip()
-        if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']: return ""
-        fid_c=str(fid_raw).split('.')[0]
-        try: fid_c2=str(int(float(fid_raw)))
-        except: fid_c2=fid_c
-        evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
-        if not evs: return ""
-        filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
+    
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
-    if pd.isna(row.get('Date')): return ""
+    if pd.isna(row.get('Date')):
+        return ""
     try:
-        fid_raw=str(row.get('fixture_id','')).strip()
-        if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']: return ""
-        fid_c=str(fid_raw).split('.')[0]
-        try: fid_c2=str(int(float(fid_raw)))
-        except: fid_c2=fid_c
-        evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
-        if not evs: return ""
+        fid_raw = str(row.get('fixture_id','')).strip()
+        if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']:
+            return ""
+        fid_c = str(fid_raw).split('.')[0]
+        try:
+            fid_c2 = str(int(float(fid_raw)))
+        except:
+            fid_c2 = fid_c
+        evs = eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
+        if not evs:
+            return ""
+
         def _clean_team(s):
             if not s: return ""
             n = unicodedata.normalize('NFKD', str(s)).encode('ASCII','ignore').decode('ASCII').upper().strip()
             n = re.sub(r'^(FC|SC|AS|AC|US|CF)\s+', '', n)
             n = re.sub(r'\s+(FC|SC)$', '', n)
-            n = re.sub(r'\s+', ' ', n)
-            return n.strip()
+            return re.sub(r'\s+', ' ', n).strip()
+
         filtro_norm = _clean_team(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
             if f_norm == t_norm: return True
-            if f_norm in t_norm: return True
-            if t_norm in f_norm: return True
-            if len(f_norm) <= 3 and t_norm.startswith(f_norm): # AZ -> AZ ALKMAAR
-                return True
-            # solo si primera palabra >2 letras (evita que FC==FC subraye todo)
+            if f_norm in t_norm or t_norm in f_norm: return True
+            if len(f_norm) <= 3 and t_norm.startswith(f_norm): return True
             f0 = f_norm.split()[0] if f_norm.split() else ""
             t0 = t_norm.split()[0] if t_norm.split() else ""
-            if len(f0) > 2 and f0 == t0:
-                return True
+            if len(f0) > 2 and f0 == t0: return True
             return False
 
-        def _abrev(nombre):
-            n=str(nombre).strip()
-            if not n or n.lower()=='nan': return ""
-            parts=n.split()
-            if len(parts)==1: return n[:14]
-            return f"{parts[0][0]}. {' '.join(parts[1:])}"[:20]
+        def _abrev(nom):
+            n = str(nom).strip()
+            if not n or n.lower() == 'nan': return ""
+            p = n.split()
+            return n[:14] if len(p)==1 else f"{p[0][0]}. {' '.join(p[1:])}"[:20]
 
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
-            m=ev.get('minute',0)
+            m = ev.get('minute',0)
             if parte=="1T" and m>45: continue
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
-            team_raw = ev.get('team','') or ev.get('equipo','') or ''
-            team_norm = _clean_team(team_raw)
-            try: es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            except: es_mio=False
-            minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_html=f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto_txt}</span>"
-            jug_abrev=_abrev(ev.get('player','') or ev.get('goleador',''))
-            assist_raw = ev.get('assist','') or ev.get('asistente','') or ''
-            assist_txt = ""
-            if assist_raw and str(assist_raw).lower() not in ['nan','none','']:
-                assist_txt = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(assist_raw)})</span>"
+            team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
+            es_mio = _es_mismo_equipo(filtro_norm, team_norm)
+            minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
+            minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
+            jug = _abrev(ev.get('player','') or ev.get('goleador',''))
+            ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
+            ast = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(ast_raw)})</span>" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
             if es_mio:
-                jug_html=f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug_abrev}</span>{assist_txt}"
+                jug_html = f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug}</span>{ast}"
             else:
-                jug_html=f"<span style='font-weight:600;color:#444'>{jug_abrev}</span>{assist_txt}"
+                jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
             txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
         return "".join(txt)
     except:
         return ""
-
-        def _abrev(nombre):
-            n=str(nombre).strip()
-            if not n or n.lower()=='nan': return ""
-            parts=n.split()
-            if len(parts)==1: return n[:14]
-            return f"{parts[0][0]}. {' '.join(parts[1:])}"[:20]
-
-        txt=[]
-        for ev in evs:
-            if ev.get('missed'): continue
-            m=ev.get('minute',0)
-            if parte=="1T" and m>45: continue
-            if parte=="2T" and m<=45: continue
-            if not (min_min <= m <= max_min): continue
-            team_raw = ev.get('team','') or ev.get('equipo','') or ''
-            team_norm = normaliza(team_raw)
-            try: es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            except: es_mio=False
-
-            minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_html=f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto_txt}</span>"
-
-            jug_abrev=_abrev(ev.get('player','') or ev.get('goleador',''))
-            assist_raw = ev.get('assist','') or ev.get('asistente','') or ''
-            assist_txt = ""
-            if assist_raw and str(assist_raw).lower() not in ['nan','none','']:
-                assist_abrev = _abrev(assist_raw)
-                assist_txt = f" <span style='font-weight:400;color:#666;font-size:10px'>({assist_abrev})</span>"
-
-            if es_mio:
-                jug_html=f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug_abrev}</span>{assist_txt}"
-            else:
-                jug_html=f"<span style='font-weight:600;color:#444'>{jug_abrev}</span>{assist_txt}"
-
-            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
-        return "".join(txt)
-    except:
-        return ""
-#############################################
 ######################################
 ###################def formatear_partido
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
