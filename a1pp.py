@@ -1350,7 +1350,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
             minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_morado=f"<span style='color:#581C87;font-weight:900;font-style:italic;font-size:12px'>{minuto_txt}</span>"
+            minuto_morado=f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto_txt}</span>"
             gol_text=f"{minuto_morado} {ev.get('player','')}"
             assist=ev.get('assist','')
             if assist and assist.lower()!='nan' and assist!="":
@@ -1497,8 +1497,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             re_html = "<span style='display:inline-block;background:#ef4444;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
         elif res_ht == 'P' and res_ft == 'G':
             re_html = "<span style='display:inline-block;background:#22c55e;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
-        # FIX: final en cursiva y 2pt más grande que 0-0 para verlo rápido
-        ft_bold = f"<span style='font-style:italic;font-size:13px;font-weight:900'>{real_home}-{real_away}</span>"
+        # FIX: final en BOLD gordita 2pt más grande, sin cursiva
+        ft_bold = f"<span style='font-style:normal;font-size:13px;font-weight:900'>{real_home}-{real_away}</span>"
         if es_local:
             txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {ht_home}-{ht_away}/{ft_bold}</u> {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
