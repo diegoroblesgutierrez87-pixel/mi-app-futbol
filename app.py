@@ -1340,7 +1340,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         except: fid_c2=fid_c
         evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
         if not evs:
-            return "" # <-- ya no muestra (sin detalle), deja vacio y no ensucia muro
+            return ""
+        filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -1354,7 +1355,16 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             assist=ev.get('assist','')
             if assist and assist.lower()!='nan' and assist!="":
                 gol_text+=f" ({assist})"
-            txt.append(f"<span style='font-weight:600;color:#000'>{gol_text}</span>")
+            # FIX SUBRAYADO: si el gol es del equipo filtrado, subrayado grueso
+            try:
+                es_mio = filtro_norm and normaliza(ev.get('team','')) == filtro_norm
+            except:
+                es_mio = False
+            if es_mio:
+                style_gol = "font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px"
+            else:
+                style_gol = "font-weight:600;color:#000"
+            txt.append(f"<span style='{style_gol}'>{gol_text}</span>")
         return " | ".join(txt)
     except:
         return ""
