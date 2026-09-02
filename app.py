@@ -1350,7 +1350,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
             minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_morado=f"<span style='color:#581C87;font-weight:900;font-style:italic;font-size:12px'>{minuto_txt}</span>"
+            minuto_morado=f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto_txt}</span>"
             gol_text=f"{minuto_morado} {ev.get('player','')}"
             assist=ev.get('assist','')
             if assist and assist.lower()!='nan' and assist!="":
