@@ -6,20 +6,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-import re
-import unicodedata
-import os
-import pathlib
-import json
-
-
-
-st.set_page_config(
-    page_title="Filtro Jornada",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt # type: ignore
