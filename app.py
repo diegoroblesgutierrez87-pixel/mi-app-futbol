@@ -1213,6 +1213,16 @@ def cargar_todo(_cache_buster=0):
             return f"{y}/{y+1}"
         return s
     df['Season'] = df['Season'].apply(norm_season)
+
+    # FIX JAPON J1/J2 - 2025/2026 VIEJA y 2026/2027 ACTUAL
+    try:
+        mask_japan = df['League'].isin(['J1 League', 'J2 League'])
+        mask_new = mask_japan & (df['Date'] >= pd.Timestamp('2026-08-01'))
+        mask_old = mask_japan & (df['Date'] < pd.Timestamp('2026-08-01'))
+        df.loc[mask_new, 'Season'] = '2026/2027'
+        df.loc[mask_old, 'Season'] = '2025/2026'
+    except:
+        pass
     mapa_ligas_todo = {
         'Jupiler':'Jupiler Pro League',
         'Jupiler Pro League':'Jupiler Pro League',
