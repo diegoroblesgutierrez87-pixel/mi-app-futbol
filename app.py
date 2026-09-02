@@ -21,8 +21,13 @@ import sys
 import time
 import streamlit.components.v1 as components
 
-LOG_FILE = str(pathlib.Path(__file__).parent / "descarga_log.txt")
-PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
+try:
+    _BASE_DIR = pathlib.Path(__file__).parent.resolve()
+except:
+    _BASE_DIR = pathlib.Path.cwd().resolve()
+LOG_FILE = str(_BASE_DIR / "descarga_log.txt")
+PERSIST_FILE = str(_BASE_DIR / "filtros_guardados.json")
+
 def log_terminal(msg):
     try:
         line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
