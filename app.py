@@ -1,23 +1,6 @@
 import re
 import unicodedata
 import streamlit as st
-
-def check_password():
-    if "password_correct" not in st.session_state:
-        st.session_state["password_correct"] = False
-    if not st.session_state["password_correct"]:
-        st.title("🔒 App Privada")
-        pwd = st.text_input("Contraseña:", type="password")
-        if st.button("Entrar"):
-            # La contraseña está en Secrets, no en el código
-            if pwd == st.secrets.get("PASSWORD"):
-                st.session_state["password_correct"] = True
-                st.rerun()
-            else:
-                st.error("Incorrecta")
-        st.stop()
-
-check_password()
 import os
 import pathlib
 import json
