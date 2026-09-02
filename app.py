@@ -1285,6 +1285,12 @@ def cargar_eventos(league=None, season=None):
             try:
                 df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
                 if not df.empty and any('minuto' in c.lower() for c in df.columns):
+                    # NORMALIZA fixture_id a entero string "1554008"
+                    if 'fixture_id' in df.columns:
+                        df['fixture_id'] = df['fixture_id'].astype(str).str.strip()
+                        df['fixture_id'] = pd.to_numeric(df['fixture_id'], errors='coerce')
+                        df = df.dropna(subset=['fixture_id'])
+                        df['fixture_id'] = df['fixture_id'].astype(int).astype(str)
                     dfs.append(df)
             except: pass
     if not dfs: return {}
@@ -1293,10 +1299,12 @@ def cargar_eventos(league=None, season=None):
     except: pass
     eventos={}
     for fid, g in df_g.groupby('fixture_id'):
-        try: fid_c=str(int(float(str(fid))))
+        try: fid_c=str(fid).split('.')[0]
         except: continue
         evs=[]
-        for _,r in g.sort_values('minuto').iterrows():
+        # asegura minuto numerico para sort
+        g['_min'] = pd.to_numeric(g['minuto'].astype(str).str.split('+').str[0], errors='coerce').fillna(0)
+        for _,r in g.sort_values('_min').iterrows():
             try:
                 m=int(float(str(r.get('minuto','0')).split('+')[0] or 0))
                 gol=str(r.get('goleador','')).strip()
@@ -1305,23 +1313,20 @@ def cargar_eventos(league=None, season=None):
                 evs.append({"minute":m,"player":gol,"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in tipo and 'miss' not in tipo,"missed":'miss' in tipo})
             except: continue
         eventos[fid_c]=evs
-        eventos[str(fid)]=evs
     return eventos
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd
-    if pd.isna(row['Date']): return ""
+    if pd.isna(row.get('Date')): return ""
     try:
-        fid=str(row.get('fixture_id','')).strip()
-        fid_c=str(int(float(fid))) if fid not in ['','nan','0','0.0','None'] else ""
-        evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid,[]) or []
+        fid_raw=str(row.get('fixture_id','')).strip()
+        if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']: return ""
+        fid_c=str(fid_raw).split('.')[0]
+        try: fid_c2=str(int(float(fid_raw)))
+        except: fid_c2=fid_c
+        evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
         if not evs:
-            try:
-                fthg=int(float(row['FTHG'])); ftag=int(float(row['FTAG']))
-                if fthg+ftag>0:
-                    return f"<span style='color:#581C87;font-weight:700'>{fthg}-{ftag} (sin detalle)</span>"
-            except: pass
-            return ""
+            return "" # <-- ya no muestra (sin detalle), deja vacio y no ensucia muro
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -1339,6 +1344,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         return " | ".join(txt)
     except:
         return ""
+
+
 
 def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
     if pd.isna(row['Date']):
