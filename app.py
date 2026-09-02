@@ -1064,21 +1064,13 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path.cwd().resolve()
     df_completo = pd.DataFrame()
     candidatos = [
-        # ACTUALES 26/27 - 2026 - TUS NOMBRES NUEVOS
         BASE / "din1_suec1_26_27.csv",              # din1 suec1 actual 2627
         BASE / "europa_actual.csv",                 # ligas europeas 2627
-        BASE / "asia_actual_j1j2k1k2csl1.csv",       # temp actual 2026 k1k2j1j2 china1
-        # HISTORICOS 22-25 - TUS NOMBRES NUEVOS
+        BASE / "asia_actual_j1j2k1k2csl1.csv",       # temp actual 2026 k1k2j1j2 china1 - 824 BUENO
         BASE / "j1j2k1k2csl1_22_25.csv",             # j1j2k1k2china1 2022-2025
         BASE / "ligas_escandinavas_22_26.csv",      # din1 suec1 2022/21 a 2025/26
         BASE / "ligas_europa22_26.csv",             # ligas europeas 2022-2025
         BASE / "sudasia_22_26.csv",                 # sudeste asiatico 2022-2025
-        # FALLBACK - nombres viejos que ya tienes en disco (no petan si no existen)
-        BASE / "partidos_2627_actual.csv",
-        BASE / "Partidos-2627-Asia.csv",
-        BASE / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
-        BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv",
-        BASE / "ligas_2122_a_2627_17_LIGAS_LIMPIO.csv",
     ]
     dfs = []
     for p in candidatos:
