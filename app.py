@@ -1999,11 +1999,20 @@ with st.expander("Filtros de partidos", expanded=False):
                 st.session_state['filtro_liga_main'] = _new if _new else (ligas_disponibles if ligas_disponibles else [])
         except:
             pass
-    _def_liga = ligas_disponibles if ligas_disponibles else []
+    # FIX RENDIMIENTO: no marques 34 ligas de golpe, usa lo guardado o solo 1 por defecto
+    if 'filtro_liga_main' in st.session_state and st.session_state.filtro_liga_main:
+        _def_liga = [x for x in st.session_state.filtro_liga_main if x in ligas_disponibles]
+        if not _def_liga:
+            _def_liga = [ligas_disponibles[0]] if ligas_disponibles else []
+    else:
+        _def_liga = [ligas_disponibles[0]] if ligas_disponibles else []
+        # si quieres Eredivisie por defecto para ver VOLENDAM/TELSTAR/HERACLES:
+        if 'Eredivisie' in ligas_disponibles:
+            _def_liga = ['Eredivisie']
+
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga, key="filtro_liga_main", on_change=persistir)
 
     st.markdown("**Temporada**")
-    # DEFAULT: 2026/2027 si existe, si no la última
     _def_temp = ["2026/2027"] if "2026/2027" in temporadas_disponibles else ([temporadas_disponibles[-1]] if temporadas_disponibles else [])
     temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=_def_temp, label_visibility="collapsed", key="filtro_temp_main", on_change=persistir)
     modo_vista = "Jornadas"
