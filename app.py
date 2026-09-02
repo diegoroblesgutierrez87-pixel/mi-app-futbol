@@ -2033,7 +2033,7 @@ with st.expander("Filtros de partidos", expanded=False):
     df_final = df_base.copy()
     df_clasificacion = df_clas_base.copy()
     
-        jornadas = sorted(df_final['Jornada'].unique(), reverse=True) # DESC: J28 -> J1  # <-- ESTA LÍNEA FALTABA
+    jornadas = sorted(df_final['Jornada'].unique(), reverse=True) # DESC: J28 -> J1  # <-- ESTA LÍNEA FALTABA
     
 
     if len(jornadas) > 0:
