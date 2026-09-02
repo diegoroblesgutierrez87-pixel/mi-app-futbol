@@ -1057,6 +1057,8 @@ def cargar_todo(_cache_buster=0):
         BASE / "ligas_escandinavas_22_26.csv",      # din1 suec1 2022/21 a 2025/26
         BASE / "ligas_europa22_26.csv",             # ligas europeas 2022-2025
         BASE / "sudasia_22_26.csv",                 # sudeste asiatico 2022-2025
+        BASE / "sudamerica_actual.csv",             # Serie A Brasil + Serie B Brasil + Chile 2026 - NUEVO
+        BASE / "partidos_2627_actual.csv",          # principal donde guardas Sudamerica tambien
     ]
     dfs = []
     for p in candidatos:
@@ -1282,10 +1284,10 @@ def cargar_eventos(league=None, season=None):
     # FIX: lista explícita, sin recursive, no escanea venv
     candidatos = [
         BASE_EV / "goles_actual.csv",
-        BASE_EV / "goles_2627_actual.csv",
         BASE_EV / "goles_2627_actual_LIMPIO.csv",
         BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
         BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
+        BASE_EV / "goles_sudamerica_actual.csv",    # Brasil A/B 2026 con minuto/goleador/asistente - NUEVO
     ]
     # añade solo los goles que existan en la carpeta base, no recursive
     for p in BASE_EV.glob("goles*.csv"):
