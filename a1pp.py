@@ -21,8 +21,13 @@ import sys
 import time
 import streamlit.components.v1 as components
 
-LOG_FILE = str(pathlib.Path(__file__).parent / "descarga_log.txt")
-PERSIST_FILE = str(pathlib.Path(__file__).parent / "filtros_guardados.json")
+try:
+    _BASE_DIR = pathlib.Path(__file__).parent.resolve()
+except:
+    _BASE_DIR = pathlib.Path.cwd().resolve()
+LOG_FILE = str(_BASE_DIR / "descarga_log.txt")
+PERSIST_FILE = str(_BASE_DIR / "filtros_guardados.json")
+
 def log_terminal(msg):
     try:
         line = f"{datetime.now().strftime('%H:%M:%S')} {msg}"
@@ -1267,23 +1272,41 @@ def cargar_todo(_cache_buster=0):
         pass
     return df.copy()
 ######################################################
+@st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
-    import os, glob, pandas as pd
-    rutas = glob.glob('**/goles*.csv', recursive=True) + ['goles_actual.csv','goles_2627_actual.csv','goles_2627_actual_LIMPIO.csv','goles_2627_actual_LIMPIO_28.csv']
+    import os, pathlib, pandas as pd
+    try:
+        BASE_EV = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE_EV = pathlib.Path.cwd().resolve()
+    # FIX: lista explícita, sin recursive, no escanea venv
+    candidatos = [
+        BASE_EV / "goles_actual.csv",
+        BASE_EV / "goles_2627_actual.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
+        BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
+    ]
+    # añade solo los goles que existan en la carpeta base, no recursive
+    for p in BASE_EV.glob("goles*.csv"):
+        if p not in candidatos and p.stat().st_size > 100:
+            candidatos.append(p)
+
     dfs=[]
-    for f in set(rutas):
-        if os.path.exists(f):
+    for f in candidatos:
+        if f.exists() and f.stat().st_size > 100:
             try:
                 df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
-                if not df.empty and any('minuto' in c.lower() for c in df.columns):
-                    # NORMALIZA fixture_id a entero string "1554008"
-                    if 'fixture_id' in df.columns:
-                        df['fixture_id'] = df['fixture_id'].astype(str).str.strip()
-                        df['fixture_id'] = pd.to_numeric(df['fixture_id'], errors='coerce')
-                        df = df.dropna(subset=['fixture_id'])
-                        df['fixture_id'] = df['fixture_id'].astype(int).astype(str)
-                    dfs.append(df)
-            except: pass
+                if df.empty or not any('minuto' in c.lower() for c in df.columns):
+                    continue
+                if 'fixture_id' in df.columns:
+                    df['fixture_id'] = df['fixture_id'].astype(str).str.strip()
+                    df['fixture_id'] = pd.to_numeric(df['fixture_id'], errors='coerce')
+                    df = df.dropna(subset=['fixture_id'])
+                    df['fixture_id'] = df['fixture_id'].astype(int).astype(str)
+                dfs.append(df)
+            except:
+                pass
     if not dfs: return {}
     df_g=pd.concat(dfs, ignore_index=True)
     try: df_g=df_g.drop_duplicates(subset=['fixture_id','minuto','goleador','tipo','equipo'], keep='first')
@@ -1317,7 +1340,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         except: fid_c2=fid_c
         evs=eventos_dict.get(fid_c,[]) or eventos_dict.get(fid_c2,[]) or eventos_dict.get(fid_raw,[]) or []
         if not evs:
-            return "" # <-- ya no muestra (sin detalle), deja vacio y no ensucia muro
+            return ""
+        filtro_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -1326,12 +1350,21 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
             minuto_txt=f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_morado=f"<span style='color:#581C87;font-weight:900'>{minuto_txt}</span>"
+            minuto_morado=f"<span style='color:#581C87;font-weight:900;font-style:italic;font-size:12px'>{minuto_txt}</span>"
             gol_text=f"{minuto_morado} {ev.get('player','')}"
             assist=ev.get('assist','')
             if assist and assist.lower()!='nan' and assist!="":
                 gol_text+=f" ({assist})"
-            txt.append(f"<span style='font-weight:600;color:#000'>{gol_text}</span>")
+            # FIX SUBRAYADO: si el gol es del equipo filtrado, subrayado grueso
+            try:
+                es_mio = filtro_norm and normaliza(ev.get('team','')) == filtro_norm
+            except:
+                es_mio = False
+            if es_mio:
+                style_gol = "font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px"
+            else:
+                style_gol = "font-weight:600;color:#000"
+            txt.append(f"<span style='{style_gol}'>{gol_text}</span>")
         return " | ".join(txt)
     except:
         return ""
@@ -1464,10 +1497,12 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             re_html = "<span style='display:inline-block;background:#ef4444;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
         elif res_ht == 'P' and res_ft == 'G':
             re_html = "<span style='display:inline-block;background:#22c55e;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
+        # FIX: final en cursiva y 2pt más grande que 0-0 para verlo rápido
+        ft_bold = f"<span style='font-style:italic;font-size:13px;font-weight:900'>{real_home}-{real_away}</span>"
         if es_local:
-            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {ht_home}-{ht_away}/{real_home}-{real_away}</u> {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {ht_home}-{ht_away}/{ft_bold}</u> {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
-            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{real_home}-{real_away} <u>{away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{ft_bold} <u>{away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{re_html}{am}"
         # --- AÑADIDO: goles SEGUIDO en misma linea - FIX globals ---
         goles_inline = ""
         try:
@@ -1999,11 +2034,20 @@ with st.expander("Filtros de partidos", expanded=False):
                 st.session_state['filtro_liga_main'] = _new if _new else (ligas_disponibles if ligas_disponibles else [])
         except:
             pass
-    _def_liga = ligas_disponibles if ligas_disponibles else []
+    # FIX RENDIMIENTO: no marques 34 ligas de golpe, usa lo guardado o solo 1 por defecto
+    if 'filtro_liga_main' in st.session_state and st.session_state.filtro_liga_main:
+        _def_liga = [x for x in st.session_state.filtro_liga_main if x in ligas_disponibles]
+        if not _def_liga:
+            _def_liga = [ligas_disponibles[0]] if ligas_disponibles else []
+    else:
+        _def_liga = [ligas_disponibles[0]] if ligas_disponibles else []
+        # si quieres Eredivisie por defecto para ver VOLENDAM/TELSTAR/HERACLES:
+        if 'Eredivisie' in ligas_disponibles:
+            _def_liga = ['Eredivisie']
+
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga, key="filtro_liga_main", on_change=persistir)
 
     st.markdown("**Temporada**")
-    # DEFAULT: 2026/2027 si existe, si no la última
     _def_temp = ["2026/2027"] if "2026/2027" in temporadas_disponibles else ([temporadas_disponibles[-1]] if temporadas_disponibles else [])
     temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=_def_temp, label_visibility="collapsed", key="filtro_temp_main", on_change=persistir)
     modo_vista = "Jornadas"
