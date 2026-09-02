@@ -1272,23 +1272,41 @@ def cargar_todo(_cache_buster=0):
         pass
     return df.copy()
 ######################################################
+@st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
-    import os, glob, pandas as pd
-    rutas = glob.glob('**/goles*.csv', recursive=True) + ['goles_actual.csv','goles_2627_actual.csv','goles_2627_actual_LIMPIO.csv','goles_2627_actual_LIMPIO_28.csv']
+    import os, pathlib, pandas as pd
+    try:
+        BASE_EV = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE_EV = pathlib.Path.cwd().resolve()
+    # FIX: lista explícita, sin recursive, no escanea venv
+    candidatos = [
+        BASE_EV / "goles_actual.csv",
+        BASE_EV / "goles_2627_actual.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
+        BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
+    ]
+    # añade solo los goles que existan en la carpeta base, no recursive
+    for p in BASE_EV.glob("goles*.csv"):
+        if p not in candidatos and p.stat().st_size > 100:
+            candidatos.append(p)
+
     dfs=[]
-    for f in set(rutas):
-        if os.path.exists(f):
+    for f in candidatos:
+        if f.exists() and f.stat().st_size > 100:
             try:
                 df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
-                if not df.empty and any('minuto' in c.lower() for c in df.columns):
-                    # NORMALIZA fixture_id a entero string "1554008"
-                    if 'fixture_id' in df.columns:
-                        df['fixture_id'] = df['fixture_id'].astype(str).str.strip()
-                        df['fixture_id'] = pd.to_numeric(df['fixture_id'], errors='coerce')
-                        df = df.dropna(subset=['fixture_id'])
-                        df['fixture_id'] = df['fixture_id'].astype(int).astype(str)
-                    dfs.append(df)
-            except: pass
+                if df.empty or not any('minuto' in c.lower() for c in df.columns):
+                    continue
+                if 'fixture_id' in df.columns:
+                    df['fixture_id'] = df['fixture_id'].astype(str).str.strip()
+                    df['fixture_id'] = pd.to_numeric(df['fixture_id'], errors='coerce')
+                    df = df.dropna(subset=['fixture_id'])
+                    df['fixture_id'] = df['fixture_id'].astype(int).astype(str)
+                dfs.append(df)
+            except:
+                pass
     if not dfs: return {}
     df_g=pd.concat(dfs, ignore_index=True)
     try: df_g=df_g.drop_duplicates(subset=['fixture_id','minuto','goleador','tipo','equipo'], keep='first')
