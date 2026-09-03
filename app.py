@@ -974,13 +974,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
-            if f_norm == t_norm: return True
-            if f_norm in t_norm or t_norm in f_norm: return True
-            if len(f_norm) <= 3 and t_norm.startswith(f_norm): return True
-            f0 = f_norm.split()[0] if f_norm.split() else ""
-            t0 = t_norm.split()[0] if t_norm.split() else ""
-            if len(f0) > 2 and f0 == t0: return True
-            return False
+            return f_norm == t_norm
 
         def _abrev(nom):
             n = str(nom).strip()
@@ -1141,12 +1135,11 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
                 if ev.get('missed'): continue
                 m = int(ev.get('minute',0) or 0)
                 if not (min_from <= m <= min_to): continue
-                # solo goles de ese lado? No, muestra todos pero subraya el tuyo
-                is_mio = False
-                try:
-                    if eq_norm and normaliza(ev.get('team','')) == eq_norm:
-                        is_mio = True
-                except: pass
+                team_ev = normaliza(ev.get('team','') or ev.get('equipo','') or '')
+                if equipo_lado:
+                    is_mio = (team_ev == normaliza(equipo_lado))
+                else:
+                    is_mio = (eq_norm and team_ev == eq_norm)
                 is_mio_style_min = "color:#581C87;font-weight:900;font-style:normal;font-size:10px;text-decoration:underline;text-decoration-thickness:2px" if is_mio else "color:#581C87;font-weight:900;font-style:normal;font-size:10px"
                 minuto_bold = f"<span style='{is_mio_style_min}'>{m}'</span>"
                 jug = _abrev_jugador(ev.get('player',''))
