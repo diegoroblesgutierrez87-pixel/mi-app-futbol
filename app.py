@@ -297,7 +297,7 @@ def _formatear_h2h_compacto_cached(key_tuple):
         nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R {hp}P {hsv}Par",hg>ag,is_h),
         nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R {ap}P {asv}Par",ag>hg,is_a)
     ]
-    return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
+    return f"<div style='font-family:monospace; font-size:11px; line-height:1.25; padding:6px 4px; border-bottom:1px solid #ddd; white-space:normal; word-break:break-word; overflow-wrap:anywhere; max-width:100%'>{ '<br>'.join(lineas) }</div>"
 
 #############################################
 #########################################
