@@ -315,8 +315,8 @@ def formatear_h2h_compacto(row, equipo_ref=None):
             int(row.get('HomePosPrev',0)), int(row.get('AwayPosPrev',0)),
             int(row.get('HomePtsPrev',0)), int(row.get('AwayPtsPrev',0)),
             round(float(row.get('HomePerf',0)),1), round(float(row.get('AwayPerf',0)),1),
-            int(row.get('HS',0)), int(row.get('HST',0)), int(row.get('HF',0)), int(row.get('HC',0)), int(row.get('HY',0)), int(row.get('HR',0)),
-            int(row.get('AS',0)), int(row.get('AST',0)), int(row.get('AF',0)), int(row.get('AC',0)), int(row.get('AY',0)), int(row.get('AR',0)),
+            int(row.get('HS',0)), int(row.get('HST',0)), int(row.get('HF',0)), int(row.get('HC',0)), int(row.get('HY',0)), int(row.get('HR',0)), int(row.get('HomePasses',0)), int(row.get('HomeSaves',0)),
+            int(row.get('AS',0)), int(row.get('AST',0)), int(row.get('AF',0)), int(row.get('AC',0)), int(row.get('AY',0)), int(row.get('AR',0)), int(row.get('AwayPasses',0)), int(row.get('AwaySaves',0)),
             float(row.get('B365H',0) or 0), float(row.get('B365D',0) or 0), float(row.get('B365A',0) or 0),
             str(row.get('FTR','')),
             eq_norm, str(row.get('HomeTeam','')), str(row.get('AwayTeam',''))
