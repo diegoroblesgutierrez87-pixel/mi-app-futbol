@@ -1355,7 +1355,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         if g.empty: continue
         if win_s.loc[g.index].all(): color = '#0f8105'
         elif loss_s.loc[g.index].all(): color = '#f31818'
-        else: color = '#0A2342'
+        else: color = '#8B7500'
         first_row = g.iloc[0]
         is_h_first = first_row['HomeTeam']==equipo
         if len(g)==1: sufijo_final = 'c' if is_h_first else 'f'
