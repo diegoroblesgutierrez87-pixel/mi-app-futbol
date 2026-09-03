@@ -69,8 +69,10 @@ st.markdown("""
 html, body { background: #FFFFFF!important; overflow-x: hidden!important; }
 [data-testid="stAppViewContainer"]{ background-color: #FFFFFF!important; }
 [data-testid="stDeployButton"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important}
-.block-container{padding:3rem 10px .5rem 10px!important; max-width:100%!important}
-div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; }
+.block-container{padding:3rem 8px .5rem 8px!important; max-width:100%!important}
+div[data-testid="stExpanderDetails"]{ padding:6px 4px!important; overflow: visible!important; }
+
+/* DESKTOP: 3 columnas */
 div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
   display: grid!important;
   grid-template-columns: repeat(3, minmax(0, 1fr))!important;
@@ -80,9 +82,31 @@ div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
 div[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div{
   width: 100%!important; min-width: 0!important; max-width: none!important; flex: none!important;
 }
-###tamaño letra desplegables filtros avanzados#####
 div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
-  font-size: 13px!important; margin: 0 0 1px 0!important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12px!important; margin: 0 0 2px 0!important; white-space: normal!important; overflow: visible!important; text-overflow: clip!important; line-height:1.2!important;
+}
+
+/* MOVIL FIX */
+@media (max-width: 768px){
+  .block-container{padding:2.5rem 4px .5rem 4px!important}
+  div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
+    grid-template-columns: repeat(2, minmax(0, 1fr))!important;
+    gap: 4px!important;
+  }
+  div[data-testid="stExpander"] [data-testid="stWidgetLabel"] p{
+    font-size: 11px!important; white-space: normal!important;
+  }
+  /* Jornadas y rachas que antes eran nowrap y te cortaban */
+  div[style*="monospace"]{
+    white-space: normal!important;
+    word-break: break-word!important;
+    overflow-wrap: anywhere!important;
+  }
+}
+@media (max-width: 480px){
+  div[data-testid="stExpander"] [data-testid="stHorizontalBlock"]{
+    grid-template-columns: 1fr!important;
+  }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -338,7 +362,7 @@ def racha_comprimida_html(df_team, equipo):
         col = "#0f8105" if letra=='G' else "#f31818" if letra=='P' else "#0A2342"
         parts.append(f"<span style='color:{col};font-weight:700;font-size:11px;line-height:1.1'>{c}{letra}</span>")
     # FIX: inline y nowrap para que no se rompa en vertical
-    return f"<span style='display:inline;white-space:nowrap'>{sep.join(parts)}</span>"
+    return f"<span style='display:inline-flex;flex-wrap:wrap;white-space:normal;gap:2px'>{sep.join(parts)}</span>"
 ############################################
 def racha_ambos_marcan_html(df_team):
     if df_team.empty:
