@@ -1431,11 +1431,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         es_h2h = False
         if rival: es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
-        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:inline-block;background:transparent;border:none;padding:1px 3px;margin:0;white-space:nowrap;font-size:11px;font-family:monospace;letter-spacing:-0.4px;word-spacing:-1.2px;line-height:20px"
+        estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:block;background:transparent;border:none;padding:6px 4px;margin:0;white-space:normal;word-break:break-word;font-size:11.5px;font-family:monospace;line-height:1.35"
         if es_h2h: estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
-        jx_html = f"""<details style="display:block;width:100%;margin:0;padding:5px 0 5px 2px;position:relative;border-bottom:1px solid #eeeeee">
-        <summary style="{estilos_summary};white-space:normal;line-height:1.25"><span>{txt}{goles_inline}</span></summary>
-        <div style="position:absolute;top:100%;left:0;z-index:9999;background:#FFFFFF;border:2px solid #000;padding:4px;margin-top:4px;width:92vw;max-width:360px;min-width:280px;text-align:left;white-space:normal;max-height:400px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.3)">{viñeta}</div>
+        jx_html = f"""<details style="display:block;width:100%;margin:0;padding:0;border-bottom:1px solid #eee">
+        <summary style="{estilos_summary}">{txt}{goles_inline}</summary>
+        <div style="position:relative;width:100%;max-width:100%;background:#fff;border:1px solid #ddd;padding:6px;margin:4px 0 8px 0;text-align:left;white-space:normal;max-height:500px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,0.15)">{viñeta}</div>
     </details>"""
         partes.append(jx_html)
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
