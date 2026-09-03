@@ -3278,15 +3278,26 @@ with st.container(border=True):
                             _si_c = int((_am & _es_loc).sum()); _si_f = int(_si_all - _si_c)
                             _no_c = int(_tot_c - _si_c); _no_f = int(_tot_f - _si_f)
                             _resumen_am = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>Si:{_si_all}/{_tot}</span> <span style='color:#000'>(c{_si_c}/{_tot_c} | f{_si_f}/{_tot_f})</span> | <span style='font-weight:900'>No:{_no_all}/{_tot}</span> <span style='color:#000'>(c{_no_c}/{_tot_c} | f{_no_f}/{_tot_f})</span></div>"
-                            # NUEVO: 0.5HT> 1.5HT> AM1P
-                            _ht_goles = _df_season['HTHG'] + _df_season['HTAG']
-                            _over05_ht = _ht_goles > 0.5
-                            _over15_ht = _ht_goles > 1.5
-                            _am1p = (_df_season['HTHG']>0) & (_df_season['HTAG']>0)
-                            _o05_all = int(_over05_ht.sum()); _o05_c = int((_over05_ht & _es_loc).sum()); _o05_f = int(_o05_all - _o05_c)
-                            _o15_all = int(_over15_ht.sum()); _o15_c = int((_over15_ht & _es_loc).sum()); _o15_f = int(_o15_all - _o15_c)
-                            _am1p_all = int(_am1p.sum()); _am1p_c = int((_am1p & _es_loc).sum()); _am1p_f = int(_am1p_all - _am1p_c)
-                            _resumen_ht = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>0.5HT> {_o05_all}/{_tot}</span> <span style='color:#000'>(c{_o05_c}/{_tot_c} | f{_o05_f}/{_tot_f})</span> | <span style='font-weight:900'>1.5HT> {_o15_all}/{_tot}</span> <span style='color:#000'>(c{_o15_c}/{_tot_c} | f{_o15_f}/{_tot_f})</span> | <span style='font-weight:900'>AM1P {_am1p_all}/{_tot}</span> <span style='color:#000'>(c{_am1p_c}/{_tot_c} | f{_am1p_f}/{_tot_f})</span></div>"
+                            # NUEVO: 0.5HT> 1.5HT> AM1P - BLINDADO
+                            try:
+                                _ht_g = pd.to_numeric(_df_season['HTHG'], errors='coerce').fillna(0)
+                                _ht_a = pd.to_numeric(_df_season['HTAG'], errors='coerce').fillna(0)
+                                _ht_goles = _ht_g + _ht_a
+                                _over05_ht = _ht_goles > 0.5
+                                _over15_ht = _ht_goles > 1.5
+                                _am1p = (_ht_g > 0) & (_ht_a > 0)
+                                _o05_all = int(_over05_ht.sum()); _o05_c = int((_over05_ht & _es_loc).sum()); _o05_f = int(_o05_all - _o05_c)
+                                _o15_all = int(_over15_ht.sum()); _o15_c = int((_over15_ht & _es_loc).sum()); _o15_f = int(_o15_all - _o15_c)
+                                _am1p_all = int(_am1p.sum()); _am1p_c = int((_am1p & _es_loc).sum()); _am1p_f = int(_am1p_all - _am1p_c)
+                                _resumen_ht = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>0.5HT> {_o05_all}/{_tot}</span> <span style='color:#000'>(c{_o05_c}/{_tot_c} | f{_o05_f}/{_tot_f})</span> | <span style='font-weight:900'>1.5HT> {_o15_all}/{_tot}</span> <span style='color:#000'>(c{_o15_c}/{_tot_c} | f{_o15_f}/{_tot_f})</span> | <span style='font-weight:900'>AM1P {_am1p_all}/{_tot}</span> <span style='color:#000'>(c{_am1p_c}/{_tot_c} | f{_am1p_f}/{_tot_f})</span></div>"
+                            except:
+                                _resumen_ht = "<div style='font-size:10px;color:red'>0.5HT> 0/0 | 1.5HT> 0/0 | AM1P 0/0</div>"
+                            _resumen_gep = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'><span style='color:#0f8105;font-weight:900'>G:{_g_all}/{_tot}</span> <span style='color:#000'>(c{_g_c}/{_tot_c} | f{_g_f}/{_tot_f})</span> | <span style='color:#0A2342;font-weight:900'>E:{_e_all}/{_tot}</span> <span style='color:#000'>(c{_e_c}/{_tot_c} | f{_e_f}/{_tot_f})</span> | <span style='color:#f31818;font-weight:900'>P:{_p_all}/{_tot}</span> <span style='color:#000'>(c{_p_c}/{_tot_c} | f{_p_f}/{_tot_f})</span></div>"
+                            _am = (_df_season['FTHG']>0) & (_df_season['FTAG']>0)
+                            _si_all = int(_am.sum()); _no_all = int(_tot - _si_all)
+                            _si_c = int((_am & _es_loc).sum()); _si_f = int(_si_all - _si_c)
+                            _no_c = int(_tot_c - _si_c); _no_f = int(_tot_f - _si_f)
+                            _resumen_am = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>Si:{_si_all}/{_tot}</span> <span style='color:#000'>(c{_si_c}/{_tot_c} | f{_si_f}/{_tot_f})</span> | <span style='font-weight:900'>No:{_no_all}/{_tot}</span> <span style='color:#000'>(c{_no_c}/{_tot_c} | f{_no_f}/{_tot_f})</span></div>"
                         except:
                             _resumen_gep = ""; _resumen_am = ""; _resumen_ht = ""; _tot=0
 
