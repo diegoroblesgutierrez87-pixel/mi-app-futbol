@@ -1400,7 +1400,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         rojo_html = f"<span style='color:#dc2626;font-weight:900'> {' -'*rojas_eq}</span>" if rojas_eq>0 else ""
         if es_local:
             htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
-        else:def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
+        else:
             htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG']); ftgf, ftgc = real_away, real_home
         res_ht = 'G' if htgf > htgc else 'P' if htgf < htgc else 'E'
         res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
