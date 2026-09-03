@@ -3249,8 +3249,8 @@ with st.container(border=True):
                         _racha = racha_comprimida_html(_df_eq_fijo_season, eq) if not _df_eq_fijo_season.empty else ""
                         _racha_am = racha_ambos_marcan_html(_df_eq_fijo_season) if not _df_eq_fijo_season.empty else ""
                         _jors = jornadas_conteo(_part_ok_season['Jornada'], _part_ok_season, eq, rival, parte_actual) if not _part_ok_season.empty else ""
-
-                        # Pos y Pts finales de ESA temporada (no total)
+#######################################################################################################################################################################
+                        # Pos y Pts finales de ESA temporada
                         try:
                             _d_clas = df_clas_base[(df_clas_base['Equipo']==eq) & (df_clas_base['Season']==_season)]
                             if not _d_clas.empty:
@@ -3261,6 +3261,7 @@ with st.container(border=True):
                         except:
                             _pos_txt = "Xº Xpts"
 
+                        _resumen_gep=""; _resumen_am=""; _resumen_ht=""; _tot=0; _tot_c=0; _tot_f=0; _es_loc=None
                         try:
                             _es_loc = _df_season['HomeTeam']==eq
                             _tot = len(_df_season)
@@ -3272,14 +3273,43 @@ with st.container(border=True):
                             _g_c = int((_gana & _es_loc).sum()); _g_f = int(_g_all - _g_c)
                             _e_c = int((_empata & _es_loc).sum()); _e_f = int(_e_all - _e_c)
                             _p_c = int((_pierde & _es_loc).sum()); _p_f = int(_p_all - _p_c)
-                            _resumen_gep = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'><span style='color:#0f8105;font-weight:900'>G:{_g_all}/{_tot}</span> <span style='color:#000'>(c{_g_c}/{_tot_c} | f{_g_f}/{_tot_f})</span> | <span style='color:#0A2342;font-weight:900'>E:{_e_all}/{_tot}</span> <span style='color:#000'>(c{_e_c}/{_tot_c} | f{_e_f}/{_tot_f})</span> | <span style='color:#f31818;font-weight:900'>P:{_p_all}/{_tot}</span> <span style='color:#000'>(c{_p_c}/{_tot_c} | f{_p_f}/{_tot_f})</span></div>"
+                            _resumen_gep = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:1px 0 2px 0;font-family:monospace'><span style='color:#0f8105;font-weight:900'>G:{_g_all}/{_tot}</span> (c{_g_c}/{_tot_c} | f{_g_f}/{_tot_f}) | <span style='color:#0A2342;font-weight:900'>E:{_e_all}/{_tot}</span> (c{_e_c}/{_tot_c} | f{_e_f}/{_tot_f}) | <span style='color:#f31818;font-weight:900'>P:{_p_all}/{_tot}</span> (c{_p_c}/{_tot_c} | f{_p_f}/{_tot_f})</div>"
+                        except:
+                            pass
+
+                        try:
                             _am = (_df_season['FTHG']>0) & (_df_season['FTAG']>0)
                             _si_all = int(_am.sum()); _no_all = int(_tot - _si_all)
-                            _si_c = int((_am & _es_loc).sum()); _si_f = int(_si_all - _si_c)
+                            _si_c = int((_am & _es_loc).sum()) if _es_loc is not None else 0; _si_f = int(_si_all - _si_c)
                             _no_c = int(_tot_c - _si_c); _no_f = int(_tot_f - _si_f)
-                            _resumen_am = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>Si:{_si_all}/{_tot}</span> <span style='color:#000'>(c{_si_c}/{_tot_c} | f{_si_f}/{_tot_f})</span> | <span style='font-weight:900'>No:{_no_all}/{_tot}</span> <span style='color:#000'>(c{_no_c}/{_tot_c} | f{_no_f}/{_tot_f})</span></div>"
+                            _resumen_am = f"<div style='font-size:10px;line-height:1.1;color:#000;margin:0 0 2px 0;font-family:monospace'><span style='font-weight:900'>Si:{_si_all}/{_tot}</span> (c{_si_c}/{_tot_c} | f{_si_f}/{_tot_f}) | <span style='font-weight:900'>No:{_no_all}/{_tot}</span> (c{_no_c}/{_tot_c} | f{_no_f}/{_tot_f})</div>"
                         except:
-                            _resumen_gep = ""; _resumen_am = ""; _tot=0
+                            pass
+
+                        # HT BLINDADO - SIEMPRE PINTA - FIX INDEX
+                        try:
+                            if 'HTHG' in _df_season.columns:
+                                _hg = pd.to_numeric(_df_season['HTHG'], errors='coerce').fillna(0)
+                                _hg = pd.Series(_hg.values, index=_df_season.index)
+                            else:
+                                _hg = pd.Series(0, index=_df_season.index)
+                            if 'HTAG' in _df_season.columns:
+                                _ag = pd.to_numeric(_df_season['HTAG'], errors='coerce').fillna(0)
+                                _ag = pd.Series(_ag.values, index=_df_season.index)
+                            else:
+                                _ag = pd.Series(0, index=_df_season.index)
+                            _ht_tot = _hg + _ag
+                            _o05 = _ht_tot > 0.5; _o15 = _ht_tot > 1.5; _am1p = (_hg>0) & (_ag>0)
+                            _o05_all = int(_o05.sum()); _o15_all = int(_o15.sum()); _am1p_all = int(_am1p.sum())
+                            if _es_loc is not None:
+                                _o05_c = int((_o05 & _es_loc).sum()); _o05_f = _o05_all - _o05_c
+                                _o15_c = int((_o15 & _es_loc).sum()); _o15_f = _o15_all - _o15_c
+                                _am1p_c = int((_am1p & _es_loc).sum()); _am1p_f = _am1p_all - _am1p_c
+                            else:
+                                _o05_c=_o05_f=_o15_c=_o15_f=_am1p_c=_am1p_f=0
+                            _resumen_ht = f"<div style='font-size:11px;line-height:1.2;color:#000;margin:2px 0 2px 0;font-family:monospace;border:1px solid #000;padding:1px 2px;background:#ffff99'><b>0.5HT> {_o05_all}/{_tot}</b> (c{_o05_c}/{_tot_c} | f{_o05_f}/{_tot_f}) | <b>1.5HT> {_o15_all}/{_tot}</b> (c{_o15_c}/{_tot_c} | f{_o15_f}/{_tot_f}) | <b>AM1P {_am1p_all}/{_tot}</b> (c{_am1p_c}/{_tot_c} | f{_am1p_f}/{_tot_f})</div>"
+                        except Exception as e:
+                            _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
                         html_temporadas += f"""<div style='background:#FFFFFF'>
 <div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
@@ -3287,9 +3317,12 @@ with st.container(border=True):
 <div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
 <div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
 {_resumen_am}
+{_resumen_ht}
 <div style='margin-top:4px'>{_jors}</div>
 </div>"""
-
+###############################################################################
+#################################################################################
+######################################################################bloque de datos pcls
                     html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:2px solid #000;font-family:monospace;color:#000'>
 <div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}% (TOTAL {len(seasons_list)} temps)</div>
 {texto_seg}
