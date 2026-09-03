@@ -1400,7 +1400,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         rojo_html = f"<span style='color:#dc2626;font-weight:900'> {' -'*rojas_eq}</span>" if rojas_eq>0 else ""
         if es_local:
             htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
-        else:
+        else:def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"):
             htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG']); ftgf, ftgc = real_away, real_home
         res_ht = 'G' if htgf > htgc else 'P' if htgf < htgc else 'E'
         res_ft = 'G' if ftgf > ftgc else 'P' if ftgf < ftgc else 'E'
@@ -1413,22 +1413,11 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             re_html = "<span style='display:inline-block;background:#ef4444;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
         elif res_ht == 'P' and res_ft == 'G':
             re_html = "<span style='display:inline-block;background:#22c55e;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
-        # FIX VISUAL: local y visitante mismo tamaño, final más grande fuera del <u>
-        STYLE_TEAM = "font-size:11px;font-weight:700;color:#000;font-style:normal"
-        STYLE_POS = f"font-size:11px;font-weight:900;color:{MORADO};font-style:normal"
-        STYLE_HT = "font-size:11px;font-weight:600;color:#555;font-style:normal"
-        STYLE_FT = "font-size:14px;font-weight:900;color:#000;font-style:normal;letter-spacing:0.3px"
-        j_label = f"J{int(j)}{sufijo_final}"
-        pos_h_html = f"<span style='{STYLE_POS}'>{h_pos}º</span>"
-        pos_a_html = f"<span style='{STYLE_POS}'>{a_pos}º</span>"
-        home_html = f"<span style='{STYLE_TEAM}'>{home_short}{rojo_html}</span>"
-        away_html = f"<span style='{STYLE_TEAM}'>{away_short}</span>"
-        ht_html = f"<span style='{STYLE_HT}'>{ht_home}-{ht_away}</span>"
-        ft_html = f"<span style='{STYLE_FT}'>{real_home}-{real_away}</span>"
+        ft_bold = f"<span style='font-style:normal;font-size:15px;font-weight:900'>{real_home}-{real_away}</span>"
         if es_local:
-            txt = f"{j_label} {pos_h_html} <u>{home_html}</u> {ht_html}/{ft_html} {away_html} {pos_a_html} {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {ht_home}-{ht_away}/{ft_bold}</u> {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
-            txt = f"{j_label} {pos_h_html} {home_html} {ht_html}/{ft_html} <u>{away_html}{rojo_html}</u> {pos_a_html} {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{ft_bold} <u>{away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{re_html}{am}"
         goles_inline = ""
         try:
             ev_dict = globals().get('todos_eventos', None)
@@ -1450,10 +1439,17 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     </details>"""
         partes.append(jx_html)
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
+
+    
+
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
     if pd.isna(row.get('Date')):
-        return ""
+        return ""        if es_local:
+            htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
+        else:
+            htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG']); ftgf, ftgc = real_away, real_home
+            
     try:
         fid_raw = str(row.get('fixture_id','')).strip()
         if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']:
