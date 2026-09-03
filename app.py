@@ -1470,13 +1470,14 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
             es_mio = _es_mismo_equipo(filtro_norm, team_norm)
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
-            minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
             ast = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(ast_raw)})</span>" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
             if es_mio:
+                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px;text-decoration:underline;text-decoration-thickness:2px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug}</span>{ast}"
             else:
+                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
             txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
         return "".join(txt)
@@ -1618,7 +1619,8 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
                     if eq_norm and normaliza(ev.get('team','')) == eq_norm:
                         is_mio = True
                 except: pass
-                minuto_bold = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:10px'>{m}'</span>"
+                is_mio_style_min = "color:#581C87;font-weight:900;font-style:normal;font-size:10px;text-decoration:underline;text-decoration-thickness:2px" if is_mio else "color:#581C87;font-weight:900;font-style:normal;font-size:10px"
+                minuto_bold = f"<span style='{is_mio_style_min}'>{m}'</span>"
                 jug = _abrev_jugador(ev.get('player',''))
                 style_j = "font-weight:900;text-decoration:underline;text-decoration-thickness:2px;color:#000" if is_mio else "font-weight:600;color:#000"
                 out.append(f"{minuto_bold} <span style='{style_j}'>{jug}</span>")
