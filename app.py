@@ -944,7 +944,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
 
     
-#######################
+
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
     if pd.isna(row.get('Date')):
@@ -3411,18 +3411,13 @@ with st.container(border=True):
     # --- CSS para las tablas ---
 
     
-        txt=[]
-        for ev in evs:
-            if ev.get('missed'): continue
-            m = ev.get('minute',0)
-            if parte=="1T" and m>45: continue
-            if parte=="2T" and m<=45: continue
-            if not (min_min <= m <= max_min): continue
-            team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
-            es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            # FIX 1 EQUIPO: si hay filtro (Real Sociedad), solo pinta goles de ese equipo
-            if filtro_norm and not es_mio:
-                continue
+    def render_tabla_equipo(df_input, equipo_ref):
+        df_tmp = df_input.copy()
+        if todos_eventos and not df_tmp.empty:
+            df_tmp['Goles'] = df_tmp.apply(
+                lambda r: buscar_goles_partido(r, todos_eventos, rango_minutos[0], rango_minutos[1], parte_gol, equipo_ref),
+                axis=1
+            )
         else:
             df_tmp['Goles'] = ''
         if jugador_filtro!= "TODOS":
