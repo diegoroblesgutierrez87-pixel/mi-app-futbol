@@ -1445,10 +1445,7 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
     if pd.isna(row.get('Date')):
-        return ""        if es_local:
-            htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
-        else:
-            htgf, htgc = int(first_row['HTAG']), int(first_row['HTHG']); ftgf, ftgc = real_away, real_home
+        return ""
             
     try:
         fid_raw = str(row.get('fixture_id','')).strip()
