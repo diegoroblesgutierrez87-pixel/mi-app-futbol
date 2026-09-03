@@ -1415,9 +1415,9 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             re_html = "<span style='display:inline-block;background:#22c55e;color:#fff;font-weight:900;font-size:9px;padding:0 4px;border-radius:3px;margin-left:3px'>RE</span>"
         ft_bold = f"<span style='font-style:normal;font-size:15px;font-weight:900'>{real_home}-{real_away}</span>"
         if es_local:
-            txt = f"J{int(j)}{sufijo_final}<u><span style='color:{MORADO};font-weight:900'>{h_pos}º</span> {home_short}{rojo_html} {ht_home}-{ht_away}/{ft_bold}</u> {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO};font-weight:900'>{h_pos}º</span> <u>{home_short}{rojo_html}</u> {ht_home}-{ht_away}/{ft_bold} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
-            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{ft_bold} <u>{away_short}{rojo_html} <span style='color:{MORADO};font-weight:900'>{a_pos}º</span></u> {res_ht}/{res_ft}{re_html}{am}"
+            txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{ft_bold} <u>{away_short}{rojo_html}</u> <span style='color:{MORADO};font-weight:900'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         goles_inline = ""
         try:
             ev_dict = globals().get('todos_eventos', None)
