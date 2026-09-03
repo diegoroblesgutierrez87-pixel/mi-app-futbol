@@ -1389,10 +1389,8 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
         real_home = int(first_row['FTHG']); real_away = int(first_row['FTAG'])
         ht_home = int(first_row['HTHG']); ht_away = int(first_row['HTAG'])
-        try: home_short = str(first_row['HomeAbbr'])
-        except: home_short = str(first_row['HomeTeam'])[:3].upper()
-        try: away_short = str(first_row['AwayAbbr'])
-        except: away_short = str(first_row['AwayTeam'])[:3].upper()
+        home_short = str(first_row['HomeTeam'])
+        away_short = str(first_row['AwayTeam'])
         h_pos = int(first_row.get('HomePosPrev', 0)); a_pos = int(first_row.get('AwayPosPrev', 0))
         es_local = first_row['HomeTeam'] == equipo
         try: rojas_eq = int(first_row['HR']) if es_local else int(first_row['AR'])
