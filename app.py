@@ -1969,6 +1969,8 @@ try:
         _BASE_TMP / "goles_actual.csv",
         _BASE_TMP / "partidos_2627_actual.csv",
         _BASE_TMP / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
+        _BASE_TMP / "sudamerica_actual.csv",
+        _BASE_TMP / "goles_sudamerica_actual.csv",
     ]
     _buster = 0
     for _pp in _lista_csv:
