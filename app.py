@@ -3813,6 +3813,34 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
                 linea=f"<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:8px 0; border-bottom:1px solid #ddd;'><div style='font-size:12px; font-weight:900; color:#0A2342;'>{r['Equipo'].upper()} IA {r['IA']}% {r['Cumple']}# {r['%']}% {r['GF']:.1f}GF</div><div style='margin-top:4px;'>{r['Jornadas']}</div></div>"
                 lineas_html.append(linea)
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+            ################################boton copiar
+                        # --- BOTON COPIAR PARA IA ---
+            import json
+            texto_copiar = ""
+            for _, r in df_mostrar.iterrows():
+                # limpia html de jornadas
+                jors_txt = r['Jornadas'].replace('<b>','').replace('</b>','').replace(' | ',' ')
+                texto_copiar += f"{r['Equipo']} {r['Liga']} - {r['Cumple']}#{r['%']}% IA:{r['IA']}% GF:{r['GF']:.1f} - {jors_txt}\n"
+            
+            texto_json = json.dumps(texto_copiar)
+            import streamlit.components.v1 as components
+            components.html(f"""
+                <button id="btn_copy_eq" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 COPIAR {len(df_mostrar)} EQUIPOS PARA IA</button>
+                <script>
+                document.getElementById('btn_copy_eq').onclick = async () => {{
+                    const txt = {texto_json};
+                    try {{
+                        await navigator.clipboard.writeText(txt);
+                        document.getElementById('btn_copy_eq').innerText = '✅ COPIADO!';
+                        setTimeout(()=>document.getElementById('btn_copy_eq').innerText='📋 COPIAR {len(df_mostrar)} EQUIPOS PARA IA',2000);
+                    }} catch(e) {{
+                        const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                        document.getElementById('btn_copy_eq').innerText = '✅ COPIADO!';
+                    }}
+                }};
+                </script>
+            """, height=55)
+            ###########################################################################3fin boton copiar
             restantes = len(df_res) - len(df_mostrar)
             if restantes > 0:
                 if st.button(f"Cargar 100 mas ({restantes} restantes)", use_container_width=True, key=f"be_cargar_mas_{st.session_state.be_pag}_{len(df_res)}"):
