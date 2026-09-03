@@ -3286,13 +3286,18 @@ with st.container(border=True):
                         except:
                             pass
 
-                        # HT BLINDADO - SIEMPRE PINTA
+                        # HT BLINDADO - SIEMPRE PINTA - FIX INDEX
                         try:
-                            if 'HTHG' in _df_season.columns and 'HTAG' in _df_season.columns:
+                            if 'HTHG' in _df_season.columns:
                                 _hg = pd.to_numeric(_df_season['HTHG'], errors='coerce').fillna(0)
-                                _ag = pd.to_numeric(_df_season['HTAG'], errors='coerce').fillna(0)
+                                _hg = pd.Series(_hg.values, index=_df_season.index)
                             else:
-                                _hg = pd.Series([0]*_tot); _ag = pd.Series([0]*_tot)
+                                _hg = pd.Series(0, index=_df_season.index)
+                            if 'HTAG' in _df_season.columns:
+                                _ag = pd.to_numeric(_df_season['HTAG'], errors='coerce').fillna(0)
+                                _ag = pd.Series(_ag.values, index=_df_season.index)
+                            else:
+                                _ag = pd.Series(0, index=_df_season.index)
                             _ht_tot = _hg + _ag
                             _o05 = _ht_tot > 0.5; _o15 = _ht_tot > 1.5; _am1p = (_hg>0) & (_ag>0)
                             _o05_all = int(_o05.sum()); _o15_all = int(_o15.sum()); _am1p_all = int(_am1p.sum())
