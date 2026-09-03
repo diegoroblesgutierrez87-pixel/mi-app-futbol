@@ -997,9 +997,6 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if not (min_min <= m <= max_min): continue
             team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
             es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            # FIX 1 EQUIPO: si hay filtro (Real Sociedad), solo pinta goles de ese equipo
-            if filtro_norm and not es_mio:
-                continue
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
