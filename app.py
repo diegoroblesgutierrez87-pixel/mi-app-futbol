@@ -226,12 +226,14 @@ def _formatear_h2h_compacto_cached(key_tuple):
     is_a = eq_norm == away_team if eq_norm else False
 
     def nv(t,b=False,u=False):
-        return f"<span style='font-weight:{900 if b else 600}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
+        # FIX: equipo seleccionado siempre en negrita gordita 900 (Ctrl+N) aunque no gane
+        fw = 900 if (b or u) else 600
+        return f"<span style='font-weight:{fw}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
 
     if eq_norm:
         won = (is_h and hg > ag) or (is_a and ag > hg)
         lost = (is_h and hg < ag) or (is_a and ag < hg)
-        color_linea = "#0f8105" if won else "#f31818" if lost else "#f89007"
+        color_linea = "#0f8105" if won else "#f31818" if lost else "#8B7500"
         color = color_linea
     else:
         color_linea = "#0A2342"
@@ -1516,7 +1518,7 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     if eq_norm:
         won = (eq_norm == ht and hg_num > ag_num) or (eq_norm == at and ag_num > hg_num)
         lost = (eq_norm == ht and hg_num < ag_num) or (eq_norm == at and ag_num < hg_num)
-        color_res = "#0f8105" if won else "#f31818" if lost else "#f89007"
+        color_res = "#0f8105" if won else "#f31818" if lost else "#8B7500"
 
     cuota_h = row.get('B365H'); cuota_d = row.get('B365D'); cuota_a = row.get('B365A')
     league_short = str(league)[:3].upper()
@@ -1542,12 +1544,12 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         away_perf_txt = f"<span style='{style_ganador}'>{away_perf:.1f}</span>"
 
     if eq_norm == ht:
-        sty = f"{style_ganador if hg_num>ag_num else style_base}; {style_subrayado}"
+        sty = f"{style_ganador}; {style_subrayado}"
         ht_txt = f"<span style='{sty}'>{ht_disp}</span>"; hg_txt = f"<span style='{sty}'>{hg_num}</span>"
         hpts_txt = f"<span style='{sty}'>{hpts}</span>"; hpos_txt = f"<span style='{sty}'>{hpos}º</span>"
         home_perf_txt = f"<span style='{sty}'>{home_perf:.1f}</span>"
     if eq_norm == at:
-        sty = f"{style_ganador if ag_num>hg_num else style_base}; {style_subrayado}"
+        sty = f"{style_ganador}; {style_subrayado}"
         at_txt = f"<span style='{sty}'>{at_disp}</span>"; ag_txt = f"<span style='{sty}'>{ag_num}</span>"
         apts_txt = f"<span style='{sty}'>{apts}</span>"; apos_txt = f"<span style='{sty}'>{apos}º</span>"
         away_perf_txt = f"<span style='{sty}'>{away_perf:.1f}</span>"
