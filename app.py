@@ -949,6 +949,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
     import pandas as pd, unicodedata, re
     if pd.isna(row.get('Date')):
         return ""
+            
     try:
         fid_raw = str(row.get('fixture_id','')).strip()
         if not fid_raw or fid_raw.lower() in ['','nan','0','0.0','none']:
@@ -996,9 +997,6 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if not (min_min <= m <= max_min): continue
             team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
             es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            # FIX: si hay filtro de 1 equipo y este gol no es suyo, saltarlo
-            if filtro_norm and not es_mio:
-                continue
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
@@ -1013,6 +1011,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         return "".join(txt)
     except:
         return ""
+######################################
 ###################def formatear_partido
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht, at = row['HomeTeam'], row['AwayTeam']
