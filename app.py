@@ -243,7 +243,7 @@ cargar_persistencia()
 @lru_cache(maxsize=8192)
 def _formatear_h2h_compacto_cached(key_tuple):
     (lg3, fecha, jorn, ht, at, hg, ag, h1, a1, hpos, apos, hpts, apts, hperf, aperf,
-     hs,hst,hf,hc,hy,hr, as_,ast2,af,ac,ay,ar, b365h,b365d,b365a, ftr, eq_norm, home_team, away_team) = key_tuple
+     hs,hst,hf,hc,hy,hr,hp,hsv, as_,ast2,af,ac,ay,ar,ap,asv, b365h,b365d,b365a, ftr, eq_norm, home_team, away_team) = key_tuple
 
     h2, a2 = hg - h1, ag - a1
     is_h = eq_norm == home_team if eq_norm else False
@@ -294,11 +294,13 @@ def _formatear_h2h_compacto_cached(key_tuple):
         f"1p:{nv(str(a1)+'G',False,is_a)}",
         f"2p:{nv(str(h2)+'G',False,is_h)}",
         f"2p:{nv(str(a2)+'G',False,is_a)}",
-        nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R",hg>ag,is_h),
-        nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R",ag>hg,is_a)
+        nv(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R {hp}P {hsv}Par",hg>ag,is_h),
+        nv(f"{as_}T {ast2}TP {af}F {ac}C {ay}A {ar}R {ap}P {asv}Par",ag>hg,is_a)
     ]
     return f"<div style='font-family:monospace; font-size:11px; line-height:1.15; padding:3px 2px; border-bottom:1px solid #ddd; white-space:nowrap'>{ '<br>'.join(lineas) }</div>"
 
+#############################################
+#########################################
 def formatear_h2h_compacto(row, equipo_ref=None):
     try:
         eq_norm = normaliza(equipo_ref) if equipo_ref else ""
