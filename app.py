@@ -1276,10 +1276,15 @@ def calcular_estado_jornada(df):
             continue
 
         # Jornadas reales de esa liga
-        exp_jornadas = (n_teams - 1) * 2
-        # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
-        if exp_jornadas < 10:
-            exp_jornadas = 38
+        if "K League 1" in str(l):
+            exp_jornadas = 33
+        elif "K League 2" in str(l):
+            exp_jornadas = 39
+        else:
+            exp_jornadas = (n_teams - 1) * 2
+            # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
+            if exp_jornadas < 10:
+                exp_jornadas = 38
         partidos_por_jornada = n_teams // 2
 
         jornada = 1
