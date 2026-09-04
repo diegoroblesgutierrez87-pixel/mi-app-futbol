@@ -1847,8 +1847,23 @@ if len(jornadas) > 0:
 with st.expander("🎛 Filtros avanzados", expanded=False):
         # --- LINEA 1: Eq1 Eq2 ---
         l1 = st.columns(2)
-        equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-        equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        # FIX DEFINITIVO - evita que titulos tipo "LALIGA HYPERMOTION (1)" o "📋 partidos filtro..." entren como equipo
+        _opciones_eq_validas = ["Ninguno"] + equipos_disponibles
+        _set_validos = set(_opciones_eq_validas)
+        # limpia persistencia contaminada ANTES de crear el widget
+        if st.session_state.get('equipo_filtro') not in _set_validos:
+            st.session_state.equipo_filtro = "Ninguno"
+        if st.session_state.get('equipo2_filtro') not in _set_validos:
+            st.session_state.equipo2_filtro = "Ninguno"
+        equipo_filtro = l1[0].selectbox("Eq1", _opciones_eq_validas, key='equipo_filtro')
+        equipo2_filtro = l1[1].selectbox("Eq2", _opciones_eq_validas, key='equipo2_filtro')
+        # doble validacion post-widget por si el movil restaura valor viejo
+        if equipo_filtro not in _set_validos:
+            equipo_filtro = "Ninguno"
+            st.session_state.equipo_filtro = "Ninguno"
+        if equipo2_filtro not in _set_validos:
+            equipo2_filtro = "Ninguno"
+            st.session_state.equipo2_filtro = "Ninguno"
         # FIX BUG MOVIL - si entra texto del expander como equipo, lo resetea a Ninguno
         _validos_eq = set(["Ninguno"] + equipos_disponibles)
         if equipo_filtro not in _validos_eq:
