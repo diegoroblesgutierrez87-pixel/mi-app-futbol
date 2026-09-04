@@ -772,13 +772,14 @@ def cargar_todo(_cache_buster=0):
         'Super League 2': 'Super League 2 Grecia',
     }
     df['League'] = df['League'].replace(mapa_ligas_todo)
-        # FIX LIGA MAL ETIQUETADA 26/27 - si es Hypermotion pero tiene equipos de Primera, corrige a EA Sports
+        # FIX LIGA MAL ETIQUETADA 26/27 - DESACTIVADO para no borrar LAS PALMAS en Hypermotion 26/27
     try:
-        EQUIPOS_PRIMERA = {"REAL MADRID","BARCELONA","ATLETICO MADRID","SEVILLA","BETIS","VILLARREAL","VALENCIA","ATHLETIC BILBAO","REAL SOCIEDAD","MALLORCA","GIRONA","OSASUNA","CELTA","RAYO VALLECANO","GETAFE","ALAVES","LAS PALMAS","ESPANYOL","ELCHE","LEVANTE","OVIEDO","VALLADOLID"}
+        EQUIPOS_PRIMERA_REAL = {"REAL MADRID","BARCELONA","ATLETICO MADRID","SEVILLA","BETIS","VILLARREAL","VALENCIA","ATHLETIC BILBAO","REAL SOCIEDAD","MALLORCA","GIRONA","OSASUNA","CELTA","RAYO VALLECANO","GETAFE","ALAVES","ESPANYOL"}
         mask_hyper = df['League'].astype(str).str.contains('Hypermotion', case=False, na=False)
-        mask_primera_team = df['HomeTeam'].isin(EQUIPOS_PRIMERA) | df['AwayTeam'].isin(EQUIPOS_PRIMERA)
-        # Si en 2026/2027 Hypermotion aparece un equipo de primera, era Primera realmente
-        df.loc[mask_hyper & mask_primera_team & (df['Season']=='2026/2027'), 'League'] = 'LaLiga EA Sports'
+        mask_primera_team = df['HomeTeam'].isin(EQUIPOS_PRIMERA_REAL) | df['AwayTeam'].isin(EQUIPOS_PRIMERA_REAL)
+        # ANTES movía LAS PALMAS/ELCHE/LEVANTE/OVIEDO a EA Sports y te dejaba 1 equipo. Ahora desactivado.
+        # df.loc[mask_hyper & mask_primera_team & (df['Season']=='2026/2027'), 'League'] = 'LaLiga EA Sports'
+        pass
     except:
         pass
     df = df[df['League'].notna() & (df['League']!='nan')]
@@ -3154,21 +3155,21 @@ with st.container(border=True):
                         base_total = base_total[(base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)]
                     elif equipo2_filtro!= "Ninguno":
                         base_total = base_total[(base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro)]
-                # FIX HALIFAX: quita equipos que no tienen ni 1 J con margen A FAVOR
+                # FIX HALIFAX: solo filtra si Margen != Todo - tu caso Margen=- no debe borrar
                 base_filtrado_real = base.copy()
-                equipos_con_j = []
-                for eq in equipos_mostrar:
-                    df_tmp = base_filtrado_real[(base_filtrado_real['HomeTeam']==eq) | (base_filtrado_real['AwayTeam']==eq)]
-                    if df_tmp.empty:
-                        continue
-                    # recalcula margen a favor del equipo
-                    if margen_filtro!="Todo":
-                        df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro, parte_gol, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
-                    if margen_filtro_eq2!="Todo" and eq==equipo2_filtro:
-                        df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
-                    if not df_tmp.empty:
-                        equipos_con_j.append(eq)
-                equipos_mostrar = equipos_con_j
+                if margen_filtro != "Todo" or margen_filtro_eq2 != "Todo":
+                    equipos_con_j = []
+                    for eq in equipos_mostrar:
+                        df_tmp = base_filtrado_real[(base_filtrado_real['HomeTeam']==eq) | (base_filtrado_real['AwayTeam']==eq)]
+                        if df_tmp.empty:
+                            continue
+                        if margen_filtro!="Todo" and eq!=equipo2_filtro:
+                            df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro, parte_gol, condicion_filtro)]
+                        if margen_filtro_eq2!="Todo" and eq==equipo2_filtro:
+                            df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
+                        if not df_tmp.empty:
+                            equipos_con_j.append(eq)
+                    equipos_mostrar = equipos_con_j
                 datos_eq1 = []
                 datos_eq2 = []
                 datos_resto = []
