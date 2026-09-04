@@ -686,6 +686,7 @@ def cargar_todo(_cache_buster=0):
         'CORDOBA':'CORDOBA','COR':'CORDOBA','CORDOBA CF':'CORDOBA',
         'LAS PALMAS':'LAS PALMAS','LPA':'LAS PALMAS','UD LAS PALMAS':'LAS PALMAS',
         'CULTURAL LEONESA':'CULTURAL LEONESA','CUL':'CULTURAL LEONESA','CULTURAL Y DEPORTIVA LEONESA':'CULTURAL LEONESA',
+        'CASTELLON':'CASTELLON','CASTELLÓN':'CASTELLON','CD CASTELLON':'CASTELLON',
         'SP G':'SPORTING GIJON',
     }
     # aplica primero holanda/espana luego bundes
@@ -1848,6 +1849,14 @@ with st.expander("🎛 Filtros avanzados", expanded=False):
         l1 = st.columns(2)
         equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
         equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        # FIX BUG MOVIL - si entra texto del expander como equipo, lo resetea a Ninguno
+        _validos_eq = set(["Ninguno"] + equipos_disponibles)
+        if equipo_filtro not in _validos_eq:
+            equipo_filtro = "Ninguno"
+            st.session_state.equipo_filtro = "Ninguno"
+        if equipo2_filtro not in _validos_eq:
+            equipo2_filtro = "Ninguno"
+            st.session_state.equipo2_filtro = "Ninguno"
 
         # --- LINEA 1b: L/V... L/V3 ---
         l1b = st.columns(2)
@@ -1953,7 +1962,11 @@ with st.expander("🎛 Filtros avanzados", expanded=False):
             st.session_state.pct_min = _safe_pct(st.session_state.get('pct_min', 70), 1)
             st.session_state.pct_max = _safe_pct(st.session_state.get('pct_max', 100), 100)
 
-            pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=int(st.session_state.get('pct_min', 70)), step=5, key='pct_min_fix', label_visibility="collapsed")
+            # FIX - default 70% borraba todo en J1-J3, ahora default 1%
+            _pct_default = int(st.session_state.get('pct_min', 1))
+            if _pct_default == 70:
+                _pct_default = 1
+            pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=_pct_default, step=5, key='pct_min_fix', label_visibility="collapsed")
             pct_max = c_p2.number_input("max", min_value=0, max_value=100, value=int(st.session_state.get('pct_max', 100)), step=5, key='pct_max_fix', label_visibility="collapsed")
 
             if pct_min > pct_max:
