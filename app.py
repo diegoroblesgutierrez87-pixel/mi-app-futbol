@@ -4727,6 +4727,7 @@ with st.expander("📋 DATOS", expanded=False):
 # ==================== FIN DATOS INDEPENDIENTE V2 ====================
 # ==================== RESUMEN2 - EQUIPO x POSICION/Nº/PTS ====================
 # ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
+# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
 with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded=False):
     import pathlib
     try:
@@ -4756,13 +4757,11 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
                 df = pd.read_csv(path, on_bad_lines='skip', engine='python')
             except:
                 df = pd.read_csv(path, sep=';', on_bad_lines='skip', engine='python')
-            # normaliza para filtro
             for c in ['League','Season','Equipo']:
                 if c in df.columns:
                     df[c] = df[c].astype(str).str.strip()
             return df
 
-        # buster para que si actualizas el csv lo recargue
         buster_r2 = int(csv_r2.stat().st_mtime)
         df_r2 = cargar_resumen2(str(csv_r2), buster_r2)
 
@@ -4790,9 +4789,6 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
         if df_filt.empty:
             st.info("Sin datos con ese filtro")
         else:
-            # arma columna Linea que pediste: equipo x posicion/nº puntos
-            # tu csv ya trae Clasificacion = "5º/22 61pts"
-            # si quieres formato exacto: equipo + clasif
             df_filt['Linea'] = df_filt['Equipo'] + " " + df_filt['Clasificacion']
 
             def tipo_equipo(pos, n):
@@ -4807,34 +4803,32 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
 
             df_filt['Tipo'] = df_filt.apply(lambda r: tipo_equipo(r['Posicion'], r['NumEquipos']), axis=1)
 
-            # pinta en grande para apostar rapido
             st.markdown("### Resultado rápido")
-            for _, r in df_filt.sort_values(['League','Season','Posicion']).iterrows():
+            for _, r in df_filt.sort_values(['League','Season','Posicion'], errors='ignore').iterrows():
                 color = "#0f8105" if r['Posicion']<=3 else "#dc2626" if "PAQUETE" in r['Tipo'] else "#000"
-                # BTTS y Over que ya tienes precalculados
                 btts = f"BTTS {r['BTTS_Total']}/{r['PJ']} ({r['BTTS_Total_%']}%)"
                 over = f"Over2.5 {r['Over25_Total']}/{r['PJ']} ({r['Over25_Total_%']}%)"
                 ceros = f"0-0 x{r['Ceros_0-0_Total']}"
                 st.markdown(f"<div style='font-family:monospace;font-size:13px;padding:3px 0;border-bottom:1px solid #eee'><b style='color:{color}'>{r['Linea']}</b> | {r['Tipo']} | {r['League']} {r['Season']} | {btts} | {over} | {ceros}</div>", unsafe_allow_html=True)
 
             st.markdown("---")
-            # tabla completa
-            cols_show = ['League','Season','Linea','Tipo','PJ','G','E','P','GF','GC','BTTS_Total_%','Over25_Total_%','Ceros_0-0_Total']
+            # FIX: sort ANTES de filtrar columnas y con errors='ignore'
+            cols_show = ['League','Season','Linea','Tipo','Posicion','PJ','G','E','P','GF','GC','BTTS_Total_%','Over25_Total_%','Ceros_0-0_Total']
             cols_show = [c for c in cols_show if c in df_filt.columns]
-            st.dataframe(df_filt[cols_show].sort_values(['League','Season','Posicion']), use_container_width=True, hide_index=True, height=450)
+            df_show = df_filt.sort_values(['League','Season','Posicion'], errors='ignore')
+            st.dataframe(df_show[cols_show], use_container_width=True, hide_index=True, height=450)
 
-            # copiar
             import json
-            txt_copy = "\n".join(df_filt.sort_values(['League','Season','Posicion'])['Linea'].tolist())
+            txt_copy = "\n".join(df_show['Linea'].tolist())
             txt_json = json.dumps(txt_copy)
             components.html(f"""
-                <button id="btn_copy_r2_fast" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 COPIAR {len(df_filt)} LINEAS</button>
+                <button id="btn_copy_r2_fast" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 COPIAR {len(df_show)} LINEAS</button>
                 <script>
                 document.getElementById('btn_copy_r2_fast').onclick = async () => {{
                     const txt = {txt_json};
                     try {{ await navigator.clipboard.writeText(txt); document.getElementById('btn_copy_r2_fast').innerText='✅ COPIADO!'; }}
                     catch(e) {{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); document.getElementById('btn_copy_r2_fast').innerText='✅ COPIADO!'; }}
-                    setTimeout(()=>document.getElementById('btn_copy_r2_fast').innerText='📋 COPIAR {len(df_filt)} LINEAS',2000);
+                    setTimeout(()=>document.getElementById('btn_copy_r2_fast').innerText='📋 COPIAR {len(df_show)} LINEAS',2000);
                 }};
                 </script>
             """, height=55)
