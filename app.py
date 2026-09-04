@@ -4623,111 +4623,7 @@ with st.expander("📋 Resumen", expanded=False):
             st.rerun()
 
 # ==================== DESPLEGABLE DATOS - INDEPENDIENTE CON FILTROS PROPIOS - V2 RÁPIDO Y COMPATIBLE ====================
-with st.expander("📋 DATOS", expanded=False):
-    # Filtros propios, independientes de todo lo demas - NO TOCA df global
-    if 'datos_cargado' not in st.session_state:
-        st.session_state.datos_cargado = False
-    if 'datos_liga_sel' not in st.session_state:
-        st.session_state.datos_liga_sel = []
-    if 'datos_temp_sel' not in st.session_state:
-        st.session_state.datos_temp_sel = []
-
-    st.caption("Filtro independiente - no afecta al resto de la app | v2 más rápido, misma lógica")
-    c1, c2, c3 = st.columns([2,2,1])
-    try:
-        ligas_datos_disp = sorted(df['League'].dropna().unique())
-    except:
-        ligas_datos_disp = sorted(df_original['League'].dropna().unique())
-    try:
-        temps_datos_disp = sorted(df['Season'].dropna().unique())
-    except:
-        temps_datos_disp = sorted(df_original['Season'].dropna().unique())
-
-    liga_datos_sel = c1.multiselect("Liga", ligas_datos_disp, default=st.session_state.datos_liga_sel, key="filtro_datos_liga_v2")
-    temp_datos_sel = c2.multiselect("Temporada", temps_datos_disp, default=st.session_state.datos_temp_sel, key="filtro_datos_temp_v2")
-    limite_filas = c3.number_input("Filas", 100, 10000, 2000, step=500, key="limite_datos_v2")
-
-    col_btn1, col_btn2 = st.columns([1,3])
-    if col_btn1.button("Cargar", key="btn_cargar_datos_v2", type="primary"):
-        st.session_state.datos_liga_sel = liga_datos_sel
-        st.session_state.datos_temp_sel = temp_datos_sel
-        st.session_state.datos_cargado = True
-        st.rerun()
-    if col_btn2.button("Limpiar", key="btn_limpiar_datos_v2"):
-        st.session_state.datos_cargado = False
-        st.session_state.datos_liga_sel = []
-        st.session_state.datos_temp_sel = []
-        st.rerun()
-
-    if st.session_state.datos_cargado:
-        try:
-            _df_base = df if 'df' in globals() else df_original
-            if liga_datos_sel:
-                _df_base = _df_base[_df_base['League'].isin(liga_datos_sel)]
-            if temp_datos_sel:
-                _df_base = _df_base[_df_base['Season'].isin(temp_datos_sel)]
-            
-            total = len(_df_base)
-            _df_show = _df_base.head(limite_filas)
-            
-            st.caption(f"Mostrando {len(_df_show)} de {total} partidos | Ligas: {', '.join(liga_datos_sel) if liga_datos_sel else 'Todas'} | Temps: {', '.join(temp_datos_sel) if temp_datos_sel else 'Todas'}")
-            
-            # CAMBIO 1: dataframe nativo (100x más rápido que text_area con 30k lineas)
-            st.dataframe(_df_show, use_container_width=True, height=600)
-
-            # CAMBIO 2: preparamos el texto en minúsculas SOLO de lo filtrado y con límite, no de todo
-            _txt_bruto = _df_show.to_csv(index=False, sep='|').lower()
-            
-            # Boton copiar optimizado
-            import json
-            _txt_json = json.dumps(_txt_bruto)
-            components.html(f"""
-                <div style="margin:8px 0">
-                    <button id="btn_copy_datos" style="
-                        background:#0A2342;color:#fff;border:none;
-                        padding:10px 18px;border-radius:8px;
-                        font-size:14px;font-weight:700;
-                        width:100%;cursor:pointer;
-                    ">📋 Copiar al portapapeles ({len(_df_show)} filas)</button>
-                    <div id="copy_msg" style="font-size:11px;font-family:monospace;margin-top:4px;color:#0f8105;display:none">¡Copiado!</div>
-                </div>
-                <script>
-                    const btn = document.getElementById('btn_copy_datos');
-                    const msg = document.getElementById('copy_msg');
-                    const texto = {_txt_json};
-                    btn.addEventListener('click', async () => {{
-                        try {{
-                            await navigator.clipboard.writeText(texto);
-                            msg.style.display = 'block';
-                            btn.innerText = '✅ ¡Copiado!';
-                            setTimeout(()=>{{ msg.style.display='none'; btn.innerText='📋 Copiar al portapapeles ({len(_df_show)} filas)'; }}, 2000);
-                        }} catch(e) {{
-                            const ta = document.createElement('textarea');
-                            ta.value = texto;
-                            document.body.appendChild(ta);
-                            ta.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(ta);
-                            msg.style.display = 'block';
-                            btn.innerText = '✅ ¡Copiado!';
-                            setTimeout(()=>{{ msg.style.display='none'; btn.innerText='📋 Copiar al portapapeles ({len(_df_show)} filas)'; }}, 2000);
-                        }}
-                    }});
-                </script>
-            """, height=90)
-            
-            # AÑADIDO: descarga directa sin pasar por portapapeles (mucho más rápido en móvil)
-            st.download_button("📥 Descargar filtrado CSV", _txt_bruto.encode('utf-8'), file_name="datos_filtrados.csv", mime="text/csv", use_container_width=True, key="dl_datos_v2")
-            
-            st.text_area("datos_bruto_independiente", value=_txt_bruto, height=250, key="datos_bruto_v5_indep", label_visibility="collapsed")
-        except Exception as _e:
-            st.error(f"error: {_e}")
-    else:
-        st.info("Selecciona Liga/Temporada y dale a Cargar")
-# ==================== FIN DATOS INDEPENDIENTE V2 ====================
-# ==================== RESUMEN2 - EQUIPO x POSICION/Nº/PTS ====================
-# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
-# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
+# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO V3 ====================
 with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded=False):
     import pathlib
     try:
@@ -4735,7 +4631,6 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
     except:
         BASE_R2 = pathlib.Path.cwd().resolve()
 
-    # busca el csv precalculado
     candidatos_r2 = [
         BASE_R2 / "Estadisticas-Equipos-Por-Temporada.csv",
         BASE_R2 / "estadisticas_equipos_por_temporada.csv",
@@ -4760,6 +4655,10 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
             for c in ['League','Season','Equipo']:
                 if c in df.columns:
                     df[c] = df[c].astype(str).str.strip()
+            # asegura numericos
+            for c in ['Posicion','NumEquipos','Puntos','PJ','G','E','P','GF','GC','BTTS_Total','Over25_Total','Ceros_0-0_Total']:
+                if c in df.columns:
+                    df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
             return df
 
         buster_r2 = int(csv_r2.stat().st_mtime)
@@ -4789,37 +4688,45 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
         if df_filt.empty:
             st.info("Sin datos con ese filtro")
         else:
-            df_filt['Linea'] = df_filt['Equipo'] + " " + df_filt['Clasificacion']
+            df_filt['Linea'] = df_filt['Equipo'] + " " + df_filt['Clasificacion'].astype(str)
 
             def tipo_equipo(pos, n):
                 try:
-                    p = int(pos)
+                    p = int(float(pos))
+                    nn = int(float(n))
                     if p <= 3: return "🔥 TOP"
                     if p <= 6: return "✅ BUENO"
-                    if p >= n-2: return "💩 PAQUETE"
+                    if p >= nn-2: return "💩 PAQUETE"
                     return "➖ MEDIO"
                 except:
                     return "➖ MEDIO"
 
-            df_filt['Tipo'] = df_filt.apply(lambda r: tipo_equipo(r['Posicion'], r['NumEquipos']), axis=1)
+            df_filt['Tipo'] = df_filt.apply(lambda r: tipo_equipo(r.get('Posicion',0), r.get('NumEquipos',20)), axis=1)
+
+            # FIX SORT SIN errors='ignore' - solo por columnas que existan
+            sort_cols = [c for c in ['League','Season','Posicion'] if c in df_filt.columns]
+            df_sorted = df_filt.sort_values(sort_cols) if sort_cols else df_filt
 
             st.markdown("### Resultado rápido")
-            for _, r in df_filt.sort_values(['League','Season','Posicion'], errors='ignore').iterrows():
-                color = "#0f8105" if r['Posicion']<=3 else "#dc2626" if "PAQUETE" in r['Tipo'] else "#000"
-                btts = f"BTTS {r['BTTS_Total']}/{r['PJ']} ({r['BTTS_Total_%']}%)"
-                over = f"Over2.5 {r['Over25_Total']}/{r['PJ']} ({r['Over25_Total_%']}%)"
-                ceros = f"0-0 x{r['Ceros_0-0_Total']}"
-                st.markdown(f"<div style='font-family:monospace;font-size:13px;padding:3px 0;border-bottom:1px solid #eee'><b style='color:{color}'>{r['Linea']}</b> | {r['Tipo']} | {r['League']} {r['Season']} | {btts} | {over} | {ceros}</div>", unsafe_allow_html=True)
+            for _, r in df_sorted.iterrows():
+                try:
+                    pos = int(float(r.get('Posicion',0)))
+                except:
+                    pos = 99
+                color = "#0f8105" if pos<=3 else "#dc2626" if "PAQUETE" in str(r.get('Tipo','')) else "#000"
+                btts = f"BTTS {int(r.get('BTTS_Total',0))}/{int(r.get('PJ',0))} ({r.get('BTTS_Total_%',0)}%)"
+                over = f"Over2.5 {int(r.get('Over25_Total',0))}/{int(r.get('PJ',0))} ({r.get('Over25_Total_%',0)}%)"
+                ceros = f"0-0 x{int(r.get('Ceros_0-0_Total',0))}"
+                st.markdown(f"<div style='font-family:monospace;font-size:13px;padding:3px 0;border-bottom:1px solid #eee'><b style='color:{color}'>{r.get('Linea','')}</b> | {r.get('Tipo','')} | {r.get('League','')} {r.get('Season','')} | {btts} | {over} | {ceros}</div>", unsafe_allow_html=True)
 
             st.markdown("---")
-            # FIX: sort ANTES de filtrar columnas y con errors='ignore'
             cols_show = ['League','Season','Linea','Tipo','Posicion','PJ','G','E','P','GF','GC','BTTS_Total_%','Over25_Total_%','Ceros_0-0_Total']
             cols_show = [c for c in cols_show if c in df_filt.columns]
-            df_show = df_filt.sort_values(['League','Season','Posicion'], errors='ignore')
-            st.dataframe(df_show[cols_show], use_container_width=True, hide_index=True, height=450)
+            df_show = df_sorted[cols_show] if cols_show else df_sorted
+            st.dataframe(df_show, use_container_width=True, hide_index=True, height=450)
 
             import json
-            txt_copy = "\n".join(df_show['Linea'].tolist())
+            txt_copy = "\n".join(df_show['Linea'].tolist() if 'Linea' in df_show.columns else df_sorted['Linea'].tolist())
             txt_json = json.dumps(txt_copy)
             components.html(f"""
                 <button id="btn_copy_r2_fast" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 COPIAR {len(df_show)} LINEAS</button>
@@ -4832,4 +4739,4 @@ with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded
                 }};
                 </script>
             """, height=55)
-# ==================== FIN RESUMEN2 RAPIDO ====================
+# ==================== FIN RESUMEN2 RAPIDO V3 ====================
