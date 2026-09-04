@@ -223,6 +223,13 @@ def cargar_persistencia():
                     if k.endswith("_buscar"): continue
                     if isinstance(v, bool): continue
                     if k.startswith("FormSubmitter"): continue
+                    # FIX DEFINITIVO - bloquea "LALIGA HYPERMOTION (1)" y "📋 partidos filtro - 1 equipos"
+                    if k in ('equipo_filtro','equipo2_filtro'):
+                        sv = str(v).upper()
+                        if "📋" in str(v) or "PARTIDOS FILTRO" in sv or "MURO EQUIPOS" in sv:
+                            continue
+                        if "(" in str(v) and ")" in str(v) and ("LIGA" in sv or "HYPERMOTION" in sv or "EQUIPOS" in sv):
+                            continue
                     try:
                         st.session_state[k] = v
                     except:
