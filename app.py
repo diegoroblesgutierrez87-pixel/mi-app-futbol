@@ -1995,10 +1995,12 @@ with st.expander("🎛 Filtros avanzados", expanded=False):
                 st.warning("Min no puede ser mayor que Max")
                 pct_min = pct_max
 
-            # compatibilidad con tu código viejo
-            st.session_state.pct_marcador = pct_min
-            pct_marcador = pct_min
-            rango_pct = (pct_min, pct_max)
+            # FIX DEFINITIVO - sincroniza los 3 nombres para que el filtro de % no se quede en 70%
+            st.session_state.pct_min = int(pct_min)
+            st.session_state.pct_max = int(pct_max)
+            st.session_state.pct_marcador = int(pct_min)
+            pct_marcador = int(pct_min)
+            rango_pct = (int(pct_min), int(pct_max))
 
 
         # --- LINEA 9: Jugador ---
