@@ -3616,6 +3616,34 @@ with st.container(border=True):
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
 
+                # --- BOTON COPIAR PARTIDOS ---
+                try:
+                    txt_copy = ""
+                    for _, r in df_mostrar.iterrows():
+                        goles = r.get('Goles','').replace('<div','').replace('</div>','').replace('<span','').replace('</span>','')
+                        txt_copy += f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']} {r['HTHG']}-{r['HTAG']}/ {int(r['FTHG']-r['HTHG'])}-{int(r['FTAG']-r['HTAG'])} {goles} | {int(r['HS'])}T {int(r['HST'])}TP {int(r['HC'])}C - {int(r['AS'])}T {int(r['AST'])}TP {int(r['AC'])}C\n"
+                    import json
+                    import streamlit.components.v1 as components
+                    txt_json = json.dumps(txt_copy)
+                    components.html(f"""
+                        <button id="btn_copy_part" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 Copiar partidos ({len(df_mostrar)})</button>
+                        <script>
+                        document.getElementById('btn_copy_part').onclick = async () => {{
+                            const txt = {txt_json};
+                            try {{
+                                await navigator.clipboard.writeText(txt);
+                                document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
+                                setTimeout(()=>document.getElementById('btn_copy_part').innerText='📋 Copiar partidos ({len(df_mostrar)})',2000);
+                            }} catch(e) {{
+                                const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                                document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
+                            }}
+                        }};
+                        </script>
+                    """, height=55)
+                except:
+                    pass
+
 
 
 ###########################################################
