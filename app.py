@@ -3594,7 +3594,6 @@ with st.container(border=True):
                   </div>
                 </div>
                 '''
-                ####################################################################
                 st.markdown(h2h_html, unsafe_allow_html=True)
             else:
                 df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True)
@@ -3616,11 +3615,6 @@ with st.container(border=True):
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
-                import json as _json
-                import streamlit.components.v1 as _comp
-                _txt = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in df_mostrar.iterrows()])
-                _txt_json = _json.dumps(_txt)
-                _comp.html(f"""<button id="btn_copy" style="background:#0A2342;color:#fff;border:none;padding:12px 0;border-radius:10px;width:100%;font-weight:900;margin-top:10px">📋 Copiar partidos ({len(df_mostrar)})</button><script>document.getElementById('btn_copy').onclick=async()=>{{const t={_txt_json};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy').innerText='✅ COPIADO!';}}}}</script>""", height=60)
 
 
 
