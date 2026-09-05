@@ -3420,30 +3420,31 @@ with st.container(border=True):
                         df_eq_liga = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
                         return "|".join(sorted(df_eq_liga['League'].dropna().unique())) if not df_eq_liga.empty else ""
 
-                    def get_historial_pos_html(eq):
+                    def _get_historial_csv_local(eq_inner):
                         try:
-                            d_hist = df_clas_base[df_clas_base['Equipo']==eq].copy()
+                            import pathlib
+                            p = pathlib.Path(__file__).parent.resolve() / "Estadisticas-Equipos-Por-Temporada.csv"
+                            if not p.exists():
+                                p = pathlib.Path("/mnt/data/Estadisticas-Equipos-Por-Temporada.csv")
+                            df_csv = pd.read_csv(p, on_bad_lines='skip', engine='python')
+                            df_csv['Equipo_norm'] = df_csv['Equipo'].astype(str).str.upper().str.strip()
+                            eq_up = str(eq_inner).upper().strip()
+                            d_hist = df_csv[df_csv['Equipo_norm'] == eq_up].copy()
                             if d_hist.empty:
                                 return ""
                             filas = []
                             for season, g in d_hist.groupby('Season'):
-                                g_last = g.sort_values('Jornada').iloc[-1]
-                                pos = int(g_last['Pos'])
-                                liga = g_last['League']
-                                jorn = g_last['Jornada']
-                                sub = df_clas_base[(df_clas_base['League']==liga) & (df_clas_base['Season']==season) & (df_clas_base['Jornada']==jorn)]
-                                num_eq = int(sub['Pos'].max()) if not sub.empty else int(g['Pos'].max())
-                                try:
-                                    y1, y2 = str(season).split('/')
-                                    short = f"{y1[2:]}/{y2[2:]}"
-                                except:
-                                    short = str(season)
-                                filas.append((season, f"{short} {pos}º/{num_eq}"))
+                                pos = int(pd.to_numeric(g['Posicion'].iloc[0], errors='coerce'))
+                                num = int(pd.to_numeric(g['NumEquipos'].iloc[0], errors='coerce'))
+                                y1, y2 = str(season).split('/')
+                                short = f"{y1[2:]}/{y2[2:]}"
+                                filas.append((season, f"{short} {pos}º/{num}"))
                             filas.sort(key=lambda x: x[0])
                             txt = " | ".join([r[1] for r in filas])
-                            return f"<div style='font-size:10px;font-family:monospace;color:#333;margin:2px 0 4px 0;font-weight:600'>{txt}</div>"
+                            return f"<div style='font-size:11px;font-family:monospace;color:#111;margin:3px 0 4px 0;font-weight:700;background:#f3f4f6;padding:2px 4px;border-radius:3px'>{txt}</div>"
                         except:
                             return ""
+                    historial_html = _get_historial_csv_local(eq)
 
                     if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
                         for pct, hits, eq, html in datos_eq1:
