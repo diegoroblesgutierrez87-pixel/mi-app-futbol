@@ -991,6 +991,10 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             p = n.split()
             return n[:14] if len(p)==1 else f"{p[0][0]}. {' '.join(p[1:])}"[:20]
 
+        # FIX: marcador acumulado que se queda
+        home_norm = _clean_team(row.get('HomeTeam',''))
+        away_norm = _clean_team(row.get('AwayTeam',''))
+        gh, ga = 0, 0
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -999,6 +1003,18 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
             team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
+            # actualiza marcador
+            if team_norm == home_norm:
+                gh += 1
+            elif team_norm == away_norm:
+                ga += 1
+            else:
+                # fallback por si viene abreviado
+                if home_norm in team_norm or team_norm in home_norm:
+                    gh += 1
+                else:
+                    ga += 1
+            score_txt = f"{gh}-{ga}"
             es_mio = _es_mismo_equipo(filtro_norm, team_norm)
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
@@ -1010,7 +1026,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             else:
                 minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
-            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
+            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
         return "".join(txt)
     except:
         return ""
