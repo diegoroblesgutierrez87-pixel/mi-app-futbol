@@ -3618,7 +3618,8 @@ with st.container(border=True):
 
 
 ###########################################################
-with st.expander("ℹ Info jornadas"):
+if False:
+ with st.expander("ℹ Info jornadas"):
     for liga in liga_sel:
         for temp in temp_sel:
             subset = df_fil[(df_fil['League']==liga) & (df_fil['Season']==temp)]
