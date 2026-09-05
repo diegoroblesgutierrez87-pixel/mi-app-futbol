@@ -3590,6 +3590,17 @@ with st.container(border=True):
         if not st.session_state.ver_partidos:
             pass
         else:
+            # BOTON COPIAR ARRIBA - MOVIL
+            try:
+                import json as _jsT, streamlit.components.v1 as _coT
+                _df_tmp = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).head(150)
+                _txt_top = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in _df_tmp.iterrows()])
+                _tjT = _jsT.dumps(_txt_top)
+                _nT = len(_df_tmp)
+                _coT.html(f"""<button id="btn_copy_top" style="background:#0A2342;color:#fff;border:none;padding:12px 0;border-radius:8px;width:100%;font-weight:900;font-size:15px;margin-bottom:8px">📋 COPIAR {_nT} PARTIDOS</button><script>document.getElementById('btn_copy_top').onclick=async()=>{{const t={_tjT};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_top').innerText='✅ COPIADO {_nT}!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_top').innerText='✅ COPIADO!';}}}}</script>""", height=55)
+                st.text_area("copia_movil", _txt_top, height=120, help="Si el botón no copia en móvil, mantén pulsado aquí y Copiar")
+            except Exception:
+                pass
             # --- TU LOGICA ORIGINAL A PARTIR DE AQUI ---
             if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
                 df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
