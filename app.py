@@ -2853,7 +2853,7 @@ if 'df_final' not in locals() or df_final is None:
 
 pct_filtro_actual = int(st.session_state.get('pct_min', 1))
 with st.container(border=True):
-    st.markdown(f"### 📊 Filtro actual ≥{pct_filtro_actual}%")
+    # TITULO ELIMINADO
     if len(df_final) == 0:
         st.error(f"0 partidos - Filtros: Ligas={liga_sel} Temp={temp_sel} J={rango_jornadas if 'rango_jornadas' in locals() else '-'} Min%={pct_filtro_actual}% -> Baja Min% a 1% y pon J1-J38")
         st.caption(f"DEBUG: df_base={len(df_base) if 'df_base' in locals() else 0} | df_final={len(df_final)} | liga_sel={liga_sel} | temp_sel={temp_sel}")
