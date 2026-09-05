@@ -223,6 +223,13 @@ def cargar_persistencia():
                     if k.endswith("_buscar"): continue
                     if isinstance(v, bool): continue
                     if k.startswith("FormSubmitter"): continue
+                    # FIX DEFINITIVO - bloquea "LALIGA HYPERMOTION (1)" y "📋 partidos filtro - 1 equipos"
+                    if k in ('equipo_filtro','equipo2_filtro'):
+                        sv = str(v).upper()
+                        if "📋" in str(v) or "PARTIDOS FILTRO" in sv or "MURO EQUIPOS" in sv:
+                            continue
+                        if "(" in str(v) and ")" in str(v) and ("LIGA" in sv or "HYPERMOTION" in sv or "EQUIPOS" in sv):
+                            continue
                     try:
                         st.session_state[k] = v
                     except:
@@ -588,6 +595,7 @@ def cargar_todo(_cache_buster=0):
         BASE / "sudasia_22_26.csv",                 # sudeste asiatico 2022-2025
         BASE / "sudamerica_actual.csv",             # Serie A Brasil + Serie B Brasil + Chile 2026 - NUEVO
         BASE / "partidos_2627_actual.csv",          # principal donde guardas Sudamerica tambien
+        BASE / "arabia_actual.csv",
     ]
     dfs = []
     for p in candidatos:
@@ -685,6 +693,7 @@ def cargar_todo(_cache_buster=0):
         'CORDOBA':'CORDOBA','COR':'CORDOBA','CORDOBA CF':'CORDOBA',
         'LAS PALMAS':'LAS PALMAS','LPA':'LAS PALMAS','UD LAS PALMAS':'LAS PALMAS',
         'CULTURAL LEONESA':'CULTURAL LEONESA','CUL':'CULTURAL LEONESA','CULTURAL Y DEPORTIVA LEONESA':'CULTURAL LEONESA',
+        'CASTELLON':'CASTELLON','CASTELLÓN':'CASTELLON','CD CASTELLON':'CASTELLON',
         'SP G':'SPORTING GIJON',
     }
     # aplica primero holanda/espana luego bundes
@@ -763,13 +772,14 @@ def cargar_todo(_cache_buster=0):
         'Super League 2': 'Super League 2 Grecia',
     }
     df['League'] = df['League'].replace(mapa_ligas_todo)
-        # FIX LIGA MAL ETIQUETADA 26/27 - si es Hypermotion pero tiene equipos de Primera, corrige a EA Sports
+        # FIX LIGA MAL ETIQUETADA 26/27 - DESACTIVADO para no borrar LAS PALMAS en Hypermotion 26/27
     try:
-        EQUIPOS_PRIMERA = {"REAL MADRID","BARCELONA","ATLETICO MADRID","SEVILLA","BETIS","VILLARREAL","VALENCIA","ATHLETIC BILBAO","REAL SOCIEDAD","MALLORCA","GIRONA","OSASUNA","CELTA","RAYO VALLECANO","GETAFE","ALAVES","LAS PALMAS","ESPANYOL","ELCHE","LEVANTE","OVIEDO","VALLADOLID"}
+        EQUIPOS_PRIMERA_REAL = {"REAL MADRID","BARCELONA","ATLETICO MADRID","SEVILLA","BETIS","VILLARREAL","VALENCIA","ATHLETIC BILBAO","REAL SOCIEDAD","MALLORCA","GIRONA","OSASUNA","CELTA","RAYO VALLECANO","GETAFE","ALAVES","ESPANYOL"}
         mask_hyper = df['League'].astype(str).str.contains('Hypermotion', case=False, na=False)
-        mask_primera_team = df['HomeTeam'].isin(EQUIPOS_PRIMERA) | df['AwayTeam'].isin(EQUIPOS_PRIMERA)
-        # Si en 2026/2027 Hypermotion aparece un equipo de primera, era Primera realmente
-        df.loc[mask_hyper & mask_primera_team & (df['Season']=='2026/2027'), 'League'] = 'LaLiga EA Sports'
+        mask_primera_team = df['HomeTeam'].isin(EQUIPOS_PRIMERA_REAL) | df['AwayTeam'].isin(EQUIPOS_PRIMERA_REAL)
+        # ANTES movía LAS PALMAS/ELCHE/LEVANTE/OVIEDO a EA Sports y te dejaba 1 equipo. Ahora desactivado.
+        # df.loc[mask_hyper & mask_primera_team & (df['Season']=='2026/2027'), 'League'] = 'LaLiga EA Sports'
+        pass
     except:
         pass
     df = df[df['League'].notna() & (df['League']!='nan')]
@@ -817,6 +827,7 @@ def cargar_eventos(league=None, season=None):
         BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
         BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
         BASE_EV / "goles_sudamerica_actual.csv",    # Brasil A/B 2026 con minuto/goleador/asistente - NUEVO
+        BASE_EV / "goles_arabia_actual.csv",  # <-- UNICA LINEA NUEVA    
     ]
     # añade solo los goles que existan en la carpeta base, no recursive
     for p in BASE_EV.glob("goles*.csv"):
@@ -972,13 +983,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
-            if f_norm == t_norm: return True
-            if f_norm in t_norm or t_norm in f_norm: return True
-            if len(f_norm) <= 3 and t_norm.startswith(f_norm): return True
-            f0 = f_norm.split()[0] if f_norm.split() else ""
-            t0 = t_norm.split()[0] if t_norm.split() else ""
-            if len(f0) > 2 and f0 == t0: return True
-            return False
+            return f_norm == t_norm
 
         def _abrev(nom):
             n = str(nom).strip()
@@ -1139,12 +1144,11 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
                 if ev.get('missed'): continue
                 m = int(ev.get('minute',0) or 0)
                 if not (min_from <= m <= min_to): continue
-                # solo goles de ese lado? No, muestra todos pero subraya el tuyo
-                is_mio = False
-                try:
-                    if eq_norm and normaliza(ev.get('team','')) == eq_norm:
-                        is_mio = True
-                except: pass
+                team_ev = normaliza(ev.get('team','') or ev.get('equipo','') or '')
+                if equipo_lado:
+                    is_mio = (team_ev == normaliza(equipo_lado))
+                else:
+                    is_mio = (eq_norm and team_ev == eq_norm)
                 is_mio_style_min = "color:#581C87;font-weight:900;font-style:normal;font-size:10px;text-decoration:underline;text-decoration-thickness:2px" if is_mio else "color:#581C87;font-weight:900;font-style:normal;font-size:10px"
                 minuto_bold = f"<span style='{is_mio_style_min}'>{m}'</span>"
                 jug = _abrev_jugador(ev.get('player',''))
@@ -1281,10 +1285,15 @@ def calcular_estado_jornada(df):
             continue
 
         # Jornadas reales de esa liga
-        exp_jornadas = (n_teams - 1) * 2
-        # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
-        if exp_jornadas < 10:
-            exp_jornadas = 38
+        if "K League 1" in str(l):
+            exp_jornadas = 33
+        elif "K League 2" in str(l):
+            exp_jornadas = 39
+        else:
+            exp_jornadas = (n_teams - 1) * 2
+            # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
+            if exp_jornadas < 10:
+                exp_jornadas = 38
         partidos_por_jornada = n_teams // 2
 
         jornada = 1
@@ -1501,6 +1510,8 @@ try:
         _BASE_TMP / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
         _BASE_TMP / "sudamerica_actual.csv",
         _BASE_TMP / "goles_sudamerica_actual.csv",
+        _BASE_TMP / "arabia_actual.csv",        # <-- NUEVA
+        _BASE_TMP / "goles_arabia_actual.csv",  # <-- NUEVA
     ]
     _buster = 0
     for _pp in _lista_csv:
@@ -1844,8 +1855,31 @@ if len(jornadas) > 0:
 with st.expander("🎛 Filtros avanzados", expanded=False):
         # --- LINEA 1: Eq1 Eq2 ---
         l1 = st.columns(2)
-        equipo_filtro = l1[0].selectbox("Eq1", ["Ninguno"] + equipos_disponibles, key='equipo_filtro')
-        equipo2_filtro = l1[1].selectbox("Eq2", ["Ninguno"] + equipos_disponibles, key='equipo2_filtro')
+        # FIX DEFINITIVO - evita que titulos tipo "LALIGA HYPERMOTION (1)" o "📋 partidos filtro..." entren como equipo
+        _opciones_eq_validas = ["Ninguno"] + equipos_disponibles
+        _set_validos = set(_opciones_eq_validas)
+        # limpia persistencia contaminada ANTES de crear el widget
+        if st.session_state.get('equipo_filtro') not in _set_validos:
+            st.session_state.equipo_filtro = "Ninguno"
+        if st.session_state.get('equipo2_filtro') not in _set_validos:
+            st.session_state.equipo2_filtro = "Ninguno"
+        equipo_filtro = l1[0].selectbox("Eq1", _opciones_eq_validas, key='equipo_filtro')
+        equipo2_filtro = l1[1].selectbox("Eq2", _opciones_eq_validas, key='equipo2_filtro')
+        # doble validacion post-widget por si el movil restaura valor viejo
+        if equipo_filtro not in _set_validos:
+            equipo_filtro = "Ninguno"
+            st.session_state.equipo_filtro = "Ninguno"
+        if equipo2_filtro not in _set_validos:
+            equipo2_filtro = "Ninguno"
+            st.session_state.equipo2_filtro = "Ninguno"
+        # FIX BUG MOVIL - si entra texto del expander como equipo, lo resetea a Ninguno
+        _validos_eq = set(["Ninguno"] + equipos_disponibles)
+        if equipo_filtro not in _validos_eq:
+            equipo_filtro = "Ninguno"
+            st.session_state.equipo_filtro = "Ninguno"
+        if equipo2_filtro not in _validos_eq:
+            equipo2_filtro = "Ninguno"
+            st.session_state.equipo2_filtro = "Ninguno"
 
         # --- LINEA 1b: L/V... L/V3 ---
         l1b = st.columns(2)
@@ -1951,17 +1985,23 @@ with st.expander("🎛 Filtros avanzados", expanded=False):
             st.session_state.pct_min = _safe_pct(st.session_state.get('pct_min', 70), 1)
             st.session_state.pct_max = _safe_pct(st.session_state.get('pct_max', 100), 100)
 
-            pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=int(st.session_state.get('pct_min', 70)), step=5, key='pct_min_fix', label_visibility="collapsed")
+            # FIX - default 70% borraba todo en J1-J3, ahora default 1%
+            _pct_default = int(st.session_state.get('pct_min', 1))
+            if _pct_default == 70:
+                _pct_default = 1
+            pct_min = c_p1.number_input("min", min_value=0, max_value=100, value=_pct_default, step=5, key='pct_min_fix', label_visibility="collapsed")
             pct_max = c_p2.number_input("max", min_value=0, max_value=100, value=int(st.session_state.get('pct_max', 100)), step=5, key='pct_max_fix', label_visibility="collapsed")
 
             if pct_min > pct_max:
                 st.warning("Min no puede ser mayor que Max")
                 pct_min = pct_max
 
-            # compatibilidad con tu código viejo
-            st.session_state.pct_marcador = pct_min
-            pct_marcador = pct_min
-            rango_pct = (pct_min, pct_max)
+            # FIX DEFINITIVO - sincroniza los 3 nombres para que el filtro de % no se quede en 70%
+            st.session_state.pct_min = int(pct_min)
+            st.session_state.pct_max = int(pct_max)
+            st.session_state.pct_marcador = int(pct_min)
+            pct_marcador = int(pct_min)
+            rango_pct = (int(pct_min), int(pct_max))
 
 
         # --- LINEA 9: Jugador ---
@@ -3115,21 +3155,21 @@ with st.container(border=True):
                         base_total = base_total[(base_total['HomeTeam']==equipo_filtro) | (base_total['AwayTeam']==equipo_filtro)]
                     elif equipo2_filtro!= "Ninguno":
                         base_total = base_total[(base_total['HomeTeam']==equipo2_filtro) | (base_total['AwayTeam']==equipo2_filtro)]
-                # FIX HALIFAX: quita equipos que no tienen ni 1 J con margen A FAVOR
+                # FIX HALIFAX: solo filtra si Margen != Todo - tu caso Margen=- no debe borrar
                 base_filtrado_real = base.copy()
-                equipos_con_j = []
-                for eq in equipos_mostrar:
-                    df_tmp = base_filtrado_real[(base_filtrado_real['HomeTeam']==eq) | (base_filtrado_real['AwayTeam']==eq)]
-                    if df_tmp.empty:
-                        continue
-                    # recalcula margen a favor del equipo
-                    if margen_filtro!="Todo":
-                        df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro, parte_gol, condicion_filtro if eq!=equipo2_filtro else condicion_filtro3)]
-                    if margen_filtro_eq2!="Todo" and eq==equipo2_filtro:
-                        df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
-                    if not df_tmp.empty:
-                        equipos_con_j.append(eq)
-                equipos_mostrar = equipos_con_j
+                if margen_filtro != "Todo" or margen_filtro_eq2 != "Todo":
+                    equipos_con_j = []
+                    for eq in equipos_mostrar:
+                        df_tmp = base_filtrado_real[(base_filtrado_real['HomeTeam']==eq) | (base_filtrado_real['AwayTeam']==eq)]
+                        if df_tmp.empty:
+                            continue
+                        if margen_filtro!="Todo" and eq!=equipo2_filtro:
+                            df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro, parte_gol, condicion_filtro)]
+                        if margen_filtro_eq2!="Todo" and eq==equipo2_filtro:
+                            df_tmp = df_tmp[_mask_margen(df_tmp, eq, margen_filtro_eq2, parte_gol_eq2, condicion_filtro3)]
+                        if not df_tmp.empty:
+                            equipos_con_j.append(eq)
+                    equipos_mostrar = equipos_con_j
                 datos_eq1 = []
                 datos_eq2 = []
                 datos_resto = []
@@ -3816,6 +3856,34 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
                 linea=f"<div style='font-size:11px; font-family:monospace; line-height:1.4; padding:8px 0; border-bottom:1px solid #ddd;'><div style='font-size:12px; font-weight:900; color:#0A2342;'>{r['Equipo'].upper()} IA {r['IA']}% {r['Cumple']}# {r['%']}% {r['GF']:.1f}GF</div><div style='margin-top:4px;'>{r['Jornadas']}</div></div>"
                 lineas_html.append(linea)
             st.markdown(f"<div style='background:#fff; border:1px solid #ddd; max-height:700px; overflow-y:auto; padding:8px;'>{''.join(lineas_html)}</div>", unsafe_allow_html=True)
+            ################################boton copiar
+                        # --- BOTON COPIAR PARA IA ---
+            import json
+            texto_copiar = ""
+            for _, r in df_mostrar.iterrows():
+                # limpia html de jornadas
+                jors_txt = r['Jornadas'].replace('<b>','').replace('</b>','').replace(' | ',' ')
+                texto_copiar += f"{r['Equipo']} {r['Liga']} - {r['Cumple']}#{r['%']}% IA:{r['IA']}% GF:{r['GF']:.1f} - {jors_txt}\n"
+            
+            texto_json = json.dumps(texto_copiar)
+            import streamlit.components.v1 as components
+            components.html(f"""
+                <button id="btn_copy_eq" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 COPIAR {len(df_mostrar)} EQUIPOS PARA IA</button>
+                <script>
+                document.getElementById('btn_copy_eq').onclick = async () => {{
+                    const txt = {texto_json};
+                    try {{
+                        await navigator.clipboard.writeText(txt);
+                        document.getElementById('btn_copy_eq').innerText = '✅ COPIADO!';
+                        setTimeout(()=>document.getElementById('btn_copy_eq').innerText='📋 COPIAR {len(df_mostrar)} EQUIPOS PARA IA',2000);
+                    }} catch(e) {{
+                        const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                        document.getElementById('btn_copy_eq').innerText = '✅ COPIADO!';
+                    }}
+                }};
+                </script>
+            """, height=55)
+            ###########################################################################3fin boton copiar
             restantes = len(df_res) - len(df_mostrar)
             if restantes > 0:
                 if st.button(f"Cargar 100 mas ({restantes} restantes)", use_container_width=True, key=f"be_cargar_mas_{st.session_state.be_pag}_{len(df_res)}"):
@@ -4657,3 +4725,85 @@ with st.expander("📋 DATOS", expanded=False):
     else:
         st.info("Selecciona Liga/Temporada y dale a Cargar")
 # ==================== FIN DATOS INDEPENDIENTE V2 ====================
+# ==================== RESUMEN2 - EQUIPO x POSICION/Nº/PTS ====================
+# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
+# ==================== RESUMEN2 - LEE CSV PRECALCULADO - ULTRA RAPIDO ====================
+# ==================== RESUMEN2 - MANTIENE TODO MENOS TABLA FEA ====================
+with st.expander("📋 Resumen2 - Equipo x Pos/Nº/PTS (precalculado)", expanded=False):
+    import pathlib
+    try:
+        BASE_R2 = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE_R2 = pathlib.Path.cwd().resolve()
+
+    candidatos_r2 = [
+        BASE_R2 / "Estadisticas-Equipos-Por-Temporada.csv",
+        BASE_R2 / "estadisticas_equipos_por_temporada.csv",
+    ]
+    csv_r2 = next((p for p in candidatos_r2 if p.exists() and p.stat().st_size > 100), None)
+
+    if not csv_r2:
+        st.error("No encuentro Estadisticas-Equipos-Por-Temporada.csv")
+    else:
+        @st.cache_data(show_spinner=False)
+        def cargar_resumen2(path, _buster=0):
+            import pandas as pd
+            try:
+                df = pd.read_csv(path, on_bad_lines='skip', engine='python')
+            except:
+                df = pd.read_csv(path, sep=';', on_bad_lines='skip', engine='python')
+            for c in ['League','Season','Equipo']:
+                if c in df.columns:
+                    df[c] = df[c].astype(str).str.strip()
+            return df
+
+        df_r2 = cargar_resumen2(str(csv_r2), int(csv_r2.stat().st_mtime))
+        st.caption(f"CSV: {len(df_r2)} equipos | {df_r2['League'].nunique()} ligas")
+
+        c1, c2, c3 = st.columns(3)
+        temp_sel = c1.selectbox("Temporada", ["Todas"] + sorted(df_r2['Season'].unique(), reverse=True), key="r2_temp_keep")
+        liga_sel = c2.selectbox("Liga", ["Todas"] + sorted(df_r2['League'].unique()), key="r2_liga_keep")
+
+        df_filt = df_r2.copy()
+        if temp_sel!= "Todas": df_filt = df_filt[df_filt['Season']==temp_sel]
+        if liga_sel!= "Todas": df_filt = df_filt[df_filt['League']==liga_sel]
+
+        equipos_r2 = ["Todos"] + sorted(df_filt['Equipo'].unique())
+        equipo_sel = c3.selectbox("Equipo", equipos_r2, key="r2_equipo_keep")
+        if equipo_sel!= "Todos": df_filt = df_filt[df_filt['Equipo']==equipo_sel]
+
+        if df_filt.empty:
+            st.info("Sin datos")
+        else:
+            df_filt['Linea'] = df_filt['Equipo'] + " " + df_filt['Clasificacion'].astype(str)
+            def tipo_equipo(pos, n):
+                try:
+                    p=int(float(pos)); nn=int(float(n))
+                    if p<=3: return "🔥 TOP"
+                    if p<=6: return "✅ BUENO"
+                    if p>=nn-2: return "💩 PAQUETE"
+                    return "➖ MEDIO"
+                except: return "➖ MEDIO"
+            df_filt['Tipo'] = df_filt.apply(lambda r: tipo_equipo(r.get('Posicion',0), r.get('NumEquipos',20)), axis=1)
+
+            sort_cols = [c for c in ['League','Season','Posicion'] if c in df_filt.columns]
+            df_sorted = df_filt.sort_values(sort_cols) if sort_cols else df_filt
+
+            # --- ESTO SE MANTIENE (te gustaba) ---
+            st.markdown("### Resultado rápido")
+            for _, r in df_sorted.iterrows():
+                pos = int(float(r.get('Posicion',0)))
+                color = "#0f8105" if pos<=3 else "#dc2626" if "PAQUETE" in str(r.get('Tipo','')) else "#000"
+                btts = f"BTTS {int(r.get('BTTS_Total',0))}/{int(r.get('PJ',0))} ({r.get('BTTS_Total_%',0)}%)"
+                over = f"Over2.5 {int(r.get('Over25_Total',0))}/{int(r.get('PJ',0))} ({r.get('Over25_Total_%',0)}%)"
+                ceros = f"0-0 x{int(r.get('Ceros_0-0_Total',0))}"
+                st.markdown(f"<div style='font-family:monospace;font-size:13px;padding:3px 0;border-bottom:1px solid #eee'><b style='color:{color}'>{r.get('Linea','')}</b> | {r.get('Tipo','')} | {r.get('League','')} {r.get('Season','')} | {btts} | {over} | {ceros}</div>", unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # --- AQUI ESTA EL CAMBIO: EN VEZ DE TABLA FEA, TEXTO SIMPLE ---
+            st.markdown("### Resumen simple")
+            for _, r in df_sorted.iterrows():
+                texto_simple = f"{r['Equipo']} {int(r['Posicion'])}º/{int(r['NumEquipos'])} {int(r['Puntos'])}pts"
+                st.markdown(f"<div style='font-family:monospace; font-size:22px; font-weight:900; padding:8px 0;'>{texto_simple}</div>", unsafe_allow_html=True)
+# ==================== FIN RESUMEN2 V4 ====================
