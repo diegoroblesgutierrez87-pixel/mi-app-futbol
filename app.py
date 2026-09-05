@@ -3367,13 +3367,17 @@ with st.container(border=True):
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
-                        html_temporadas += f"""<div style='background:#FFFFFF'>
-<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
-{_resumen_gep}
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
+                        # MEJORA VISUAL - formato tipo AL TAAWON
+                        _resumen_gep_fix = f"<div style='font-size:10px;line-height:1.2;color:#000;margin:2px 0;font-family:monospace'>G:{_g_all}/{_tot} (c{_g_c}/{_tot_c} | f{_g_f}/{_tot_f}) | E:{_e_all}/{_tot} (c{_e_c}/{_tot_c} | f{_e_f}/{_tot_f}) | P:{_p_all}/{_tot} (c{_p_c}/{_tot_c} | f{_p_f}/{_tot_f})</div>"
+                        _resumen_ht_fix = f"<div style='font-size:10px;line-height:1.2;color:#000;margin:2px 0;font-family:monospace;background:#ffff99;border:1px solid #000;padding:1px 3px'>ht>0,5= C{_o05_c}x F{_o05_f}x | ht>1,5= C{_o15_c}x F{_o15_f}x | AM1P C{_am1p_c}x F{_am1p_f}x</div>"
+
+                        html_temporadas += f"""<div style='background:#FFFFFF;border:1px solid #ddd;padding:3px;margin-bottom:4px'>
+<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:2px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
+{_resumen_gep_fix}
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0'>{_racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0'>{_racha_am}</div>
 {_resumen_am}
-{_resumen_ht}
+{_resumen_ht_fix}
 <div style='margin-top:4px'>{_jors}</div>
 </div>"""
 ###############################################################################
