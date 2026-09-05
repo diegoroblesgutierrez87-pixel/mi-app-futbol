@@ -983,7 +983,12 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
-            return f_norm == t_norm
+            fn = normaliza(f_norm)
+            tn = normaliza(t_norm)
+            if fn == tn: return True
+            if fn in tn or tn in fn: return True
+            if abreviar_equipo(fn) == abreviar_equipo(tn): return True
+            return False
 
         def _abrev(nom):
             n = str(nom).strip()
