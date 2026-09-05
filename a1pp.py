@@ -399,35 +399,6 @@ def racha_ambos_marcan_html(df_team):
 with st.expander("⚙ Opciones avanzadas"):
     if 'pausa_descarga' not in st.session_state:
         st.session_state.pausa_descarga = False
-
-    # --- INFO CSV MOVIDA AQUI CON BOTON ---
-    if 'ver_info_csv' not in st.session_state:
-        st.session_state.ver_info_csv = False
-    
-    if st.button("📊 Ver info CSV" if not st.session_state.ver_info_csv else "❌ Ocultar info CSV", key="btn_toggle_info_csv_avanzadas", use_container_width=True):
-        st.session_state.ver_info_csv = not st.session_state.ver_info_csv
-
-    if st.session_state.ver_info_csv:
-        _ligas_info = sorted([str(x) for x in df['League'].dropna().unique()])
-        _temps_info = sorted([str(x) for x in df['Season'].dropna().unique()])
-        st.success(f"✅ CSV: {len(df)} filas | {len(_ligas_info)} LIGAS | {len(_temps_info)} TEMPORADAS - 26/27 YA DISPONIBLE")
-        st.info(f"LIGAS: {', '.join(_ligas_info[:10])}... total {len(_ligas_info)}")
-        st.info(f"TEMPORADAS: {', '.join(_temps_info)}")
-        st.caption(f"Ligas detectadas: {', '.join(_ligas_info)} | Total {len(_ligas_info)}")
-        st.sidebar.write(f"DEBUG FILTROS: {len(_ligas_info)} ligas | Temps {_temps_info}")
-        if '2026/2027' not in _temps_info:
-            st.sidebar.error("2026/2027 NO esta en df['Season'] - revisa CSV")
-        if 'Eredivisie' in _ligas_info:
-            eq_ered = sorted(df[df['League']=='Eredivisie']['HomeTeam'].unique())
-            st.sidebar.write(f"Eredivisie equipos: {eq_ered[:20]}")
-        for team in ['VOLENDAM','TELSTAR','HERACLES']:
-            if team in df['HomeTeam'].values or team in df['AwayTeam'].values:
-                st.sidebar.success(f"Equipo {team} ENCONTRADO")
-            else:
-                st.sidebar.warning(f"Equipo {team} NO encontrado")
-
-    st.markdown("---")
-        st.session_state.pausa_descarga = False
     if 'ultima_descarga' not in st.session_state:
         st.session_state.ultima_descarga = None
     col_p1, col_p2 = st.columns(2)
@@ -1585,6 +1556,25 @@ if df.empty or 'League' not in df.columns:
 with st.expander("Filtros de partidos", expanded=False):
     ligas_disponibles = sorted([str(x) for x in df['League'].dropna().unique()])
     temporadas_disponibles = sorted([str(x) for x in df['Season'].dropna().unique()])
+    st.success(f"✅ CSV: {len(df)} filas | {len(ligas_disponibles)} LIGAS | {len(temporadas_disponibles)} TEMPORADAS - 26/27 YA DISPONIBLE")
+    st.info(f"LIGAS: {', '.join(ligas_disponibles[:10])}... total {len(ligas_disponibles)}")
+    st.info(f"TEMPORADAS: {', '.join(temporadas_disponibles)}")
+    # DEBUG: fuerza que salga 2026/2027 si esta en el CSV
+    st.sidebar.write(f"DEBUG FILTROS: {len(ligas_disponibles)} ligas | Temps {temporadas_disponibles}")
+    if '2026/2027' not in temporadas_disponibles:
+        st.sidebar.error("2026/2027 NO esta en df['Season'] - revisa CSV")
+    # Muestra equipos nuevos si estan
+    if 'Eredivisie' in ligas_disponibles:
+        eq_ered = sorted(df[df['League']=='Eredivisie']['HomeTeam'].unique())
+        st.sidebar.write(f"Eredivisie equipos: {eq_ered[:20]}")
+    # Busca VOLENDAM TELSTAR
+    for team in ['VOLENDAM','TELSTAR','HERACLES']:
+        if team in df['HomeTeam'].values or team in df['AwayTeam'].values:
+            st.sidebar.success(f"Equipo {team} ENCONTRADO")
+        else:
+            st.sidebar.warning(f"Equipo {team} NO encontrado")
+
+    st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
     # FIX MOVIL: traductor B1,D1,E0 -> nombre real - NO ROMPE NADA - VERSION LIMPIA
