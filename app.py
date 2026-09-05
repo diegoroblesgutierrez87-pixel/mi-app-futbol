@@ -3087,7 +3087,8 @@ with st.container(border=True):
                                     unsafe_allow_html=True
                                 )
                 else:
-                    st.caption("Mini resumen: 0 equipos pasan el %")
+                    # MINI RESUMEN ELIMINADO
+                    pass
         except Exception:
             pass
 
