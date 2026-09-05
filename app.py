@@ -1021,12 +1021,14 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
             ast = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(ast_raw)})</span>" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
             if es_mio:
-                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px;text-decoration:underline;text-decoration-thickness:2px'>{minuto}</span>"
-                jug_html = f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug}</span>{ast}"
+                # LINEA ENTERA SUBRAYADA SI ES DE MI EQUIPO FILTRADO
+                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
+                jug_html = f"<span style='font-weight:900;color:#000'>{jug}</span>{ast}"
+                txt.append(f"<div style='line-height:1.35;white-space:nowrap;text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
             else:
                 minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
-            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
+                txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
         return "".join(txt)
     except:
         return ""
