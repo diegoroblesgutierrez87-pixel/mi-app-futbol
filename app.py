@@ -3376,13 +3376,13 @@ with st.container(border=True):
                                 _num = int(_g['NumEquipos'].iloc[0])
                                 try:
                                     _a, _b = str(_s).split('/')
-                                    _short = f"{_a[2:]}/{_b[2:]}"
+                                    _short = _a[2:] + "/" + _b[2:]
                                 except:
                                     _short = str(_s)
-                                _parts.append((_s, f"{_short} {_pos}º/{_num}"))
+                                _parts.append((_s, _short + " " + str(_pos) + "º/" + str(_num)))
                             _parts.sort(key=lambda x: x[0])
                             _txt = " | ".join([p[1] for p in _parts])
-                            return f"<div style='font-size:11px;font-family:monospace;color:#111;margin:3px 0 4px 0;font-weight:700;background:#f3f4f6;padding:2px 4px;border-radius:3px">{_txt}</div>"
+                            return '<div style="font-size:11px;font-family:monospace;color:#111;margin:3px 0 4px 0;font-weight:700;background:#f3f4f6;padding:2px 4px;border-radius:3px">' + _txt + '</div>'
                         except:
                             return ""
 
