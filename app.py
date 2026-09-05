@@ -3594,6 +3594,7 @@ with st.container(border=True):
                   </div>
                 </div>
                 '''
+                ####################################################################
                 st.markdown(h2h_html, unsafe_allow_html=True)
             else:
                 df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True)
@@ -3615,49 +3616,11 @@ with st.container(border=True):
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
-
-                # --- BOTON COPIAR PARTIDOS - FIX QUE NO PETA ---
-                import json
-                import streamlit.components.v1 as components
-                txt_copy = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']} | HS:{int(r['HS'])} HC:{int(r['HC'])} | AS:{int(r['AS'])} AC:{int(r['AC'])}" for _, r in df_mostrar.iterrows()])
-                txt_json = json.dumps(txt_copy)
-                components.html(f"""
-                    <button id="btn_copy_part" style="background:#0A2342;color:#fff;border:none;padding:12px 0;border-radius:10px;width:100%;font-weight:900;margin-top:10px;font-size:15px">📋 Copiar partidos ({len(df_mostrar)}) al portapapeles</button>
-                    <script>
-                    document.getElementById('btn_copy_part').onclick = async () => {{
-                        const txt = {txt_json};
-                        try {{
-                            await navigator.clipboard.writeText(txt);
-                            document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
-                            setTimeout(()=>document.getElementById('btn_copy_part').innerText='📋 Copiar partidos ({len(df_mostrar)}) al portapapeles',2000);
-                        }} catch(e) {{
-                            const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-                            document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
-                        }}
-                    }};
-                    </script>
-                """, height=60)
-                    import json
-                    import streamlit.components.v1 as components
-                    txt_json = json.dumps(txt_copy)
-                    components.html(f"""
-                        <button id="btn_copy_part" style="background:#0A2342;color:#fff;border:none;padding:10px 0;border-radius:8px;width:100%;font-weight:900;margin-top:8px">📋 Copiar partidos ({len(df_mostrar)})</button>
-                        <script>
-                        document.getElementById('btn_copy_part').onclick = async () => {{
-                            const txt = {txt_json};
-                            try {{
-                                await navigator.clipboard.writeText(txt);
-                                document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
-                                setTimeout(()=>document.getElementById('btn_copy_part').innerText='📋 Copiar partidos ({len(df_mostrar)})',2000);
-                            }} catch(e) {{
-                                const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-                                document.getElementById('btn_copy_part').innerText = '✅ COPIADO!';
-                            }}
-                        }};
-                        </script>
-                    """, height=55)
-                except:
-                    pass
+                import json as _json
+                import streamlit.components.v1 as _comp
+                _txt = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in df_mostrar.iterrows()])
+                _txt_json = _json.dumps(_txt)
+                _comp.html(f"""<button id="btn_copy" style="background:#0A2342;color:#fff;border:none;padding:12px 0;border-radius:10px;width:100%;font-weight:900;margin-top:10px">📋 Copiar partidos ({len(df_mostrar)})</button><script>document.getElementById('btn_copy').onclick=async()=>{{const t={_txt_json};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy').innerText='✅ COPIADO!';}}}}</script>""", height=60)
 
 
 
