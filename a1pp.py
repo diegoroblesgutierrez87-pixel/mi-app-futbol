@@ -983,7 +983,12 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
-            return f_norm == t_norm
+            fn = normaliza(f_norm)
+            tn = normaliza(t_norm)
+            if fn == tn: return True
+            if fn in tn or tn in fn: return True
+            if abreviar_equipo(fn) == abreviar_equipo(tn): return True
+            return False
 
         def _abrev(nom):
             n = str(nom).strip()
@@ -1021,12 +1026,14 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
             ast = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(ast_raw)})</span>" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
             if es_mio:
-                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px;text-decoration:underline;text-decoration-thickness:2px'>{minuto}</span>"
-                jug_html = f"<span style='font-weight:900;color:#000;text-decoration:underline;text-decoration-thickness:2px'>{jug}</span>{ast}"
+                # LINEA ENTERA SUBRAYADA SI ES DE MI EQUIPO FILTRADO
+                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
+                jug_html = f"<span style='font-weight:900;color:#000'>{jug}</span>{ast}"
+                txt.append(f"<div style='line-height:1.35;white-space:nowrap;text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
             else:
                 minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
-            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
+                txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
         return "".join(txt)
     except:
         return ""
@@ -1556,9 +1563,7 @@ if df.empty or 'League' not in df.columns:
 with st.expander("Filtros de partidos", expanded=False):
     ligas_disponibles = sorted([str(x) for x in df['League'].dropna().unique()])
     temporadas_disponibles = sorted([str(x) for x in df['Season'].dropna().unique()])
-    st.success(f"✅ CSV: {len(df)} filas | {len(ligas_disponibles)} LIGAS | {len(temporadas_disponibles)} TEMPORADAS - 26/27 YA DISPONIBLE")
-    st.info(f"LIGAS: {', '.join(ligas_disponibles[:10])}... total {len(ligas_disponibles)}")
-    st.info(f"TEMPORADAS: {', '.join(temporadas_disponibles)}")
+
     # DEBUG: fuerza que salga 2026/2027 si esta en el CSV
     st.sidebar.write(f"DEBUG FILTROS: {len(ligas_disponibles)} ligas | Temps {temporadas_disponibles}")
     if '2026/2027' not in temporadas_disponibles:
@@ -1574,7 +1579,7 @@ with st.expander("Filtros de partidos", expanded=False):
         else:
             st.sidebar.warning(f"Equipo {team} NO encontrado")
 
-    st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
+
 
     st.markdown("**Liga**")
     # FIX MOVIL: traductor B1,D1,E0 -> nombre real - NO ROMPE NADA - VERSION LIMPIA
@@ -2853,7 +2858,7 @@ if 'df_final' not in locals() or df_final is None:
 
 pct_filtro_actual = int(st.session_state.get('pct_min', 1))
 with st.container(border=True):
-    st.markdown(f"### 📊 Filtro actual ≥{pct_filtro_actual}%")
+    # TITULO ELIMINADO
     if len(df_final) == 0:
         st.error(f"0 partidos - Filtros: Ligas={liga_sel} Temp={temp_sel} J={rango_jornadas if 'rango_jornadas' in locals() else '-'} Min%={pct_filtro_actual}% -> Baja Min% a 1% y pon J1-J38")
         st.caption(f"DEBUG: df_base={len(df_base) if 'df_base' in locals() else 0} | df_final={len(df_final)} | liga_sel={liga_sel} | temp_sel={temp_sel}")
@@ -2926,6 +2931,12 @@ with st.container(border=True):
                 equipos_con_partidos_set = set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
         equipos_clasif = list(equipos_con_partidos_set)
         equipos_con_partidos = equipos_con_partidos_set
+        equipos_con_partidos = equipos_con_partidos_set
+        if dict_ult:
+            partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
+        else:
+            partidos_mostrar = len(df_visible_titulo)
+        num_equipos = len(equipos_clasif)
         if dict_ult:
             partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
         else:
@@ -2970,8 +2981,7 @@ with st.container(border=True):
             bloque = f"<b><i style='color:#000;font-size:10px'>{liga}:</i></b> " + " <span style='color:#555'>|</span> ".join(lista_eq_liga)
             lista_bloques.append(bloque)
         equipos_txt = "<br>".join(lista_bloques) if lista_bloques else "sin equipos"
-        with st.expander(f"🧱 muro equipos ligas - {num_equipos} equipos - {partidos_mostrar} partidos", expanded=True):
-            st.markdown(f"<div style='font-size:11px;font-family:monospace;color:#555;padding:0 0 4px 0;line-height:1.5'>Ligas: {ligas_mostrar} | Eq: {num_equipos} | Partidos: {partidos_mostrar} | Mostrando {len(ligas_visibles)}/{len(ligas_ordenadas_all)} ligas<br>{equipos_txt}</div>", unsafe_allow_html=True)
+        # MURO ELIMINADO
 
         # ---- AQUI ESTA EL BOTON - SIEMPRE VISIBLE SI HAY +1 LIGA ----
         if ligas_ordenadas_all:
@@ -2981,7 +2991,8 @@ with st.container(border=True):
                     st.session_state.num_ligas_filtro_actual += 1
                     st.rerun()
             else:
-                st.markdown(f"<span style='color:#0f4d0f;font-size:10px;font-family:monospace'>Todas las ligas cargadas ({len(ligas_ordenadas_all)})</span>", unsafe_allow_html=True)
+                # TEXTO ELIMINADO
+                pass
 
             # --- BOTONES CARGAR (se quedan igual) ---
             st.markdown("""
@@ -3072,7 +3083,7 @@ with st.container(border=True):
                     # YA NO FILTRAMOS POR ligas_visibles - por eso se ve siempre
                     equipos_por_liga[_liga_eq].append(f"{eq.lower()} ({_hits_eq})")
                 #
-                if equipos_por_liga:
+                if False and equipos_por_liga:
                     total_eq = sum(len(set(v)) for v in equipos_por_liga.values())
                     with st.expander(f"📁 Equipos que pasan filtro ({total_eq} equipos)", expanded=True):
                         st.markdown(f"**📁 Equipos que pasan filtro ({total_eq} equipos)**")
@@ -3088,7 +3099,8 @@ with st.container(border=True):
                                     unsafe_allow_html=True
                                 )
                 else:
-                    st.caption("Mini resumen: 0 equipos pasan el %")
+                    # MINI RESUMEN ELIMINADO
+                    pass
         except Exception:
             pass
 
@@ -3367,13 +3379,23 @@ with st.container(border=True):
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
-                        html_temporadas += f"""<div style='background:#FFFFFF'>
-<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
+                        # --- FIX HT con Cj / Fj ---
+                        def _fmt_j(r):
+                            pref = 'C' if r['HomeTeam']==eq else 'F'
+                            return f"{pref}j{int(r['Jornada'])}"
+                        ht05_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>0.5]
+                        ht15_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>1.5]
+                        am1p_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if r['HTHG']>0 and r['HTAG']>0]
+
+                        _resumen_ht_fix = f"<div style='font-size:10px;line-height:1.2;color:#000;margin:2px 0;font-family:monospace;background:#ffff99;border:1px solid #000;padding:2px'>ht>0,5= {' '.join(ht05_lista) if ht05_lista else '-'}<br>ht>1,5= {' '.join(ht15_lista) if ht15_lista else '-'}<br>AM1P= {' '.join(am1p_lista) if am1p_lista else '-'}</div>"
+
+                        html_temporadas += f"""<div style='background:#FFFFFF;border:1px solid #ddd;padding:3px;margin-bottom:4px'>
+<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:2px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
 {_resumen_gep}
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0'>{_racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0'>{_racha_am}</div>
 {_resumen_am}
-{_resumen_ht}
+{_resumen_ht_fix}
 <div style='margin-top:4px'>{_jors}</div>
 </div>"""
 ###############################################################################
@@ -3608,7 +3630,8 @@ with st.container(border=True):
 
 
 ###########################################################
-with st.expander("ℹ Info jornadas"):
+if False:
+ with st.expander("ℹ Info jornadas"):
     for liga in liga_sel:
         for temp in temp_sel:
             subset = df_fil[(df_fil['League']==liga) & (df_fil['Season']==temp)]
