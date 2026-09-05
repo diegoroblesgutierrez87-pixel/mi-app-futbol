@@ -2928,6 +2928,10 @@ with st.container(border=True):
         equipos_con_partidos = equipos_con_partidos_set
         equipos_con_partidos = equipos_con_partidos_set
         if dict_ult:
+            partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
+        else:
+            partidos_mostrar = len(df_visible_titulo)
+        num_equipos = len(equipos_clasif)
         if dict_ult:
             partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
         else:
