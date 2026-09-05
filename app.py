@@ -3629,13 +3629,22 @@ with st.container(border=True):
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
-                # BOTON COPIAR - MOVIL 1 CLIC
+                # BOTON COPIAR - MOVIL 1 CLIC - FIX NO PETA
                 try:
                     import json as _js2, streamlit.components.v1 as _co2
-                    _txt_p = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in df_mostrar.iterrows()])
-                    _tj2 = _js2.dumps(_txt_p)
-                    _co2.html(f"""<div style="margin-top:10px"><button id="btn_copy_partidos" style="background:#0A2342;color:#fff;border:none;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR {len(df_mostrar)} PARTIDOS AL PORTAPAPELES</button></div><script>document.getElementById('btn_copy_partidos').onclick=async()=>{{const t={_tj2};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO {len(df_mostrar)} PARTIDOS!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO!';}}}}</script>""", height=70)
-                except:
+                    # coge el df que exista en este modo
+                    if 'df_mostrar' in locals() and not df_mostrar.empty:
+                        _df_copy = df_mostrar
+                    elif 'df1' in locals() and 'df2' in locals():
+                        _df_copy = pd.concat([df1, df2]).drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
+                    else:
+                        _df_copy = pd.DataFrame()
+                    if not _df_copy.empty:
+                        _txt_p = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in _df_copy.iterrows()])
+                        _tj2 = _js2.dumps(_txt_p)
+                        _n = len(_df_copy)
+                        _co2.html(f"""<div style="margin-top:10px"><button id="btn_copy_partidos" style="background:#0A2342;color:#fff;border:none;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR {_n} PARTIDOS AL PORTAPAPELES</button></div><script>document.getElementById('btn_copy_partidos').onclick=async()=>{{const t={_tj2};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO {_n} PARTIDOS!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO!';}}}}</script>""", height=70)
+                except Exception:
                     pass
 
 
