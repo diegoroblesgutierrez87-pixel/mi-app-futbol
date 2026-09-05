@@ -2980,7 +2980,8 @@ with st.container(border=True):
                     st.session_state.num_ligas_filtro_actual += 1
                     st.rerun()
             else:
-                st.markdown(f"<span style='color:#0f4d0f;font-size:10px;font-family:monospace'>Todas las ligas cargadas ({len(ligas_ordenadas_all)})</span>", unsafe_allow_html=True)
+                # TEXTO ELIMINADO
+                pass
 
             # --- BOTONES CARGAR (se quedan igual) ---
             st.markdown("""
