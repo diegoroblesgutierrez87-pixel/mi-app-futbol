@@ -3367,23 +3367,13 @@ with st.container(border=True):
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
-                        # --- FIX HT con Cj / Fj ---
-                        def _fmt_j(r):
-                            pref = 'C' if r['HomeTeam']==eq else 'F'
-                            return f"{pref}j{int(r['Jornada'])}"
-                        ht05_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>0.5]
-                        ht15_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>1.5]
-                        am1p_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if r['HTHG']>0 and r['HTAG']>0]
-
-                        _resumen_ht_fix = f"<div style='font-size:10px;line-height:1.2;color:#000;margin:2px 0;font-family:monospace;background:#ffff99;border:1px solid #000;padding:2px'>ht>0,5= {' '.join(ht05_lista) if ht05_lista else '-'}<br>ht>1,5= {' '.join(ht15_lista) if ht15_lista else '-'}<br>AM1P= {' '.join(am1p_lista) if am1p_lista else '-'}</div>"
-
-                        html_temporadas += f"""<div style='background:#FFFFFF;border:1px solid #ddd;padding:3px;margin-bottom:4px'>
-<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:2px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
+                        html_temporadas += f"""<div style='background:#FFFFFF'>
+<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
 {_resumen_gep}
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0'>{_racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0'>{_racha_am}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
 {_resumen_am}
-{_resumen_ht_fix}
+{_resumen_ht}
 <div style='margin-top:4px'>{_jors}</div>
 </div>"""
 ###############################################################################
