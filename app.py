@@ -3631,6 +3631,22 @@ with st.container(border=True):
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
                 try:
+                    import json as _jc, streamlit.components.v1 as _cc, re as _rc
+                    _ls = []
+                    for _, r in df_mostrar.iterrows():
+                        try:
+                            _h = formatear_partido(r, equipo_filtro if equipo_filtro!="Ninguno" else None, cuota_tipo, r.get('Goles',''))
+                            _p = _rc.sub(r'<[^>]+>', ' ', _h)
+                            _p = _rc.sub(r'\s+', ' ', _p).strip()
+                            _ls.append(_p)
+                        except:
+                            pass
+                    if _ls:
+                        _tj = _jc.dumps("\n\n".join(_ls))
+                        _cc.html(f"""<button id="btn_c" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px;margin-top:12px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_c').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_c').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_c').innerText='✅ COPIADO!';}}}}</script>""", height=70)
+                except Exception:
+                    pass
+                try:
                     import json as _jsC, streamlit.components.v1 as _coC, re as _reC
                     _txts = []
                     for _, r in _df_tmp.iterrows() if '_df_tmp' in locals() else _df_copy.iterrows() if '_df_copy' in locals() else df_mostrar.iterrows():
