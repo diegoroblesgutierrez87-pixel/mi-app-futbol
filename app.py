@@ -1168,6 +1168,9 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
                 m = int(ev.get('minute',0) or 0)
                 if not (min_from <= m <= min_to): continue
                 team_ev = normaliza(ev.get('team','') or ev.get('equipo','') or '')
+                # FIX REPETICION - solo mete goles del equipo que toca
+                if equipo_lado and team_ev!= normaliza(equipo_lado):
+                    continue
                 if equipo_lado:
                     is_mio = (team_ev == normaliza(equipo_lado))
                 else:
