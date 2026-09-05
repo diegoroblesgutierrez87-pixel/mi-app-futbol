@@ -991,6 +991,10 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             p = n.split()
             return n[:14] if len(p)==1 else f"{p[0][0]}. {' '.join(p[1:])}"[:20]
 
+        # FIX: marcador acumulado que se queda
+        home_norm = _clean_team(row.get('HomeTeam',''))
+        away_norm = _clean_team(row.get('AwayTeam',''))
+        gh, ga = 0, 0
         txt=[]
         for ev in evs:
             if ev.get('missed'): continue
@@ -999,6 +1003,18 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
             team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
+            # actualiza marcador
+            if team_norm == home_norm:
+                gh += 1
+            elif team_norm == away_norm:
+                ga += 1
+            else:
+                # fallback por si viene abreviado
+                if home_norm in team_norm or team_norm in home_norm:
+                    gh += 1
+                else:
+                    ga += 1
+            score_txt = f"{gh}-{ga}"
             es_mio = _es_mismo_equipo(filtro_norm, team_norm)
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
@@ -1010,7 +1026,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             else:
                 minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
                 jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
-            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html}</div>")
+            txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
         return "".join(txt)
     except:
         return ""
@@ -3351,20 +3367,56 @@ with st.container(border=True):
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
-                        html_temporadas += f"""<div style='background:#FFFFFF'>
-<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:3px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
+                        # --- FIX HT con Cj / Fj ---
+                        def _fmt_j(r):
+                            pref = 'C' if r['HomeTeam']==eq else 'F'
+                            return f"{pref}j{int(r['Jornada'])}"
+                        ht05_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>0.5]
+                        ht15_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if (r['HTHG']+r['HTAG'])>1.5]
+                        am1p_lista = [_fmt_j(r) for _, r in _df_season.iterrows() if r['HTHG']>0 and r['HTAG']>0]
+
+                        _resumen_ht_fix = f"<div style='font-size:10px;line-height:1.2;color:#000;margin:2px 0;font-family:monospace;background:#ffff99;border:1px solid #000;padding:2px'>ht>0,5= {' '.join(ht05_lista) if ht05_lista else '-'}<br>ht>1,5= {' '.join(ht15_lista) if ht15_lista else '-'}<br>AM1P= {' '.join(am1p_lista) if am1p_lista else '-'}</div>"
+
+                        html_temporadas += f"""<div style='background:#FFFFFF;border:1px solid #ddd;padding:3px;margin-bottom:4px'>
+<div style='font-size:10px;font-weight:900;color:#0A2342;margin-bottom:2px'>{_season} - {eq.lower()} {_pos_txt} ({_tot}PJ)</div>
 {_resumen_gep}
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0 1px 0'>{_racha}</div>
-<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0 1px 0'>{_racha_am}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:2px 0'>{_racha}</div>
+<div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0'>{_racha_am}</div>
 {_resumen_am}
-{_resumen_ht}
+{_resumen_ht_fix}
 <div style='margin-top:4px'>{_jors}</div>
 </div>"""
 ###############################################################################
 #################################################################################
 ######################################################################bloque de datos pcls
+                    def _get_historial_pos_html_local(eq_inner):
+                        try:
+                            _dfh = pd.read_csv("Estadisticas-Equipos-Por-Temporada.csv", on_bad_lines='skip')
+                            _dfh['Equipo_norm'] = _dfh['Equipo'].astype(str).str.upper().str.strip()
+                            _d = _dfh[_dfh['Equipo_norm'] == eq_inner.upper()].copy()
+                            if _d.empty:
+                                return ""
+                            _parts = []
+                            for _s, _g in _d.groupby('Season'):
+                                _pos = int(_g['Posicion'].iloc[0])
+                                _num = int(_g['NumEquipos'].iloc[0])
+                                try:
+                                    _a, _b = str(_s).split('/')
+                                    _short = _a[2:] + "/" + _b[2:]
+                                except:
+                                    _short = str(_s)
+                                _parts.append((_s, _short + " " + str(_pos) + "º/" + str(_num)))
+                            _parts.sort(key=lambda x: x[0])
+                            _txt = " | ".join([p[1] for p in _parts])
+                            return '<div style="font-size:11px;font-family:monospace;color:#111;margin:3px 0 4px 0;font-weight:700;background:#f3f4f6;padding:2px 4px;border-radius:3px">' + _txt + '</div>'
+                        except:
+                            return ""
+
+                    historial_html = _get_historial_pos_html_local(eq)
+
                     html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:2px solid #000;font-family:monospace;color:#000'>
 <div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}% (TOTAL {len(seasons_list)} temps)</div>
+{historial_html}
 {texto_seg}
 {html_temporadas}
 </div>"""
@@ -3385,12 +3437,37 @@ with st.container(border=True):
                         d = df_clas_base[df_clas_base['Equipo']==eq]
                         if not d.empty:
                             d = d.sort_values('Jornada').iloc[-1]
-                            return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
-                        return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>"
+                            return f"<b style='color:#000;font-size:14px'>{eq.upper()}</b> <span style='color:#4B0082;font-size:12px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
+                        return f"<b style='color:#000;font-size:14px'>{eq.upper()}</b> <span style='color:#4B0082;font-size:12px;font-weight:900'>Xº Xpts</span>"
 
                     def get_liga_eq(eq):
                         df_eq_liga = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
                         return "|".join(sorted(df_eq_liga['League'].dropna().unique())) if not df_eq_liga.empty else ""
+
+                    def get_historial_pos_html(eq):
+                        try:
+                            d_hist = df_clas_base[df_clas_base['Equipo']==eq].copy()
+                            if d_hist.empty:
+                                return ""
+                            filas = []
+                            for season, g in d_hist.groupby('Season'):
+                                g_last = g.sort_values('Jornada').iloc[-1]
+                                pos = int(g_last['Pos'])
+                                liga = g_last['League']
+                                jorn = g_last['Jornada']
+                                sub = df_clas_base[(df_clas_base['League']==liga) & (df_clas_base['Season']==season) & (df_clas_base['Jornada']==jorn)]
+                                num_eq = int(sub['Pos'].max()) if not sub.empty else int(g['Pos'].max())
+                                try:
+                                    y1, y2 = str(season).split('/')
+                                    short = f"{y1[2:]}/{y2[2:]}"
+                                except:
+                                    short = str(season)
+                                filas.append((season, f"{short} {pos}º/{num_eq}"))
+                            filas.sort(key=lambda x: x[0])
+                            txt = " | ".join([r[1] for r in filas])
+                            return f"<div style='font-size:10px;font-family:monospace;color:#333;margin:2px 0 4px 0;font-weight:600'>{txt}</div>"
+                        except:
+                            return ""
 
                     if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
                         for pct, hits, eq, html in datos_eq1:
