@@ -980,6 +980,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             return re.sub(r'\s+', ' ', n).strip()
 
         filtro_norm = _clean_team(equipo_filtro) if equipo_filtro and equipo_filtro!="Ninguno" else None
+        equipos_titulo = st.session_state.get('equipos_titulo_subrayar', set())
+        # si no hay Eq1, usa los del muro como referencia para subrayar
 
         def _es_mismo_equipo(f_norm, t_norm):
             if not f_norm or not t_norm: return False
@@ -1015,7 +1017,8 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
                 else:
                     ga += 1
             score_txt = f"{gh}-{ga}"
-            es_mio = _es_mismo_equipo(filtro_norm, team_norm)
+            es_del_titulo = team_norm in equipos_titulo
+            es_mio = _es_mismo_equipo(filtro_norm, team_norm) or es_del_titulo
             minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
@@ -2926,6 +2929,7 @@ with st.container(border=True):
                 equipos_con_partidos_set = set(pd.unique(df_visible_titulo[['HomeTeam','AwayTeam']].values.ravel()))
         equipos_clasif = list(equipos_con_partidos_set)
         equipos_con_partidos = equipos_con_partidos_set
+        st.session_state['equipos_titulo_subrayar'] = {normaliza(e) for e in equipos_con_partidos_set}
         if dict_ult:
             partidos_mostrar = sum(len(df) for eq, df in dict_ult.items() if eq in equipos_con_partidos_set)
         else:
