@@ -3363,8 +3363,11 @@ with st.container(border=True):
 ###############################################################################
 #################################################################################
 ######################################################################bloque de datos pcls
+                    historial_html = get_historial_pos_html(eq)
+
                     html = f"""<div style='font-size:9px;line-height:1.2;margin:3px 0;padding:4px 0;border-bottom:2px solid #000;font-family:monospace;color:#000'>
 <div style='font-size:10px;font-weight:900;line-height:1.1'>{hits}/{tot} - {hits}# {pct:.1f}% (TOTAL {len(seasons_list)} temps)</div>
+{historial_html}
 {texto_seg}
 {html_temporadas}
 </div>"""
@@ -3385,12 +3388,37 @@ with st.container(border=True):
                         d = df_clas_base[df_clas_base['Equipo']==eq]
                         if not d.empty:
                             d = d.sort_values('Jornada').iloc[-1]
-                            return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
-                        return f"<b style='color:#000;font-size:9px'>{eq.lower()}</b> <span style='color:#4B0082;font-size:9px;font-weight:900'>Xº Xpts</span>"
+                            return f"<b style='color:#000;font-size:14px'>{eq.upper()}</b> <span style='color:#4B0082;font-size:12px;font-weight:900'>{int(d['Pos'])}º {int(d['Pts'])}pts</span>"
+                        return f"<b style='color:#000;font-size:14px'>{eq.upper()}</b> <span style='color:#4B0082;font-size:12px;font-weight:900'>Xº Xpts</span>"
 
                     def get_liga_eq(eq):
                         df_eq_liga = base[(base['HomeTeam']==eq) | (base['AwayTeam']==eq)]
                         return "|".join(sorted(df_eq_liga['League'].dropna().unique())) if not df_eq_liga.empty else ""
+
+                    def get_historial_pos_html(eq):
+                        try:
+                            d_hist = df_clas_base[df_clas_base['Equipo']==eq].copy()
+                            if d_hist.empty:
+                                return ""
+                            filas = []
+                            for season, g in d_hist.groupby('Season'):
+                                g_last = g.sort_values('Jornada').iloc[-1]
+                                pos = int(g_last['Pos'])
+                                liga = g_last['League']
+                                jorn = g_last['Jornada']
+                                sub = df_clas_base[(df_clas_base['League']==liga) & (df_clas_base['Season']==season) & (df_clas_base['Jornada']==jorn)]
+                                num_eq = int(sub['Pos'].max()) if not sub.empty else int(g['Pos'].max())
+                                try:
+                                    y1, y2 = str(season).split('/')
+                                    short = f"{y1[2:]}/{y2[2:]}"
+                                except:
+                                    short = str(season)
+                                filas.append((season, f"{short} {pos}º/{num_eq}"))
+                            filas.sort(key=lambda x: x[0])
+                            txt = " | ".join([r[1] for r in filas])
+                            return f"<div style='font-size:10px;font-family:monospace;color:#333;margin:2px 0 4px 0;font-weight:600'>{txt}</div>"
+                        except:
+                            return ""
 
                     if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
                         for pct, hits, eq, html in datos_eq1:
