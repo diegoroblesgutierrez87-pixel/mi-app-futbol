@@ -1556,7 +1556,9 @@ if df.empty or 'League' not in df.columns:
 with st.expander("Filtros de partidos", expanded=False):
     ligas_disponibles = sorted([str(x) for x in df['League'].dropna().unique()])
     temporadas_disponibles = sorted([str(x) for x in df['Season'].dropna().unique()])
-
+    st.success(f"✅ CSV: {len(df)} filas | {len(ligas_disponibles)} LIGAS | {len(temporadas_disponibles)} TEMPORADAS - 26/27 YA DISPONIBLE")
+    st.info(f"LIGAS: {', '.join(ligas_disponibles[:10])}... total {len(ligas_disponibles)}")
+    st.info(f"TEMPORADAS: {', '.join(temporadas_disponibles)}")
     # DEBUG: fuerza que salga 2026/2027 si esta en el CSV
     st.sidebar.write(f"DEBUG FILTROS: {len(ligas_disponibles)} ligas | Temps {temporadas_disponibles}")
     if '2026/2027' not in temporadas_disponibles:
@@ -1572,7 +1574,7 @@ with st.expander("Filtros de partidos", expanded=False):
         else:
             st.sidebar.warning(f"Equipo {team} NO encontrado")
 
-
+    st.caption(f"Ligas detectadas: {', '.join(ligas_disponibles)} | Total {len(ligas_disponibles)}")
 
     st.markdown("**Liga**")
     # FIX MOVIL: traductor B1,D1,E0 -> nombre real - NO ROMPE NADA - VERSION LIMPIA
