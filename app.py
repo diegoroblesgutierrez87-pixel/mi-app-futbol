@@ -3626,6 +3626,14 @@ with st.container(border=True):
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
+                # BOTON COPIAR - MOVIL 1 CLIC
+                try:
+                    import json as _js2, streamlit.components.v1 as _co2
+                    _txt_p = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in df_mostrar.iterrows()])
+                    _tj2 = _js2.dumps(_txt_p)
+                    _co2.html(f"""<div style="margin-top:10px"><button id="btn_copy_partidos" style="background:#0A2342;color:#fff;border:none;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR {len(df_mostrar)} PARTIDOS AL PORTAPAPELES</button></div><script>document.getElementById('btn_copy_partidos').onclick=async()=>{{const t={_tj2};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO {len(df_mostrar)} PARTIDOS!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO!';}}}}</script>""", height=70)
+                except:
+                    pass
 
 
 
