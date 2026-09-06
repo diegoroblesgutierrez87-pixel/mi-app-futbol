@@ -3509,21 +3509,52 @@ with st.container(border=True):
 ######################################################################bloque de datos pcls
                     def _get_historial_pos_html_local(eq_inner):
                         try:
-                            _dfh = pd.read_csv("Estadisticas-Equipos-Por-Temporada.csv", on_bad_lines='skip')
-                            _dfh['Equipo_norm'] = _dfh['Equipo'].astype(str).str.upper().str.strip()
-                            _d = _dfh[_dfh['Equipo_norm'] == eq_inner.upper()].copy()
-                            if _d.empty:
+                            if '_historial_dict' not in globals():
+                                import pathlib
+                                try: _bh = pathlib.Path(__file__).parent.resolve()
+                                except: _bh = pathlib.Path.cwd().resolve()
+                                _pfh = _bh / "Estadisticas-Equipos-Por-Temporada.csv"
+                                _tmp_hist = {}
+                                if _pfh.exists():
+                                    _dfh = pd.read_csv(_pfh, encoding='utf-8-sig', on_bad_lines='skip', low_memory=False)
+                                    for _, _r in _dfh.iterrows():
+                                        _k = normaliza(_r.get('Equipo',''))
+                                        if not _k: continue
+                                        _s = str(_r.get('Season','')).strip()
+                                        _pos = _r.get('Posicion','')
+                                        _num = _r.get('NumEquipos','')
+                                        _tmp_hist.setdefault(_k, []).append((_s, _pos, _num))
+                                globals()['_historial_dict'] = _tmp_hist
+                                # cache para búsqueda rápida por substring
+                                globals()['_historial_keys'] = list(_tmp_hist.keys())
+
+                            _eq_norm = normaliza(eq_inner)
+                            _d_list = globals().get('_historial_dict', {}).get(_eq_norm, [])
+
+                            # UNIVERSAL: si no hay match exacto, busca por contenido (para todas las ligas)
+                            # Ej: BAYER LEVERKUSEN contiene LEVERKUSEN, MANCHESTER CITY contiene MAN CITY
+                            if not _d_list:
+                                for _k in globals().get('_historial_keys', []):
+                                    if _k in _eq_norm or _eq_norm in _k or _k.split()[-1] in _eq_norm.split() and len(_k.split()[-1])>3:
+                                        _d_list = globals()['_historial_dict'].get(_k, [])
+                                        if _d_list: break
+
+                            if not _d_list:
                                 return ""
+
                             _parts = []
-                            for _s, _g in _d.groupby('Season'):
-                                _pos = int(_g['Posicion'].iloc[0])
-                                _num = int(_g['NumEquipos'].iloc[0])
+                            for _s, _pos, _num in _d_list:
+                                try:
+                                    _pos_i = int(float(_pos)); _num_i = int(float(_num))
+                                except:
+                                    continue
                                 try:
                                     _a, _b = str(_s).split('/')
                                     _short = _a[2:] + "/" + _b[2:]
                                 except:
                                     _short = str(_s)
-                                _parts.append((_s, _short + " " + str(_pos) + "º/" + str(_num)))
+                                _parts.append((_s, f"{_short} {_pos_i}º/{_num_i}"))
+                            _parts = sorted(set(_parts))
                             _parts.sort(key=lambda x: x[0])
                             _txt = " | ".join([p[1] for p in _parts])
                             return '<div style="font-size:11px;font-family:monospace;color:#111;margin:3px 0 4px 0;font-weight:700;background:#f3f4f6;padding:2px 4px;border-radius:3px">' + _txt + '</div>'
