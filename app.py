@@ -294,9 +294,9 @@ def _formatear_h2h_compacto_cached(key_tuple):
         ht_r = _res_ht_ft(h1,a1)
         ft_r = _res_ht_ft(hg,ag)
 
-    # nombres completos en vez de abrev
-    home_full = str(home_team).title()
-    away_full = str(away_team).title()
+    # FIX MOVIL - nombres abreviados, no completos
+    home_full = str(ht).upper()[:3]
+    away_full = str(at).upper()[:3]
 
     ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(home_full,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(away_full,a1>h1,is_a)}</span>"
     st_line = f"<span style='color:{color_linea}'>2ªP: {nv(home_full,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(away_full,a2>h2,is_a)}</span>"
