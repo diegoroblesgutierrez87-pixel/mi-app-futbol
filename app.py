@@ -575,29 +575,19 @@ if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 ########################################
 ##########################################
 @st.cache_data(show_spinner=False)
-
 def cargar_todo(_cache_buster=0):
-    import os, pathlib, re
+    import pathlib
     import pandas as pd
-    import numpy as np
     try:
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    df_completo = pd.DataFrame()
-    candidatos = [
-        BASE / "din1_suec1_26_27.csv",              # din1 suec1 actual 2627
-        BASE / "europa_actual.csv",                 # ligas europeas 2627
-        BASE / "asia_actual_j1j2k1k2csl1.csv",       # temp actual 2026 k1k2j1j2 china1 - 824 BUENO
-        BASE / "j1j2k1k2csl1_22_25.csv",             # j1j2k1k2china1 2022-2025
-        BASE / "ligas_escandinavas_22_26.csv",      # din1 suec1 2022/21 a 2025/26
-        BASE / "ligas_europa22_26.csv",             # ligas europeas 2022-2025
-        BASE / "sudasia_22_26.csv",                 # sudeste asiatico 2022-2025
-        BASE / "sudamerica_actual.csv",             # Serie A Brasil + Serie B Brasil + Chile 2026 - NUEVO
-        BASE / "partidos_2627_actual.csv",          # principal donde guardas Sudamerica tambien
-        BASE / "arabia_actual.csv",
-    ]
-    dfs = []
+    f = BASE / "ligas_PRECALCULADO.csv"
+    df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
+    if 'HomeAbbr' not in df.columns:
+        df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
+        df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
+    return df.copy()
     for p in candidatos:
         if p.exists() and p.stat().st_size > 168:
             try:
@@ -1465,8 +1455,21 @@ def calcular_estado_jornada(df):
 
 @st.cache_data(show_spinner=False)
 def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
-    df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].isin(temps_tuple)]
-    return calcular_estado_jornada(df_fil)
+    import pathlib
+    import pandas as pd
+    df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].isin(temps_tuple)].copy()
+    df_fil = df_fil.sort_values(['League','Season','Date'])
+    try:
+        BASE = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE = pathlib.Path.cwd().resolve()
+    f_clas = BASE / "clasificacion_PRECALCULADO.csv"
+    if f_clas.exists():
+        df_clas = pd.read_csv(f_clas)
+        df_clas = df_clas[df_clas['League'].isin(ligas_tuple) & df_clas['Season'].isin(temps_tuple)]
+        return df_fil, df_clas
+    else:
+        return calcular_estado_jornada(df_fil)
  
 
 def limpiar_filtros():
@@ -1524,20 +1527,8 @@ try:
     import pathlib
     _BASE_TMP = pathlib.Path(__file__).parent.resolve()
     _lista_csv = [
-        _BASE_TMP / "din1_suec1_26_27.csv",
-        _BASE_TMP / "europa_actual.csv",
-        _BASE_TMP / "asia_actual_j1j2k1k2csl1.csv",
-        _BASE_TMP / "j1j2k1k2csl1_22_25.csv",
-        _BASE_TMP / "ligas_escandinavas_22_26.csv",
-        _BASE_TMP / "ligas_europa22_26.csv",
-        _BASE_TMP / "sudasia_22_26.csv",
-        _BASE_TMP / "goles_actual.csv",
-        _BASE_TMP / "partidos_2627_actual.csv",
-        _BASE_TMP / "partidos_2627_Asiaticas_J1J2K1K2China_2026.csv",
-        _BASE_TMP / "sudamerica_actual.csv",
-        _BASE_TMP / "goles_sudamerica_actual.csv",
-        _BASE_TMP / "arabia_actual.csv",        # <-- NUEVA
-        _BASE_TMP / "goles_arabia_actual.csv",  # <-- NUEVA
+        _BASE_TMP / "ligas_PRECALCULADO.csv",
+        _BASE_TMP / "clasificacion_PRECALCULADO.csv",
     ]
     _buster = 0
     for _pp in _lista_csv:
