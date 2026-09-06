@@ -642,10 +642,6 @@ def cargar_todo(_cache_buster=0):
 
 ############################################3lectura muro amarillo
 @st.cache_data(show_spinner=False)
-def cargar_eventos(league=None, season=None):
-    return {}
-
-@st.cache_data(show_spinner=False)
 def get_equipos_cached(ligas_tuple):
     src = df[df['League'].isin(ligas_tuple)] if ligas_tuple else df
     eqs = pd.unique(src[['HomeTeam','AwayTeam']].values.ravel())
@@ -666,13 +662,11 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if v: return v
     except:
         pass
-    import unicodedata, re
-    if pd.isna(row.get('Date')):
-        return ""
+    return ""
 
 @st.cache_data(show_spinner=False)
-@st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
+    return {}
     import pathlib, pandas as pd
     try:
         BASE = pathlib.Path(__file__).parent.resolve()
