@@ -592,23 +592,47 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    f = BASE / "Ligas-PRECALCULADO.csv"
-    df = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
-    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    try:
-        fg = BASE / "Goles-Precalculado.csv"
-        if fg.exists() and fg.stat().st_size > 100:
-            df_g = pd.read_csv(fg, dtype=str, engine='c', on_bad_lines='skip')
-            if 'fixture_id' in df_g.columns and 'fixture_id' in df.columns:
-                df_g['fixture_id'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-                df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0]
-                cols = [c for c in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT'] if c in df_g.columns]
-                if cols:
-                    df = df.merge(df_g[['fixture_id']+cols], on='fixture_id', how='left')
-                    for c in cols:
-                        df[c] = df[c].fillna('')
-    except:
-        pass
+
+    # FIX: lee tus 5 archivos separados + normaliza fecha dd/mm/yyyy
+    lista_ligas = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv"]
+    dfs = []
+    for nombre in lista_ligas:
+        f = BASE / nombre
+        if f.exists() and f.stat().st_size > 100:
+            d = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
+            d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
+            dfs.append(d)
+    df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+    df = df.sort_values('Date').drop_duplicates(subset=['fixture_id'], keep='last') if not df.empty else df
+
+    # FIX GOLES: tus 3 goles_actual.csv están en formato largo -> los convierte a HTML
+    lista_goles = ["goles_actual.csv","goles_arabia_actual.csv","goles_sudamerica_actual.csv"]
+    dfs_g = []
+    for nombre in lista_goles:
+        f = BASE / nombre
+        if f.exists() and f.stat().st_size > 100:
+            dg = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
+            dfs_g.append(dg)
+    if dfs_g and not df.empty:
+        df_g_long = pd.concat(dfs_g, ignore_index=True)
+        mapa = {}
+        for fid, g in df_g_long.groupby('fixture_id'):
+            g = g.sort_values('minuto')
+            todos = []
+            for _, r in g.iterrows():
+                if pd.isna(r.get('goleador')): continue
+                m = int(r['minuto']) if pd.notna(r['minuto']) else 0
+                gol = str(r['goleador'])
+                asist = f" ({r['asistente']})" if pd.notna(r.get('asistente')) and str(r['asistente']).strip() not in ('','nan') else ""
+                pen = "(pen)" if 'pen' in str(r.get('tipo','')).lower() else ""
+                todos.append(f"{m}'{pen} {gol}{asist}")
+            mapa[str(int(fid))] = " | ".join(todos)
+        df['fixture_id_str'] = df['fixture_id'].astype(str).str.split('.').str[0]
+        df['Goles_Todo_HTML'] = df['fixture_id_str'].map(mapa).fillna("")
+        df['Goles_1P_HTML'] = df['Goles_Todo_HTML']
+        df['Goles_2P_HTML'] = df['Goles_Todo_HTML']
+        df['Goles_Todo_TXT'] = df['Goles_Todo_HTML']
+
     if 'HomeAbbr' not in df.columns:
         df['HomeAbbr'] = df['HomeTeam']
     if 'AwayAbbr' not in df.columns:
