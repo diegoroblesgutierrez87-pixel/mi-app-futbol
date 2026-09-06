@@ -1043,11 +1043,19 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     hst, ast = int(row['HST']), int(row['AST']); hf, af = int(row['HF']), int(row['AF'])
     hthg, htag = int(row['HTHG']), int(row['HTAG'])
     h2tg = hg_num - hthg; a2tg = ag_num - htag
-    # FIX 26/27 - solo hay totales, 1P/2P viene a 0
-    hp = int(row.get('HomePasses',0) or 0); ap = int(row.get('AwayPasses',0) or 0)
-    hp_1p = int(row.get('HomePasses_1P',0) or 0); ap_1p = int(row.get('AwayPasses_1P',0) or 0)
-    hp_2p = int(row.get('HomePasses_2P',0) or 0); ap_2p = int(row.get('AwayPasses_2P',0) or 0)
-    hsav = int(row.get('HomeSaves',0) or 0); asav = int(row.get('AwaySaves',0) or 0)
+    # FIX 26/27 - solo hay totales, 1P/2P viene a 0 - SAFE INT no peta con '' / nan
+    def _safe_int(v):
+        try:
+            if pd.isna(v): return 0
+            s=str(v).strip()
+            if s=='' or s.lower() in ('nan','none'): return 0
+            return int(float(s))
+        except:
+            return 0
+    hp = _safe_int(row.get('HomePasses',0)); ap = _safe_int(row.get('AwayPasses',0))
+    hp_1p = _safe_int(row.get('HomePasses_1P',0)); ap_1p = _safe_int(row.get('AwayPasses_1P',0))
+    hp_2p = _safe_int(row.get('HomePasses_2P',0)); ap_2p = _safe_int(row.get('AwayPasses_2P',0))
+    hsav = _safe_int(row.get('HomeSaves',0)); asav = _safe_int(row.get('AwaySaves',0))
     hpos_pct = row.get('HomePos',''); apos_pct = row.get('AwayPos','')
 
     NAVY = "#0A2342"
