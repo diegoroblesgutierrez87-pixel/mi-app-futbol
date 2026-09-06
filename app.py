@@ -1526,6 +1526,9 @@ try:
     import pathlib
     _BASE_TMP = pathlib.Path(__file__).parent.resolve()
     _lista_csv = [
+        _BASE_TMP / "Ligas-PRECALCULADO.csv",
+        _BASE_TMP / "Clasificacion-PRECALCULADO.csv",
+        _BASE_TMP / "Ligas-PRECALC.csv",
         _BASE_TMP / "ligas_PRECALCULADO.csv",
         _BASE_TMP / "clasificacion_PRECALCULADO.csv",
     ]
