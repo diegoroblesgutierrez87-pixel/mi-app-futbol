@@ -1971,11 +1971,13 @@ if len(jornadas) > 0:
         "HomePtsPrev", "AwayPtsPrev", "HomePosPrev", "AwayPosPrev", "HomePerf", "AwayPerf"
     ]
     # FIX: muestra todos los equipos historicos de la liga seleccionada, no solo de la temp seleccionada, para que aparezca VOLENDAM aunque 26/27 solo tenga 9 partidos
-    try:
-        _df_teams_source = df[df['League'].isin(liga_sel)] if liga_sel else df
-        equipos_disponibles = sorted(pd.unique(_df_teams_source[['HomeTeam','AwayTeam']].values.ravel()))
-    except:
-        equipos_disponibles = sorted(pd.unique(df_final[['HomeTeam','AwayTeam']].values.ravel()))
+    @st.cache_data(show_spinner=False)
+    def get_equipos_cached(ligas_tuple):
+        src = df[df['League'].isin(ligas_tuple)] if ligas_tuple else df
+        eqs = pd.unique(src[['HomeTeam','AwayTeam']].values.ravel())
+        return sorted([str(x) for x in eqs if str(x).lower()!='nan'])
+
+    equipos_disponibles = get_equipos_cached(tuple(liga_sel))
 
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
