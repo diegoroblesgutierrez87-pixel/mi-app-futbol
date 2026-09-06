@@ -666,7 +666,6 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 
 @st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
-    return {}
     import pathlib, pandas as pd
     try:
         BASE = pathlib.Path(__file__).parent.resolve()
@@ -686,9 +685,6 @@ def cargar_eventos(league=None, season=None):
             ev[str(fid).split('.')[0]]=[{"minute":int(float(str(r.get('minuto','0')).split('+')[0] or 0)),"player":str(r.get('goleador','')).strip(),"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in str(r.get('tipo','')).lower()} for _,r in g.iterrows() if str(r.get('goleador','')).strip().lower()!='nan']
         except: continue
     return ev
-
-    # FIX - BLOQUE ROTO ELIMINADO
-    return {}
 
     # LIMPIEZA
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
