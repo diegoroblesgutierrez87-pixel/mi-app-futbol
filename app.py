@@ -1041,25 +1041,51 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
         partes.append(jx_html)
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
 
+def abreviar_jugador(nombre):
+    import unicodedata
+    n = str(nombre).strip()
+    if not n or n.lower()=='nan': return ""
+    n = unicodedata.normalize('NFKD', n).encode('ASCII','ignore').decode('ASCII')
+    partes = n.split()
+    if len(partes)==1: return partes[0][:8].upper()
+    # P. GARCIA
+    return f"{partes[0][0]}. {partes[-1]}"[:10].upper()
+
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
-    import pandas as pd, unicodedata, re
-    # FIX PRECALC - vuelve a pintar minuto+goleador en cromos
     try:
-        if parte=="Todo":
-            v=str(row.get('Goles_Todo_HTML','')).strip()
-            if v and v.lower()!='nan' and len(v)>5:
-                return v
-        if parte=="1T":
-            v=str(row.get('Goles_1P_HTML','')).strip()
-            if v and v.lower()!='nan' and len(v)>3:
-                return v
-        if parte=="2T":
-            v=str(row.get('Goles_2P_HTML','')).strip()
-            if v and v.lower()!='nan' and len(v)>3:
-                return v
+        fid = str(row.get('fixture_id','')).split('.')[0]
+        evs = eventos_dict.get(fid, []) or eventos_dict.get(str(int(float(fid))), []) if fid.replace('.','',1).isdigit() else []
+        if not evs: return ""
+
+        evs = sorted(evs, key=lambda x: int(x.get('minute',0) or 0))
+        home = str(row.get('HomeTeam','')).upper()
+        home_abbr = str(row.get('HomeAbbr','') or abreviar_equipo(row.get('HomeTeam','')))[:3].upper()
+        away_abbr = str(row.get('AwayAbbr','') or abreviar_equipo(row.get('AwayTeam','')))[:3].upper()
+
+        gh, ga = 0, 0
+        out = []
+        for ev in evs:
+            if ev.get('missed'): continue
+            m = int(ev.get('minute',0) or 0)
+            if parte=="1T" and m>45: continue
+            if parte=="2T" and m<=45: continue
+            if not (min_min <= m <= max_min): continue
+
+            team = str(ev.get('team','')).upper()
+            es_local = home in team or team in home or team[:3]==home_abbr
+
+            if es_local: gh+=1
+            else: ga+=1
+
+            score = f"{gh}-{ga}"
+            jug = abreviar_jugador(ev.get('player',''))
+            abbr = home_abbr if es_local else away_abbr
+
+            # FORMATO QUE PIDES: 30' Pep |1-0 AJAX
+            out.append(f"{m}' {jug} | {score} {abbr}")
+
+        return "<br>".join(out)
     except:
-        pass
-    if pd.isna(row.get('Date')):
         return ""
             
     try:
