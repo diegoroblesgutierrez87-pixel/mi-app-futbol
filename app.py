@@ -3646,39 +3646,6 @@ with st.container(border=True):
                         _cc.html(f"""<button id="btn_c" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px;margin-top:12px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_c').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_c').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_c').innerText='✅ COPIADO!';}}}}</script>""", height=70)
                 except Exception:
                     pass
-                try:
-                    import json as _jsC, streamlit.components.v1 as _coC, re as _reC
-                    _txts = []
-                    for _, r in _df_tmp.iterrows() if '_df_tmp' in locals() else _df_copy.iterrows() if '_df_copy' in locals() else df_mostrar.iterrows():
-                        try:
-                            _html = formatear_partido(r, row_hist=None)
-                            _plain = _reC.sub(r'<[^>]+>', ' ', _html)
-                            _plain = _reC.sub(r'\s+', ' ', _plain).strip()
-                            _txts.append(_plain)
-                        except:
-                            _txts.append(f"{r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}")
-                    _txt_cromos = "\n\n---\n\n".join(_txts)
-                    _tjC = _jsC.dumps(_txt_cromos)
-                    _coC.html(f"""<button id="btn_copy_cromos" style="background:#0A2342;color:#fff;border:none;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px;margin-top:10px">📋 COPIAR CROMOS TAL CUAL ({len(_txts)})</button><script>document.getElementById('btn_copy_cromos').onclick=async()=>{{const t={_tjC};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_cromos').innerText='✅ CROMOS COPIADOS!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_cromos').innerText='✅ COPIADO!';}}}}</script>""", height=70)
-                except Exception:
-                    pass
-                # BOTON COPIAR - MOVIL 1 CLIC - FIX NO PETA
-                try:
-                    import json as _js2, streamlit.components.v1 as _co2
-                    # coge el df que exista en este modo
-                    if 'df_mostrar' in locals() and not df_mostrar.empty:
-                        _df_copy = df_mostrar
-                    elif 'df1' in locals() and 'df2' in locals():
-                        _df_copy = pd.concat([df1, df2]).drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
-                    else:
-                        _df_copy = pd.DataFrame()
-                    if not _df_copy.empty:
-                        _txt_p = "\n".join([f"{r['Date'].strftime('%d/%m/%y')} J{int(r['Jornada'])} {r['League']} {r['HomeTeam']} {int(r['FTHG'])}-{int(r['FTAG'])} {r['AwayTeam']}" for _, r in _df_copy.iterrows()])
-                        _tj2 = _js2.dumps(_txt_p)
-                        _n = len(_df_copy)
-                        _co2.html(f"""<div style="margin-top:10px"><button id="btn_copy_partidos" style="background:#0A2342;color:#fff;border:none;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR {_n} PARTIDOS AL PORTAPAPELES</button></div><script>document.getElementById('btn_copy_partidos').onclick=async()=>{{const t={_tj2};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO {_n} PARTIDOS!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_partidos').innerText='✅ COPIADO!';}}}}</script>""", height=70)
-                except Exception:
-                    pass
 
 
 
