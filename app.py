@@ -3319,7 +3319,7 @@ with st.container(border=True):
 
                         _racha = racha_comprimida_html(_df_eq_fijo_season, eq) if not _df_eq_fijo_season.empty else ""
                         _racha_am = racha_ambos_marcan_html(_df_eq_fijo_season) if not _df_eq_fijo_season.empty else ""
-                        _jors = jornadas_conteo(_part_ok_season['Jornada'], _part_ok_season, eq, rival, parte_actual) if not _part_ok_season.empty else ""
+                        # _jors ELIMINADO - solo resumen wapo, cromos ya están en 📋 Partidos
 #######################################################################################################################################################################
                         # Pos y Pts finales de ESA temporada
                         try:
@@ -3357,7 +3357,6 @@ with st.container(border=True):
                         except:
                             pass
 
-                        # HT BLINDADO - SIEMPRE PINTA - FIX INDEX
                         try:
                             if 'HTHG' in _df_season.columns:
                                 _hg = pd.to_numeric(_df_season['HTHG'], errors='coerce').fillna(0)
@@ -3382,7 +3381,6 @@ with st.container(border=True):
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
 
-                        # --- FIX HT con Cj / Fj ---
                         def _fmt_j(r):
                             pref = 'C' if r['HomeTeam']==eq else 'F'
                             return f"{pref}j{int(r['Jornada'])}"
@@ -3399,7 +3397,6 @@ with st.container(border=True):
 <div style='display:flex;flex-wrap:wrap;align-items:center;gap:1px 2px;margin:1px 0'>{_racha_am}</div>
 {_resumen_am}
 {_resumen_ht_fix}
-<div style='margin-top:4px'>{_jors}</div>
 </div>"""
 ###############################################################################
 #################################################################################
