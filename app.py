@@ -1211,19 +1211,19 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         return f"{parts[0][0]}. {' '.join(parts[1:])}"[:18] # K. Tanimura
 
     def _goles_parte(min_from, min_to, equipo_lado):
-        # FIX VELOCIDAD - usa precalculado, no recorre eventos_dict
+        # FIX VELOCIDAD - precalculado ya trae goles, no escanees eventos
         try:
-            if equipo_lado:
-                # si ya tienes Goles HTML precalculado, no busques
-                if 'Goles_Todo_HTML' in row and str(row.get('Goles_Todo_HTML','')).strip():
-                    return "" # ya viene en goles_txt de arriba
+            if 'Goles_Todo_HTML' in row and str(row.get('Goles_Todo_HTML','')).strip():
+                return ""
             ev_dict = globals().get('todos_eventos', {})
-            if not ev_dict: return ""
+            if not ev_dict:
+                return ""
             fid_raw = str(row.get('fixture_id','')).strip().split('.')[0]
             evs = ev_dict.get(fid_raw, [])
-            if not evs or len(evs)>20: return "" # corta si hay muchos
+            if not evs:
+                return ""
             out = []
-            for ev in evs[:5]: # solo 5 primeros, no todos
+            for ev in evs[:3]:
                 if ev.get('missed'): continue
                 m = int(ev.get('minute',0) or 0)
                 if not (min_from <= m <= min_to): continue
@@ -1864,10 +1864,16 @@ if len(jornadas) > 0:
 
     df_base_h2h = df_final.copy()
 
+    # FIX VELOCIDAD - si hay Goles-Precalculado, NO cargues eventos (es instantáneo)
     todos_eventos = {}
-    for liga in liga_sel:
-        for temp in temp_sel:
-            todos_eventos.update(cargar_eventos(liga, temp))
+    try:
+        tiene_precalc = 'Goles_Todo_HTML' in df_final.columns and df_final['Goles_Todo_HTML'].astype(str).str.len().gt(10).any()
+    except:
+        tiene_precalc = False
+    if not tiene_precalc:
+        for liga in liga_sel:
+            for temp in temp_sel:
+                todos_eventos.update(cargar_eventos(liga, temp))
 #########filtro rango de ultimas jornadas
     if 'marcador_filtro' not in st.session_state: st.session_state.marcador_filtro = "Todos"
     if 'marcador_filtro_eq2' not in st.session_state: st.session_state.marcador_filtro_eq2 = "Todos"
