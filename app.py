@@ -677,11 +677,8 @@ def cargar_eventos(league=None, season=None):
         BASE_EV / "goles_arabia_actual.csv",
     ]
 
-    # FIX COLUMNAS ALTERNATIVAS ELIMINADO - ESTABA ROTO, USABA df QUE NO EXISTE
-    # La conversion GolLocal_FT ya esta en cargar_todo, no aqui
-    pass
-    # si aún no hay FTHG intenta desde Resultado tipo "2-1"
-    if 'FTHG' not in df.columns or df['FTHG'].sum()==0:
+    # FIX - ESTE BLOQUE ESTABA ROTO, NO EXISTE df AQUI
+    return {}
         if 'Resultado' in df.columns:
             try:
                 tmp = df['Resultado'].astype(str).str.extract(r'(\d+)\s*-\s*(\d+)')
@@ -862,6 +859,61 @@ def cargar_eventos(league=None, season=None):
 ######################################################
 @st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
+    import pathlib, pandas as pd
+    try:
+        BASE_EV = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE_EV = pathlib.Path.cwd().resolve()
+
+    # FIX INSTANTANEO - si hay Goles-Precalculado no hace falta cargar eventos
+    try:
+        pre = BASE_EV / "Goles-Precalculado.csv"
+        if pre.exists() and pre.stat().st_size > 1000:
+            return {}
+    except:
+        pass
+
+    candidatos = [
+        BASE_EV / "goles_actual.csv",
+        BASE_EV / "goles_sudamerica_actual.csv",
+        BASE_EV / "goles_arabia_actual.csv",
+    ]
+    dfs=[]
+    for f in candidatos:
+        if f.exists() and f.stat().st_size > 100:
+            try:
+                df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
+                if df.empty or 'minuto' not in str(df.columns).lower():
+                    continue
+                if 'fixture_id' in df.columns:
+                    df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0]
+                dfs.append(df)
+            except:
+                pass
+    if not dfs:
+        return {}
+    df_g=pd.concat(dfs, ignore_index=True)
+    try:
+        df_g=df_g.drop_duplicates(subset=['fixture_id','minuto','goleador','tipo','equipo'], keep='first')
+    except:
+        pass
+    eventos={}
+    for fid, g in df_g.groupby('fixture_id'):
+        fid_c=str(fid).split('.')[0]
+        evs=[]
+        g['_min'] = pd.to_numeric(g['minuto'].astype(str).str.split('+').str[0], errors='coerce').fillna(0)
+        for _,r in g.sort_values('_min').iterrows():
+            try:
+                m=int(float(str(r.get('minuto','0')).split('+')[0] or 0))
+                gol=str(r.get('goleador','')).strip()
+                if not gol or gol.lower() in ['nan','']:
+                    continue
+                tipo=str(r.get('tipo','')).lower()
+                evs.append({"minute":m,"player":gol,"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in tipo and 'miss' not in tipo,"missed":'miss' in tipo})
+            except:
+                continue
+        eventos[fid_c]=evs
+    return eventos
     import os, pathlib, pandas as pd
     try:
         BASE_EV = pathlib.Path(__file__).parent.resolve()
