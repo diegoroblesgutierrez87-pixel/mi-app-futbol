@@ -1530,7 +1530,18 @@ def calcular_estado_jornada(df):
 def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
     import pathlib
     import pandas as pd
-    df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].isin(temps_tuple)].copy()
+    def _exp(_lst):
+        _o=[]
+        for _s in _lst:
+            _s=str(_s).strip()
+            _o.append(_s)
+            if "/" in _s:
+                _o.append(_s.split("/")[0])
+            elif _s.isdigit():
+                _o.append(f"{_s}/{int(_s)+1}")
+        return list(set(_o))
+    _temps_exp = _exp(temps_tuple)
+    df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].astype(str).str.strip().isin(_temps_exp)].copy()
     df_fil = df_fil.sort_values(['League','Season','Date'])
     if 'Jornada' not in df_fil.columns and not df_fil.empty:
         df_fil, _ = calcular_estado_jornada(df_fil)
