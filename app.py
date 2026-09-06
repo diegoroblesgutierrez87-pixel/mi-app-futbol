@@ -1509,7 +1509,7 @@ if df.empty or 'League' not in df.columns:
 
 with st.expander("Filtros de partidos", expanded=False):
     ligas_disponibles = sorted([str(x) for x in df['League'].dropna().unique()])
-    temporadas_disponibles = sorted([str(x) for x in df['Season'].dropna().unique()])
+    temporadas_disponibles = ["2026/2027"]
 
     # DEBUG: fuerza que salga 2026/2027 si esta en el CSV
     st.sidebar.write(f"DEBUG FILTROS: {len(ligas_disponibles)} ligas | Temps {temporadas_disponibles}")
