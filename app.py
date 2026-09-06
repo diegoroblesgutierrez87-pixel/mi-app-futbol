@@ -1259,6 +1259,8 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         if hp or ap:
             extras.append(f"{hsav}Par-{asav}Par")
     extras_html = f"<div style='font-size:7px;color:#000'>{' | '.join(extras)}</div>" if extras else ""
+    if not goles_txt:
+        goles_txt = row.get('Goles_Todo_HTML','') or row.get('Goles_Todo_TXT','') or ""
     goles_html = f"<div style='font-size:9px;color:{NAVY};line-height:1.2;margin-top:2px'>{goles_txt}</div>" if goles_txt else ""
     return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{ft_line}{pos_line}{pts_line}{perf_line}{stats_html}{extras_html}{goles_html}</div>'
 
@@ -1576,11 +1578,17 @@ try:
     import pathlib
     _BASE_TMP = pathlib.Path(__file__).parent.resolve()
     _lista_csv = [
+        _BASE_TMP / "europa_actual.csv",
+        _BASE_TMP / "din1_suec1_26_27.csv",
+        _BASE_TMP / "asia_actual_j1j2k1k2csl1.csv",
+        _BASE_TMP / "arabia_actual.csv",
+        _BASE_TMP / "sudamerica_actual.csv",
+        _BASE_TMP / "goles_actual.csv",
+        _BASE_TMP / "goles_arabia_actual.csv",
+        _BASE_TMP / "goles_sudamerica_actual.csv",
+        _BASE_TMP / "jugadores_2627_actual.csv",
         _BASE_TMP / "Ligas-PRECALCULADO.csv",
         _BASE_TMP / "Clasificacion-PRECALCULADO.csv",
-        _BASE_TMP / "Ligas-PRECALC.csv",
-        _BASE_TMP / "ligas_PRECALCULADO.csv",
-        _BASE_TMP / "clasificacion_PRECALCULADO.csv",
     ]
     _buster = 0
     for _pp in _lista_csv:
@@ -3579,7 +3587,7 @@ with st.container(border=True):
     
     def render_tabla_equipo(df_input, equipo_ref):
         df_tmp = df_input.copy()
-        if todos_eventos and not df_tmp.empty:
+        if not df_tmp.empty:
             df_tmp['Goles'] = df_tmp.apply(
                 lambda r: buscar_goles_partido(r, todos_eventos, rango_minutos[0], rango_minutos[1], parte_gol, equipo_ref),
                 axis=1
