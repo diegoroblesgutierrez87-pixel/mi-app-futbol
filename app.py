@@ -3283,7 +3283,18 @@ with st.container(border=True):
                         equipos_mostrar = ok_in_base
                 # --- FIN PARCHE ---
                 base_total = df_original.copy()
-                base_total = base_total[base_total['League'].isin(ligas_visibles) & base_total['Season'].isin(temp_sel)]
+                def _exp3(_lst):
+                    _o=[]
+                    for _s in _lst:
+                        _s=str(_s).strip()
+                        _o.append(_s)
+                        if "/" in _s:
+                            _o.append(_s.split("/")[0])
+                        elif _s.isdigit():
+                            _o.append(f"{_s}/{int(_s)+1}")
+                    return list(set(_o))
+                _t3 = _exp3(temp_sel)
+                base_total = base_total[base_total['League'].isin(ligas_visibles) & base_total['Season'].astype(str).str.strip().isin(_t3)]
                 if base_total.empty:
                     base_total = base_total.copy()
                 else:
