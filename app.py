@@ -257,7 +257,6 @@ def _formatear_h2h_compacto_cached(key_tuple):
     is_a = eq_norm == away_team if eq_norm else False
 
     def nv(t,b=False,u=False):
-        # FIX: equipo seleccionado siempre en negrita gordita 900 (Ctrl+N) aunque no gane
         fw = 900 if (b or u) else 600
         return f"<span style='font-weight:{fw}{';text-decoration:underline;text-decoration-thickness:2px' if u else ''}'>{t}</span>"
 
@@ -270,22 +269,43 @@ def _formatear_h2h_compacto_cached(key_tuple):
         color_linea = "#0A2342"
         color = "#444"
 
+    # FIX ODDS - no mostrar nan nan nan
     try:
-        s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
-        odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{b365h:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{b365d:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{b365a:.2f}</span>"
+        import math
+        if any(v is None or (isinstance(v,float) and (math.isnan(v) or v<=1.0)) for v in [b365h,b365d,b365a]):
+            odds = ""
+        else:
+            s_win = "font-weight:900; color:#000"; s_norm = "color:#555"
+            odds = f"<span style='{s_win if ftr=='H' else s_norm}'>{b365h:.2f}</span> <span style='{s_win if ftr=='D' else s_norm}'>{b365d:.2f}</span> <span style='{s_win if ftr=='A' else s_norm}'>{b365a:.2f}</span>"
     except:
         odds = ""
 
-    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(ht,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(at,a1>h1,is_a)}</span>"
-    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(ht,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(at,a2>h2,is_a)}</span>"
-    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(ht,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(at,ag>hg,is_a)}</span>"
+    # FIX TITULO G/G - Gana primera y segunda = G/G
+    def _res_ht_ft(g_home, g_away):
+        if g_home>g_away: return "G"
+        if g_home<g_away: return "P"
+        return "E"
+    # para titulo usamos perspectiva del ganador o del eq_norm
+    if eq_norm:
+        # G/P/E del equipo filtrado
+        ht_r = _res_ht_ft(h1 if is_h else a1, a1 if is_h else h1) if (is_h or is_a) else _res_ht_ft(h1,a1)
+        ft_r = _res_ht_ft(hg if is_h else ag, ag if is_h else hg) if (is_h or is_a) else _res_ht_ft(hg,ag)
+    else:
+        ht_r = _res_ht_ft(h1,a1)
+        ft_r = _res_ht_ft(hg,ag)
+
+    # nombres completos en vez de abrev
+    home_full = str(home_team).title()
+    away_full = str(away_team).title()
+
+    ht_line = f"<span style='color:{color_linea}'>1ªP: {nv(home_full,h1>a1,is_h)} {nv(h1,h1>a1,is_h)}-{nv(a1,a1>h1,is_a)} {nv(away_full,a1>h1,is_a)}</span>"
+    st_line = f"<span style='color:{color_linea}'>2ªP: {nv(home_full,h2>a2,is_h)} {nv(h2,h2>a2,is_h)}-{nv(a2,a2>h2,is_a)} {nv(away_full,a2>h2,is_a)}</span>"
+    ft_line = f"<span style='color:{color_linea};font-weight:900'>FINAL: {nv(home_full,hg>ag,is_h)} {nv(hg,hg>ag,is_h)}-{nv(ag,ag>hg,is_a)} {nv(away_full,ag>hg,is_a)}</span>"
 
     pos = f"{nv(str(hpos)+'º',False,is_h)} <span style='color:#000'>vs</span> {nv(str(apos)+'º',False,is_a)}"
     pts = f"{nv(hpts,False,is_h)}-<span style='color:#000'>pts</span> {nv(apts,False,is_a)}"
 
-    ht_res = ht if h1>a1 else at if a1>h1 else 'E'
-    ft_res = ht if hg>ag else at if ag>hg else 'E'
-    res = f"<span style='color:{color};font-weight:700'>{ht_res}/{ft_res}</span>"
+    res = f"<span style='color:{color};font-weight:700'>{ht_r}/{ft_r}</span>"
 
     lineas = [
         f"{lg3} {res}",
