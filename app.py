@@ -1211,19 +1211,23 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         return f"{parts[0][0]}. {' '.join(parts[1:])}"[:18] # K. Tanimura
 
     def _goles_parte(min_from, min_to, equipo_lado):
+        # FIX VELOCIDAD - usa precalculado, no recorre eventos_dict
         try:
+            if equipo_lado:
+                # si ya tienes Goles HTML precalculado, no busques
+                if 'Goles_Todo_HTML' in row and str(row.get('Goles_Todo_HTML','')).strip():
+                    return "" # ya viene en goles_txt de arriba
             ev_dict = globals().get('todos_eventos', {})
             if not ev_dict: return ""
             fid_raw = str(row.get('fixture_id','')).strip().split('.')[0]
             evs = ev_dict.get(fid_raw, [])
-            if not evs: return ""
+            if not evs or len(evs)>20: return "" # corta si hay muchos
             out = []
-            for ev in evs:
+            for ev in evs[:5]: # solo 5 primeros, no todos
                 if ev.get('missed'): continue
                 m = int(ev.get('minute',0) or 0)
                 if not (min_from <= m <= min_to): continue
                 team_ev = normaliza(ev.get('team','') or ev.get('equipo','') or '')
-                # FIX REPETICION - solo mete goles del equipo que toca
                 if equipo_lado and team_ev!= normaliza(equipo_lado):
                     continue
                 if equipo_lado:
