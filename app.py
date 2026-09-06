@@ -597,12 +597,13 @@ if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 @st.cache_data(show_spinner=False)
 def cargar_todo(_cache_buster=0):
     import pathlib, pandas as pd
-    try: BASE = pathlib.Path(__file__).parent.resolve()
-    except: BASE = pathlib.Path.cwd().resolve()
+    try:
+        BASE = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE = pathlib.Path.cwd().resolve()
     f = BASE / "Ligas-PRECALCULADO.csv"
     df = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    # merge goles precalculado - solo 1 archivo
     try:
         fg = BASE / "Goles-Precalculado.csv"
         if fg.exists() and fg.stat().st_size > 100:
@@ -610,15 +611,17 @@ def cargar_todo(_cache_buster=0):
             if 'fixture_id' in df_g.columns and 'fixture_id' in df.columns:
                 df_g['fixture_id'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
                 df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0]
-                # solo columnas que existen
                 cols = [c for c in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT'] if c in df_g.columns]
                 if cols:
                     df = df.merge(df_g[['fixture_id']+cols], on='fixture_id', how='left')
-                    for c in cols: df[c] = df[c].fillna('')
-    except: pass
-    # Abbr lazy - no en carga
-    if 'HomeAbbr' not in df.columns: df['HomeAbbr'] = df['HomeTeam']
-    if 'AwayAbbr' not in df.columns: df['AwayAbbr'] = df['AwayTeam']
+                    for c in cols:
+                        df[c] = df[c].fillna('')
+    except:
+        pass
+    if 'HomeAbbr' not in df.columns:
+        df['HomeAbbr'] = df['HomeTeam']
+    if 'AwayAbbr' not in df.columns:
+        df['AwayAbbr'] = df['AwayTeam']
     return df.copy()
 
 @st.cache_data(show_spinner=False)
@@ -630,24 +633,6 @@ def get_equipos_cached(ligas_tuple):
     src = df[df['League'].isin(ligas_tuple)] if ligas_tuple else df
     eqs = pd.unique(src[['HomeTeam','AwayTeam']].values.ravel())
     return sorted([str(x) for x in eqs if str(x).lower()!='nan'])
-        if fg is not None and fg.stat().st_size > 100:
-            df_g = pd.read_csv(fg, dtype=str, on_bad_lines='skip', engine='python')
-            if 'fixture_id' in df_g.columns:
-                df_g['fixture_id'] = df_g['fixture_id'].astype(str).str.split('.').str[0].str.strip()
-                df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0].str.strip()
-                for col in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT']:
-                    if col in df_g.columns and col not in df.columns:
-                        df = df.merge(df_g[['fixture_id', col]], on='fixture_id', how='left')
-                for col in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT']:
-                    if col in df.columns:
-                        df[col] = df[col].fillna('')
-    except:
-        pass
-    if 'HomeAbbr' not in df.columns:
-        df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
-    if 'AwayAbbr' not in df.columns:
-        df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
-    return df.copy()
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd
@@ -1651,10 +1636,10 @@ df_original = df.copy() if not df.empty else pd.DataFrame()
 
 if df.empty or 'League' not in df.columns:
     try:
-        existentes = [p.name for p in pathlib.Path(__file__).parent.glob("*.csv")]
+        existentes = [p.name for p in pathlib.Path(__file__).parent.glob("*PRECALCULADO*.csv")]
     except:
         existentes = []
-    st.error(f"DF vacio - no encontró tus 7 CSV nuevos. En carpeta hay: {existentes}. Necesitas: din1_suec1_26_27.csv + europa_actual.csv + asia_actual_j1j2k1k2csl1.csv + j1j2k1k2csl1_22_25.csv + ligas_escandinavas_22_26.csv + ligas_europa22_26.csv + sudasia_22_26.csv")
+    st.error(f"DF vacio - no encontró Ligas-PRECALCULADO.csv / Goles-Precalculado.csv. En carpeta hay: {existentes}")
     st.stop()
 
 with st.expander("Filtros de partidos", expanded=False):
