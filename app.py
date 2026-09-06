@@ -685,8 +685,7 @@ def cargar_eventos(league=None, season=None):
             ev[str(fid).split('.')[0]]=[{"minute":int(float(str(r.get('minuto','0')).split('+')[0] or 0)),"player":str(r.get('goleador','')).strip(),"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in str(r.get('tipo','')).lower()} for _,r in g.iterrows() if str(r.get('goleador','')).strip().lower()!='nan']
         except: continue
     return ev
-
-    # LIMPIEZA
+# --- LIMPIEZA FUERA DE cargar_eventos ---
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
     df = df[df['Date'].notna()]
     for col in ['League','Season','HomeTeam','AwayTeam']:
@@ -1705,8 +1704,20 @@ with st.expander("Filtros de partidos", expanded=False):
     temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=_def_temp, label_visibility="collapsed", key="filtro_temp_main", on_change=persistir)
     modo_vista = "Jornadas"
 
-    st.info(f"SELECCION ACTUAL: Liga={liga_sel} | Temp={temp_sel} | Filas={len(df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)])}")
-    df_fil = df[df['League'].isin(liga_sel) & df['Season'].isin(temp_sel)]
+    def _expand_temps(_lst):
+        _out=[]
+        for _s in _lst:
+            _s=str(_s).strip()
+            _out.append(_s)
+            if "/" in _s:
+                _out.append(_s.split("/")[0])
+            else:
+                if _s.isdigit():
+                    _out.append(f"{_s}/{int(_s)+1}")
+        return list(set(_out))
+    _temp_fix = _expand_temps(temp_sel)
+    st.info(f"SELECCION ACTUAL: Liga={liga_sel} | Temp={temp_sel} | Filas={len(df[df['League'].isin(liga_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)])}")
+    df_fil = df[df['League'].isin(liga_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)]
 
     if df_fil.empty:
         st.warning("Selecciona al menos 1 liga y 1 temporada")
