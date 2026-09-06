@@ -349,12 +349,11 @@ def formatear_h2h_compacto(row, equipo_ref=None):
             eq_norm, str(row.get('HomeTeam','')), str(row.get('AwayTeam',''))
         )
         base_html = _formatear_h2h_compacto_cached(key)
-        # NUEVO: añade goles con minuto/jugador/asistente si hay eventos cargados
+        # FIX: siempre intenta pintar Goles_Todo_HTML aunque todos_eventos sea {}
         try:
-            if 'todos_eventos' in globals() and todos_eventos:
-                goles = buscar_goles_partido(row, todos_eventos, 0, 120, "Todo", equipo_ref)
-                if goles:
-                    base_html = base_html.replace("</div>", f"<div style='font-size:10px;color:#000;line-height:1.2;margin-top:3px;border-top:1px dashed #999;padding-top:2px'>{goles}</div></div>")
+            goles = buscar_goles_partido(row, todos_eventos if 'todos_eventos' in globals() else {}, 0, 120, "Todo", equipo_ref)
+            if goles:
+                base_html = base_html.replace("</div>", f"<div style='font-size:10px;color:#000;line-height:1.2;margin-top:3px;border-top:1px dashed #999;padding-top:2px'>{goles}</div></div>")
         except:
             pass
         return base_html
