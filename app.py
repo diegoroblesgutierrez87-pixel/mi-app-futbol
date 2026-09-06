@@ -3697,8 +3697,8 @@ with st.container(border=True):
                 html1 = "".join([formatear_h2h_compacto(r, equipo_filtro) for _, r in df1.iterrows()])
                 html2 = "".join([formatear_h2h_compacto(r, equipo2_filtro) for _, r in df2.iterrows()])
                 h2h_html = f'''
-                <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; position:sticky; top:0; background:#fff; z-index:5; border-bottom:2px solid #000;">
+                <div style="border:1px solid #ddd;">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; background:#fff; border-bottom:2px solid #000;">
                     <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo_filtro} ({len(df1)})</div>
                     <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo2_filtro} ({len(df2)})</div>
                   </div>
