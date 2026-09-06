@@ -3586,14 +3586,10 @@ with st.container(border=True):
         df_tmp = df_tmp.sort_values(['Jornada','Date'], ascending=[False, False]).head(150)
         return df_tmp[['partidos']].to_html(escape=False, index=False, classes='dataframe')
 
-    # --- Partidos plegables CON BOTON ---
+    # --- Partidos plegables CON BOTON --- ULTRA RAPIDO - SOLO BAY FORMAT ---
     with st.expander("📋 Partidos", expanded=False):
-        
-        # Estado inicial
         if 'ver_partidos' not in st.session_state:
             st.session_state.ver_partidos = False
-
-        # Reset automático si cambias Eq1/Eq2/Jornada
         firma = f"{equipo_filtro}|{equipo2_filtro}|{rango_jornadas}|{cuota_tipo}"
         if 'firma_partidos' not in st.session_state:
             st.session_state.firma_partidos = firma
@@ -3617,56 +3613,33 @@ with st.container(border=True):
             else:
                 st.caption(f"Mostrando {min(150, len(df_final))} de {len(df_final)} partidos")
 
-        # SI NO HA DADO AL BOTON, NO HACE NADA MÁS
         if not st.session_state.ver_partidos:
             pass
         else:
-            pass
-            import json as _jc, streamlit.components.v1 as _cc, re as _rc
-            # --- BOTON COPIAR QUE FUNCIONA CON 1 O 2 EQUIPOS ---
-            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True).head(150)
-            _ls = []
-            for _, r in df_mostrar.iterrows():
-                try:
-                    _h = formatear_partido(r, equipo_filtro if equipo_filtro!="Ninguno" else None, cuota_tipo, "")
-                    _ls.append(_rc.sub(r'\s+', ' ', _rc.sub(r'<[^>]+>', ' ', _h)).strip())
-                except:
-                    pass
-            if _ls:
-                _tj = _jc.dumps("\n\n".join(_ls))
-                _cc.html(f"""<button id="btn_copy_final" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_copy_final').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}}}</script>""", height=80)
+            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).head(80).copy()
 
-            if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
-                df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
-                df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
-                html1 = "".join([formatear_h2h_compacto(r, equipo_filtro) for _, r in df1.iterrows()])
-                html2 = "".join([formatear_h2h_compacto(r, equipo2_filtro) for _, r in df2.iterrows()])
-                h2h_html = f'''
-                <div style="border:1px solid #ddd;">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; background:#fff; border-bottom:2px solid #000;">
-                    <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo_filtro} ({len(df1)})</div>
-                    <div style="font-weight:700; font-size:11px; text-align:center; padding:4px">{equipo2_filtro} ({len(df2)})</div>
-                  </div>
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
-                    <div>{html1}</div>
-                    <div>{html2}</div>
-                  </div>
-                </div>
-                '''
-                st.markdown(h2h_html, unsafe_allow_html=True)
-            else:
-                partidos_html = []
-                for _, r in df_mostrar.iterrows():
-                    partidos_html.append(formatear_partido(r, equipo_filtro if equipo_filtro != "Ninguno" else None, cuota_tipo, r.get('Goles','')))
-                left_html = "".join(partidos_html[0::2])
-                right_html = "".join(partidos_html[1::2])
-                grid_html = f'''
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
-                    <div>{left_html}</div>
-                    <div>{right_html}</div>
-                </div>
-                '''
-                st.markdown(grid_html, unsafe_allow_html=True)
+            # --- FORMATO RAPIDO BAY ---
+            def fmt_bay_fast(r):
+                try:
+                    j = int(r.get('Jornada',0))
+                    h_ab = str(r.get('HomeAbbr','') or abreviar_equipo(r.get('HomeTeam','')))[:3].upper()
+                    a_ab = str(r.get('AwayAbbr','') or abreviar_equipo(r.get('AwayTeam','')))[:3].upper()
+                    h1 = int(r.get('HTHG',0)); a1 = int(r.get('HTAG',0))
+                    hg = int(r.get('FTHG',0)); ag = int(r.get('FTAG',0))
+                    goles = str(r.get('Goles_Todo_HTML','') or r.get('Goles','') or "").strip()
+                    # limpia | para tu formato
+                    goles_br = goles.replace(' | ', '<br>') if goles else "-"
+                    return f"<div style='font-family:monospace;font-size:11px;line-height:1.25;padding:6px 4px;border-bottom:2px solid #000;background:#fff'>|J{j}| 1ªP: {h_ab} {h1}-{a1} {a_ab}<br>FINAL: {h_ab} {hg}-{ag} {a_ab}<br>{hg}-{ag} {h_ab if hg>ag else a_ab}| {goles_br}</div>"
+                except:
+                    return "<div style='font-size:10px'>-</div>"
+
+            # Vectorizado - itertuples es 5x mas rapido que iterrows + formatear_partido
+            partidos_html = [fmt_bay_fast(r._asdict()) if hasattr(r,'_asdict') else fmt_bay_fast(r) for r in df_mostrar.itertuples(index=False)]
+            
+            # 2 columnas sin html pesado
+            left_html = "".join(partidos_html[0::2])
+            right_html = "".join(partidos_html[1::2])
+            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"> <div>{left_html}</div><div>{right_html}</div></div>', unsafe_allow_html=True)
 
 
 
