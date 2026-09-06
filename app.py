@@ -582,13 +582,19 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    f = BASE / "ligas_PRECALCULADO.csv"
+    # FIX NOMBRE REAL EN CLOUD: Ligas-PRECALCULADO.csv / ligas_PRECALCULADO.csv
+    candidatos_ligas = [
+        BASE / "Ligas-PRECALCULADO.csv",
+        BASE / "ligas_PRECALCULADO.csv",
+        BASE / "Ligas_PRECALCULADO.csv",
+        BASE / "ligas-PRECALCULADO.csv",
+    ]
+    f = next((p for p in candidatos_ligas if p.exists()), candidatos_ligas[0])
     df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
     if 'HomeAbbr' not in df.columns:
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
         df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
     return df.copy()
-    for p in candidatos:
         if p.exists() and p.stat().st_size > 168:
             try:
                 try: d = pd.read_csv(p, on_bad_lines='skip', engine='python')
