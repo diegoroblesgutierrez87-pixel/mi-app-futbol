@@ -602,23 +602,58 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    # FIX NOMBRE REAL EN CLOUD: Ligas-PRECALCULADO.csv / ligas_PRECALCULADO.csv
     candidatos_ligas = [
         BASE / "Ligas-PRECALCULADO.csv",
         BASE / "ligas_PRECALCULADO.csv",
         BASE / "Ligas_PRECALCULADO.csv",
         BASE / "ligas-PRECALCULADO.csv",
+        BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv",
+        BASE / "Ligas-PRECALC.csv",
     ]
+    f = next((p for p in candidatos_ligas if p.exists()), candidatos_ligas[0])
+    df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
+    # FIX GOLES PRECALCULADO - fusion rapida y segura
+    try:
+        cands_g = [
+            BASE / "Goles-Precalculado.csv",
+            BASE / "goles_precalculado.csv",
+            BASE / "Goles_precalculado.csv",
+            BASE / "goles-precalculado.csv",
+            BASE / "Goles-PRECALCULADO.csv",
+        ]
+        fg = next((p for p in cands_g if p.exists()), None)
+        if fg is not None and fg.stat().st_size > 100:
+            df_g = pd.read_csv(fg, dtype=str, on_bad_lines='skip', engine='python')
+            if 'fixture_id' in df_g.columns:
+                df_g['fixture_id'] = df_g['fixture_id'].astype(str).str.split('.').str[0].str.strip()
+                df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0].str.strip()
+                for col in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT']:
+                    if col in df_g.columns and col not in df.columns:
+                        df = df.merge(df_g[['fixture_id', col]], on='fixture_id', how='left')
+                for col in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT']:
+                    if col in df.columns:
+                        df[col] = df[col].fillna('')
+    except:
+        pass
+    if 'HomeAbbr' not in df.columns:
+        df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
+    if 'AwayAbbr' not in df.columns:
+        df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
+    return df.copy()
+
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd
-    # FIX PRECALC - si viene de Goles-Precalculado devuelve directo
+    # FIX PRECALC - ultra rapido
     try:
-        if parte=="Todo" and str(row.get('Goles_Todo_HTML','')).strip()!="":
-            return str(row.get('Goles_Todo_HTML',''))
-        if parte=="1T" and str(row.get('Goles_1P_HTML','')).strip()!="":
-            return str(row.get('Goles_1P_HTML',''))
-        if parte=="2T" and str(row.get('Goles_2P_HTML','')).strip()!="":
-            return str(row.get('Goles_2P_HTML',''))
+        if parte=="Todo":
+            v = str(row.get('Goles_Todo_HTML','')).strip()
+            if v: return v
+        if parte=="1T":
+            v = str(row.get('Goles_1P_HTML','')).strip()
+            if v: return v
+        if parte=="2T":
+            v = str(row.get('Goles_2P_HTML','')).strip()
+            if v: return v
     except:
         pass
     import unicodedata, re
@@ -642,15 +677,9 @@ def cargar_eventos(league=None, season=None):
         BASE_EV / "goles_arabia_actual.csv",
     ]
 
-    # FIX COLUMNAS ALTERNATIVAS - tu SOLO_RESULTADO usa GolLocal_FT
-    mapa_cols = {
-        'GolLocal_FT':'FTHG', 'GolVisitante_FT':'FTAG',
-        'GolLocal_1P':'HTHG', 'GolVisitante_1P':'HTAG',
-        'GolLocal_2P':'FTHG_2P', 'GolVisitante_2P':'FTAG_2P'
-    }
-    for old,new in mapa_cols.items():
-        if old in df.columns and new not in df.columns:
-            df[new] = df[old]
+    # FIX COLUMNAS ALTERNATIVAS ELIMINADO - ESTABA ROTO, USABA df QUE NO EXISTE
+    # La conversion GolLocal_FT ya esta en cargar_todo, no aqui
+    pass
     # si aún no hay FTHG intenta desde Resultado tipo "2-1"
     if 'FTHG' not in df.columns or df['FTHG'].sum()==0:
         if 'Resultado' in df.columns:
