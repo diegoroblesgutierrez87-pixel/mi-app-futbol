@@ -602,25 +602,10 @@ def cargar_todo(_cache_buster=0):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    candidatos_ligas = [
-        BASE / "Ligas-PRECALCULADO.csv",
-        BASE / "ligas_PRECALCULADO.csv",
-        BASE / "Ligas_PRECALCULADO.csv",
-        BASE / "ligas-PRECALCULADO.csv",
-        BASE / "ligas_2122_a_2627_SIN_DUPLICADOS.csv",
-        BASE / "Ligas-PRECALC.csv",
-    ]
-    f = next((p for p in candidatos_ligas if p.exists()), candidatos_ligas[0])
+    f = BASE / "Ligas-PRECALCULADO.csv"
     df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
-    # FIX GOLES PRECALCULADO - fusion rapida y segura
     try:
-        cands_g = [
-            BASE / "Goles-Precalculado.csv",
-            BASE / "goles_precalculado.csv",
-            BASE / "Goles_precalculado.csv",
-            BASE / "goles-precalculado.csv",
-            BASE / "Goles-PRECALCULADO.csv",
-        ]
+        fg = BASE / "Goles-Precalculado.csv"
         fg = next((p for p in cands_g if p.exists()), None)
         if fg is not None and fg.stat().st_size > 100:
             df_g = pd.read_csv(fg, dtype=str, on_bad_lines='skip', engine='python')
