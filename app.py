@@ -596,17 +596,40 @@ if 'xx_filtro' not in st.session_state: st.session_state.xx_filtro = "Todo"
 ##########################################
 @st.cache_data(show_spinner=False)
 def cargar_todo(_cache_buster=0):
-    import pathlib
-    import pandas as pd
-    try:
-        BASE = pathlib.Path(__file__).parent.resolve()
-    except:
-        BASE = pathlib.Path.cwd().resolve()
+    import pathlib, pandas as pd
+    try: BASE = pathlib.Path(__file__).parent.resolve()
+    except: BASE = pathlib.Path.cwd().resolve()
     f = BASE / "Ligas-PRECALCULADO.csv"
-    df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
+    df = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    # merge goles precalculado - solo 1 archivo
     try:
         fg = BASE / "Goles-Precalculado.csv"
-        fg = next((p for p in cands_g if p.exists()), None)
+        if fg.exists() and fg.stat().st_size > 100:
+            df_g = pd.read_csv(fg, dtype=str, engine='c', on_bad_lines='skip')
+            if 'fixture_id' in df_g.columns and 'fixture_id' in df.columns:
+                df_g['fixture_id'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
+                df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0]
+                # solo columnas que existen
+                cols = [c for c in ['Goles_Todo_HTML','Goles_1P_HTML','Goles_2P_HTML','Goles_Todo_TXT'] if c in df_g.columns]
+                if cols:
+                    df = df.merge(df_g[['fixture_id']+cols], on='fixture_id', how='left')
+                    for c in cols: df[c] = df[c].fillna('')
+    except: pass
+    # Abbr lazy - no en carga
+    if 'HomeAbbr' not in df.columns: df['HomeAbbr'] = df['HomeTeam']
+    if 'AwayAbbr' not in df.columns: df['AwayAbbr'] = df['AwayTeam']
+    return df.copy()
+
+@st.cache_data(show_spinner=False)
+def cargar_eventos(league=None, season=None):
+    return {}
+
+@st.cache_data(show_spinner=False)
+def get_equipos_cached(ligas_tuple):
+    src = df[df['League'].isin(ligas_tuple)] if ligas_tuple else df
+    eqs = pd.unique(src[['HomeTeam','AwayTeam']].values.ravel())
+    return sorted([str(x) for x in eqs if str(x).lower()!='nan'])
         if fg is not None and fg.stat().st_size > 100:
             df_g = pd.read_csv(fg, dtype=str, on_bad_lines='skip', engine='python')
             if 'fixture_id' in df_g.columns:
@@ -835,33 +858,7 @@ def cargar_eventos(league=None, season=None):
         pass
     return df.copy()
 ######################################################
-@st.cache_data(show_spinner=False)
-def cargar_eventos(league=None, season=None):
-    import pathlib, pandas as pd
-    try:
-        BASE_EV = pathlib.Path(__file__).parent.resolve()
-    except:
-        BASE_EV = pathlib.Path.cwd().resolve()
-
-    candidatos = [
-        BASE_EV / "goles_actual.csv",
-        BASE_EV / "goles_sudamerica_actual.csv",
-        BASE_EV / "goles_arabia_actual.csv",
-    ]
-    dfs=[]
-    for f in candidatos:
-        if f.exists() and f.stat().st_size > 100:
-            try:
-                df=pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
-                if df.empty or 'minuto' not in str(df.columns).lower():
-                    continue
-                if 'fixture_id' in df.columns:
-                    df['fixture_id'] = df['fixture_id'].astype(str).str.split('.').str[0]
-                dfs.append(df)
-            except:
-                pass
-    if not dfs:
-        return {}
+####################
     df_g=pd.concat(dfs, ignore_index=True)
     try:
         df_g=df_g.drop_duplicates(subset=['fixture_id','minuto','goleador','tipo','equipo'], keep='first')
