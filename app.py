@@ -595,30 +595,23 @@ def cargar_todo(_cache_buster=0):
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
         df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
     return df.copy()
-        if p.exists() and p.stat().st_size > 168:
-            try:
-                try: d = pd.read_csv(p, on_bad_lines='skip', engine='python')
-                except: d = pd.read_csv(p, sep=';', on_bad_lines='skip', engine='python')
-                if not d.empty and 'fixture_id' in d.columns:
-                    d['fixture_id'] = pd.to_numeric(d['fixture_id'], errors='coerce')
-                    d = d.dropna(subset=['fixture_id'])
-                    if not d.empty:
-                        dfs.append(d)
-                elif not d.empty:
-                    dfs.append(d)
-            except: pass
-    if dfs:
-        df_completo = pd.concat(dfs, ignore_index=True)
-        if 'fixture_id' in df_completo.columns and 'HS' in df_completo.columns:
-            df_completo['__has_stats'] = pd.to_numeric(df_completo['HS'], errors='coerce').fillna(0) > 0
-            df_completo = df_completo.sort_values(['__has_stats','Date'], ascending=[False, True])
-            df_completo = df_completo.drop_duplicates(subset=['fixture_id'], keep='first')
-            df_completo = df_completo.drop(columns=['__has_stats'])
-        elif 'fixture_id' in df_completo.columns:
-            df_completo = df_completo.drop_duplicates(subset=['fixture_id'], keep='last')
-    if df_completo.empty:
-        return pd.DataFrame()
-    df = df_completo.copy()
+
+@st.cache_data(show_spinner=False)
+def cargar_eventos(league=None, season=None):
+    import os, pathlib, pandas as pd
+    try:
+        BASE_EV = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE_EV = pathlib.Path.cwd().resolve()
+    # FIX: lista explícita, sin recursive, no escanea venv
+    candidatos = [
+        BASE_EV / "goles_actual.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO.csv",
+        BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
+        BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
+        BASE_EV / "goles_sudamerica_actual.csv",
+        BASE_EV / "goles_arabia_actual.csv",
+    ]
 
     # FIX COLUMNAS ALTERNATIVAS - tu SOLO_RESULTADO usa GolLocal_FT
     mapa_cols = {
