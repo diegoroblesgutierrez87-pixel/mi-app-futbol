@@ -3471,10 +3471,10 @@ with st.container(border=True):
                             _resumen_ht = f"<div style='font-size:11px;line-height:1.2;color:#000;margin:2px 0 2px 0;font-family:monospace;border:1px solid #000;padding:1px 2px;background:#ffff99'><b>0.5HT> {_o05_all}/{_tot}</b> (c{_o05_c}/{_tot_c} | f{_o05_f}/{_tot_f}) | <b>1.5HT> {_o15_all}/{_tot}</b> (c{_o15_c}/{_tot_c} | f{_o15_f}/{_tot_f}) | <b>AM1P {_am1p_all}/{_tot}</b> (c{_am1p_c}/{_tot_c} | f{_am1p_f}/{_tot_f})</div>"
                         except Exception as e:
                             _resumen_ht = f"<div style='font-size:11px;color:#fff;background:#f00;padding:2px'>HT ERROR {e} - {_tot}PJ</div>"
-##########################3muro amarillo
+##########################3 muro amarillo
                         #############################
                         ################################
-                                              # LECTURA UNICA DE ESTE CSV - Tablon-Maestro-Completo.csv
+                                              # LECTURA UNICA DE ESTE CSV - Tablon-Maestro-Completo.csv - SOLO ESTE CSV, RAPIDO
                         if '_tablon_dict' not in globals():
                             try:
                                 import pathlib
@@ -3482,11 +3482,18 @@ with st.container(border=True):
                                 except: _b = pathlib.Path.cwd().resolve()
                                 _pf = _b / "Tablon-Maestro-Completo.csv"
                                 _dft = pd.read_csv(_pf, on_bad_lines='skip', engine='c', low_memory=False) if _pf.exists() else pd.DataFrame()
-                                globals()['_tablon_dict'] = { (str(r['Equipo']).strip().upper(), str(r['Season']).strip()): (str(r.get('HT05_j','')).strip(), str(r.get('HT15_j','')).strip(), str(r.get('AM1P_j','')).strip()) for _, r in _dft.iterrows() }
+                                _tmp = {}
+                                for _, r in _dft.iterrows():
+                                    _k = (normaliza(r.get('Equipo','')), str(r.get('Season','')).strip())
+                                    _v = (str(r.get('HT05_j','')).strip(), str(r.get('HT15_j','')).strip(), str(r.get('AM1P_j','')).strip())
+                                    # si hay duplicado con Ü (BAYERN MÜNCHEN / MUNCHEN), quédate con el que tiene datos
+                                    if _k not in _tmp or (_tmp[_k][0] in ('','nan','-') and _v[0] not in ('','nan','-')):
+                                        _tmp[_k] = _v
+                                globals()['_tablon_dict'] = _tmp
                             except:
                                 globals()['_tablon_dict'] = {}
 
-                        _key = (str(eq).strip().upper(), str(_season).strip())
+                        _key = (normaliza(eq), str(_season).strip())
                         ht05_txt, ht15_txt, am1p_txt = globals().get('_tablon_dict', {}).get(_key, ("-","-","-"))
                         if ht05_txt=='' or ht05_txt.lower()=='nan': ht05_txt="-"
                         if ht15_txt=='' or ht15_txt.lower()=='nan': ht15_txt="-"
