@@ -1917,16 +1917,8 @@ if len(jornadas) > 0:
 
     df_base_h2h = df_final.copy()
 
-    # FIX VELOCIDAD - si hay Goles-Precalculado, NO cargues eventos (es instantáneo)
+    # FIX PRECALCULADO - solo Goles-Precalculado.csv, no goles_*.csv
     todos_eventos = {}
-    try:
-        tiene_precalc = 'Goles_Todo_HTML' in df_final.columns and df_final['Goles_Todo_HTML'].astype(str).str.len().gt(10).any()
-    except:
-        tiene_precalc = False
-    if not tiene_precalc:
-        for liga in liga_sel:
-            for temp in temp_sel:
-                todos_eventos.update(cargar_eventos(liga, temp))
 #########filtro rango de ultimas jornadas
     if 'marcador_filtro' not in st.session_state: st.session_state.marcador_filtro = "Todos"
     if 'marcador_filtro_eq2' not in st.session_state: st.session_state.marcador_filtro_eq2 = "Todos"
