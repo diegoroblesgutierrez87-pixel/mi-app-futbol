@@ -3591,7 +3591,20 @@ with st.container(border=True):
             pass
         else:
             pass
-            # --- TU LOGICA ORIGINAL A PARTIR DE AQUI ---
+            import json as _jc, streamlit.components.v1 as _cc, re as _rc
+            # --- BOTON COPIAR QUE FUNCIONA CON 1 O 2 EQUIPOS ---
+            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True).head(150)
+            _ls = []
+            for _, r in df_mostrar.iterrows():
+                try:
+                    _h = formatear_partido(r, equipo_filtro if equipo_filtro!="Ninguno" else None, cuota_tipo, "")
+                    _ls.append(_rc.sub(r'\s+', ' ', _rc.sub(r'<[^>]+>', ' ', _h)).strip())
+                except:
+                    pass
+            if _ls:
+                _tj = _jc.dumps("\n\n".join(_ls))
+                _cc.html(f"""<button id="btn_copy_final" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_copy_final').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}}}</script>""", height=80)
+
             if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
                 df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
                 df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
@@ -3611,14 +3624,9 @@ with st.container(border=True):
                 '''
                 st.markdown(h2h_html, unsafe_allow_html=True)
             else:
-                df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True)
-                MAX_FILAS = 150
-                if len(df_mostrar) > MAX_FILAS:
-                    df_mostrar = df_mostrar.head(MAX_FILAS)
                 partidos_html = []
-                if len(df_mostrar) > 0:
-                    for _, r in df_mostrar.iterrows():
-                        partidos_html.append(formatear_partido(r, equipo_filtro if equipo_filtro != "Ninguno" else None, cuota_tipo, r.get('Goles','')))
+                for _, r in df_mostrar.iterrows():
+                    partidos_html.append(formatear_partido(r, equipo_filtro if equipo_filtro != "Ninguno" else None, cuota_tipo, r.get('Goles','')))
                 left_html = "".join(partidos_html[0::2])
                 right_html = "".join(partidos_html[1::2])
                 grid_html = f'''
@@ -3629,17 +3637,6 @@ with st.container(border=True):
                   </div>
                 </div>
                 '''
-                import json as _jc, streamlit.components.v1 as _cc, re as _rc
-                _ls = []
-                for _, r in df_mostrar.iterrows():
-                    try:
-                        _h = formatear_partido(r, equipo_filtro if equipo_filtro!="Ninguno" else None, cuota_tipo, "")
-                        _ls.append(_rc.sub(r'\s+', ' ', _rc.sub(r'<[^>]+>', ' ', _h)).strip())
-                    except:
-                        pass
-                if _ls:
-                    _tj = _jc.dumps("\n\n".join(_ls))
-                    _cc.html(f"""<button id="btn_copy_final" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_copy_final').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}}}</script>""", height=80)
                 st.markdown(grid_html, unsafe_allow_html=True)
 
 
