@@ -603,6 +603,7 @@ def cargar_todo(_cache_buster=0):
             d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
             dfs.append(d)
     df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+    df['Season'] = df['Season'].astype(str)
     df = df.sort_values('Date').drop_duplicates(subset=['fixture_id'], keep='last') if not df.empty else df
 
     # FIX GOLES: tus 3 goles_actual.csv están en formato largo -> los convierte a HTML
@@ -3756,9 +3757,11 @@ with st.expander("🔍 Buscador de Equipos + IA (optimizado)", expanded=False):
     st.caption("Busca equipos que cumplan condiciones - optimizado 10x + IA sin cuota")
 
     df_busca = df.copy()
+    df_busca['Season'] = df_busca['Season'].astype(str)
+    df_busca['League'] = df_busca['League'].astype(str)
     col_liga, col_temp = st.columns(2)
-    ligas_busca = col_liga.multiselect("Ligas", sorted(df_busca['League'].unique()), default=[], key="be2_ligas_v2")
-    temps_busca = col_temp.multiselect("Temps", sorted(df_busca['Season'].unique()), default=[], key="be2_temps_v2")
+    ligas_busca = col_liga.multiselect("Ligas", sorted([str(x) for x in df_busca['League'].dropna().unique()]), default=[], key="be2_ligas_v2")
+    temps_busca = col_temp.multiselect("Temps", sorted([str(x) for x in df_busca['Season'].dropna().unique()]), default=[], key="be2_temps_v2")
     if ligas_busca: df_busca = df_busca[df_busca['League'].isin(ligas_busca)]
     if temps_busca: df_busca = df_busca[df_busca['Season'].isin(temps_busca)]
     if df_busca.empty:
