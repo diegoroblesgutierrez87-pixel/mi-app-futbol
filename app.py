@@ -1086,39 +1086,20 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         away_norm = _clean_team(row.get('AwayTeam',''))
         gh, ga = 0, 0
         txt=[]
-        for ev in evs:
+        # ordena por minuto para que salga 40' luego 71'
+        evs_sorted = sorted(evs, key=lambda x: int(x.get('minute',0)))
+        for ev in evs_sorted:
             if ev.get('missed'): continue
             m = ev.get('minute',0)
             if parte=="1T" and m>45: continue
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
-            team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
-            # actualiza marcador
-            if team_norm == home_norm:
-                gh += 1
-            elif team_norm == away_norm:
-                ga += 1
-            else:
-                # fallback por si viene abreviado
-                if home_norm in team_norm or team_norm in home_norm:
-                    gh += 1
-                else:
-                    ga += 1
-            score_txt = f"{gh}-{ga}"
-            es_mio = _es_mismo_equipo(filtro_norm, team_norm)
-            minuto = f"{m}'(pen)" if ev.get('penalty') else f"{m}'"
+            minuto = f"{m}'(P)" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
             ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
-            ast = f" <span style='font-weight:400;color:#666;font-size:10px'>({_abrev(ast_raw)})</span>" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
-            if es_mio:
-                # LINEA ENTERA SUBRAYADA SI ES DE MI EQUIPO FILTRADO
-                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
-                jug_html = f"<span style='font-weight:900;color:#000'>{jug}</span>{ast}"
-                txt.append(f"<div style='line-height:1.35;white-space:nowrap;text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
-            else:
-                minuto_html = f"<span style='color:#581C87;font-weight:900;font-style:normal;font-size:12px'>{minuto}</span>"
-                jug_html = f"<span style='font-weight:600;color:#444'>{jug}</span>{ast}"
-                txt.append(f"<div style='line-height:1.25;white-space:nowrap'>{minuto_html} {jug_html} <span style='font-weight:900;color:#000;background:#ffff99;padding:0 4px;border-radius:3px;margin-left:5px;border:1px solid #000'>{score_txt}</span></div>")
+            ast = f" ({_abrev(ast_raw)})" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
+            # una linea por gol, sin cuadro amarillo de marcador
+            txt.append(f"<div style='line-height:1.35;font-size:11px;color:#000;white-space:nowrap'>{minuto} {jug}{ast}</div>")
         return "".join(txt)
     except:
         return ""
