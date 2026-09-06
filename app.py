@@ -1482,6 +1482,8 @@ def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
     import pandas as pd
     df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].isin(temps_tuple)].copy()
     df_fil = df_fil.sort_values(['League','Season','Date'])
+    if 'Jornada' not in df_fil.columns and not df_fil.empty:
+        df_fil, _ = calcular_estado_jornada(df_fil)
     try:
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
