@@ -609,12 +609,21 @@ def cargar_todo(_cache_buster=0):
         BASE / "Ligas_PRECALCULADO.csv",
         BASE / "ligas-PRECALCULADO.csv",
     ]
-    f = next((p for p in candidatos_ligas if p.exists()), candidatos_ligas[0])
-    df = pd.read_csv(f, on_bad_lines='skip', engine='python', parse_dates=['Date'])
-    if 'HomeAbbr' not in df.columns:
-        df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
-        df['AwayAbbr'] = df['AwayTeam'].apply(abreviar_equipo)
-    return df.copy()
+def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
+    import pandas as pd
+    # FIX PRECALC - si viene de Goles-Precalculado devuelve directo
+    try:
+        if parte=="Todo" and str(row.get('Goles_Todo_HTML','')).strip()!="":
+            return str(row.get('Goles_Todo_HTML',''))
+        if parte=="1T" and str(row.get('Goles_1P_HTML','')).strip()!="":
+            return str(row.get('Goles_1P_HTML',''))
+        if parte=="2T" and str(row.get('Goles_2P_HTML','')).strip()!="":
+            return str(row.get('Goles_2P_HTML',''))
+    except:
+        pass
+    import unicodedata, re
+    if pd.isna(row.get('Date')):
+        return ""
 
 @st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
