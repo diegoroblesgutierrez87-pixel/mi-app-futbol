@@ -1470,13 +1470,21 @@ def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
         BASE = pathlib.Path.cwd().resolve()
-    f_clas = BASE / "clasificacion_PRECALCULADO.csv"
-    if f_clas.exists():
-        df_clas = pd.read_csv(f_clas)
+    # FIX PRECALCULADO - busca con mayusculas/minusculas
+    candidatos_clas = [
+        BASE / "Clasificacion-PRECALCULADO.csv",
+        BASE / "Clasificacion-PF.csv",
+        BASE / "clasificacion_PRECALCULADO.csv",
+        BASE / "clasificacion-PRECALCULADO.csv",
+    ]
+    f_clas = next((p for p in candidatos_clas if p.exists()), None)
+    if f_clas is not None and f_clas.exists():
+        df_clas = pd.read_csv(f_clas, on_bad_lines='skip', engine='python')
         df_clas = df_clas[df_clas['League'].isin(ligas_tuple) & df_clas['Season'].isin(temps_tuple)]
         return df_fil, df_clas
     else:
-        return calcular_estado_jornada(df_fil)
+        # si no hay clasif, devuelve df_fil tal cual, NO recalcula jornada (ya viene en el CSV)
+        return df_fil, pd.DataFrame()
  
 
 def limpiar_filtros():
@@ -2773,11 +2781,10 @@ if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_b
         df_final['partidos'] = pd.Series(dtype='object')
         df_final['Tarjetas/Corners/goles'] = pd.Series(dtype='object')
 
-    # FIX: % siempre activo, aunque haya %Clasif
+    # FIX: % siempre activo, aunque haya %Clasif - NO recalcular jornada, usa precalculado
     _pct_min = int(st.session_state.get('pct_min', 1))
     _pct_max = int(st.session_state.get('pct_max', 100))
     if not (_pct_min == 1 and _pct_max == 100) and len(df_final) > 0:
-        # total por equipo en la liga/temp/jornada seleccionada (sin filtros)
         _base_tot = df_original.copy()
         try:
             _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].isin(temp_sel)]
@@ -2787,7 +2794,6 @@ if str(st.session_state.get('seguidos_filtro','-')) not in ["-",""] and len(df_b
             _base_tot = _base_tot[(_base_tot['Jornada'] >= rango_jornadas[0]) & (_base_tot['Jornada'] <= rango_jornadas[1])]
         except:
             pass
-        _base_tot, _ = calcular_estado_jornada(_base_tot)
 
         _equipos_ok = []
         for _eq in pd.unique(df_final[['HomeTeam','AwayTeam']].values.ravel()):
