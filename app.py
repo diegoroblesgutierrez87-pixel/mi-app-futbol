@@ -1508,7 +1508,8 @@ if df.empty or 'League' not in df.columns:
     st.stop()
 
 with st.expander("Filtros de partidos", expanded=False):
-    ligas_disponibles = sorted([str(x) for x in df['League'].dropna().unique()])
+    _df_eu_ligas = pd.read_csv("europa_actual.csv", on_bad_lines='skip', engine='python') if os.path.exists("europa_actual.csv") else pd.DataFrame()
+    ligas_disponibles = sorted([str(x) for x in _df_eu_ligas['League'].dropna().unique()]) if not _df_eu_ligas.empty else []
     temporadas_disponibles = ["2026/2027"]
 
     # DEBUG: fuerza que salga 2026/2027 si esta en el CSV
