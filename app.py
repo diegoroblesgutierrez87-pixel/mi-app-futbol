@@ -865,13 +865,7 @@ def cargar_eventos(league=None, season=None):
     except:
         BASE_EV = pathlib.Path.cwd().resolve()
 
-    # FIX INSTANTANEO - si hay Goles-Precalculado no hace falta cargar eventos
-    try:
-        pre = BASE_EV / "Goles-Precalculado.csv"
-        if pre.exists() and pre.stat().st_size > 1000:
-            return {}
-    except:
-        pass
+    candidatos = [
 
     candidatos = [
         BASE_EV / "goles_actual.csv",
@@ -1055,6 +1049,22 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
+    # FIX PRECALC - vuelve a pintar minuto+goleador en cromos
+    try:
+        if parte=="Todo":
+            v=str(row.get('Goles_Todo_HTML','')).strip()
+            if v and v.lower()!='nan' and len(v)>5:
+                return v
+        if parte=="1T":
+            v=str(row.get('Goles_1P_HTML','')).strip()
+            if v and v.lower()!='nan' and len(v)>3:
+                return v
+        if parte=="2T":
+            v=str(row.get('Goles_2P_HTML','')).strip()
+            if v and v.lower()!='nan' and len(v)>3:
+                return v
+    except:
+        pass
     if pd.isna(row.get('Date')):
         return ""
             
