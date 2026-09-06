@@ -669,21 +669,9 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         return ""
 
 @st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
-    import os, pathlib, pandas as pd
-    try:
-        BASE_EV = pathlib.Path(__file__).parent.resolve()
-    except:
-        BASE_EV = pathlib.Path.cwd().resolve()
-    # FIX: lista explícita, sin recursive, no escanea venv
-    candidatos = [
-        BASE_EV / "goles_actual.csv",
-        BASE_EV / "goles_2627_actual_LIMPIO.csv",
-        BASE_EV / "goles_2627_actual_LIMPIO_28.csv",
-        BASE_EV / "goles_2627_Asiaticas_J1J2K1K2China_2026.csv",
-        BASE_EV / "goles_sudamerica_actual.csv",
-        BASE_EV / "goles_arabia_actual.csv",
-    ]
+    return {}
 
     # FIX - BLOQUE ROTO ELIMINADO
     return {}
