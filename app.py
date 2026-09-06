@@ -671,7 +671,25 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
 @st.cache_data(show_spinner=False)
 @st.cache_data(show_spinner=False)
 def cargar_eventos(league=None, season=None):
-    return {}
+    import pathlib, pandas as pd
+    try:
+        BASE = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE = pathlib.Path.cwd().resolve()
+    lista=[BASE/"goles_actual.csv",BASE/"goles_arabia_actual.csv",BASE/"goles_sudamerica_actual.csv"]
+    dfs=[]
+    for f in lista:
+        if f.exists() and f.stat().st_size>100:
+            try: dfs.append(pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python'))
+            except: pass
+    if not dfs: return {}
+    df_g=pd.concat(dfs, ignore_index=True)
+    ev={}
+    for fid,g in df_g.groupby('fixture_id'):
+        try:
+            ev[str(fid).split('.')[0]]=[{"minute":int(float(str(r.get('minuto','0')).split('+')[0] or 0)),"player":str(r.get('goleador','')).strip(),"assist":str(r.get('asistente','')).strip(),"team":str(r.get('equipo','')).upper(),"penalty":'pen' in str(r.get('tipo','')).lower()} for _,r in g.iterrows() if str(r.get('goleador','')).strip().lower()!='nan']
+        except: continue
+    return ev
 
     # FIX - BLOQUE ROTO ELIMINADO
     return {}
@@ -1841,8 +1859,7 @@ if len(jornadas) > 0:
 
     df_base_h2h = df_final.copy()
 
-    # FIX PRECALCULADO - solo Goles-Precalculado.csv, no goles_*.csv
-    todos_eventos = {}
+    todos_eventos = cargar_eventos()
 #########filtro rango de ultimas jornadas
     if 'marcador_filtro' not in st.session_state: st.session_state.marcador_filtro = "Todos"
     if 'marcador_filtro_eq2' not in st.session_state: st.session_state.marcador_filtro_eq2 = "Todos"
