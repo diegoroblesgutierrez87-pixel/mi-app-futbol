@@ -677,15 +677,8 @@ def cargar_eventos(league=None, season=None):
         BASE_EV / "goles_arabia_actual.csv",
     ]
 
-    # FIX - ESTE BLOQUE ESTABA ROTO, NO EXISTE df AQUI
+    # FIX - BLOQUE ROTO ELIMINADO
     return {}
-        if 'Resultado' in df.columns:
-            try:
-                tmp = df['Resultado'].astype(str).str.extract(r'(\d+)\s*-\s*(\d+)')
-                df['FTHG'] = pd.to_numeric(tmp[0], errors='coerce')
-                df['FTAG'] = pd.to_numeric(tmp[1], errors='coerce')
-            except:
-                pass
 
     # LIMPIEZA
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
@@ -864,8 +857,6 @@ def cargar_eventos(league=None, season=None):
         BASE_EV = pathlib.Path(__file__).parent.resolve()
     except:
         BASE_EV = pathlib.Path.cwd().resolve()
-
-    candidatos = [
 
     candidatos = [
         BASE_EV / "goles_actual.csv",
