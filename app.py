@@ -3716,11 +3716,9 @@ with st.container(border=True):
                 left_html = "".join(partidos_html[0::2])
                 right_html = "".join(partidos_html[1::2])
                 grid_html = f'''
-                <div style="max-height:700px; overflow-y:auto; border:1px solid #ddd;">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:6px;">
                     <div>{left_html}</div>
                     <div>{right_html}</div>
-                  </div>
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
