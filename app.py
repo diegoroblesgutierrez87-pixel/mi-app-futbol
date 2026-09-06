@@ -3527,8 +3527,14 @@ with st.container(border=True):
                             except:
                                 globals()['_tablon_dict'] = {}
 
-                        _key = (normaliza(eq), str(_season).strip())
-                        ht05_txt, ht15_txt, am1p_txt = globals().get('_tablon_dict', {}).get(_key, ("-","-","-"))
+                        _season_str = str(_season).strip()
+                        _keys_try = [(_season_str), _season_str.split("/")[0] if "/" in _season_str else f"{_season_str}/{int(_season_str)+1}" if _season_str.isdigit() else _season_str]
+                        ht05_txt, ht15_txt, am1p_txt = ("-","-","-")
+                        for _k_try in _keys_try:
+                            _key = (normaliza(eq), str(_k_try).strip())
+                            if _key in globals().get('_tablon_dict', {}):
+                                ht05_txt, ht15_txt, am1p_txt = globals().get('_tablon_dict', {}).get(_key, ("-","-","-"))
+                                break
                         if ht05_txt=='' or ht05_txt.lower()=='nan': ht05_txt="-"
                         if ht15_txt=='' or ht15_txt.lower()=='nan': ht15_txt="-"
                         if am1p_txt=='' or am1p_txt.lower()=='nan': am1p_txt="-"
