@@ -1086,7 +1086,7 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
         away_norm = _clean_team(row.get('AwayTeam',''))
         gh, ga = 0, 0
         txt=[]
-        # ordena por minuto para que salga 40' luego 71'
+        gh, ga = 0, 0
         evs_sorted = sorted(evs, key=lambda x: int(x.get('minute',0)))
         for ev in evs_sorted:
             if ev.get('missed'): continue
@@ -1094,12 +1094,27 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
             if parte=="1T" and m>45: continue
             if parte=="2T" and m<=45: continue
             if not (min_min <= m <= max_min): continue
-            minuto = f"{m}'(P)" if ev.get('penalty') else f"{m}'"
+            team_norm = _clean_team(ev.get('team','') or ev.get('equipo','') or '')
+            if team_norm == home_norm:
+                gh += 1
+            elif team_norm == away_norm:
+                ga += 1
+            else:
+                if home_norm in team_norm or team_norm in home_norm:
+                    gh += 1
+                else:
+                    ga += 1
+            score_txt = f"{gh}-{ga}"
+            minuto = f"{m}'P" if ev.get('penalty') else f"{m}'"
             jug = _abrev(ev.get('player','') or ev.get('goleador',''))
-            ast_raw = ev.get('assist','') or ev.get('asistente','') or ''
-            ast = f" ({_abrev(ast_raw)})" if ast_raw and str(ast_raw).lower() not in ['nan','none',''] else ""
-            # una linea por gol, sin cuadro amarillo de marcador
-            txt.append(f"<div style='line-height:1.35;font-size:11px;color:#000;white-space:nowrap'>{minuto} {jug}{ast}</div>")
+            jug_short = (jug[:12].upper() if len(jug)>12 else jug.upper())
+            try:
+                team_abbr = row.get('HomeAbbr','') if team_norm==home_norm else row.get('AwayAbbr','')
+                if not team_abbr:
+                    team_abbr = abreviar_equipo(row.get('HomeTeam','') if team_norm==home_norm else row.get('AwayTeam',''))
+            except:
+                team_abbr = team_norm[:3].upper()
+            txt.append(f"<div style='line-height:1.35;font-size:11px;color:#000;white-space:nowrap'>{minuto} {jug_short} {score_txt} | {team_abbr}</div>")
         return "".join(txt)
     except:
         return ""
