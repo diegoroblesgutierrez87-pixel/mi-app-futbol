@@ -3606,12 +3606,7 @@ with st.container(border=True):
             pass
             import json as _jc, streamlit.components.v1 as _cc, re as _rc
             # --- BOTON COPIAR QUE FUNCIONA CON 1 O 2 EQUIPOS ---
-            # FIX RENDIMIENTO: 40 en vez de 150 - misma visualizacion
-            if 'pag_partidos' not in st.session_state:
-                st.session_state.pag_partidos = 0
-            PAGE = 40
-            start = st.session_state.pag_partidos * PAGE
-            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True).iloc[start:start+PAGE]
+            df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).reset_index(drop=True).head(150)
             _ls = []
             for _, r in df_mostrar.iterrows():
                 try:
@@ -3624,9 +3619,8 @@ with st.container(border=True):
                 _cc.html(f"""<button id="btn_copy_final" style="background:#0A2342;color:#fff;border:0;padding:14px 0;border-radius:10px;width:100%;font-weight:900;font-size:16px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_copy_final').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_copy_final').innerText='✅ COPIADO!';}}}}</script>""", height=80)
 
             if equipo_filtro != "Ninguno" and equipo2_filtro != "Ninguno":
-                # FIX RENDIMIENTO: 40 en vez de 150
-                df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).iloc[start:start+PAGE]
-                df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).iloc[start:start+PAGE]
+                df1 = df_final[(df_final['HomeTeam']==equipo_filtro) | (df_final['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
+                df2 = df_final[(df_final['HomeTeam']==equipo2_filtro) | (df_final['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=False).head(150)
                 html1 = "".join([formatear_h2h_compacto(r, equipo_filtro) for _, r in df1.iterrows()])
                 html2 = "".join([formatear_h2h_compacto(r, equipo2_filtro) for _, r in df2.iterrows()])
                 h2h_html = f'''
@@ -3657,15 +3651,6 @@ with st.container(border=True):
                 </div>
                 '''
                 st.markdown(grid_html, unsafe_allow_html=True)
-                c_prev, c_next = st.columns(2)
-                with c_prev:
-                    if st.button("◀ Anterior", key="btn_prev_mini", disabled=start==0, use_container_width=True):
-                        st.session_state.pag_partidos = max(0, st.session_state.pag_partidos - 1)
-                        st.rerun()
-                with c_next:
-                    if st.button("Siguiente ▶", key="btn_next_mini", disabled=start+PAGE>=len(df_final), use_container_width=True):
-                        st.session_state.pag_partidos += 1
-                        st.rerun()
 
 
 
