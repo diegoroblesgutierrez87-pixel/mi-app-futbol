@@ -369,47 +369,38 @@ def racha_comprimida_html(df_team, equipo):
     if df_team.empty:
         return ""
     df_team = df_team.drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
-    res = []
-    for _, r in df_team.iterrows():
-        is_home = r['HomeTeam'] == equipo
-        hg, ag = int(r['FTHG']), int(r['FTAG'])
-        if is_home:
-            res.append('G' if hg>ag else 'P' if hg<ag else 'E')
-        else:
-            res.append('G' if ag>hg else 'P' if ag<hg else 'E')
-    if not res:
+    is_home = df_team['HomeTeam'].values == equipo
+    hg = df_team['FTHG'].to_numpy(dtype=int)
+    ag = df_team['FTAG'].to_numpy(dtype=int)
+    # vectorizado, sin iterrows
+    res = np.where(is_home,
+                   np.where(hg>ag, 'G', np.where(hg<ag, 'P', 'E')),
+                   np.where(ag>hg, 'G', np.where(ag<hg, 'P', 'E')))
+    if len(res)==0:
         return ""
-    comp = []
-    cnt = 1
-    for i in range(1, len(res)):
-        if res[i]==res[i-1]: cnt+=1
-        else: comp.append((cnt,res[i-1])); cnt=1
-    comp.append((cnt,res[-1]))
+    # comprime GGGP -> 3G|1P
+    import itertools
+    comp = [(len(list(g)), k) for k, g in itertools.groupby(res)]
     sep = "<span style='color:#bbb;font-size:11px;margin:0 3px'>|</span>"
     parts = []
     for c, letra in comp:
         col = "#0f8105" if letra=='G' else "#f31818" if letra=='P' else "#0A2342"
         parts.append(f"<span style='color:{col};font-weight:700;font-size:11px;line-height:1.1'>{c}{letra}</span>")
-    # FIX: inline y nowrap para que no se rompa en vertical
     return f"<span style='display:inline-flex;flex-wrap:wrap;white-space:normal;gap:2px'>{sep.join(parts)}</span>"
-############################################
+
 def racha_ambos_marcan_html(df_team):
     if df_team.empty:
         return ""
     df_team = df_team.drop_duplicates(subset=['Date','HomeTeam','AwayTeam']).sort_values('Date')
-    res = ['si' if int(r['FTHG'])>0 and int(r['FTAG'])>0 else 'no' for _,r in df_team.iterrows()]
-    if not res:
+    hg = df_team['FTHG'].to_numpy(dtype=int)
+    ag = df_team['FTAG'].to_numpy(dtype=int)
+    res = np.where((hg>0)&(ag>0), 'si', 'no')
+    if len(res)==0:
         return ""
-    comp = []
-    cnt=1
-    for i in range(1,len(res)):
-        if res[i]==res[i-1]: cnt+=1
-        else: comp.append(f"{cnt}{res[i-1]}"); cnt=1
-    comp.append(f"{cnt}{res[-1]}")
+    import itertools
+    comp = [f"{len(list(g))}{k}" for k, g in itertools.groupby(res)]
     sep = "<span style='color:#bbb;font-size:11px;margin:0 3px'>|</span>"
-    inner = []
-    for x in comp:
-        inner.append(f"<span style='font-size:11px;font-weight:700;color:#000;line-height:1.1'>{x}</span>")
+    inner = [f"<span style='font-size:11px;font-weight:700;color:#000;line-height:1.1'>{x}</span>" for x in comp]
     return f"<span style='display:inline;white-space:nowrap'>{sep.join(inner)}</span>"
     ##############
 # --- PRIMER EXPANDER DUPLICADO ELIMINADO - SE MANTIENE SOLO FINAL UNICO ---
@@ -915,39 +906,56 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
     if df_ref is None or equipo is None:
         c = Counter(jornadas)
         return "|".join([f"J{int(j)}-{c[j]}#" if c[j]>1 else f"J{int(j)}" for j in sorted(c)])
-    df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)] if len(df_ref) > 300 else df_ref
-    if df_eq.empty: return ""
-    df_eq = df_eq.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'])
-    is_home_s = (df_eq['HomeTeam']==equipo)
-    final_gf_arr = np.where(is_home_s, df_eq['FTHG'].to_numpy(), df_eq['FTAG'].to_numpy())
-    final_gc_arr = np.where(is_home_s, df_eq['FTAG'].to_numpy(), df_eq['FTHG'].to_numpy())
-    win_s = pd.Series(final_gf_arr > final_gc_arr, index=df_eq.index)
-    loss_s = pd.Series(final_gf_arr < final_gc_arr, index=df_eq.index)
+    # FIX VELOCIDAD - sin copy extra
+    if len(df_ref) > 300:
+        df_eq = df_ref[(df_ref['HomeTeam']==equipo) | (df_ref['AwayTeam']==equipo)]
+    else:
+        df_eq = df_ref
+    if df_eq.empty:
+        return ""
+    df_eq = df_eq.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season']).sort_values(['Season','Jornada'], ascending=[True, False])
+    is_home_arr = (df_eq['HomeTeam'].values == equipo)
+    fthg = df_eq['FTHG'].to_numpy(dtype=int)
+    ftag = df_eq['FTAG'].to_numpy(dtype=int)
+    hthg = df_eq['HTHG'].to_numpy(dtype=int)
+    htag = df_eq['HTAG'].to_numpy(dtype=int)
+    gf = np.where(is_home_arr, fthg, ftag)
+    gc = np.where(is_home_arr, ftag, fthg)
+
     partes = []
-    for (season, j), g in sorted(df_eq.groupby(['Season','Jornada']), key=lambda x: x[0][1], reverse=True):
-        g = g.drop_duplicates(subset=['Date','HomeTeam','AwayTeam','League','Season'])
-        if g.empty: continue
+    # groupby una sola vez, ya ordenado
+    for (season, j), g in df_eq.groupby(['Season','Jornada'], sort=False):
+        if g.empty:
+            continue
+        # ya viene con 1 fila por jornada normalmente, evita sort
         if len(g) > 1:
             g = g.sort_values('Date').head(1)
-        if g.empty: continue
-        if win_s.loc[g.index].all(): color = '#0f8105'
-        elif loss_s.loc[g.index].all(): color = '#f31818'
-        else: color = '#E67E22'
         first_row = g.iloc[0]
-        is_h_first = first_row['HomeTeam']==equipo
-        if len(g)==1: sufijo_final = 'c' if is_h_first else 'f'
+        # color win/loss del grupo - vectorizado
+        idxs = g.index
+        # usa los arrays ya calculados para este grupo
+        mask = df_eq.index.isin(idxs)
+        g_gf = gf[mask] if mask.any() else gf[:1]
+        g_gc = gc[mask] if mask.any() else gc[:1]
+        if (g_gf > g_gc).all():
+            color = '#0f8105'
+        elif (g_gf < g_gc).all():
+            color = '#f31818'
         else:
-            all_home = (g['HomeTeam']==equipo).all()
-            all_away = (g['AwayTeam']==equipo).all()
-            sufijo_final = 'c' if all_home else 'f' if all_away else 'cf'
+            color = '#E67E22'
+
+        is_h_first = first_row['HomeTeam']==equipo
+        sufijo_final = 'c' if is_h_first else 'f'
         real_home = int(first_row['FTHG']); real_away = int(first_row['FTAG'])
         ht_home = int(first_row['HTHG']); ht_away = int(first_row['HTAG'])
         home_short = str(first_row['HomeTeam'])
         away_short = str(first_row['AwayTeam'])
         h_pos = int(first_row.get('HomePosPrev', 0)); a_pos = int(first_row.get('AwayPosPrev', 0))
         es_local = first_row['HomeTeam'] == equipo
-        try: rojas_eq = int(first_row['HR']) if es_local else int(first_row['AR'])
-        except: rojas_eq = 0
+        try:
+            rojas_eq = int(first_row['HR']) if es_local else int(first_row['AR'])
+        except:
+            rojas_eq = 0
         rojo_html = f"<span style='color:#dc2626;font-weight:900'> {' -'*rojas_eq}</span>" if rojas_eq>0 else ""
         if es_local:
             htgf, htgc = int(first_row['HTHG']), int(first_row['HTAG']); ftgf, ftgc = real_home, real_away
@@ -969,29 +977,27 @@ def jornadas_conteo(jornadas, df_ref=None, equipo=None, rival=None, parte="Todo"
             txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO};font-weight:900'>{h_pos}º</span> <u>{home_short}{rojo_html}</u> {ht_home}-{ht_away}/{ft_bold} {away_short} <span style='color:{MORADO}'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
         else:
             txt = f"J{int(j)}{sufijo_final}<span style='color:{MORADO}'>{h_pos}º</span> {home_short} {ht_home}-{ht_away}/{ft_bold} <u>{away_short}{rojo_html}</u> <span style='color:{MORADO};font-weight:900'>{a_pos}º</span> {res_ht}/{res_ft}{re_html}{am}"
+        # FIX PRECALC - usa Goles_Todo_HTML directo, no busca eventos
         goles_inline = ""
         try:
-            ev_dict = globals().get('todos_eventos', None)
-            if ev_dict is None:
-                ev_dict = locals().get('todos_eventos', {})
-            if ev_dict:
-                gt = buscar_goles_partido(first_row, ev_dict, 0, 120, parte, equipo)
-                if gt:
-                    goles_inline = f"<span style='font-size:10px;font-weight:400;margin-left:3px;white-space:normal;display:block;margin-top:2px'>{gt}</span>"
-        except: pass
+            v = str(first_row.get('Goles_Todo_HTML','') or first_row.get('Goles_Todo_TXT','')).strip()
+            if v and len(v) > 5:
+                goles_inline = f"<span style='font-size:10px;font-weight:400;margin-left:3px;white-space:normal;display:block;margin-top:2px'>{v}</span>"
+        except:
+            pass
         es_h2h = False
-        if rival: es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
+        if rival:
+            es_h2h = ((g['HomeTeam']==equipo) & (g['AwayTeam']==rival)).any() or ((g['HomeTeam']==rival) & (g['AwayTeam']==equipo)).any()
         viñeta = "".join([formatear_h2h_compacto(r, equipo) for _, r in g.iterrows()])
         estilos_summary = f"color:{color};font-weight:700;cursor:pointer;list-style:none;display:block;background:transparent;border:none;padding:6px 4px;margin:0;white-space:normal;word-break:break-word;font-size:11.5px;font-family:monospace;line-height:1.35"
-        if es_h2h: estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
+        if es_h2h:
+            estilos_summary += ";text-decoration:underline;text-decoration-thickness:2px"
         jx_html = f"""<details style="display:block;width:100%;margin:0;padding:0;border-bottom:1px solid #eee">
         <summary style="{estilos_summary}">{txt}{goles_inline}</summary>
         <div style="position:relative;width:100%;max-width:100%;background:#fff;border:1px solid #ddd;padding:6px;margin:4px 0 8px 0;text-align:left;white-space:normal;max-height:500px;overflow-y:auto;box-shadow:0 2px 8px rgba(0,0,0,0.15)">{viñeta}</div>
     </details>"""
         partes.append(jx_html)
     return f"<div style='display:flex;flex-direction:column;gap:3px;padding:2px 0'>{''.join(partes)}</div>"
-
-    
 
 def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo", equipo_filtro=None):
     import pandas as pd, unicodedata, re
@@ -1093,31 +1099,33 @@ def buscar_goles_partido(row, eventos_dict, min_min=0, max_min=120, parte="Todo"
     except:
         return ""
 ######################################
-###################def formatear_partido
 def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht, at = row['HomeTeam'], row['AwayTeam']
-    ht_disp = row.get('HomeAbbr', abreviar_equipo(ht))
-    at_disp = row.get('AwayAbbr', abreviar_equipo(at))
+    ht_disp = row.get('HomeAbbr') or str(ht)[:3].upper()
+    at_disp = row.get('AwayAbbr') or str(at)[:3].upper()
     league = row.get('League','')
     fecha = row['Date'].strftime('%d/%m/%y') if pd.notna(row['Date']) else ''
     jornada = f"J{int(row['Jornada'])}" if pd.notna(row.get('Jornada')) else ''
     hg_num, ag_num = int(row['FTHG']), int(row['FTAG'])
-    hpts, apts = int(row['HomePtsPrev']), int(row['AwayPtsPrev'])
-    hpos, apos = int(row['HomePosPrev']), int(row['AwayPosPrev'])
-    hy, ay = int(row['HY']), int(row['AY']); hr, ar = int(row['HR']), int(row['AR'])
-    hc, ac = int(row['HC']), int(row['AC']); hs, as_ = int(row['HS']), int(row['AS'])
-    hst, ast = int(row['HST']), int(row['AST']); hf, af = int(row['HF']), int(row['AF'])
-    hthg, htag = int(row['HTHG']), int(row['HTAG'])
+    hpts = int(row.get('HomePtsPrev',0) or 0); apts = int(row.get('AwayPtsPrev',0) or 0)
+    hpos = int(row.get('HomePosPrev',0) or 0); apos = int(row.get('AwayPosPrev',0) or 0)
+    hy, ay = int(row.get('HY',0) or 0), int(row.get('AY',0) or 0)
+    hr, ar = int(row.get('HR',0) or 0), int(row.get('AR',0) or 0)
+    hc, ac = int(row.get('HC',0) or 0), int(row.get('AC',0) or 0)
+    hs, as_ = int(row.get('HS',0) or 0), int(row.get('AS',0) or 0)
+    hst, ast = int(row.get('HST',0) or 0), int(row.get('AST',0) or 0)
+    hf, af = int(row.get('HF',0) or 0), int(row.get('AF',0) or 0)
+    hthg, htag = int(row.get('HTHG',0) or 0), int(row.get('HTAG',0) or 0)
     h2tg = hg_num - hthg; a2tg = ag_num - htag
-    # FIX 26/27 - solo hay totales, 1P/2P viene a 0 - SAFE INT no peta con '' / nan
+
     def _safe_int(v):
         try:
             if pd.isna(v): return 0
             s=str(v).strip()
             if s=='' or s.lower() in ('nan','none'): return 0
             return int(float(s))
-        except:
-            return 0
+        except: return 0
+
     hp = _safe_int(row.get('HomePasses',0)); ap = _safe_int(row.get('AwayPasses',0))
     hp_1p = _safe_int(row.get('HomePasses_1P',0)); ap_1p = _safe_int(row.get('AwayPasses_1P',0))
     hp_2p = _safe_int(row.get('HomePasses_2P',0)); ap_2p = _safe_int(row.get('AwayPasses_2P',0))
@@ -1132,16 +1140,15 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     ht_res = ht_disp if hthg > htag else at_disp if hthg < htag else 'E'
     ft_res = ht_disp if hg_num > ag_num else at_disp if hg_num < ag_num else 'E'
     color_res = "#444"
-    eq_norm = normaliza(equipo_filtro) if equipo_filtro and equipo_filtro!= "Ninguno" else None
+    eq_norm = str(equipo_filtro).upper() if equipo_filtro and equipo_filtro!= "Ninguno" else None
     if eq_norm:
-        won = (eq_norm == ht and hg_num > ag_num) or (eq_norm == at and ag_num > hg_num)
-        lost = (eq_norm == ht and hg_num < ag_num) or (eq_norm == at and ag_num < hg_num)
+        won = (eq_norm == str(ht).upper() and hg_num > ag_num) or (eq_norm == str(at).upper() and ag_num > hg_num)
+        lost = (eq_norm == str(ht).upper() and hg_num < ag_num) or (eq_norm == str(at).upper() and ag_num < hg_num)
         color_res = "#0f8105" if won else "#f31818" if lost else "#8B7500"
 
     cuota_h = row.get('B365H'); cuota_d = row.get('B365D'); cuota_a = row.get('B365A')
     league_short = str(league)[:3].upper()
-    home_perf = round(float(row.get('HomePerf',0)),1); away_perf = round(float(row.get('AwayPerf',0)),1)
-
+    home_perf = round(float(row.get('HomePerf',0) or 0),1); away_perf = round(float(row.get('AwayPerf',0) or 0),1)
     MORADO_STYLE = "color:#581C87; font-weight:900; font-size:9px;"
     hg_txt = f"<span style='{style_base}'>{hg_num}</span>"; ag_txt = f"<span style='{style_base}'>{ag_num}</span>"
     hpts_txt = f"<span style='{style_base}'>{hpts}</span>"; apts_txt = f"<span style='{style_base}'>{apts}</span>"
@@ -1153,20 +1160,18 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     if hg_num > ag_num:
         ht_txt = f"<span style='{style_ganador}'>{ht_disp}</span>"; hg_txt = f"<span style='{style_ganador}'>{hg_num}</span>"
         hpts_txt = f"<span style='{style_ganador}'>{hpts}</span>"
-        # hpos_txt se queda morado, no lo toques
         home_perf_txt = f"<span style='{style_ganador}'>{home_perf:.1f}</span>"
     elif ag_num > hg_num:
         at_txt = f"<span style='{style_ganador}'>{at_disp}</span>"; ag_txt = f"<span style='{style_ganador}'>{ag_num}</span>"
         apts_txt = f"<span style='{style_ganador}'>{apts}</span>"
-        # apos_txt se queda morado, no lo toques
         away_perf_txt = f"<span style='{style_ganador}'>{away_perf:.1f}</span>"
 
-    if eq_norm == ht:
+    if eq_norm and eq_norm == str(ht).upper():
         sty = f"{style_ganador}; {style_subrayado}"
         ht_txt = f"<span style='{sty}'>{ht_disp}</span>"; hg_txt = f"<span style='{sty}'>{hg_num}</span>"
         hpts_txt = f"<span style='{sty}'>{hpts}</span>"; hpos_txt = f"<span style='{sty}'>{hpos}º</span>"
         home_perf_txt = f"<span style='{sty}'>{home_perf:.1f}</span>"
-    if eq_norm == at:
+    if eq_norm and eq_norm == str(at).upper():
         sty = f"{style_ganador}; {style_subrayado}"
         at_txt = f"<span style='{sty}'>{at_disp}</span>"; ag_txt = f"<span style='{sty}'>{ag_num}</span>"
         apts_txt = f"<span style='{sty}'>{apts}</span>"; apos_txt = f"<span style='{sty}'>{apos}º</span>"
@@ -1190,12 +1195,9 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
     color_linea = color_res if eq_norm else "#0A2342"
     ht_style = "font-weight:900" if hg_num > ag_num else "font-weight:600"
     at_style = "font-weight:900" if ag_num > hg_num else "font-weight:600"
-    if eq_norm == ht:
-        ht_style += ";text-decoration:underline;text-decoration-thickness:2px"
-    if eq_norm == at:
-        at_style += ";text-decoration:underline;text-decoration-thickness:2px"
+    if eq_norm and eq_norm == str(ht).upper(): ht_style += ";text-decoration:underline;text-decoration-thickness:2px"
+    if eq_norm and eq_norm == str(at).upper(): at_style += ";text-decoration:underline;text-decoration-thickness:2px"
     
-    # --- NUEVO: calcular goles por parte ---#"cartas" de los partidos
     h1, a1 = int(row['HTHG']), int(row['HTAG'])
     h2, a2 = hg_num - h1, ag_num - a1
     ht_line = f"<div style='font-size:9px;color:{color_linea}'>1ªP: <span style='{ht_style}'>{ht_disp}</span> {h1}-{a1} <span style='{at_style}'>{at_disp}</span></div>"
@@ -1210,93 +1212,30 @@ def formatear_partido(row, equipo_filtro=None, cuota_tipo=None, goles_txt=""):
         if fil: s += f"; {style_subrayado}"
         return f"<span style='{s}'>{v}</span>"
 
-    # --- NUEVO: goles por parte con minuto + jugador abreviado y subrayado ---
-    def _abrev_jugador(nombre):
-        n = str(nombre).strip()
-        if not n: return ""
-        parts = n.split()
-        if len(parts) == 1: return n[:12]
-        return f"{parts[0][0]}. {' '.join(parts[1:])}"[:18] # K. Tanimura
+    # FIX VELOCIDAD: ya no escaneamos eventos, goles_txt ya viene precalculado
+    h1_g = f"1p:{wrap(f'{hthg}G', hg_num>ag_num, eq_norm==str(ht).upper())}"
+    a1_g = f"1p:{wrap(f'{htag}G', ag_num>hg_num, eq_norm==str(at).upper())}"
+    h2_g = f"2p:{wrap(f'{h2tg}G', hg_num>ag_num, eq_norm==str(ht).upper())}"
+    a2_g = f"2p:{wrap(f'{a2tg}G', ag_num>hg_num, eq_norm==str(at).upper())}"
 
-    def _goles_parte(min_from, min_to, equipo_lado):
-        # FIX VELOCIDAD - precalculado ya trae goles, no escanees eventos
-        try:
-            if 'Goles_Todo_HTML' in row and str(row.get('Goles_Todo_HTML','')).strip():
-                return ""
-            ev_dict = globals().get('todos_eventos', {})
-            if not ev_dict:
-                return ""
-            fid_raw = str(row.get('fixture_id','')).strip().split('.')[0]
-            evs = ev_dict.get(fid_raw, [])
-            if not evs:
-                return ""
-            out = []
-            for ev in evs[:3]:
-                if ev.get('missed'): continue
-                m = int(ev.get('minute',0) or 0)
-                if not (min_from <= m <= min_to): continue
-                team_ev = normaliza(ev.get('team','') or ev.get('equipo','') or '')
-                if equipo_lado and team_ev!= normaliza(equipo_lado):
-                    continue
-                if equipo_lado:
-                    is_mio = (team_ev == normaliza(equipo_lado))
-                else:
-                    is_mio = (eq_norm and team_ev == eq_norm)
-                is_mio_style_min = "color:#581C87;font-weight:900;font-style:normal;font-size:10px;text-decoration:underline;text-decoration-thickness:2px" if is_mio else "color:#581C87;font-weight:900;font-style:normal;font-size:10px"
-                minuto_bold = f"<span style='{is_mio_style_min}'>{m}'</span>"
-                jug = _abrev_jugador(ev.get('player',''))
-                style_j = "font-weight:900;text-decoration:underline;text-decoration-thickness:2px;color:#000" if is_mio else "font-weight:600;color:#000"
-                out.append(f"{minuto_bold} <span style='{style_j}'>{jug}</span>")
-            return (" ▪ " + " | ".join(out)) if out else ""
-        except:
-            return ""
-
-    # 1P local / visitante con minutos
-    h1_extra = _goles_parte(0,45, ht) if ht==row['HomeTeam'] else ""
-    a1_extra = _goles_parte(0,45, at) if at==row['AwayTeam'] else ""
-    h2_extra = _goles_parte(46,120, ht) if ht==row['HomeTeam'] else ""
-    a2_extra = _goles_parte(46,120, at) if at==row['AwayTeam'] else ""
-    # si el partido es neutral (ERE), usa ambos lados por parte
-    if not h1_extra and not a1_extra:
-        h1_extra = _goles_parte(0,45, None)
-    if not h2_extra and not a2_extra:
-        h2_extra = _goles_parte(46,120, None)
-    # junta 1P y 2P reales para que 1p:1G muestre sus goles y 1p:2G los suyos
-    # Distribuye por equipo: si ht es local, sus goles 1P van en h1_g
-    def _split_por_equipo(extra_all, equipo):
-        # extra_all ya viene filtrado por minuto, ahora filtra por equipo si quieres solo el tuyo
-        return extra_all
-
-    h1_g = f"1p:{wrap(f'{hthg}G', hg_num>ag_num, eq_norm==ht)}{_goles_parte(0,45, ht) if row['HomeTeam']==ht else _goles_parte(0,45, None)}"
-    a1_g = f"1p:{wrap(f'{htag}G', ag_num>hg_num, eq_norm==at)}{_goles_parte(0,45, at) if row['AwayTeam']==at else ''}"
-    h2_g = f"2p:{wrap(f'{h2tg}G', hg_num>ag_num, eq_norm==ht)}{_goles_parte(46,120, ht) if row['HomeTeam']==ht else _goles_parte(46,120, None)}"
-    a2_g = f"2p:{wrap(f'{a2tg}G', ag_num>hg_num, eq_norm==at)}{_goles_parte(46,120, at) if row['AwayTeam']==at else ''}"
-
-    # --- añade pases a la línea de stats como pides ---
-    sh = wrap(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R {hp}P", hg_num>ag_num, eq_norm==ht)
-    sa = wrap(f"{as_}T {ast}TP {af}F {ac}C {ay}A {ar}R {ap}P", ag_num>hg_num, eq_norm==at)
+    sh = wrap(f"{hs}T {hst}TP {hf}F {hc}C {hy}A {hr}R {hp}P", hg_num>ag_num, eq_norm==str(ht).upper())
+    sa = wrap(f"{as_}T {ast}TP {af}F {ac}C {ay}A {ar}R {ap}P", ag_num>hg_num, eq_norm==str(at).upper())
 
     stats_html = f"<div style='font-size:7.5px'>{h1_g}</div><div style='font-size:7.5px'>{a1_g}</div><div style='font-size:7.5px'>{h2_g}</div><div style='font-size:7.5px'>{a2_g}</div><div style='font-size:7px'>{sh}</div><div style='font-size:7px'>{sa}</div>"
-    # NUEVO: pases/posesión/paradas
     extras = []
-    # Si hay 1P/2P (ligas viejas) muestro desglose, si no solo totales (26/27)
     if hp_1p or ap_1p or hp_2p or ap_2p:
         extras.append(f"1P:{hp_1p}P-{ap_1p}P")
         extras.append(f"2P:{hp_2p}P-{ap_2p}P")
     elif hp or ap:
         extras.append(f"{hp}P-{ap}P")
-
     if str(hpos_pct).strip() not in ['', '0', '0.0', 'nan', 'None']:
         extras.append(f"{hpos_pct}% Pos {apos_pct}%")
     if hsav or asav:
-        # 0 paradas es real, lo mostramos igual si hay pases para no confundir con falta de datos
         if hp or ap:
             extras.append(f"{hsav}Par-{asav}Par")
     extras_html = f"<div style='font-size:7px;color:#000'>{' | '.join(extras)}</div>" if extras else ""
-
     goles_html = f"<div style='font-size:9px;color:{NAVY};line-height:1.2;margin-top:2px'>{goles_txt}</div>" if goles_txt else ""
     return f'<div translate="no" lang="zxx" style="border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px">{top_line}{date_line}{odds_html}{ht_line}{st_line}{ft_line}{pos_line}{pts_line}{perf_line}{stats_html}{extras_html}{goles_html}</div>'
-####def formatear_h2h_compacto
 
 
 
