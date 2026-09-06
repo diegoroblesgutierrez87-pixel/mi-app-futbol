@@ -3141,7 +3141,18 @@ with st.container(border=True):
 
                 _base_tot = df_original.copy()
                 try:
-                    _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].isin(temp_sel)]
+                    def _exp2(_lst):
+                        _o=[]
+                        for _s in _lst:
+                            _s=str(_s).strip()
+                            _o.append(_s)
+                            if "/" in _s:
+                                _o.append(_s.split("/")[0])
+                            elif _s.isdigit():
+                                _o.append(f"{_s}/{int(_s)+1}")
+                        return list(set(_o))
+                    _t2 = _exp2(temp_sel)
+                    _base_tot = _base_tot[_base_tot['League'].isin(liga_sel) & _base_tot['Season'].astype(str).str.strip().isin(_t2)]
                     _base_tot = _base_tot[(_base_tot['Jornada']>=rango_jornadas[0]) & (_base_tot['Jornada']<=rango_jornadas[1])]
                 except:
                     pass
