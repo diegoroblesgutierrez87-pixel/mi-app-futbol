@@ -3629,6 +3629,20 @@ with st.container(border=True):
                   </div>
                 </div>
                 '''
+                try:
+                    import json as _jc, streamlit.components.v1 as _cc, re as _rc
+                    _ls = []
+                    for _, r in df_mostrar.iterrows():
+                        try:
+                            _h = formatear_partido(r, equipo_filtro if equipo_filtro!="Ninguno" else None, cuota_tipo, "")
+                            _ls.append(_rc.sub(r'\s+', ' ', _rc.sub(r'<[^>]+>', ' ', _h)).strip())
+                        except:
+                            pass
+                    if _ls:
+                        _tj = _jc.dumps("\n\n".join(_ls))
+                        _cc.html(f"""<button id="btn_c" style="background:#0A2342;color:#fff;border:0;padding:12px 0;border-radius:8px;width:100%;font-weight:900;font-size:15px;margin-bottom:10px">📋 COPIAR CROMOS ({len(_ls)}) TAL CUAL</button><script>document.getElementById('btn_c').onclick=async()=>{{const t={_tj};try{{await navigator.clipboard.writeText(t);document.getElementById('btn_c').innerText='✅ COPIADO!';}}catch(e){{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);document.getElementById('btn_c').innerText='✅ COPIADO!';}}}}</script>""", height=55)
+                except Exception:
+                    pass
                 st.markdown(grid_html, unsafe_allow_html=True)
                 try:
                     import json as _jc, streamlit.components.v1 as _cc, re as _rc
