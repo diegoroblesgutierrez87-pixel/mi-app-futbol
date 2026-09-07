@@ -3667,29 +3667,36 @@ with st.container(border=True):
                                 m = int(ev.get('minute',0) or 0)
                                 team_raw = str(ev.get('team','') or ev.get('team_name','') or ev.get('club','')).strip()
 
-                                def es_equipo_mio(team_raw, equipo_sel, h_team, a_team, h_ab, a_ab):
-                                    if equipo_sel=="Ninguno": return False
-                                    tr = normaliza(team_raw)
-                                    sel = normaliza(equipo_sel)
-                                    if not tr: return False
-                                    if tr==sel: return True
-                                    if sel in tr or tr in sel: return True
-                                    if tr==normaliza(abreviar_equipo(equipo_sel)): return True
-                                    if sel==normaliza(h_team) and tr in [normaliza(h_team), normaliza(h_ab), h_ab.lower()]: return True
-                                    if sel==normaliza(a_team) and tr in [normaliza(a_team), normaliza(a_ab), a_ab.lower()]: return True
-                                    return False
+                                # FIX MORADO: usa HomeTeam/AwayTeam del evento, no team_raw vacío
+                                team_norm = normaliza(team_raw) if team_raw else ""
+                                h_norm = normaliza(h_team)
+                                a_norm = normaliza(a_team)
+                                # determina si es gol local
+                                es_local = False
+                                if team_norm:
+                                    if h_norm in team_norm or team_norm in h_norm: es_local = True
+                                    elif a_norm in team_norm or team_norm in a_norm: es_local = False
+                                    else: es_local = team_norm[:3] == h_norm[:3]
+                                else:
+                                    # fallback: usa lista de eventos ordenada, gh/ga no disponible aquí, usamos posición en evs
+                                    # si no hay team, el evento es del equipo que va ganando según Goles_Todo_HTML no fiable
+                                    # lo inferimos por abbr en Goles_Todo_HTML si existe
+                                    es_local = False
 
-                                es_mio = es_equipo_mio(team_raw, equipo_filtro, h_team, a_team, h_ab, a_ab) or es_equipo_mio(team_raw, equipo2_filtro, h_team, a_team, h_ab, a_ab)
-                                # FIX: si team_raw viene vacio, usamos Goles_Todo_HTML para saber de quien es
-                                if not es_mio and not team_raw:
-                                    import re
-                                    raw_line = str(r_dict.get('Goles_Todo_HTML',''))
-                                    for ln in raw_line.splitlines():
-                                        if f"{m}'" in ln:
-                                            if normaliza(equipo_filtro) in normaliza(ln) or abreviar_equipo(equipo_filtro).upper() in ln.upper():
-                                                es_mio = True
-                                            if normaliza(equipo2_filtro) in normaliza(ln) or abreviar_equipo(equipo2_filtro).upper() in ln.upper():
-                                                es_mio = True
+                                # es mio si el equipo seleccionado es el que metió ese gol
+                                es_mio = False
+                                if es_local:
+                                    if equipo_filtro!="Ninguno" and normaliza(equipo_filtro)==h_norm: es_mio = True
+                                    if equipo2_filtro!="Ninguno" and normaliza(equipo2_filtro)==h_norm: es_mio = True
+                                    if eq_ref2 and normaliza(eq_ref2)==h_norm: es_mio = True
+                                else:
+                                    if equipo_filtro!="Ninguno" and normaliza(equipo_filtro)==a_norm: es_mio = True
+                                    if equipo2_filtro!="Ninguno" and normaliza(equipo2_filtro)==a_norm: es_mio = True
+                                    if eq_ref2 and normaliza(eq_ref2)==a_norm: es_mio = True
+
+                                # si no hay filtro equipo, nunca morado
+                                if equipo_filtro=="Ninguno" and equipo2_filtro=="Ninguno":
+                                    es_mio = False
 
                                 html_min = f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>" if es_mio else f"<span style='color:#000'>{m}'</span>"
                                 if m <= 45:
