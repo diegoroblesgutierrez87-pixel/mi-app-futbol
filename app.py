@@ -3589,8 +3589,21 @@ with st.container(border=True):
                 except Exception as e:
                     return f"<div>ERR {e}</div>"
 
-            partidos_html = [fmt_final(row.to_dict()) for _, row in df_mostrar.iterrows()]
-            html_all = "".join(partidos_html)
+            # --- FIX ORDENADO COMO RAPIDO: J ULTIMA ARRIBA + NOMBRE EQUIPO ---
+            if equipo_filtro!="Ninguno" and equipo2_filtro!="Ninguno":
+                df_eq1 = df_mostrar[(df_mostrar['HomeTeam']==equipo_filtro) | (df_mostrar['AwayTeam']==equipo_filtro)].sort_values(['Jornada','Date'], ascending=[False, False])
+                df_eq2 = df_mostrar[(df_mostrar['HomeTeam']==equipo2_filtro) | (df_mostrar['AwayTeam']==equipo2_filtro)].sort_values(['Jornada','Date'], ascending=[False, False])
+                html_eq1 = "".join([fmt_final(r.to_dict()) for _, r in df_eq1.iterrows()])
+                html_eq2 = "".join([fmt_final(r.to_dict()) for _, r in df_eq2.iterrows()])
+                html_all = f"<div style='font-family:monospace;font-weight:900;font-size:13px;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0'>{equipo_filtro}</div>{html_eq1}<div style='font-family:monospace;font-weight:900;font-size:13px;background:#0A2342;color:#fff;padding:4px 6px;margin:12px 0 2px 0'>{equipo2_filtro}</div>{html_eq2}"
+            else:
+                # ordena J33 -> J32 -> J1
+                df_mostrar = df_mostrar.sort_values(['Jornada','Date'], ascending=[False, False])
+                html_list = [fmt_final(r.to_dict()) for _, r in df_mostrar.iterrows()]
+                html_all = "".join(html_list)
+                if equipo_filtro!="Ninguno" or equipo2_filtro!="Ninguno":
+                    team_name = equipo_filtro if equipo_filtro!="Ninguno" else equipo2_filtro
+                    html_all = f"<div style='font-family:monospace;font-weight:900;font-size:13px;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0'>{team_name} | J{int(df_mostrar['Jornada'].max())} a J{int(df_mostrar['Jornada'].min())} | {len(df_mostrar)} partidos</div>{html_all}"
             st.markdown(f'<div>{html_all}</div>', unsafe_allow_html=True)
 ############################################################
 
