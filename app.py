@@ -3742,7 +3742,7 @@ with st.container(border=True):
                         lost = hg<ag
                     col = "#0f8105" if won else "#f31818" if lost else "#E67E22"
 
-                    mins = []
+                    mins_html = []
                     try:
                         fid = str(r_dict.get('fixture_id','')).split('.')[0]
                         evs = todos_eventos.get(fid, []) if 'todos_eventos' in globals() and todos_eventos else []
@@ -3753,16 +3753,27 @@ with st.container(border=True):
                             evs = sorted(evs, key=lambda x: int(x.get('minute',0) or 0))
                             for ev in evs:
                                 if ev.get('missed'): continue
-                                mins.append(f"{int(ev.get('minute',0) or 0)}'")
+                                m = int(ev.get('minute',0) or 0)
+                                team_raw = str(ev.get('team','')).strip()
+                                es_mio = False
+                                if equipo_filtro!="Ninguno" and normaliza(team_raw)==normaliza(equipo_filtro): es_mio=True
+                                if equipo2_filtro!="Ninguno" and normaliza(team_raw)==normaliza(equipo2_filtro): es_mio=True
+                                if not es_mio:
+                                    if equipo_filtro!="Ninguno" and abreviar_equipo(equipo_filtro).lower() in team_raw.lower(): es_mio=True
+                                    if equipo2_filtro!="Ninguno" and abreviar_equipo(equipo2_filtro).lower() in team_raw.lower(): es_mio=True
+                                if es_mio:
+                                    mins_html.append(f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>")
+                                else:
+                                    mins_html.append(f"<span style='color:#000'>{m}'</span>")
                     except:
                         pass
 
-                    if not mins:
+                    if not mins_html:
                         import re
                         raw = str(r_dict.get('Goles_Todo_HTML','') or "").strip()
-                        mins = [f"{m}'" for m in re.findall(r"(\d+)'", raw)]
+                        mins_html = [f"<span style='color:#000'>{m}'</span>" for m in re.findall(r"(\d+)'", raw)]
 
-                    txt_mins = " ".join(mins)
+                    txt_mins = " ".join(mins_html)
                     return f"<div style='font-family:monospace;font-size:11px;padding:5px 4px;border-bottom:2px solid #000;background:#fff'><span style='color:{col};font-weight:900'>|J{j}|{h_ab} {hg}-{ag} {a_ab}</span><span style='color:#000'> | {txt_mins}</span></div>"
                 except:
                     return "<div>-</div>"
