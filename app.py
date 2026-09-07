@@ -1453,8 +1453,8 @@ with st.expander("Filtros de partidos", expanded=False):
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga, key="filtro_liga_main", on_change=persistir)
 
     st.markdown("**Liga Asia -----> lee el csv de asia unicamente nada mas**")
-    _df_asia_ligas = pd.read_csv("asia_actual_j1j2k1k2csl1.csv", on_bad_lines='skip', engine='python') if os.path.exists("asia_actual_j1j2k1k2csl1.csv") else pd.DataFrame()
-    ligas_asia_disponibles = sorted([str(x) for x in _df_asia_ligas['League'].dropna().unique()]) if not _df_asia_ligas.empty else []
+    ASIA_LEAGUES = {"J1 League","J2 League","K League 1","K League 2","Chinese Super League"}
+    ligas_asia_disponibles = sorted([l for l in df['League'].dropna().unique() if l in ASIA_LEAGUES])
     liga_asia_sel = st.multiselect("Liga Asia", ligas_asia_disponibles, default=st.session_state.get('filtro_liga_asia', []), key="filtro_liga_asia", on_change=persistir)
 
     st.markdown("**Temporada**")
