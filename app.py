@@ -64,9 +64,10 @@ except:
 
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 
-# BOTON BORRAR CACHE / COOKIES - AL PRINCIPIO
-with st.sidebar:
-    if st.button("🧹 Borrar caché / cookies", key="btn_borrar_cache_inicio", use_container_width=True):
+# BOTON BORRAR CACHE / COOKIES - VISIBLE ARRIBA
+c1, c2 = st.columns([1,3])
+with c1:
+    if st.button("🧹 Borrar caché", key="btn_borrar_cache_inicio", type="primary", use_container_width=True):
         try:
             st.cache_data.clear()
             st.cache_resource.clear()
@@ -87,6 +88,8 @@ with st.sidebar:
             except:
                 pass
         st.rerun()
+with c2:
+    st.caption("Si no ves cambios, dale aquí")
 #############################css visualizacion filtros avanzados columnas todo centrado y bien - 1 SOLO CARTEL
 st.markdown("""
 <style>
