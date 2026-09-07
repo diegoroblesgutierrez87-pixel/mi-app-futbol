@@ -3691,9 +3691,8 @@ with st.container(border=True):
                     return f"<div>ERR {e}</div>"
 
             partidos_html = [fmt_final(row.to_dict()) for _, row in df_mostrar.iterrows()]
-            left_html = "".join(partidos_html[0::2])
-            right_html = "".join(partidos_html[1::2])
-            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left_html}</div><div>{right_html}</div></div>', unsafe_allow_html=True)
+            html_all = "".join(partidos_html)
+            st.markdown(f'<div>{html_all}</div>', unsafe_allow_html=True)
 ############################################################
 
     # --- AÑADIDO: PARTIDOS RAPIDO SOLO FINAL ---
