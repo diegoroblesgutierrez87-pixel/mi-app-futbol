@@ -1239,73 +1239,18 @@ def calcular_estado_jornada(df):
     if df.empty or 'Date' not in df.columns:
         return df.copy(), pd.DataFrame()
     df = df.sort_values(['League','Season','Date']).copy()
-    # 1) Jornada FIX V6 DEFINITIVO - esperado + tope real
+    # Jornada rapida - mismo calculo que get_df_base_calculado
     df['Jornada'] = 0
     for (l, s), g in df.groupby(['League','Season'], sort=False):
-        g = g.sort_values(['Date','HomeTeam','AwayTeam'])
-        if g.empty:
-            continue
-        teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
-        n_teams = len(teams)
-        if n_teams < 2:
-            continue
-
-        # Jornadas reales de esa liga
-        if "K League 1" in str(l):
-            exp_jornadas = 33
-        elif "K League 2" in str(l):
-            exp_jornadas = 39
-        else:
-            exp_jornadas = (n_teams - 1) * 2
-            # Ej: 20 equipos=38, 22 equipos=42, 18 equipos=34
-            if exp_jornadas < 10:
-                exp_jornadas = 38
-        partidos_por_jornada = n_teams // 2
-
-        jornada = 1
-        vistos = set()
-
-        for idx in g.index:
-            ht = df.loc[idx, 'HomeTeam']
-            at = df.loc[idx, 'AwayTeam']
-
-            if ht in vistos or at in vistos:
-                jornada += 1
-                if jornada > exp_jornadas:
-                    jornada = exp_jornadas
-                vistos = set()
-
-            df.loc[idx, 'Jornada'] = jornada
-            vistos.add(ht)
-            vistos.add(at)
-
-            if len(vistos) >= n_teams:
-                if jornada < exp_jornadas:
-                    jornada += 1
-                vistos = set()
+        g_sorted = g.sort_values('Date')
+        ppj = max(len(pd.unique(g_sorted[['HomeTeam','AwayTeam']].values.ravel())) // 2, 1)
+        for i, idx in enumerate(g_sorted.index):
+            df.loc[idx, 'Jornada'] = (i // ppj) + 1
     df['Jornada'] = df['Jornada'].astype(int)
-    
-
-    # 2) Puntos del partido
     df['HPts'] = np.where(df['FTR']=='H', 3, np.where(df['FTR']=='D', 1, 0))
     df['APts'] = np.where(df['FTR']=='A', 3, np.where(df['FTR']=='D', 1, 0))
-
-    # 3) Puntos previos - FIX: acumulado TOTAL por equipo (casa+fuera)
-    _pts_acum = {}
-    _home_prev = {}
-    _away_prev = {}
-    for _idx in df.sort_values(['League','Season','Date','Jornada']).index:
-        _r = df.loc[_idx]
-        _k_ht = (_r['League'], _r['Season'], _r['HomeTeam'])
-        _k_at = (_r['League'], _r['Season'], _r['AwayTeam'])
-        _home_prev[_idx] = _pts_acum.get(_k_ht, 0)
-        _away_prev[_idx] = _pts_acum.get(_k_at, 0)
-        _pts_acum[_k_ht] = _pts_acum.get(_k_ht, 0) + int(_r['HPts'])
-        _pts_acum[_k_at] = _pts_acum.get(_k_at, 0) + int(_r['APts'])
-    df['HomePtsPrev'] = pd.Series(_home_prev).reindex(df.index).fillna(0).astype(int)
-    df['AwayPtsPrev'] = pd.Series(_away_prev).reindex(df.index).fillna(0).astype(int)
-
-    # 4) ELIMINADO - ERA EL 70% DEL LAG
+    df['HomePtsPrev'] = 0
+    df['AwayPtsPrev'] = 0
     df['HomePosPrev'] = 0
     df['AwayPosPrev'] = 0
     df_clasificacion = pd.DataFrame()
@@ -1314,7 +1259,6 @@ def calcular_estado_jornada(df):
     df['RivalProAway'] = False
     df['HomePerf'] = 0.0
     df['AwayPerf'] = 0.0
-
     return df, df_clasificacion
 
    
@@ -1360,25 +1304,6 @@ def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
         df_clas = df_clas[df_clas['League'].isin(ligas_tuple) & df_clas['Season'].isin(temps_tuple)]
         return df_fil, df_clas
     else:
-        return df_fil, pd.DataFrame()
-    try:
-        BASE = pathlib.Path(__file__).parent.resolve()
-    except:
-        BASE = pathlib.Path.cwd().resolve()
-    # FIX PRECALCULADO - busca con mayusculas/minusculas
-    candidatos_clas = [
-        BASE / "Clasificacion-PRECALCULADO.csv",
-        BASE / "Clasificacion-PF.csv",
-        BASE / "clasificacion_PRECALCULADO.csv",
-        BASE / "clasificacion-PRECALCULADO.csv",
-    ]
-    f_clas = next((p for p in candidatos_clas if p.exists()), None)
-    if f_clas is not None and f_clas.exists():
-        df_clas = pd.read_csv(f_clas, on_bad_lines='skip', engine='python')
-        df_clas = df_clas[df_clas['League'].isin(ligas_tuple) & df_clas['Season'].isin(temps_tuple)]
-        return df_fil, df_clas
-    else:
-        # si no hay clasif, devuelve df_fil tal cual, NO recalcula jornada (ya viene en el CSV)
         return df_fil, pd.DataFrame()
  
 
