@@ -3742,7 +3742,7 @@ with st.container(border=True):
                         lost = hg<ag
                     col = "#0f8105" if won else "#f31818" if lost else "#E67E22"
 
-                    mins_html = []
+                    mins_1p_html, mins_2p_html = [], []
                     try:
                         fid = str(r_dict.get('fixture_id','')).split('.')[0]
                         evs = todos_eventos.get(fid, []) if 'todos_eventos' in globals() and todos_eventos else []
@@ -3761,19 +3761,26 @@ with st.container(border=True):
                                 if not es_mio:
                                     if equipo_filtro!="Ninguno" and abreviar_equipo(equipo_filtro).lower() in team_raw.lower(): es_mio=True
                                     if equipo2_filtro!="Ninguno" and abreviar_equipo(equipo2_filtro).lower() in team_raw.lower(): es_mio=True
-                                if es_mio:
-                                    mins_html.append(f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>")
+                                html_min = f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>" if es_mio else f"<span style='color:#000'>{m}'</span>"
+                                if m <= 45:
+                                    mins_1p_html.append(html_min)
                                 else:
-                                    mins_html.append(f"<span style='color:#000'>{m}'</span>")
+                                    mins_2p_html.append(html_min)
                     except:
                         pass
 
-                    if not mins_html:
+                    if not mins_1p_html and not mins_2p_html:
                         import re
                         raw = str(r_dict.get('Goles_Todo_HTML','') or "").strip()
-                        mins_html = [f"<span style='color:#000'>{m}'</span>" for m in re.findall(r"(\d+)'", raw)]
+                        mins_1p_html = [f"<span style='color:#000'>{m}'</span>" for m in re.findall(r"(\d+)'", raw)]
 
-                    txt_mins = " ".join(mins_html)
+                    # "|" para diferenciar 1ª y 2ª parte
+                    if mins_1p_html and mins_2p_html:
+                        txt_mins = " ".join(mins_1p_html) + " <span style='color:#000'>|</span> " + " ".join(mins_2p_html)
+                    elif mins_1p_html:
+                        txt_mins = " ".join(mins_1p_html)
+                    else:
+                        txt_mins = " ".join(mins_2p_html)
                     return f"<div style='font-family:monospace;font-size:11px;padding:5px 4px;border-bottom:2px solid #000;background:#fff'><span style='color:{col};font-weight:900'>|J{j}|{h_ab} {hg}-{ag} {a_ab}</span><span style='color:#000'> | {txt_mins}</span></div>"
                 except:
                     return "<div>-</div>"
