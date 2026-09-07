@@ -315,22 +315,32 @@ if filtro_tipo!= "Ninguno":
         st.warning(f"⚠️ {liga_sel} no tiene amarillas"); hay_datos=False
 
     if hay_datos:
-        equipos_a_chequear = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
+        equipos_con_loc = []
+        if eq1!= "Ninguno":
+            equipos_con_loc.append((eq1, eq1_loc))
+        if eq2!= "Ninguno":
+            equipos_con_loc.append((eq2, eq2_loc))
+
+        if equipos_con_loc:
+            equipos_a_chequear = equipos_con_loc
+        else:
+            base_eq = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
+            equipos_a_chequear = [(t, "Todos") for t in base_eq]
+
         calificados = []
-        for team in equipos_a_chequear:
-            d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
+        for team, loc_cond in equipos_a_chequear:
+            d_team = filtrar_equipo(df_f, team, loc_cond)
             if len(d_team) < 1:
                 continue
             c_ok = 0
             for _, rr in d_team.iterrows():
-                ok = cumple(rr.to_dict())
-                if ok:
+                if cumple(rr.to_dict()):
                     c_ok+=1
             pct = (c_ok / len(d_team) * 100) if len(d_team)>0 else 0
             if pct >= filtro_pct:
-                calificados.append((team, pct, len(d_team), c_ok))
+                calificados.append((team, loc_cond, pct, len(d_team), c_ok))
 
-        calificados = sorted(calificados, key=lambda x: x[1], reverse=True)
+        calificados = sorted(calificados, key=lambda x: x[2], reverse=True)
 
     if not calificados:
         st.info(f"Ningún equipo cumple {filtro_tipo} >= {filtro_pct}%")
