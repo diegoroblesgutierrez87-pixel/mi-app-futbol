@@ -186,23 +186,41 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if ern == hn and hg < ag: col = "#f31818"
             if ern == an and ag < hg: col = "#f31818"
 
-    mins_html = []
+    mins_1t = []
+    mins_2t = []
     try:
         fid = str(r.get('fixture_id','')).split('.')[0]
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
-            if es_mio:
-                mins_html.append(f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>")
+            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>" if es_mio else f"<span style='color:#000'>{m}'</span>"
+            if m <= 45:
+                mins_1t.append(html_gol)
             else:
-                mins_html.append(f"<span style='color:#000'>{m}'</span>")
+                mins_2t.append(html_gol)
     except: pass
 
-    if not mins_html:
+    if not mins_1t and not mins_2t:
         ms = re.findall(r"(\d+)'", str(r.get('Goles_Todo_HTML','') or ''))
-        mins_html = [f"<span style='color:#000'>{x}'</span>" for x in ms]
+        for x in ms:
+            try:
+                m_int = int(x)
+                if m_int <= 45:
+                    mins_1t.append(f"<span style='color:#000'>{x}'</span>")
+                else:
+                    mins_2t.append(f"<span style='color:#000'>{x}'</span>")
+            except:
+                mins_1t.append(f"<span style='color:#000'>{x}'</span>")
 
-    txt_mins = " ".join(mins_html) if mins_html else "-"
+    # separador visual 1T | 2T
+    if mins_1t and mins_2t:
+        txt_mins = " ".join(mins_1t) + " <span style='color:#999;font-weight:900'>|</span> " + " ".join(mins_2t)
+    elif mins_1t:
+        txt_mins = " ".join(mins_1t)
+    elif mins_2t:
+        txt_mins = "<span style='color:#999'>-</span> <span style='color:#999;font-weight:900'>|</span> " + " ".join(mins_2t)
+    else:
+        txt_mins = "-"
 
     # FIX L/V - ahora sí usa el equipo del bloque
     loc_tag = ""
