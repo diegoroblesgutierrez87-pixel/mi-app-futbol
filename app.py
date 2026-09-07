@@ -327,8 +327,13 @@ if filtro_tipo!= "Ninguno":
         for team, pct, total, ok in calificados:
             d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)].sort_values(['Jornada','Date'], ascending=[False, False]).head(20)
             # cabecera con % en verde/rojo
+            # saca la liga del equipo
+            try:
+                liga_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]['League'].mode().iloc[0]
+            except:
+                liga_team = liga_sel
             color_pct = "#0f8105" if pct>=70 else "#0A2342"
-            html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
+            html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
             for _, r in d_team.iterrows():
                 # usa tu mismo fmt_rapido pero pasando solo ese equipo como ref
                 html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
