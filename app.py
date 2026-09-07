@@ -1336,9 +1336,31 @@ def get_df_base_calculado(_df, ligas_tuple, temps_tuple):
         return list(set(_o))
     _temps_exp = _exp(temps_tuple)
     df_fil = _df[_df['League'].isin(ligas_tuple) & _df['Season'].astype(str).str.strip().isin(_temps_exp)].copy()
-    df_fil = df_fil.sort_values(['League','Season','Date'])
     if 'Jornada' not in df_fil.columns and not df_fil.empty:
-        df_fil, _ = calcular_estado_jornada(df_fil)
+        df_fil = df_fil.sort_values(['League','Season','Date']).copy()
+        df_fil['Jornada'] = 0
+        for (l, s), g in df_fil.groupby(['League','Season'], sort=False):
+            g_sorted = g.sort_values('Date')
+            ppj = max(len(pd.unique(g_sorted[['HomeTeam','AwayTeam']].values.ravel())) // 2, 1)
+            for i, idx in enumerate(g_sorted.index):
+                df_fil.loc[idx, 'Jornada'] = (i // ppj) + 1
+    try:
+        BASE = pathlib.Path(__file__).parent.resolve()
+    except:
+        BASE = pathlib.Path.cwd().resolve()
+    candidatos_clas = [
+        BASE / "Clasificacion-PRECALCULADO.csv",
+        BASE / "Clasificacion-PF.csv",
+        BASE / "clasificacion_PRECALCULADO.csv",
+        BASE / "clasificacion-PRECALCULADO.csv",
+    ]
+    f_clas = next((p for p in candidatos_clas if p.exists()), None)
+    if f_clas is not None and f_clas.exists():
+        df_clas = pd.read_csv(f_clas, on_bad_lines='skip', engine='python')
+        df_clas = df_clas[df_clas['League'].isin(ligas_tuple) & df_clas['Season'].isin(temps_tuple)]
+        return df_fil, df_clas
+    else:
+        return df_fil, pd.DataFrame()
     try:
         BASE = pathlib.Path(__file__).parent.resolve()
     except:
