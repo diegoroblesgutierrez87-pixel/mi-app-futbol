@@ -3753,19 +3753,36 @@ with st.container(border=True):
                             for ev in evs:
                                 if ev.get('missed'): continue
                                 m = int(ev.get('minute',0) or 0)
-                                team_raw = str(ev.get('team','')).strip()
-                                es_mio = False
-                                if equipo_filtro!="Ninguno" and normaliza(team_raw)==normaliza(equipo_filtro): es_mio=True
-                                if equipo2_filtro!="Ninguno" and normaliza(team_raw)==normaliza(equipo2_filtro): es_mio=True
-                                if not es_mio:
-                                    if equipo_filtro!="Ninguno" and abreviar_equipo(equipo_filtro).lower() in team_raw.lower(): es_mio=True
-                                    if equipo2_filtro!="Ninguno" and abreviar_equipo(equipo2_filtro).lower() in team_raw.lower(): es_mio=True
+                                team_raw = str(ev.get('team','') or ev.get('team_name','') or ev.get('club','')).strip()
+
+                                # equipo de referencia para este partido
+                                def es_equipo_mio(team_raw, equipo_sel, h_team, a_team, h_ab, a_ab):
+                                    if equipo_sel=="Ninguno": return False
+                                    tr = normaliza(team_raw)
+                                    sel = normaliza(equipo_sel)
+                                    # compara directo
+                                    if tr==sel: return True
+                                    if tr==normaliza(abreviar_equipo(equipo_sel)): return True
+                                    # si el seleccionado es el local o visitante de ESTE partido, acepta h_ab/a_ab
+                                    if sel==normaliza(h_team) or sel==normaliza(abreviar_equipo(h_team)):
+                                        if tr in [normaliza(h_team), normaliza(h_ab), normaliza(abreviar_equipo(h_team)), h_ab.lower()]: return True
+                                        if h_ab.lower() in tr or tr in h_team.lower(): return True
+                                    if sel==normaliza(a_team) or sel==normaliza(abreviar_equipo(a_team)):
+                                        if tr in [normaliza(a_team), normaliza(a_ab), normaliza(abreviar_equipo(a_team)), a_ab.lower()]: return True
+                                        if a_ab.lower() in tr or tr in a_team.lower(): return True
+                                    # fallback contiene
+                                    if sel in tr or tr in sel: return True
+                                    return False
+
+                                es_mio = es_equipo_mio(team_raw, equipo_filtro, h_team, a_team, h_ab, a_ab) or es_equipo_mio(team_raw, equipo2_filtro, h_team, a_team, h_ab, a_ab)
+
                                 html_min = f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>" if es_mio else f"<span style='color:#000'>{m}'</span>"
                                 if m <= 45:
                                     mins_1p_html.append(html_min)
                                 else:
                                     mins_2p_html.append(html_min)
-                    except:
+                    except Exception as e:
+                        # print(e) para debug
                         pass
 
                     if not mins_1p_html and not mins_2p_html:
