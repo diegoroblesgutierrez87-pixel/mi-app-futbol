@@ -174,8 +174,8 @@ else:
 def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     j = int(r.get('Jornada',0) or 0)
     h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
-    hab = str(r.get('HomeAbbr', abreviar_equipo(h)))[:3].upper()
-    aab = str(r.get('AwayAbbr', abreviar_equipo(a)))[:3].upper()
+    hab = h.strip()
+    aab = a.strip()
     try: hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
     except: hg = 0; ag = 0
 
