@@ -230,34 +230,67 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         if r.get('HomeTeam','') == current_eq_orig: loc_tag = " (L)"
         elif r.get('AwayTeam','') == current_eq_orig: loc_tag = " (V)"
 
-    # extra stats solo si el filtro lo pide
+    # extra stats - ON muestra todo diferenciado con color / OFF normal
     extra = ""
     try:
-        if "Corners" in filtro_tipo:
-            hc = r.get('HC'); ac = r.get('AC')
-            if hc is not None and ac is not None and pd.notna(hc) and pd.notna(ac):
-                tot_c = int(float(hc)+float(ac))
-                extra += f" <span style='color:#555'>[{tot_c}c]</span>"
-        if "Amarillas" in filtro_tipo:
-            hy = r.get('HY'); ay = r.get('AY')
-            if hy is not None and ay is not None and pd.notna(hy) and pd.notna(ay):
-                tot_y = int(float(hy)+float(ay))
-                extra += f" <span style='color:#b8860b'>[{tot_y}y]</span>"
-        if "Tiros Puerta" in filtro_tipo:
-            hst = r.get('HST'); ast = r.get('AST')
-            if hst is not None and ast is not None and pd.notna(hst) and pd.notna(ast):
-                tot_sot = int(float(hst)+float(ast))
-                extra += f" <span style='color:#0066cc'>[{tot_sot}tp]</span>"
-        if "Tiros Totales" in filtro_tipo:
-            hs = r.get('HS'); _as = r.get('AS')
-            if hs is not None and _as is not None and pd.notna(hs) and pd.notna(_as):
-                tot_s = int(float(hs)+float(_as))
-                extra += f" <span style='color:#0066cc'>[{tot_s}t]</span>"
-        if "Faltas" in filtro_tipo:
-            hf = r.get('HF'); af = r.get('AF')
-            if hf is not None and af is not None and pd.notna(hf) and pd.notna(af):
-                tot_f = int(float(hf)+float(af))
-                extra += f" <span style='color:#888'>[{tot_f}f]</span>"
+        def _iv(v):
+            try:
+                if v is None or pd.isna(v): return None
+                return int(float(v))
+            except: return None
+
+        if 'modo_stats' in locals() or 'modo_stats' in globals():
+            ms = modo_stats
+        else:
+            ms = "OFF"
+
+        if ms == "ON":
+            hy = _iv(r.get('HY')); ay = _iv(r.get('AY'))
+            hr = _iv(r.get('HR')); ar = _iv(r.get('AR'))
+            hc = _iv(r.get('HC')); ac = _iv(r.get('AC'))
+            hst = _iv(r.get('HST')); ast = _iv(r.get('AST'))
+            hs = _iv(r.get('HS')); _as = _iv(r.get('AS'))
+            hf = _iv(r.get('HF')); af = _iv(r.get('AF'))
+
+            if hy is not None or ay is not None:
+                extra += f" <span style='color:#b8860b'>[HY{hy if hy is not None else '-'}]</span> <span style='color:#DAA520'>[AY{ay if ay is not None else '-'}]</span>"
+            if hr is not None or ar is not None:
+                extra += f" <span style='color:#FF0000'>[HR{hr if hr is not None else '-'}]</span> <span style='color:#FF4500'>[AR{ar if ar is not None else '-'}]</span>"
+            if hc is not None or ac is not None:
+                extra += f" <span style='color:#1E90FF'>[HC{hc if hc is not None else '-'}]</span> <span style='color:#4682B4'>[AC{ac if ac is not None else '-'}]</span>"
+            if hst is not None or ast is not None:
+                extra += f" <span style='color:#0066cc'>[HST{hst if hst is not None else '-'}]</span> <span style='color:#0099FF'>[AST{ast if ast is not None else '-'}]</span>"
+            if hs is not None or _as is not None:
+                extra += f" <span style='color:#004080'>[HS{hs if hs is not None else '-'}]</span> <span style='color:#5A8AC0'>[AS{_as if _as is not None else '-'}]</span>"
+            if hf is not None or af is not None:
+                extra += f" <span style='color:#666'>[HF{hf if hf is not None else '-'}]</span> <span style='color:#999'>[AF{af if af is not None else '-'}]</span>"
+        else:
+            # OFF - comportamiento original tuyo
+            if "Corners" in filtro_tipo:
+                hc = r.get('HC'); ac = r.get('AC')
+                if hc is not None and ac is not None and pd.notna(hc) and pd.notna(ac):
+                    tot_c = int(float(hc)+float(ac))
+                    extra += f" <span style='color:#555'>[{tot_c}c]</span>"
+            if "Amarillas" in filtro_tipo:
+                hy = r.get('HY'); ay = r.get('AY')
+                if hy is not None and ay is not None and pd.notna(hy) and pd.notna(ay):
+                    tot_y = int(float(hy)+float(ay))
+                    extra += f" <span style='color:#b8860b'>[{tot_y}y]</span>"
+            if "Tiros Puerta" in filtro_tipo:
+                hst = r.get('HST'); ast = r.get('AST')
+                if hst is not None and ast is not None and pd.notna(hst) and pd.notna(ast):
+                    tot_sot = int(float(hst)+float(ast))
+                    extra += f" <span style='color:#0066cc'>[{tot_sot}tp]</span>"
+            if "Tiros Totales" in filtro_tipo:
+                hs = r.get('HS'); _as = r.get('AS')
+                if hs is not None and _as is not None and pd.notna(hs) and pd.notna(_as):
+                    tot_s = int(float(hs)+float(_as))
+                    extra += f" <span style='color:#0066cc'>[{tot_s}t]</span>"
+            if "Faltas" in filtro_tipo:
+                hf = r.get('HF'); af = r.get('AF')
+                if hf is not None and af is not None and pd.notna(hf) and pd.notna(af):
+                    tot_f = int(float(hf)+float(af))
+                    extra += f" <span style='color:#888'>[{tot_f}f]</span>"
     except: pass
 
     return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {hab} {hg}-{ag} {aab}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
