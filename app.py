@@ -319,7 +319,7 @@ if filtro_tipo!= "Ninguno":
         calificados = []
         for team in equipos_a_chequear:
             d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
-            if len(d_team) < min_partidos:
+            if len(d_team) < 1:
                 continue
             c_ok = 0
             for _, rr in d_team.iterrows():
