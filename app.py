@@ -230,21 +230,34 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         if r.get('HomeTeam','') == current_eq_orig: loc_tag = " (L)"
         elif r.get('AwayTeam','') == current_eq_orig: loc_tag = " (V)"
 
-    # extra stats visual - solo si existen en el CSV
+    # extra stats solo si el filtro lo pide
     extra = ""
     try:
-        hc = r.get('HC'); ac = r.get('AC')
-        if hc is not None and ac is not None and pd.notna(hc) and pd.notna(ac):
-            tot_c = int(float(hc)+float(ac))
-            extra += f" <span style='color:#555'>[{tot_c}c]</span>"
-        hy = r.get('HY'); ay = r.get('AY')
-        if hy is not None and ay is not None and pd.notna(hy) and pd.notna(ay):
-            tot_y = int(float(hy)+float(ay))
-            extra += f" <span style='color:#b8860b'>[{tot_y}y]</span>"
-        hst = r.get('HST'); ast = r.get('AST')
-        if hst is not None and ast is not None and pd.notna(hst) and pd.notna(ast):
-            tot_sot = int(float(hst)+float(ast))
-            extra += f" <span style='color:#0066cc'>[{tot_sot}tp]</span>"
+        if "Corners" in filtro_tipo:
+            hc = r.get('HC'); ac = r.get('AC')
+            if hc is not None and ac is not None and pd.notna(hc) and pd.notna(ac):
+                tot_c = int(float(hc)+float(ac))
+                extra += f" <span style='color:#555'>[{tot_c}c]</span>"
+        if "Amarillas" in filtro_tipo:
+            hy = r.get('HY'); ay = r.get('AY')
+            if hy is not None and ay is not None and pd.notna(hy) and pd.notna(ay):
+                tot_y = int(float(hy)+float(ay))
+                extra += f" <span style='color:#b8860b'>[{tot_y}y]</span>"
+        if "Tiros Puerta" in filtro_tipo:
+            hst = r.get('HST'); ast = r.get('AST')
+            if hst is not None and ast is not None and pd.notna(hst) and pd.notna(ast):
+                tot_sot = int(float(hst)+float(ast))
+                extra += f" <span style='color:#0066cc'>[{tot_sot}tp]</span>"
+        if "Tiros Totales" in filtro_tipo:
+            hs = r.get('HS'); _as = r.get('AS')
+            if hs is not None and _as is not None and pd.notna(hs) and pd.notna(_as):
+                tot_s = int(float(hs)+float(_as))
+                extra += f" <span style='color:#0066cc'>[{tot_s}t]</span>"
+        if "Faltas" in filtro_tipo:
+            hf = r.get('HF'); af = r.get('AF')
+            if hf is not None and af is not None and pd.notna(hf) and pd.notna(af):
+                tot_f = int(float(hf)+float(af))
+                extra += f" <span style='color:#888'>[{tot_f}f]</span>"
     except: pass
 
     return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {hab} {hg}-{ag} {aab}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
