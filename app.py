@@ -3586,7 +3586,7 @@ with st.container(border=True):
         df_tmp = df_tmp.sort_values(['Jornada','Date'], ascending=[False, False]).head(150)
         return df_tmp[['partidos']].to_html(escape=False, index=False, classes='dataframe')
 
-    # --- Partidos plegables CON BOTON --- SOLO 2 LINEAS PINTADAS + RAYITA 1P/2P ---
+    # --- Partidos plegables CON BOTON --- PINTA 2 LINEAS + P/G + RAYITA ---
     with st.expander("📋 Partidos", expanded=False):
         if 'ver_partidos' not in st.session_state:
             st.session_state.ver_partidos = False
@@ -3618,23 +3618,37 @@ with st.container(border=True):
                 try:
                     j = int(r_dict.get('Jornada',0) or 0)
                     h_team = str(r_dict.get('HomeTeam',''))
+                    a_team = str(r_dict.get('AwayTeam',''))
                     h_ab = str(r_dict.get('HomeAbbr','') or abreviar_equipo(h_team))[:3].upper()
-                    a_ab = str(r_dict.get('AwayAbbr','') or abreviar_equipo(str(r_dict.get('AwayTeam',''))))[:3].upper()
+                    a_ab = str(r_dict.get('AwayAbbr','') or abreviar_equipo(a_team))[:3].upper()
                     h1 = int(r_dict.get('HTHG',0) or 0); a1 = int(r_dict.get('HTAG',0) or 0)
                     hg = int(r_dict.get('FTHG',0) or 0); ag = int(r_dict.get('FTAG',0) or 0)
 
+                    # COLOR
                     if eq_ref:
                         is_home = normaliza(h_team) == normaliza(eq_ref)
                         won = (is_home and hg>ag) or (not is_home and ag>hg)
                         lost = (is_home and hg<ag) or (not is_home and ag<hg)
+                        # HT/FT desde eq_ref
+                        gf_ht = h1 if is_home else a1
+                        ga_ht = a1 if is_home else h1
+                        gf_ft = hg if is_home else ag
+                        ga_ft = ag if is_home else hg
                     else:
                         won = hg>ag
                         lost = hg<ag
+                        # sin filtro, perspectiva visitante (como tu ejemplo BOR remonta)
+                        gf_ht = a1; ga_ht = h1
+                        gf_ft = ag; ga_ft = hg
+
                     col = "#0f8105" if won else "#f31818" if lost else "#E67E22"
 
-                    # ---- GOLES CON SEPARACION 1P / 2P ----
-                    line1 = []
-                    line2 = []
+                    def res(gf, ga):
+                        return "G" if gf>ga else "P" if gf<ga else "E"
+                    htft = f"{res(gf_ht, ga_ht)}/{res(gf_ft, ga_ft)}"
+
+                    # GOLES
+                    line1, line2 = [], []
                     try:
                         fid = str(r_dict.get('fixture_id','')).split('.')[0]
                         evs = todos_eventos.get(fid, []) if 'todos_eventos' in globals() and todos_eventos else []
@@ -3643,43 +3657,36 @@ with st.container(border=True):
                             except: pass
                         if evs:
                             evs = sorted(evs, key=lambda x: int(x.get('minute',0) or 0))
-                            gh, ga = 0, 0
+                            gh, ga_c = 0, 0
                             home_norm = normaliza(h_team)
                             for ev in evs:
                                 if ev.get('missed'): continue
                                 team = str(ev.get('team','')).upper()
                                 es_local = home_norm in team or team in home_norm
                                 if es_local: gh+=1
-                                else: ga+=1
+                                else: ga_c+=1
                                 ab = h_ab if es_local else a_ab
                                 m = int(ev.get('minute',0) or 0)
                                 jug = str(ev.get('player','')).strip().split()[-1]
                                 asist = str(ev.get('assist','')).strip().split()[-1] if str(ev.get('assist','')).lower()!='nan' and str(ev.get('assist','')).strip()!='' else ""
                                 asist_txt = f" ({asist})" if asist else ""
-                                txt = f"{gh}-{ga} {ab}| {m}' {jug}{asist_txt}"
-                                if m <= 45:
-                                    line1.append(txt)
-                                else:
-                                    line2.append(txt)
+                                txt = f"{gh}-{ga_c} {ab}| {m}' {jug}{asist_txt}"
+                                if m <= 45: line1.append(txt)
+                                else: line2.append(txt)
                     except:
                         pass
 
                     if not line1 and not line2:
                         raw = str(r_dict.get('Goles_Todo_HTML','') or "").strip()
-                        if raw:
-                            # fallback sin minutos, todo a 1P
-                            line1 = [x.strip() for x in raw.split('|') if x.strip()]
-                            goles_html = "<br>".join(line1)
-                        else:
-                            goles_html = "<span style='color:#888'>-</span>"
+                        goles_html = raw.replace(' | ', '<br>') if raw else "-"
                     else:
                         goles_html = "<br>".join(line1)
                         if line1 and line2:
-                            goles_html += "<div style='border-top:1px solid #999;margin:4px 0'></div>"
+                            goles_html += "<div style='border-top:1px solid #bbb;margin:4px 0'></div>"
                         if line2:
                             goles_html += "<br>".join(line2)
 
-                    return f"<div style='font-family:monospace;font-size:11px;line-height:1.3;padding:6px 4px;border-bottom:2px solid #000;background:#fff;font-weight:700'><span style='color:{col};font-weight:900'>|J{j}| 1ªP: {h_ab} {h1}-{a1} {a_ab}</span><br><span style='color:{col};font-weight:900'>FINAL: {h_ab} {hg}-{ag} {a_ab}</span><br><span style='color:#000'>{goles_html}</span></div>"
+                    return f"<div style='font-family:monospace;font-size:11px;line-height:1.3;padding:6px 4px;border-bottom:2px solid #000;background:#fff;font-weight:700'><span style='color:{col};font-weight:900'>|J{j}| 1ªP: {h_ab} {h1}-{a1} {a_ab} | {htft}</span><br><span style='color:{col};font-weight:900'>FINAL: {h_ab} {hg}-{ag} {a_ab}</span><br><span style='color:#000'>{goles_html}</span></div>"
                 except Exception as e:
                     return f"<div>ERR {e}</div>"
 
