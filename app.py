@@ -141,11 +141,13 @@ with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e!=
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
-c6,c7 = st.columns(2)
+c6,c7,c8 = st.columns([2,1,1])
 with c6:
     filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
 with c7:
     filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
+with c8:
+    modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
 
 # --- FILTRO VECTORIZADO ---
 def filtrar_equipo(dframe, equipo, condicion):
