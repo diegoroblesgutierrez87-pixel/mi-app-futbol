@@ -140,7 +140,9 @@ def fmt_rapido(r, eq_refs):
         ms=re.findall(r"(\d+)'", str(r.get('Goles_Todo_HTML','') or ''))
         mins=[f"<span style='color:#000'>{x}'</span>" for x in ms]
     txt_mins=" ".join(mins) if mins else "-"
-    loc_tag = " (L)" if r.get('HomeTeam','') in eq_refs else " (V)" if r.get('AwayTeam','') in eq_refs else ""
+    # fix L/V por bloque
+    equipo_bloque = eq_refs[0] if len(eq_refs)==1 else current_eq
+    loc_tag = " (L)" if r.get('HomeTeam','')==equipo_bloque else " (V)" if r.get('AwayTeam','')==equipo_bloque else ""
     return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #000'><span style='color:{col};font-weight:900'>|J{j}| {hab} {hg}-{ag} {aab}{loc_tag}</span> <span style='color:#000'>| {txt_mins}</span></div>"
 
 eq_refs=[e for e in [eq1,eq2] if e!="Ninguno"]
