@@ -141,11 +141,13 @@ with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e!=
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
-c6,c7 = st.columns(2)
+c6,c7,c8 = st.columns(3)
 with c6:
-    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5"], key="filtro_tipo")
+    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
 with c7:
     filtro_pct = st.slider("% mínimo", 0, 100, 60, 5, key="filtro_pct")
+with c8:
+    min_partidos = st.slider("Mín partidos", 3, 30, 10, 1, key="min_part")
 
 # --- FILTRO VECTORIZADO ---
 def filtrar_equipo(dframe, equipo, condicion):
@@ -254,26 +256,59 @@ html = ""
 
 # MODO FILTRO POR % - PRIORITARIO
 if filtro_tipo!= "Ninguno":
+    def get_val(r, keys):
+        for k in keys:
+            if k in r and pd.notna(r.get(k)):
+                try: return float(r.get(k))
+                except: pass
+        return None
     def cumple(r):
-        try:
-            hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
-        except: return False, False, False
-        ambos_si = hg>0 and ag>0
-        ambos_no = not ambos_si
-        over = (hg+ag) > 2.5
-        under = not over
-        if filtro_tipo == "Ambos SI": return ambos_si, True, True
-        if filtro_tipo == "Ambos NO": return ambos_no, True, True
-        if filtro_tipo == "Over 2.5": return over, True, True
-        if filtro_tipo == "Under 2.5": return under, True, True
-        return False, False, False
+        try: hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
+        except: hg=0; ag=0
+        hc = get_val(r, ['HC']) or 0; ac = get_val(r, ['AC']) or 0
+        tot_c = get_val(r, ['Corners','TotalCorners'])
+        if tot_c is None: tot_c = hc + ac
+        hy = get_val(r, ['HY']) or 0; ay = get_val(r, ['AY']) or 0
+        tot_y = get_val(r, ['YellowCards'])
+        if tot_y is None: tot_y = hy + ay
+        hst = get_val(r, ['HST']) or 0; ast = get_val(r, ['AST']) or 0
+        tot_sot = get_val(r, ['SOT'])
+        if tot_sot is None: tot_sot = hst + ast
+        hs = get_val(r, ['HS']) or 0; _as = get_val(r, ['AS']) or 0
+        tot_s = get_val(r, ['Shots'])
+        if tot_s is None: tot_s = hs + _as
+        hf = get_val(r, ['HF']) or 0; af = get_val(r, ['AF']) or 0
+        tot_f = get_val(r, ['Fouls'])
+        if tot_f is None: tot_f = hf + af
+        if filtro_tipo == "Ambos SI": return hg>0 and ag>0
+        if filtro_tipo == "Ambos NO": return not (hg>0 and ag>0)
+        if filtro_tipo == "Over 2.5": return (hg+ag) > 2.5
+        if filtro_tipo == "Under 2.5": return (hg+ag) < 2.5
+        if filtro_tipo == "Corners Over 9.5": return tot_c > 9.5
+        if filtro_tipo == "Corners Under 9.5": return tot_c < 9.5 and tot_c>0
+        if filtro_tipo == "Amarillas Over 4.5": return tot_y > 4.5
+        if filtro_tipo == "Amarillas Under 4.5": return tot_y <= 4.5
+        if filtro_tipo == "Tiros Puerta Over 8.5": return tot_sot > 8.5
+        if filtro_tipo == "Tiros Puerta Under 8.5": return tot_sot < 8.5 and tot_sot>0
+        if filtro_tipo == "Tiros Totales Over 24.5": return tot_s > 24.5
+        if filtro_tipo == "Tiros Totales Under 24.5": return tot_s < 24.5 and tot_s>0
+        if filtro_tipo == "Faltas Over 24.5": return tot_f > 24.5
+        if filtro_tipo == "Faltas Under 24.5": return tot_f < 24.5 and tot_f>0
+        return False
 
-    equipos_a_chequear = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
+    columnas = set(df_f.columns)
+    hay_datos = True
+    if "Corners" in filtro_tipo and not ({"HC","AC","Corners"}.intersection(columnas)):
+        st.warning(f"⚠️ {liga_sel} no tiene corners"); hay_datos=False
+    if "Amarillas" in filtro_tipo and not ({"HY","AY"}.intersection(columnas)):
+        st.warning(f"⚠️ {liga_sel} no tiene amarillas"); hay_datos=False
 
-    calificados = []
-    for team in equipos_a_chequear:
-        d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
-        if len(d_team) < 3: continue
+    if hay_datos:
+        equipos_a_chequear = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
+        calificados = []
+        for team in equipos_a_chequear:
+            d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
+            if len(d_team) < min_partidos: continue
         c_ok = 0
         for _, rr in d_team.iterrows():
             ok,_,_ = cumple(rr.to_dict())
