@@ -3788,7 +3788,35 @@ with st.container(border=True):
                     if not mins_1p_html and not mins_2p_html:
                         import re
                         raw = str(r_dict.get('Goles_Todo_HTML','') or "").strip()
-                        mins_1p_html = [f"<span style='color:#000'>{m}'</span>" for m in re.findall(r"(\d+)'", raw)]
+                        # raw es tipo "1-0 BY 21' Upamecano..."
+                        # para detectar si el gol es mio, miramos si la linea contiene mi abreviatura
+                        sel_abbrs = []
+                        if equipo_filtro!="Ninguno":
+                            sel_abbrs.append(abreviar_equipo(equipo_filtro).upper())
+                            sel_abbrs.append(equipo_filtro[:3].upper())
+                        if equipo2_filtro!="Ninguno":
+                            sel_abbrs.append(abreviar_equipo(equipo2_filtro).upper())
+                            sel_abbrs.append(equipo2_filtro[:3].upper())
+                        # recorre lineas del HTML
+                        for line in raw.splitlines():
+                            m_match = re.search(r"(\d+)'", line)
+                            if not m_match: continue
+                            m = f"{m_match.group(1)}'"
+                            es_mio_line = any(ab in line.upper() for ab in sel_abbrs) or (eq_ref and normaliza(eq_ref) in normaliza(line))
+                            # si filtro es BY, y linea es "1-0 BY 21'" -> es mio si BY esta en el marcador? No, 21' es de WFB en tu captura
+                            # Por eso chequeamos: si equipo_filtro es BY y linea tiene BY antes del minuto, es de BY
+                            html_min = f"<span style='color:#8A2BE2;font-weight:900'>{m}</span>" if es_mio_line else f"<span style='color:#000'>{m}</span>"
+                            try:
+                                min_int = int(m_match.group(1))
+                                if min_int <= 45:
+                                    mins_1p_html.append(html_min)
+                                else:
+                                    mins_2p_html.append(html_min)
+                            except:
+                                mins_1p_html.append(html_min)
+                        if not mins_1p_html and not mins_2p_html:
+                            # ultimo fallback
+                            mins_1p_html = [f"<span style='color:#000'>{m}'</span>" for m in re.findall(r"(\d+)'", raw)]
 
                     # "|" para diferenciar 1ª y 2ª parte
                     if mins_1p_html and mins_2p_html:
