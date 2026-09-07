@@ -1561,6 +1561,11 @@ with st.expander("Filtros de partidos", expanded=False):
 
     liga_sel = st.multiselect("Liga", ligas_disponibles, default=_def_liga, key="filtro_liga_main", on_change=persistir)
 
+    st.markdown("**Liga Asia -----> lee el csv de asia unicamente nada mas**")
+    _df_asia_ligas = pd.read_csv("asia_actual_j1j2k1k2csl1.csv", on_bad_lines='skip', engine='python') if os.path.exists("asia_actual_j1j2k1k2csl1.csv") else pd.DataFrame()
+    ligas_asia_disponibles = sorted([str(x) for x in _df_asia_ligas['League'].dropna().unique()]) if not _df_asia_ligas.empty else []
+    liga_asia_sel = st.multiselect("Liga Asia", ligas_asia_disponibles, default=st.session_state.get('filtro_liga_asia', []), key="filtro_liga_asia", on_change=persistir)
+
     st.markdown("**Temporada**")
     _def_temp = ["2026/2027"] if "2026/2027" in temporadas_disponibles else ([temporadas_disponibles[-1]] if temporadas_disponibles else [])
     temp_sel = st.multiselect("Temporada", temporadas_disponibles, default=_def_temp, label_visibility="collapsed", key="filtro_temp_main", on_change=persistir)
@@ -1578,8 +1583,11 @@ with st.expander("Filtros de partidos", expanded=False):
                     _out.append(f"{_s}/{int(_s)+1}")
         return list(set(_out))
     _temp_fix = _expand_temps(temp_sel)
-    st.info(f"SELECCION ACTUAL: Liga={liga_sel} | Temp={temp_sel} | Filas={len(df[df['League'].isin(liga_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)])}")
-    df_fil = df[df['League'].isin(liga_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)]
+    ligas_todas_sel = list(set(liga_sel + liga_asia_sel)) if 'liga_asia_sel' in locals() else liga_sel
+    if not ligas_todas_sel:
+        ligas_todas_sel = liga_sel
+    st.info(f"SELECCION ACTUAL: Liga={ligas_todas_sel} | Temp={temp_sel} | Europa:{len(liga_sel)} Asia:{len(liga_asia_sel) if 'liga_asia_sel' in locals() else 0} | Filas={len(df[df['League'].isin(ligas_todas_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)])}")
+    df_fil = df[df['League'].isin(ligas_todas_sel) & df['Season'].astype(str).str.strip().isin(_temp_fix)]
 
     if df_fil.empty:
         st.warning("Selecciona al menos 1 liga y 1 temporada")
@@ -1589,7 +1597,7 @@ with st.expander("Filtros de partidos", expanded=False):
 
 
     with st.spinner('Calculando clasificación...'):
-        df_base, df_clas_base = get_df_base_calculado(df, tuple(liga_sel), tuple(temp_sel))
+        df_base, df_clas_base = get_df_base_calculado(df, tuple(ligas_todas_sel), tuple(temp_sel))
 
 
     df_final = df_base.copy()
