@@ -112,7 +112,7 @@ else:
     df_mostrar = df_f
     modo_doble = False
 
-def fmt_rapido(r, eq_refs):
+def fmt_rapido(r, eq_refs, current_eq=None):
     j=int(r.get('Jornada',0) or 0)
     h=str(r.get('HomeTeam','')); a=str(r.get('AwayTeam',''))
     hab=str(r.get('HomeAbbr',abreviar_equipo(h)))[:3].upper()
@@ -147,7 +147,6 @@ def fmt_rapido(r, eq_refs):
 
 eq_refs=[e for e in [eq1,eq2] if e!="Ninguno"]
 html=""
-
 if modo_doble:
     for eq, df_eq, cond in [(eq1, df_eq1, eq1_loc), (eq2, df_eq2, eq2_loc)]:
         df_eq = df_eq.sort_values(['Jornada','Date'], ascending=[False, False]).head(30) if not df_eq.empty else df_eq
