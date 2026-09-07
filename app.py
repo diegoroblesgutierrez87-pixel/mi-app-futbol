@@ -1832,7 +1832,7 @@ if len(jornadas) > 0:
         eqs = pd.unique(src[['HomeTeam','AwayTeam']].values.ravel())
         return sorted([str(x) for x in eqs if str(x).lower()!='nan'])
 
-    equipos_disponibles = get_equipos_cached(tuple(liga_sel))
+    equipos_disponibles = get_equipos_cached(tuple(ligas_todas_sel))
 
     opciones_1x2 = ["Ninguno","Gana","Pierde","Empata","Gana/Empata","Gana/Pierde","Empata/Pierde"]
     mapa_1x2 = {"Ninguno":"-", "Gana":"G", "Pierde":"P", "Empata":"E", "Gana/Empata":"GE", "Gana/Pierde":"GP", "Empata/Pierde":"EP"}
