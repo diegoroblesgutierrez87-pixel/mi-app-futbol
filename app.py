@@ -17,7 +17,7 @@ def abreviar_equipo(nombre):
     return (n.split()[0][:3] if n.split() else "XXX").upper()
 
 def get_base():
-    for p in [pathlib.Path("/mnt/data"), pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve(), pathlib.Path("/mount/src/mi-app-futbol")]:
+    for p in [pathlib.Path("/mnt/data"), pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
         if (p / "europa_actual.csv").exists(): return p
     return pathlib.Path("/mnt/data")
 BASE = get_base()
@@ -112,7 +112,6 @@ else:
     df_mostrar = df_f
     modo_doble = False
 
-# --- BLOQUE CORREGIDO + BUSCADOR ---
 def fmt_rapido(r, eq_refs, current_eq=None):
     j=int(r.get('Jornada',0) or 0)
     h=str(r.get('HomeTeam','')); a=str(r.get('AwayTeam',''))
@@ -141,95 +140,28 @@ def fmt_rapido(r, eq_refs, current_eq=None):
         ms=re.findall(r"(\d+)'", str(r.get('Goles_Todo_HTML','') or ''))
         mins=[f"<span style='color:#000'>{x}'</span>" for x in ms]
     txt_mins=" ".join(mins) if mins else "-"
-    equipo_bloque = current_eq if current_eq is not None else (eq_refs[0] if eq_refs else "")
-    if equipo_bloque:
-        if r.get('HomeTeam','')==equipo_bloque: loc_tag=" (L)"
-        elif r.get('AwayTeam','')==equipo_bloque: loc_tag=" (V)"
-        else: loc_tag=""
-    else:
-        loc_tag=""
+    # fix L/V por bloque
+    equipo_bloque = eq_refs[0] if len(eq_refs)==1 else current_eq
+    loc_tag = " (L)" if r.get('HomeTeam','')==equipo_bloque else " (V)" if r.get('AwayTeam','')==equipo_bloque else ""
     return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #000'><span style='color:{col};font-weight:900'>|J{j}| {hab} {hg}-{ag} {aab}{loc_tag}</span> <span style='color:#000'>| {txt_mins}</span></div>"
 
-def fmt_corto(r):
-    j=int(r.get('Jornada',0) or 0)
-    try: hg=int(float(r.get('FTHG',0))); ag=int(float(r.get('FTAG',0)))
-    except: hg=0; ag=0
-    return f"|J{j}| {hg}-{ag}"
-
-# Asegurar columnas BTTS y OVER sin tocar carga original
-for _df in [df_f] + ([df_eq1, df_eq2] if modo_doble else [df_mostrar]):
-    if not _df.empty and 'BTTS' not in _df.columns and 'FTHG' in _df.columns:
-        _df['BTTS'] = (pd.to_numeric(_df['FTHG'], errors='coerce').fillna(0)>0) & (pd.to_numeric(_df['FTAG'], errors='coerce').fillna(0)>0)
-        _df['OVER25'] = (pd.to_numeric(_df['FTHG'], errors='coerce').fillna(0)+pd.to_numeric(_df['FTAG'], errors='coerce').fillna(0))>2.5
-
-# BUSCADOR
-st.divider()
-b1,b2,b3 = st.columns(3)
-with b1: filtro_btts = st.selectbox("Ambos marcan", ["Todos","BTTS Si","BTTS No"])
-with b2: filtro_over = st.selectbox("Goles", ["Todos","Over 2.5","Under 2.5"])
-with b3: pct_min = st.slider("% mínimo", 0, 100, 70)
-
-def cumple_filtro(dframe):
-    dfx=dframe
-    if filtro_btts=="BTTS Si": dfx=dfx[dfx['BTTS']==True]
-    if filtro_btts=="BTTS No": dfx=dfx[dfx['BTTS']==False]
-    if filtro_over=="Over 2.5": dfx=dfx[dfx['OVER25']==True]
-    if filtro_over=="Under 2.5": dfx=dfx[dfx['OVER25']==False]
-    return dfx
-
 eq_refs=[e for e in [eq1,eq2] if e!="Ninguno"]
-texto_portapapeles=""
 html=""
-
 if modo_doble:
     for eq, df_eq, cond in [(eq1, df_eq1, eq1_loc), (eq2, df_eq2, eq2_loc)]:
-        total=len(df_eq)
-        if total==0: continue
-        df_cumple = cumple_filtro(df_eq) if (filtro_btts!="Todos" or filtro_over!="Todos") else df_eq
-        cumple=len(df_cumple)
-        pct = round(cumple/total*100,1) if total else 0
-        if pct < pct_min: continue
-        df_cumple = df_cumple.sort_values(['Jornada','Date'], ascending=[False, False])
-        partidos_str = " ".join([fmt_corto(r.to_dict() if hasattr(r,'to_dict') else r) for _,r in df_cumple.iterrows()])
-        linea = f"{eq} {cond} {pct}% ({cumple}/{total} {filtro_btts} {filtro_over}): {partidos_str}"
-        texto_portapapeles += linea + "\n\n"
-        color = "#0f8105" if pct>=70 else "#f39c12" if pct>=50 else "#f31818"
-        html+=f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px;margin:8px 0 2px 0;display:flex;justify-content:space-between'><span>{eq} {cond} | {pct}% ({cumple}/{total})</span><span style='background:{color};padding:2px 6px;border-radius:4px'>{pct}%</span></div>"
-        html+=f"<div style='font-family:monospace;font-size:12px;padding:6px;border:1px solid #000;margin-bottom:10px'>{partidos_str if partidos_str else 'Ninguno cumple'}</div>"
+        df_eq = df_eq.sort_values(['Jornada','Date'], ascending=[False, False]).head(30) if not df_eq.empty else df_eq
+        html+=f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{eq} {cond} | {len(df_eq)}</div>"
+        for _,r in df_eq.iterrows(): html+=fmt_rapido(r.to_dict(), eq_refs)
 else:
-    df_base = df_mostrar
-    total=len(df_base)
-    if total>0:
-        df_cumple = cumple_filtro(df_base) if (filtro_btts!="Todos" or filtro_over!="Todos") else df_base
-        cumple=len(df_cumple)
-        pct = round(cumple/total*100,1) if total else 0
-        eq_nombre = eq1 if eq1!="Ninguno" else eq2 if eq2!="Ninguno" else "TODOS"
-        cond_txt = eq1_loc if eq1!="Ninguno" else eq2_loc if eq2!="Ninguno" else "Todos"
-        if pct >= pct_min:
-            df_cumple = df_cumple.sort_values(['Jornada','Date'], ascending=[False, False])
-            partidos_str = " ".join([fmt_corto(r.to_dict() if hasattr(r,'to_dict') else r) for _,r in df_cumple.iterrows()])
-            linea = f"{eq_nombre} {cond_txt} {pct}% ({cumple}/{total} {filtro_btts} {filtro_over}): {partidos_str}"
-            texto_portapapeles = linea
-            color = "#0f8105" if pct>=70 else "#f39c12" if pct>=50 else "#f31818"
-            html+=f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px;margin:6px 0 2px 0;display:flex;justify-content:space-between'><span>{eq_nombre} {cond_txt} | {pct}% ({cumple}/{total})</span><span style='background:{color};padding:2px 6px;border-radius:4px'>{pct}%</span></div>"
-            html+=f"<div style='font-family:monospace;font-size:12px;padding:6px;border:1px solid #000'>{partidos_str}</div>"
-        else:
-            html=f"<div style='font-family:monospace;padding:10px;background:#ffe0e0'>No cumple % mínimo: {eq_nombre} tiene {pct}% y pides {pct_min}%</div>"
-            texto_portapapeles = f"{eq_nombre} NO CUMPLE {pct_min}% -> tiene {pct}% ({cumple}/{total})"
+    df_mostrar = df_mostrar.sort_values(['Jornada','Date'], ascending=[False, False]).head(60) if not df_mostrar.empty else df_mostrar
+    if eq_refs:
+        cond_txt = eq1_loc if eq1!="Ninguno" else eq2_loc
+        html+=f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0'>{eq_refs[0]} {cond_txt} | {len(df_mostrar)}</div>"
+    for _,r in df_mostrar.iterrows(): html+=fmt_rapido(r.to_dict(), eq_refs)
 
-if html:
+if (modo_doble and (not df_eq1.empty or not df_eq2.empty)) or (not modo_doble and not df_mostrar.empty):
     st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
 else:
-    st.info("Ningún equipo cumple el % mínimo con esos filtros")
+    st.info("Selecciona equipo")
 
-if texto_portapapeles:
-    st.divider()
-    st.code(texto_portapapeles, language="text")
-    st.components.v1.html(f"""
-    <button onclick="navigator.clipboard.writeText(`{texto_portapapeles.replace('`','').replace(chr(92),chr(92)+chr(92))}`)"
-    style="background:#0A2342;color:#fff;padding:10px 20px;border:none;border-radius:6px;font-weight:900;cursor:pointer;width:100%">
-    📋 COPIAR AL PORTAPAPELES
-    </button>
-    """, height=50)
-
-st.caption(f"Sigue volando - Buscador vectorizado, no añade lag")
+st.caption(f"Sigue volando - Local/Visitante es solo un filtro vectorizado, no añade lag")
