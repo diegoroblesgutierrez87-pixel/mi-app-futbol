@@ -3586,14 +3586,14 @@ with st.container(border=True):
         df_tmp = df_tmp.sort_values(['Jornada','Date'], ascending=[False, False]).head(150)
         return df_tmp[['partidos']].to_html(escape=False, index=False, classes='dataframe')
 
-    # --- Partidos plegables CON BOTON --- ULTRA RAPIDO - SOLO BAY FORMAT ---
+    # --- Partidos plegables CON BOTON --- FORMATO FINAL COINCIDE 100% TODAS LIGAS ---
     with st.expander("📋 Partidos", expanded=False):
         if 'ver_partidos' not in st.session_state:
             st.session_state.ver_partidos = False
         firma = f"{equipo_filtro}|{equipo2_filtro}|{rango_jornadas}|{cuota_tipo}"
         if 'firma_partidos' not in st.session_state:
             st.session_state.firma_partidos = firma
-        if firma != st.session_state.firma_partidos:
+        if firma!= st.session_state.firma_partidos:
             st.session_state.ver_partidos = False
             st.session_state.firma_partidos = firma
 
@@ -3608,40 +3608,78 @@ with st.container(border=True):
                     st.session_state.ver_partidos = False
                     st.rerun()
         with c2:
-            if not st.session_state.ver_partidos:
-                st.caption(f"Hay {len(df_final)} partidos listos. Dale a cargar para verlos.")
-            else:
-                st.caption(f"Mostrando {min(150, len(df_final))} de {len(df_final)} partidos")
+            st.caption(f"Hay {len(df_final)} partidos listos." if not st.session_state.ver_partidos else f"Mostrando {min(80, len(df_final))} de {len(df_final)}")
 
-        if not st.session_state.ver_partidos:
-            pass
-        else:
+        if st.session_state.ver_partidos:
             df_mostrar = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).head(80).copy()
+            eq_ref = equipo_filtro if equipo_filtro!="Ninguno" else (equipo2_filtro if equipo2_filtro!="Ninguno" else None)
 
-            # --- FORMATO RAPIDO BAY ---
-            def fmt_bay_fast(r):
+            def fmt_final(r_dict):
                 try:
-                    j = int(r.get('Jornada',0))
-                    h_ab = str(r.get('HomeAbbr','') or abreviar_equipo(r.get('HomeTeam','')))[:3].upper()
-                    a_ab = str(r.get('AwayAbbr','') or abreviar_equipo(r.get('AwayTeam','')))[:3].upper()
-                    h1 = int(r.get('HTHG',0)); a1 = int(r.get('HTAG',0))
-                    hg = int(r.get('FTHG',0)); ag = int(r.get('FTAG',0))
-                    goles = str(r.get('Goles_Todo_HTML','') or r.get('Goles','') or "").strip()
-                    # limpia | para tu formato
-                    goles_br = goles.replace(' | ', '<br>') if goles else "-"
-                    return f"<div style='font-family:monospace;font-size:11px;line-height:1.25;padding:6px 4px;border-bottom:2px solid #000;background:#fff'>|J{j}| 1ªP: {h_ab} {h1}-{a1} {a_ab}<br>FINAL: {h_ab} {hg}-{ag} {a_ab}<br>{hg}-{ag} {h_ab if hg>ag else a_ab}| {goles_br}</div>"
-                except:
-                    return "<div style='font-size:10px'>-</div>"
+                    j = int(r_dict.get('Jornada',0) or 0)
+                    h_team = str(r_dict.get('HomeTeam',''))
+                    a_team = str(r_dict.get('AwayTeam',''))
+                    h_ab = str(r_dict.get('HomeAbbr','') or abreviar_equipo(h_team))[:3].upper()
+                    a_ab = str(r_dict.get('AwayAbbr','') or abreviar_equipo(a_team))[:3].upper()
+                    h1 = int(r_dict.get('HTHG',0) or 0); a1 = int(r_dict.get('HTAG',0) or 0)
+                    hg = int(r_dict.get('FTHG',0) or 0); ag = int(r_dict.get('FTAG',0) or 0)
 
-            # Vectorizado - itertuples es 5x mas rapido que iterrows + formatear_partido
-            partidos_html = [fmt_bay_fast(r._asdict()) if hasattr(r,'_asdict') else fmt_bay_fast(r) for r in df_mostrar.itertuples(index=False)]
-            
-            # 2 columnas sin html pesado
+                    # COLOR POR EQUIPO FILTRO
+                    if eq_ref:
+                        is_home = normaliza(h_team) == normaliza(eq_ref)
+                        won = (is_home and hg>ag) or (not is_home and ag>hg)
+                        lost = (is_home and hg<ag) or (not is_home and ag<hg)
+                    else:
+                        won = hg>ag
+                        lost = hg<ag
+                    col = "#0f8105" if won else "#f31818" if lost else "#E67E22"
+
+                    # GOLES - si hay todos_eventos lo usa, si no usa Goles_Todo_HTML
+                    goles_html = ""
+                    try:
+                        fid = str(r_dict.get('fixture_id','')).split('.')[0]
+                        evs = todos_eventos.get(fid, []) if 'todos_eventos' in globals() and todos_eventos else []
+                        if not evs:
+                            try:
+                                evs = todos_eventos.get(str(int(float(fid))), []) if fid else []
+                            except: pass
+                        if evs:
+                            evs = sorted(evs, key=lambda x: int(x.get('minute',0) or 0))
+                            gh, ga = 0, 0
+                            lines = []
+                            home_norm = normaliza(h_team)
+                            for ev in evs:
+                                if ev.get('missed'): continue
+                                team = str(ev.get('team','')).upper()
+                                es_local = home_norm in team or team in home_norm
+                                if es_local: gh+=1
+                                else: ga+=1
+                                ab = h_ab if es_local else a_ab
+                                m = int(ev.get('minute',0) or 0)
+                                jug = str(ev.get('player','')).strip().split()[-1]
+                                asist = str(ev.get('assist','')).strip()
+                                asist = asist.split()[-1] if asist and asist.lower()!='nan' else ""
+                                asist_txt = f" ({asist})" if asist else ""
+                                lines.append(f"{gh}-{ga} {ab}| {m}' {jug}{asist_txt}")
+                            goles_html = "<br>".join(lines)
+                    except:
+                        pass
+
+                    if not goles_html:
+                        raw = str(r_dict.get('Goles_Todo_HTML','') or r_dict.get('Goles_Todo_TXT','') or r_dict.get('Goles','') or "").strip()
+                        if raw:
+                            goles_html = raw.replace(' | ', '<br>')
+                        else:
+                            goles_html = "-"
+
+                    return f"<div style='font-family:monospace;font-size:11px;line-height:1.3;padding:6px 4px;border-bottom:2px solid #000;background:#fff;color:{col};font-weight:800'>|J{j}| 1ªP: {h_ab} {h1}-{a1} {a_ab}<br>FINAL: {h_ab} {hg}-{ag} {a_ab}<br>{goles_html}</div>"
+                except Exception as e:
+                    return f"<div style='font-size:10px'>ERR {e}</div>"
+
+            partidos_html = [fmt_final(row.to_dict()) for _, row in df_mostrar.iterrows()]
             left_html = "".join(partidos_html[0::2])
             right_html = "".join(partidos_html[1::2])
-            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"> <div>{left_html}</div><div>{right_html}</div></div>', unsafe_allow_html=True)
-
-
+            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left_html}</div><div>{right_html}</div></div>', unsafe_allow_html=True)
 
 ###########################################################
 if False:
