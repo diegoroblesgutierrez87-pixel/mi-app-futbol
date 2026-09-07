@@ -33,8 +33,9 @@ def get_base():
 BASE = get_base()
 
 @st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False)
 def cargar_todo_lite():
-    files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv"]
+    files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv","asia_4ligas_actual_2026.csv","asia_5ligas_actual_2026.csv"]
     dfs=[]
     for fn in files:
         f = BASE / fn
