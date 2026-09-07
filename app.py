@@ -1278,98 +1278,15 @@ def calcular_estado_jornada(df):
     df['HomePtsPrev'] = pd.Series(_home_prev).reindex(df.index).fillna(0).astype(int)
     df['AwayPtsPrev'] = pd.Series(_away_prev).reindex(df.index).fillna(0).astype(int)
 
-    # 4) Posiciones previas con numpy
-    home_pos = pd.Series(0, index=df.index, dtype=int)
-    away_pos = pd.Series(0, index=df.index, dtype=int)
-    tablas = []
-
-    for (l, s), g in df.groupby(['League','Season'], sort=False):
-        g = g.sort_values(['Jornada','Date'])
-        teams = pd.unique(g[['HomeTeam','AwayTeam']].values.ravel())
-        idx_map = {t:i for i, t in enumerate(teams)}
-        n = len(teams)
-
-        pts = np.zeros(n, dtype=int)
-        gf = np.zeros(n, dtype=int)
-        gc = np.zeros(n, dtype=int)
-        pj = np.zeros(n, dtype=int)
-        pg = np.zeros(n, dtype=int)
-        pe = np.zeros(n, dtype=int)
-        pp = np.zeros(n, dtype=int)
-
-        last_jor = None
-
-        for row in g.itertuples():
-            hi = idx_map[row.HomeTeam]
-            ai = idx_map[row.AwayTeam]
-
-            if last_jor is not None and row.Jornada!= last_jor:
-                snap = pd.DataFrame({
-                    'Equipo': teams, 'Pts': pts, 'PJ': pj, 'PG': pg,
-                    'PE': pe, 'PP': pp, 'GF': gf, 'GC': gc, 'DG': gf-gc
-                })
-                snap['Pos'] = snap['Pts'].rank(method='min', ascending=False).astype(int)
-                snap = snap.sort_values(['Pts','DG','GF'], ascending=False)
-                snap['Jornada'] = last_jor
-                snap['League'] = l
-                snap['Season'] = s
-                tablas.append(snap)
-
-            dg = gf - gc
-            order = np.lexsort((-gf, -dg, -pts))
-            ranks = np.empty(n, dtype=int)
-            ranks[order] = np.arange(1, n+1)
-
-            home_pos.at[row.Index] = ranks[hi]
-            away_pos.at[row.Index] = ranks[ai]
-
-            pj[hi] += 1; pj[ai] += 1
-            gf[hi] += row.FTHG; gc[hi] += row.FTAG
-            gf[ai] += row.FTAG; gc[ai] += row.FTHG
-
-            if row.FTR == 'H':
-                pts[hi] += 3; pg[hi] += 1; pp[ai] += 1
-            elif row.FTR == 'A':
-                pts[ai] += 3; pg[ai] += 1; pp[hi] += 1
-            else:
-                pts[hi] += 1; pts[ai] += 1; pe[hi] += 1; pe[ai] += 1
-
-            last_jor = row.Jornada
-
-        if last_jor is not None:
-            snap = pd.DataFrame({
-                'Equipo': teams, 'Pts': pts, 'PJ': pj, 'PG': pg,
-                'PE': pe, 'PP': pp, 'GF': gf, 'GC': gc, 'DG': gf-gc
-            })
-            snap['Pos'] = snap['Pts'].rank(method='min', ascending=False).astype(int)
-            snap = snap.sort_values(['Pts','DG','GF'], ascending=False)
-            snap['Jornada'] = last_jor
-            snap['League'] = l
-            snap['Season'] = s
-            tablas.append(snap)
-
-    df['HomePosPrev'] = home_pos
-    df['AwayPosPrev'] = away_pos
-    df_clasificacion = pd.concat(tablas, ignore_index=True) if tablas else pd.DataFrame()
-
-    # ResHtFt vectorizado - usa abreviaturas ya calculadas
-    if 'HomeAbbr' in df.columns and 'AwayAbbr' in df.columns:
-        abbr_map = {}
-        abbr_map.update(dict(zip(df['HomeTeam'], df['HomeAbbr'])))
-        abbr_map.update(dict(zip(df['AwayTeam'], df['AwayAbbr'])))
-    else:
-        abbr_map = {t: abreviar_equipo(t) for t in pd.unique(df[['HomeTeam','AwayTeam']].values.ravel())}
-    ht_res = np.where(df['HTHG'] > df['HTAG'], df['HomeTeam'].map(abbr_map),
-             np.where(df['HTHG'] < df['HTAG'], df['AwayTeam'].map(abbr_map), 'E'))
-    ft_res = np.where(df['FTHG'] > df['FTAG'], df['HomeTeam'].map(abbr_map),
-             np.where(df['FTHG'] < df['FTAG'], df['AwayTeam'].map(abbr_map), 'E'))
-    df['ResHtFt'] = ht_res + '/' + ft_res
-
-    # PUNTAJE RENDIMIENTO
-    df['RivalProHome'] = df['AwayPosPrev'] <= 6
-    df['RivalProAway'] = df['HomePosPrev'] <= 6
-    df['HomePerf'] = np.where(df['FTR']=='H',1.5,np.where(df['FTR']=='D',0.5,0)) + 0.15*df['HST'] - 0.05*df['AST'] + 0.05*df['HC'] - 0.02*df['AC'] - 0.10*df['HY'] - 0.25*df['HR'] + 0.5*df['RivalProHome']*(df['FTR']=='H')
-    df['AwayPerf'] = np.where(df['FTR']=='A',1.5,np.where(df['FTR']=='D',0.5,0)) + 0.15*df['AST'] - 0.05*df['HST'] + 0.05*df['AC'] - 0.02*df['HC'] - 0.10*df['AY'] - 0.25*df['AR'] + 0.5*df['RivalProAway']*(df['FTR']=='A')
+    # 4) ELIMINADO - ERA EL 70% DEL LAG
+    df['HomePosPrev'] = 0
+    df['AwayPosPrev'] = 0
+    df_clasificacion = pd.DataFrame()
+    df['ResHtFt'] = 'E/E'
+    df['RivalProHome'] = False
+    df['RivalProAway'] = False
+    df['HomePerf'] = 0.0
+    df['AwayPerf'] = 0.0
 
     return df, df_clasificacion
 
