@@ -315,7 +315,15 @@ if filtro_tipo!= "Ninguno":
         st.warning(f"⚠️ {liga_sel} no tiene amarillas"); hay_datos=False
 
     if hay_datos:
-        equipos_a_chequear = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
+        # Si hay Equipo 1 / Equipo 2 puestos -> solo esos. Si no, todos.
+        if eq1!= "Ninguno" and eq2!= "Ninguno":
+            equipos_a_chequear = [eq1, eq2]
+        elif eq1!= "Ninguno":
+            equipos_a_chequear = 
+        elif eq2!= "Ninguno":
+            equipos_a_chequear = 
+        else:
+            equipos_a_chequear = equipos if liga_sel!="Todas" else sorted(pd.unique(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna()).tolist())
         calificados = []
         for team in equipos_a_chequear:
             d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
