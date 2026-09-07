@@ -308,16 +308,18 @@ if filtro_tipo!= "Ninguno":
         calificados = []
         for team in equipos_a_chequear:
             d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]
-            if len(d_team) < min_partidos: continue
-        c_ok = 0
-        for _, rr in d_team.iterrows():
-            ok,_,_ = cumple(rr.to_dict())
-            if ok: c_ok+=1
-        pct = (c_ok / len(d_team) * 100) if len(d_team)>0 else 0
-        if pct >= filtro_pct:
-            calificados.append((team, pct, len(d_team), c_ok))
+            if len(d_team) < min_partidos:
+                continue
+            c_ok = 0
+            for _, rr in d_team.iterrows():
+                ok = cumple(rr.to_dict())
+                if ok:
+                    c_ok+=1
+            pct = (c_ok / len(d_team) * 100) if len(d_team)>0 else 0
+            if pct >= filtro_pct:
+                calificados.append((team, pct, len(d_team), c_ok))
 
-    calificados = sorted(calificados, key=lambda x: x[1], reverse=True)
+        calificados = sorted(calificados, key=lambda x: x[1], reverse=True)
 
     if not calificados:
         st.info(f"Ningún equipo cumple {filtro_tipo} >= {filtro_pct}%")
