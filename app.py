@@ -3779,9 +3779,13 @@ with st.container(border=True):
                     return "<div>-</div>"
 
             htmls2 = [fmt_rapido_final(row.to_dict()) for _, row in df_mostrar2.iterrows()]
-            left2 = "".join(htmls2[0::2])
-            right2 = "".join(htmls2[1::2])
-            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left2}</div><div>{right2}</div></div>', unsafe_allow_html=True)
+            if equipo_filtro!="Ninguno" or equipo2_filtro!="Ninguno":
+                html_all = "".join(htmls2)
+                st.markdown(f'<div>{html_all}</div>', unsafe_allow_html=True)
+            else:
+                left2 = "".join(htmls2[0::2])
+                right2 = "".join(htmls2[1::2])
+                st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left2}</div><div>{right2}</div></div>', unsafe_allow_html=True)
 
 
 
