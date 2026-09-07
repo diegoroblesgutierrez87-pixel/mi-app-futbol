@@ -101,11 +101,34 @@ if df.empty:
 
 # --- UI ---
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
-c1,c2,c3 = st.columns(3)
+c1,c2,c3,c4d = st.columns(4)
 with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
 df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 
-# Equipo lista más rápida
+# --- FILTRO FECHA POR LIGA ---
+# saca las fechas que realmente existen en esa liga
+if not df_f.empty and 'Date' in df_f.columns:
+    # solo fechas validas
+    fechas_dt = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dropna()
+    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True) # mas reciente primero
+    fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
+else:
+    fechas_unicas = []
+    fechas_str = ["Todas"]
+
+with c4d:
+    fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
+
+# filtra df_f desde esa fecha en adelante
+if fecha_sel_str != "Todas" and fechas_unicas:
+    try:
+        fecha_sel_date = pd.to_datetime(fecha_sel_str, dayfirst=True).date()
+        mask_fecha = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dt.date >= fecha_sel_date
+        df_f = df_f[mask_fecha]
+    except:
+        pass
+
+# Equipo lista más rápida - DESPUES del filtro de fecha para que solo salgan equipos de ese rango
 if not df_f.empty:
     equipos = sorted(pd.unique(pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna()).tolist())
 else:
