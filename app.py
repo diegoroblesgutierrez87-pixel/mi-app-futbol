@@ -345,18 +345,17 @@ if filtro_tipo!= "Ninguno":
     if not calificados:
         st.info(f"Ningún equipo cumple {filtro_tipo} >= {filtro_pct}%")
     else:
-        for team, pct, total, ok in calificados:
-            d_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)].sort_values(['Jornada','Date'], ascending=[False, False]).head(20)
-            # cabecera con % en verde/rojo
-            # saca la liga del equipo
+        for team, loc_cond, pct, total, ok in calificados:
+            d_team_full = filtrar_equipo(df_f, team, loc_cond)
+            d_team_cumple = d_team_full[d_team_full.apply(lambda rr: cumple(rr.to_dict()), axis=1)]
+            d_team_cumple = d_team_cumple.sort_values(['Jornada','Date'], ascending=[False, False]).head(20)
             try:
                 liga_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]['League'].mode().iloc[0]
             except:
                 liga_team = liga_sel
             color_pct = "#0f8105" if pct>=70 else "#0A2342"
-            html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
-            for _, r in d_team.iterrows():
-                # usa tu mismo fmt_rapido pero pasando solo ese equipo como ref
+            html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
+            for _, r in d_team_cumple.iterrows():
                 html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
         st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
 
