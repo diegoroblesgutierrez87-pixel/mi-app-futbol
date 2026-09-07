@@ -252,6 +252,9 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             hs = _iv(r.get('HS')); _as = _iv(r.get('AS'))
             hf = _iv(r.get('HF')); af = _iv(r.get('AF'))
 
+            hp = _iv(r.get('HomePasses')); ap = _iv(r.get('AwayPasses'))
+            hpos = _iv(r.get('HomePos')); apos = _iv(r.get('AwayPos'))
+
             if hy is not None or ay is not None:
                 extra += f" <span style='color:#b8860b'>[HY{hy if hy is not None else '-'}]</span> <span style='color:#DAA520'>[AY{ay if ay is not None else '-'}]</span>"
             if hr is not None or ar is not None:
@@ -264,6 +267,10 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 extra += f" <span style='color:#004080'>[HS{hs if hs is not None else '-'}]</span> <span style='color:#5A8AC0'>[AS{_as if _as is not None else '-'}]</span>"
             if hf is not None or af is not None:
                 extra += f" <span style='color:#666'>[HF{hf if hf is not None else '-'}]</span> <span style='color:#999'>[AF{af if af is not None else '-'}]</span>"
+            if hp is not None or ap is not None:
+                extra += f" <span style='color:#2E8B57'>[HP{hp if hp is not None else '-'}]</span> <span style='color:#3CB371'>[AP{ap if ap is not None else '-'}]</span>"
+            if hpos is not None or apos is not None:
+                extra += f" <span style='color:#8B4513'>[POS{hpos if hpos is not None else '-'}-{apos if apos is not None else '-'}]</span>"
         else:
             # OFF - comportamiento original tuyo
             if "Corners" in filtro_tipo:
