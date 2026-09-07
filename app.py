@@ -145,9 +145,9 @@ c6,c7,c8 = st.columns(3)
 with c6:
     filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
 with c7:
-    filtro_pct = st.slider("% mínimo", 0, 100, 60, 5, key="filtro_pct")
+    filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
 with c8:
-    min_partidos = st.slider("Mín partidos", 3, 30, 10, 1, key="min_part")
+    min_partidos = st.number_input("Mín partidos", min_value=1, max_value=50, value=10, step=1, key="min_part")
 
 # --- FILTRO VECTORIZADO ---
 def filtrar_equipo(dframe, equipo, condicion):
