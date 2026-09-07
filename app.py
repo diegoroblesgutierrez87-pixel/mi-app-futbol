@@ -3694,6 +3694,85 @@ with st.container(border=True):
             left_html = "".join(partidos_html[0::2])
             right_html = "".join(partidos_html[1::2])
             st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left_html}</div><div>{right_html}</div></div>', unsafe_allow_html=True)
+############################################################
+
+    # --- AÑADIDO: PARTIDOS RAPIDO SOLO FINAL ---
+    with st.expander("📋 Partidos rapido", expanded=False):
+        if 'ver_rapido_solo' not in st.session_state:
+            st.session_state.ver_rapido_solo = False
+        firma_rs = f"{equipo_filtro}|{equipo2_filtro}|{rango_jornadas}|{cuota_tipo}|rapido"
+        if 'firma_rapido_solo' not in st.session_state:
+            st.session_state.firma_rapido_solo = firma_rs
+        if firma_rs!= st.session_state.firma_rapido_solo:
+            st.session_state.ver_rapido_solo = False
+            st.session_state.firma_rapido_solo = firma_rs
+
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            if not st.session_state.ver_rapido_solo:
+                if st.button("📥 Cargar rapido", key="btn_cargar_rapido_solo", type="primary", use_container_width=True):
+                    st.session_state.ver_rapido_solo = True
+                    st.rerun()
+            else:
+                if st.button("❌ Ocultar rapido", key="btn_ocultar_rapido_solo", use_container_width=True):
+                    st.session_state.ver_rapido_solo = False
+                    st.rerun()
+        with c2:
+            st.caption(f"Hay {len(df_final)} listos" if not st.session_state.ver_rapido_solo else f"Mostrando {min(80, len(df_final))}")
+
+        if st.session_state.ver_rapido_solo:
+            df_mostrar2 = df_final.sort_values(['Jornada','Date'], ascending=[False, False]).head(80).copy()
+            eq_ref2 = equipo_filtro if equipo_filtro!="Ninguno" else (equipo2_filtro if equipo2_filtro!="Ninguno" else None)
+
+            def fmt_rapido_final(r_dict):
+                try:
+                    j = int(r_dict.get('Jornada',0) or 0)
+                    h_team = str(r_dict.get('HomeTeam',''))
+                    a_team = str(r_dict.get('AwayTeam',''))
+                    h_ab = str(r_dict.get('HomeAbbr','') or abreviar_equipo(h_team))[:3].upper()
+                    a_ab = str(r_dict.get('AwayAbbr','') or abreviar_equipo(a_team))[:3].upper()
+                    hg = int(r_dict.get('FTHG',0) or 0); ag = int(r_dict.get('FTAG',0) or 0)
+
+                    if eq_ref2:
+                        is_home = normaliza(h_team) == normaliza(eq_ref2)
+                        won = (is_home and hg>ag) or (not is_home and ag>hg)
+                        lost = (is_home and hg<ag) or (not is_home and ag<hg)
+                    else:
+                        won = hg>ag
+                        lost = hg<ag
+                    col = "#0f8105" if won else "#f31818" if lost else "#E67E22"
+
+                    mins = []
+                    try:
+                        fid = str(r_dict.get('fixture_id','')).split('.')[0]
+                        evs = todos_eventos.get(fid, []) if 'todos_eventos' in globals() and todos_eventos else []
+                        if not evs:
+                            try: evs = todos_eventos.get(str(int(float(fid))), []) if fid else []
+                            except: pass
+                        if evs:
+                            evs = sorted(evs, key=lambda x: int(x.get('minute',0) or 0))
+                            for ev in evs:
+                                if ev.get('missed'): continue
+                                mins.append(f"{int(ev.get('minute',0) or 0)}'")
+                    except:
+                        pass
+
+                    if not mins:
+                        import re
+                        raw = str(r_dict.get('Goles_Todo_HTML','') or "").strip()
+                        mins = [f"{m}'" for m in re.findall(r"(\d+)'", raw)]
+
+                    txt_mins = " ".join(mins)
+                    return f"<div style='font-family:monospace;font-size:11px;padding:5px 4px;border-bottom:2px solid #000;background:#fff'><span style='color:{col};font-weight:900'>|J{j}|{h_ab} {hg}-{ag} {a_ab}</span><span style='color:#000'> | {txt_mins}</span></div>"
+                except:
+                    return "<div>-</div>"
+
+            htmls2 = [fmt_rapido_final(row.to_dict()) for _, row in df_mostrar2.iterrows()]
+            left2 = "".join(htmls2[0::2])
+            right2 = "".join(htmls2[1::2])
+            st.markdown(f'<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div>{left2}</div><div>{right2}</div></div>', unsafe_allow_html=True)
+
+
 
 ###########################################################
 if False:
