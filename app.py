@@ -511,7 +511,7 @@ else:
         for eq_orig, df_eq in [(eq1, df_eq1), (eq2, df_eq2)]:
             cond = eq1_loc if eq_orig == eq1 else eq2_loc
             df_eq = df_eq.sort_values(['Jornada','Date'], ascending=[False, False]).head(30) if not df_eq.empty else df_eq
-            html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{eq_orig} {cond} | {len(df_eq)}</div>"
+            html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
             for _, r in df_eq.iterrows():
                 html += fmt_rapido(r.to_dict(), [eq_norm_single], eq_norm_single, eq_orig)
@@ -519,7 +519,7 @@ else:
         df_mostrar = df_mostrar.sort_values(['Jornada','Date'], ascending=[False, False]).head(60) if not df_mostrar.empty else df_mostrar
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
-            html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
+            html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
         for _, r in df_mostrar.iterrows():
             curr_norm = eq_refs_norm[0] if eq_refs_norm else ""
             curr_orig = eq_refs_orig[0] if eq_refs_orig else ""
