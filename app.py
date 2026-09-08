@@ -389,7 +389,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                     extra += f" <span style='color:#888'>[{tot_f}f]</span>"
     except: pass
 
-    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {hab} {hg}-{ag} {aab}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {f'<u style=\"text-decoration-thickness:2px;text-underline-offset:3px\">{hab}</u>' if eq_refs_norm and normaliza(h) in eq_refs_norm else hab} {hg}-{ag} {f'<u style=\"text-decoration-thickness:2px;text-underline-offset:3px\">{aab}</u>' if eq_refs_norm and normaliza(a) in eq_refs_norm else aab}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
