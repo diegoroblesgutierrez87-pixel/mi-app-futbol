@@ -411,13 +411,28 @@ if filtro_tipo!= "Ninguno":
             d_team = filtrar_equipo(df_f, team, loc_cond)
             if len(d_team) < 1:
                 continue
+            # para filtros de stats, excluye partidos sin dato para no penalizar %
+            if "Corners" in filtro_tipo:
+                d_team_valid = d_team[(pd.to_numeric(d_team['HC'], errors='coerce').fillna(0) + pd.to_numeric(d_team['AC'], errors='coerce').fillna(0)) > 0]
+            elif "Amarillas" in filtro_tipo:
+                d_team_valid = d_team[(pd.to_numeric(d_team['HY'], errors='coerce').fillna(0) + pd.to_numeric(d_team['AY'], errors='coerce').fillna(0)) > 0]
+            elif "Tiros Puerta" in filtro_tipo:
+                d_team_valid = d_team[(pd.to_numeric(d_team['HST'], errors='coerce').fillna(0) + pd.to_numeric(d_team['AST'], errors='coerce').fillna(0)) > 0]
+            elif "Tiros Totales" in filtro_tipo:
+                d_team_valid = d_team[(pd.to_numeric(d_team['HS'], errors='coerce').fillna(0) + pd.to_numeric(d_team['AS'], errors='coerce').fillna(0)) > 0]
+            elif "Faltas" in filtro_tipo:
+                d_team_valid = d_team[(pd.to_numeric(d_team['HF'], errors='coerce').fillna(0) + pd.to_numeric(d_team['AF'], errors='coerce').fillna(0)) > 0]
+            else:
+                d_team_valid = d_team
+            if len(d_team_valid) < 1:
+                continue
             c_ok = 0
-            for _, rr in d_team.iterrows():
+            for _, rr in d_team_valid.iterrows():
                 if cumple(rr.to_dict()):
                     c_ok+=1
-            pct = (c_ok / len(d_team) * 100) if len(d_team)>0 else 0
+            pct = (c_ok / len(d_team_valid) * 100) if len(d_team_valid)>0 else 0
             if pct >= filtro_pct:
-                calificados.append((team, loc_cond, pct, len(d_team), c_ok))
+                calificados.append((team, loc_cond, pct, len(d_team_valid), c_ok))
 
         calificados = sorted(calificados, key=lambda x: x[2], reverse=True)
 
