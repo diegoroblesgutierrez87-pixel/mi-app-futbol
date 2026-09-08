@@ -138,7 +138,12 @@ def cargar_goles_lite():
                     m = int(float(str(r.get('minuto','0')).split('+')[0] or 0))
                     team = normaliza(r.get('equipo',''))
                     if not team: continue
-                    lista.append({"m": m, "team": team})
+                    gol = str(r.get('goleador','')).strip()
+                    asi = str(r.get('asistente','')).strip()
+                    if gol.lower() == 'nan': gol = ""
+                    if asi.lower() == 'nan': asi = ""
+                    abbr = abreviar_equipo(team)
+                    lista.append({"m": m, "team": team, "gol": gol, "asi": asi, "abbr": abbr})
                 except: continue
             if lista:
                 ev[fid_c] = sorted(lista, key=lambda x: x['m'])
@@ -201,6 +206,10 @@ with c7:
 with c8:
     modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
 
+c9,c10 = st.columns([1,3])
+with c9:
+    modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
+
 # --- FILTRO VECTORIZADO ---
 def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
@@ -251,9 +260,15 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         fid = str(r.get('fixture_id','')).split('.')[0]
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
-            abbr = abreviar_equipo(team) if team else "???"
+            gol = ev.get('gol',''); asi = ev.get('asi','')
+            abbr = ev.get('abbr') or abreviar_equipo(team)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
-            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'({abbr})</span>" if es_mio else f"<span style='color:#000'>{m}'({abbr})</span>"
+            mj = globals().get('modo_jugadores', 'OFF')
+            if mj == "ON" and gol:
+                txt_extra = f' "{gol}" ({asi})({abbr})' if asi else f' "{gol}" ({abbr})'
+            else:
+                txt_extra = f'({abbr})'
+            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'{txt_extra}</span>" if es_mio else f"<span style='color:#000'>{m}'{txt_extra}</span>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
