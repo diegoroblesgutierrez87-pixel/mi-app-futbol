@@ -251,8 +251,9 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         fid = str(r.get('fixture_id','')).split('.')[0]
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
+            abbr = abreviar_equipo(team) if team else "???"
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
-            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'</span>" if es_mio else f"<span style='color:#000'>{m}'</span>"
+            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'({abbr})</span>" if es_mio else f"<span style='color:#000'>{m}'({abbr})</span>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
