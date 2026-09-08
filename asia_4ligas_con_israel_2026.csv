@@ -1,57 +1,31 @@
 Date,League,Season,HomeTeam,AwayTeam,FTHG,FTAG,HTHG,HTAG,FTR,HS,AS,HST,AST,HF,AF,HC,AC,HY,AY,HR,AR,HomePasses,AwayPasses,HomeSaves,AwaySaves,HomePos,AwayPos,fixture_id
-04/09/2026,Liga 1 Indonesia,2026/2027,Arema FC,Adhyaksa,4,0,3,0,H,,,,,,,,,,,,,,,,,,,1621304
-04/09/2026,Liga 1 Indonesia,2026/2027,Bali United,PSS Sleman,2,1,1,0,H,,,,,,,,,,,,,,,,,,,1621305
-05/09/2026,Liga 1 Indonesia,2026/2027,Bhayangkara FC,Persebaya Surabaya,1,1,0,1,D,,,,,,,,,,,,,,,,,,,1621306
-05/09/2026,Liga 1 Indonesia,2026/2027,PSIM Yogyakarta,Persita,1,1,0,0,D,,,,,,,,,,,,,,,,,,,1621308
-05/09/2026,Liga 1 Indonesia,2026/2027,Persik Kediri,Dewa United,0,1,0,1,A,,,,,,,,,,,,,,,,,,,1621307
-05/09/2026,Liga 1 Indonesia,2026/2027,Pusamania Borneo,Persija,0,1,0,1,A,,,,,,,,,,,,,,,,,,,1621309
-06/09/2026,Liga 1 Indonesia,2026/2027,Malut United,Garudayaksa,1,1,1,0,D,,,,,,,,,,,,,,,,,,,1621310
-06/09/2026,Liga 1 Indonesia,2026/2027,Persepam Madura Utd,Persijap,2,0,0,0,H,,,,,,,,,,,,,,,,,,,1621311
-06/09/2026,Liga 1 Indonesia,2026/2027,Persib Bandung,PSM Makassar,3,1,0,1,H,,,,,,,,,,,,,,,,,,,1621312
-21/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Kuching FA,3,0,1,0,H,,,,,,,,,,,,,,,,,,,1601116
-22/08/2026,Super League Malasia,2026/2027,Terengganu,Melaka,3,0,2,0,H,,,,,,,,,,,,,,,,,,,1601119
-22/08/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Selangor,1,4,0,2,A,,,,,,,,,,,,,,,,,,,1601118
-23/08/2026,Super League Malasia,2026/2027,Penang,DPMM FC Brunei,0,1,0,0,A,,,,,,,,,,,,,,,,,,,1601120
-24/08/2026,Super League Malasia,2026/2027,Sabah FA,Imigresen,3,1,1,1,H,,,,,,,,,,,,,,,,,,,1601121
-26/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Kelantan Red Warrior FC,9,0,3,0,H,,,,,,,,,,,,,,,,,,,1601146
-26/08/2026,Super League Malasia,2026/2027,Kuala Lumpur FA,Kuching FA,0,6,0,2,A,,,,,,,,,,,,,,,,,,,1601147
-28/08/2026,Super League Malasia,2026/2027,Sabah FA,Penang,2,0,1,0,H,,,,,,,,,,,,,,,,,,,1601122
-28/08/2026,Super League Malasia,2026/2027,Terengganu,Selangor,0,3,0,0,A,,,,,,,,,,,,,,,,,,,1601123
-29/08/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Kuching FA,0,5,0,3,A,,,,,,,,,,,,,,,,,,,1601126
-29/08/2026,Super League Malasia,2026/2027,Kuala Lumpur FA,DPMM FC Brunei,1,0,0,0,H,,,,,,,,,,,,,,,,,,,1601124
-29/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Imigresen,7,0,5,0,H,,,,,,,,,,,,,,,,,,,1601125
-30/08/2026,Super League Malasia,2026/2027,Melaka,Negeri Sembilan,2,1,1,1,H,,,,,,,,,,,,,,,,,,,1601127
-04/09/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,DPMM FC Brunei,3,0,2,0,H,,,,,,,,,,,,,,,,,,,1601128
-04/09/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Kuala Lumpur FA,1,3,1,0,A,,,,,,,,,,,,,,,,,,,1601129
-05/09/2026,Super League Malasia,2026/2027,Negeri Sembilan,Imigresen,2,2,0,1,D,,,,,,,,,,,,,,,,,,,1601130
-05/09/2026,Super League Malasia,2026/2027,Sabah FA,Kuching FA,0,2,0,2,A,,,,,,,,,,,,,,,,,,,1601131
-05/09/2026,Super League Malasia,2026/2027,Terengganu,Penang,0,0,0,0,D,,,,,,,,,,,,,,,,,,,1601132
-06/09/2026,Super League Malasia,2026/2027,Selangor,Melaka,3,2,1,0,H,,,,,,,,,,,,,,,,,,,1601133
-25/07/2026,Premier League Hong Kong,2026/2027,Maccabi Haifa,Hapoel Haifa,2,3,0,2,A,,,,,,,,,,,,,,,,,,,1557933
-25/07/2026,Premier League Hong Kong,2026/2027,Hapoel Petah Tikva,Maccabi Petah Tikva,1,0,0,0,H,,,,,,,,,,,,,,,,,,,1557931
-25/07/2026,Premier League Hong Kong,2026/2027,Maccabi Netanya,Hapoel Katamon,3,1,2,1,H,,,,,,,,,,,,,,,,,,,1557934
-25/07/2026,Premier League Hong Kong,2026/2027,Ironi Tiberias,Bnei Sakhnin,2,1,0,1,H,,,,,,,,,,,,,,,,,,,1557932
-28/07/2026,Premier League Hong Kong,2026/2027,Hapoel Haifa,Ironi Tiberias,3,1,2,1,H,,,,,,,,,,,,,,,,,,,1557935
-28/07/2026,Premier League Hong Kong,2026/2027,Ironi Kiryat Shmona,Maccabi Haifa,3,0,3,0,H,,,,,,,,,,,,,,,,,,,1557937
-29/07/2026,Premier League Hong Kong,2026/2027,Maccabi Petah Tikva,Maccabi Netanya,1,2,1,1,A,,,,,,,,,,,,,,,,,,,1557938
-29/07/2026,Premier League Hong Kong,2026/2027,Hapoel Ramat Gan,Hapoel Petah Tikva,2,1,0,1,H,,,,,,,,,,,,,,,,,,,1557936
-01/08/2026,Premier League Hong Kong,2026/2027,Bnei Sakhnin,Hapoel Haifa,1,2,0,1,A,,,,,,,,,,,,,,,,,,,1557939
-01/08/2026,Premier League Hong Kong,2026/2027,Ironi Tiberias,Ironi Kiryat Shmona,0,1,0,0,A,,,,,,,,,,,,,,,,,,,1557941
-02/08/2026,Premier League Hong Kong,2026/2027,Hapoel Katamon,Maccabi Petah Tikva,1,0,0,0,H,,,,,,,,,,,,,,,,,,,1557940
-02/08/2026,Premier League Hong Kong,2026/2027,Maccabi Netanya,Hapoel Ramat Gan,2,3,1,1,A,,,,,,,,,,,,,,,,,,,1557942
-04/08/2026,Premier League Hong Kong,2026/2027,Ironi Kiryat Shmona,Bnei Sakhnin,1,0,0,0,H,,,,,,,,,,,,,,,,,,,1557945
-04/08/2026,Premier League Hong Kong,2026/2027,Maccabi Haifa,Ironi Tiberias,4,2,3,1,H,,,,,,,,,,,,,,,,,,,1557946
-05/08/2026,Premier League Hong Kong,2026/2027,Hapoel Petah Tikva,Maccabi Netanya,0,2,0,1,A,,,,,,,,,,,,,,,,,,,1557943
-05/08/2026,Premier League Hong Kong,2026/2027,Hapoel Ramat Gan,Hapoel Katamon,2,2,1,1,D,,,,,,,,,,,,,,,,,,,1557944
-08/08/2026,Premier League Hong Kong,2026/2027,Hapoel Haifa,Ironi Kiryat Shmona,1,3,1,0,A,,,,,,,,,,,,,,,,,,,1557947
-08/08/2026,Premier League Hong Kong,2026/2027,Bnei Sakhnin,Maccabi Haifa,0,1,0,0,A,,,,,,,,,,,,,,,,,,,1557950
-09/08/2026,Premier League Hong Kong,2026/2027,Hapoel Katamon,Hapoel Petah Tikva,3,1,0,0,H,,,,,,,,,,,,,,,,,,,1557948
-09/08/2026,Premier League Hong Kong,2026/2027,Maccabi Petah Tikva,Hapoel Ramat Gan,2,1,0,0,H,,,,,,,,,,,,,,,,,,,1557949
-15/08/2026,Premier League Hong Kong,2026/2027,Bnei Sakhnin,Hapoel Petah Tikva,1,0,0,0,H,,,,,,,,,,,,,,,,,,,1620657
-15/08/2026,Premier League Hong Kong,2026/2027,Ironi Tiberias,Maccabi Petah Tikva,0,3,0,0,A,,,,,,,,,,,,,,,,,,,1620656
-15/08/2026,Premier League Hong Kong,2026/2027,Hapoel Haifa,Hapoel Beer Sheva,4,0,2,0,H,,,,,,,,,,,,,,,,,,,1620655
-16/08/2026,Premier League Hong Kong,2026/2027,Maccabi Netanya,Maccabi Tel Aviv,0,1,0,1,A,,,,,,,,,,,,,,,,,,,1620659
-16/08/2026,Premier League Hong Kong,2026/2027,Ironi Kiryat Shmona,Hapoel Tel Aviv,1,2,1,0,A,,,,,,,,,,,,,,,,,,,1620658
-17/08/2026,Premier League Hong Kong,2026/2027,Maccabi Haifa,Hapoel Katamon,0,1,0,0,A,,,,,,,,,,,,,,,,,,,1620661
-18/07/2026,Ligat HaAl Israel,2026/2027,BEITAR JERUSALEM,HAPOEL TEL AVIV,2,2,1,1,D,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1557930
-17/08/2026,Ligat HaAl Israel,2026/2027,HAPOEL RAMAT GAN,BEITAR JERUSALEM,3,3,1,2,D,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1620660
+04/09/2026,Liga 1 Indonesia,2026/2027,Arema FC,Adhyaksa,4,0,3,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621304
+04/09/2026,Liga 1 Indonesia,2026/2027,Bali United,PSS Sleman,2,1,1,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621305
+05/09/2026,Liga 1 Indonesia,2026/2027,Bhayangkara FC,Persebaya Surabaya,1,1,0,1,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621306
+05/09/2026,Liga 1 Indonesia,2026/2027,PSIM Yogyakarta,Persita,1,1,0,0,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621308
+05/09/2026,Liga 1 Indonesia,2026/2027,Persik Kediri,Dewa United,0,1,0,1,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621307
+05/09/2026,Liga 1 Indonesia,2026/2027,Pusamania Borneo,Persija,0,1,0,1,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621309
+06/09/2026,Liga 1 Indonesia,2026/2027,Malut United,Garudayaksa,1,1,1,0,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621310
+06/09/2026,Liga 1 Indonesia,2026/2027,Persepam Madura Utd,Persijap,2,0,0,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621311
+06/09/2026,Liga 1 Indonesia,2026/2027,Persib Bandung,PSM Makassar,3,1,0,1,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1621312
+21/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Kuching FA,3,0,1,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601116
+22/08/2026,Super League Malasia,2026/2027,Terengganu,Melaka,3,0,2,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601119
+22/08/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Selangor,1,4,0,2,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601118
+23/08/2026,Super League Malasia,2026/2027,Penang,DPMM FC Brunei,0,1,0,0,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601120
+24/08/2026,Super League Malasia,2026/2027,Sabah FA,Imigresen,3,1,1,1,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601121
+26/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Kelantan Red Warrior FC,9,0,3,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601146
+26/08/2026,Super League Malasia,2026/2027,Kuala Lumpur FA,Kuching FA,0,6,0,2,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601147
+28/08/2026,Super League Malasia,2026/2027,Sabah FA,Penang,2,0,1,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601122
+28/08/2026,Super League Malasia,2026/2027,Terengganu,Selangor,0,3,0,0,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601123
+29/08/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Kuching FA,0,5,0,3,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601126
+29/08/2026,Super League Malasia,2026/2027,Kuala Lumpur FA,DPMM FC Brunei,1,0,0,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601124
+29/08/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,Imigresen,7,0,5,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601125
+30/08/2026,Super League Malasia,2026/2027,Melaka,Negeri Sembilan,2,1,1,1,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601127
+04/09/2026,Super League Malasia,2026/2027,Johor Darul Takzim FC,DPMM FC Brunei,3,0,2,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601128
+04/09/2026,Super League Malasia,2026/2027,Kelantan Red Warrior FC,Kuala Lumpur FA,1,3,1,0,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601129
+05/09/2026,Super League Malasia,2026/2027,Negeri Sembilan,Imigresen,2,2,0,1,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601130
+05/09/2026,Super League Malasia,2026/2027,Sabah FA,Kuching FA,0,2,0,2,A,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601131
+05/09/2026,Super League Malasia,2026/2027,Terengganu,Penang,0,0,0,0,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601132
+06/09/2026,Super League Malasia,2026/2027,Selangor,Melaka,3,2,1,0,H,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1601133
+18/07/2026,Ligat HaAl Israel,2026/2027,BEITAR JERUSALEM,HAPOEL TEL AVIV,2,2,1,1,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1557930
+17/08/2026,Ligat HaAl Israel,2026/2027,HAPOEL RAMAT GAN,BEITAR JERUSALEM,3,3,1,2,D,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1620660
