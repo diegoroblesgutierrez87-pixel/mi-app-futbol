@@ -64,20 +64,28 @@ def get_base():
 BASE = get_base()
 
 @st.cache_data(show_spinner=False)
-@st.cache_data(show_spinner=False)
 def cargar_todo_lite():
-    files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv","asia_4ligas_actual_2026.csv","asia_5ligas_actual_2026.csv","asia_4ligas_con_israel_2026.csv"]
-    dfs=[]
-    for fn in files:
-        f = BASE / fn
-        if f.exists() and f.stat().st_size > 100:
-            d = pd.read_csv(f, on_bad_lines='skip', engine='c', low_memory=False)
-            if 'Date' in d.columns:
-                d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
-            dfs.append(d)
-    if not dfs:
-        return pd.DataFrame()
-    df = pd.concat(dfs, ignore_index=True)
+    f_parquet = BASE / "base_partidos.parquet"
+    f_pkl = BASE / "base_partidos.pkl"
+    if f_parquet.exists():
+        df = pd.read_parquet(f_parquet)
+        if 'Date' in df.columns:
+            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    elif f_pkl.exists():
+        df = pd.read_pickle(f_pkl)
+        if 'Date' in df.columns:
+            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    else:
+        files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv","asia_4ligas_con_israel_2026.csv"]
+        dfs=[]
+        for fn in files:
+            fp = BASE / fn
+            if fp.exists() and fp.stat().st_size > 100:
+                d = pd.read_csv(fp, on_bad_lines='skip', engine='c')
+                if 'Date' in d.columns:
+                    d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
+                dfs.append(d)
+        df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
     if 'Season' in df.columns:
         df['Season'] = df['Season'].astype(str)
     if 'fixture_id' in df.columns and not df.empty:
@@ -103,26 +111,38 @@ def cargar_todo_lite():
 
 @st.cache_data(show_spinner=False)
 def cargar_goles_lite():
-    files = ["goles_actual.csv","goles_arabia_actual.csv","goles_sudamerica_actual.csv","goles_asia_4ligas_con_israel_2026.csv"]
+    f_parquet = BASE / "base_goles.parquet"
+    f_pkl = BASE / "base_goles.pkl"
+    if f_parquet.exists():
+        dg_all = pd.read_parquet(f_parquet)
+    elif f_pkl.exists():
+        dg_all = pd.read_pickle(f_pkl)
+    else:
+        files = ["goles_actual.csv","goles_arabia_actual.csv","goles_sudamerica_actual.csv","goles_asia_4ligas_con_israel_2026.csv"]
+        dfs=[]
+        for fn in files:
+            f = BASE / fn
+            if f.exists() and f.stat().st_size > 100:
+                dfs.append(pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='c'))
+        dg_all = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
     ev = {}
-    for fn in files:
-        f = BASE / fn
-        if not f.exists(): continue
-        try:
-            dg = pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='python')
-            for fid, g in dg.groupby('fixture_id'):
-                fid_c = str(fid).split('.')[0]
-                lista = []
-                for _, r in g.iterrows():
-                    try:
-                        m = int(float(str(r.get('minuto','0')).split('+')[0] or 0))
-                        team = normaliza(r.get('equipo',''))
-                        if not team: continue
-                        lista.append({"m": m, "team": team})
-                    except: continue
-                if lista:
-                    ev[fid_c] = sorted(lista, key=lambda x: x['m'])
-        except: pass
+    if dg_all.empty:
+        return ev
+    try:
+        for fid, g in dg_all.groupby('fixture_id'):
+            fid_c = str(fid).split('.')[0]
+            lista = []
+            for _, r in g.iterrows():
+                try:
+                    m = int(float(str(r.get('minuto','0')).split('+')[0] or 0))
+                    team = normaliza(r.get('equipo',''))
+                    if not team: continue
+                    lista.append({"m": m, "team": team})
+                except: continue
+            if lista:
+                ev[fid_c] = sorted(lista, key=lambda x: x['m'])
+    except: pass
     return ev
 
 df = cargar_todo_lite()
