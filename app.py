@@ -270,7 +270,14 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
             gol = ev.get('gol',''); asi = ev.get('asi','')
-            abbr = ev.get('abbr') or abreviar_equipo(team)
+            # usa abbr del partido para que visitante siempre salga bien
+            h_norm = normaliza(r.get('HomeTeam','')); a_norm = normaliza(r.get('AwayTeam',''))
+            if team == h_norm:
+                abbr = r.get('HomeAbbr') or abreviar_equipo(r.get('HomeTeam',''))
+            elif team == a_norm:
+                abbr = r.get('AwayAbbr') or abreviar_equipo(r.get('AwayTeam',''))
+            else:
+                abbr = ev.get('abbr') or abreviar_equipo(team)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
             if mj == "ON" and gol:
