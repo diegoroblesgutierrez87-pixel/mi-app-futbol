@@ -514,7 +514,7 @@ else:
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
             for _, r in df_eq.iterrows():
-                html += fmt_rapido(r.to_dict(), eq_refs_norm, eq_norm_single, eq_orig)
+                html += fmt_rapido(r.to_dict(), [eq_norm_single], eq_norm_single, eq_orig)
     else:
         df_mostrar = df_mostrar.sort_values(['Jornada','Date'], ascending=[False, False]).head(60) if not df_mostrar.empty else df_mostrar
         if eq_refs_orig:
