@@ -342,6 +342,14 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         else:
             ms = "OFF"
 
+        # --- ROJAS AUTO SIEMPRE ---
+        hr_auto = _iv(r.get('HR'))
+        ar_auto = _iv(r.get('AR'))
+        if hr_auto is not None and hr_auto > 0:
+            extra += f" <span style='color:#FF0000;font-weight:900'>[HR{hr_auto}]</span>"
+        if ar_auto is not None and ar_auto > 0:
+            extra += f" <span style='color:#FF4500;font-weight:900'>[AR{ar_auto}]</span>"
+
         if ms == "ON":
             hy = _iv(r.get('HY')); ay = _iv(r.get('AY'))
             hr = _iv(r.get('HR')); ar = _iv(r.get('AR'))
