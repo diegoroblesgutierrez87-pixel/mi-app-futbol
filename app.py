@@ -336,14 +336,19 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if not txt_extra.strip():
                 txt_extra = f'({abbr}){alterador}'
 
-            team_full = r.get('HomeTeam','') if team == h_norm else r.get('AwayTeam','') if team == a_norm else abbr
+            is_local = (team == h_norm)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             color_gol = "#9370DB" if es_mio else "#000"
             if mj == "ON" and gol_ab:
                 extra_jug = f' "{gol_ab}"' + (f' ({asi_ab})' if asi_ab else '')
-                html_gol = f'<span style="color:{color_gol}; display:inline-block; margin:2px 0; font-weight:900">{team_full} | {m}\' |{alterador}{extra_jug}</span>' if es_mio else f'<span style="color:{color_gol}; display:inline-block; margin:2px 0">{team_full} | {m}\' |{alterador}{extra_jug}</span>'
             else:
-                html_gol = f'<span style="color:{color_gol}; display:inline-block; margin:2px 0; font-weight:900">{team_full} | {m}\' |{alterador}</span>' if es_mio else f'<span style="color:{color_gol}; display:inline-block; margin:2px 0">{team_full} | {m}\' |{alterador}</span>'
+                extra_jug = ""
+            # minuto resaltado
+            min_bold = f"<span style='font-weight:900; background:#EFEFEF; padding:0 4px; border-radius:3px'>{m}'</span>"
+            if is_local:
+                html_gol = f"<div style='text-align:left; color:{color_gol}; margin:2px 0'>{min_bold} {alterador.strip()}{extra_jug}</div>"
+            else:
+                html_gol = f"<div style='text-align:right; color:{color_gol}; margin:2px 0'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
