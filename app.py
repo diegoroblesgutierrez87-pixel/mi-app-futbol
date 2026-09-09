@@ -287,8 +287,10 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 abbr = ev.get('abbr') or abreviar_equipo(team)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
+            gol_fmt = gol.upper() if gol else ""
+            asi_fmt = asi.lower() if asi else ""
             if mj == "ON" and gol:
-                txt_extra = f' "{gol}" ({asi})({abbr})' if asi else f' "{gol}" ({abbr})'
+                txt_extra = f' "{gol_fmt}" ({asi_fmt})({abbr})' if asi_fmt else f' "{gol_fmt}" ({abbr})'
             else:
                 txt_extra = f'({abbr})'
             html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'{txt_extra}</span>" if es_mio else f"<span style='color:#000'>{m}'{txt_extra}</span>"
