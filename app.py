@@ -333,15 +333,13 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             except:
                 mins_1t.append(f"<span style='color:#000'>{x}'</span>")
 
-    # separador visual 1T | 2T
-    sep_gol = " <span style='color:#d0d0d0;font-weight:300'>|</span> "
-    sep_tiempo = " <span style='color:#111;font-weight:900;font-size:13px;margin:0 4px'>|</span> "
+    # goles uno debajo de otro ordenados
     if mins_1t and mins_2t:
-        txt_mins = sep_gol.join(mins_1t) + sep_tiempo + sep_gol.join(mins_2t)
+        txt_mins = "<br>".join(mins_1t) + "<br><span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
     elif mins_1t:
-        txt_mins = sep_gol.join(mins_1t)
+        txt_mins = "<br>".join(mins_1t)
     elif mins_2t:
-        txt_mins = "<span style='color:#999'>-</span>" + sep_tiempo + sep_gol.join(mins_2t)
+        txt_mins = "<br>".join(mins_2t)
     else:
         txt_mins = "-"
 
