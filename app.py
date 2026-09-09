@@ -327,16 +327,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 marc_a += 1
             alterador = f" {marc_h}-{marc_a}"
 
-            # --- FILTRO MINUTOS [DESDE] - [HASTA] ---
-            try:
-                md = globals().get('MIN_DESDE', None)
-                mh = globals().get('MIN_HASTA', None)
-                if md is not None and m < md:
-                    continue
-                if mh is not None and m > mh:
-                    continue
-            except:
-                pass
+            # --- NO filtrar goles aquí, el filtro de partido se hace fuera ---
 
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
@@ -651,6 +642,23 @@ else:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
         for _, r in df_mostrar.iterrows():
+            # --- FILTRO POR MINUTO A NIVEL PARTIDO ---
+            try:
+                if MIN_DESDE is not None or MIN_HASTA is not None:
+                    fid_f = str(r.get('fixture_id','')).split('.')[0]
+                    evs = eventos.get(fid_f, [])
+                    tiene = False
+                    for ev in evs:
+                        mm = ev.get('m', -1)
+                        if MIN_DESDE is not None and mm < MIN_DESDE: continue
+                        if MIN_HASTA is not None and mm > MIN_HASTA: continue
+                        tiene = True
+                        break
+                    if not tiene:
+                        continue
+            except:
+                pass
+
             curr_norm = eq_refs_norm[0] if eq_refs_norm else ""
             curr_orig = eq_refs_orig[0] if eq_refs_orig else ""
             html += fmt_rapido(r.to_dict(), eq_refs_norm, curr_norm, curr_orig)
