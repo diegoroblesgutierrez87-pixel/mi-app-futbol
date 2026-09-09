@@ -346,9 +346,9 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             # minuto resaltado
             min_bold = f"<span style='font-weight:900; background:#EFEFEF; padding:0 4px; border-radius:3px'>{m}'</span>"
             if is_local:
-                html_gol = f"<div style='text-align:left; color:{color_gol}; margin:2px 0'>{min_bold} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:left; color:{color_gol}; margin:0; padding:0; line-height:1.1'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             else:
-                html_gol = f"<div style='text-align:right; color:{color_gol}; margin:2px 0'>{min_bold} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:right; color:{color_gol}; margin:0; padding:0; line-height:1.1'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
@@ -484,7 +484,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     hab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{hab}</u>" if eq_refs_norm and normaliza(h) in eq_refs_norm else hab
     aab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{aab}</u>" if eq_refs_norm and normaliza(a) in eq_refs_norm else aab
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;white-space:normal'><span style='color:{col};font-weight:900'>|J{j}| {btts_txt}{loc_tag}</span>{extra}<br><span style='color:{col};font-weight:900'>{hab_u} [ {hg}-{ag} ] {aab_u}</span><br><span style='color:#555;font-weight:700'>{hab} [ {hthg}-{htag} ] {aab}</span><br><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.6'>{txt_mins}</div></div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;white-space:normal'><span style='color:{col};font-weight:900'>|J{j}| {btts_txt}{loc_tag}</span>{extra}<br><span style='color:{col};font-weight:900'>{hab_u} [ {hg}-{ag} ] {aab_u}</span><br><span style='color:#555;font-weight:700'>{hab} [ {hthg}-{htag} ] {aab}</span><br><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1'>{txt_mins}</div></div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
