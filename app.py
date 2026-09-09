@@ -336,10 +336,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if not txt_extra.strip():
                 txt_extra = f'({abbr}){alterador}'
 
-            if es_mio:
-                html_gol = f'<span style="background-color:#E0E0E0; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:1px solid #CCCCCC; display:inline-block; margin:2px 0">{m}&#39;{txt_extra}</span>'
-            else:
-                html_gol = f'<span style="color:#000; display:inline-block; margin:2px 0">{m}&#39;{txt_extra}</span>'
+            html_gol = f'<span style="color:#000; display:inline-block; margin:2px 0">{m}&#39;{txt_extra}</span>'
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
