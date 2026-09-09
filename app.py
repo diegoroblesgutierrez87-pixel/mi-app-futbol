@@ -631,6 +631,20 @@ else:
     if modo_doble:
         for eq_orig, df_eq in [(eq1, df_eq1), (eq2, df_eq2)]:
             cond = eq1_loc if eq_orig == eq1 else eq2_loc
+            # FIX MIN en modo doble
+            try:
+                if MIN_DESDE is not None or MIN_HASTA is not None:
+                    fids_v = set()
+                    for fid_c, evs_c in eventos.items():
+                        for ev_c in evs_c:
+                            mm_c = ev_c.get('m', -1)
+                            if MIN_DESDE is not None and mm_c < MIN_DESDE: continue
+                            if MIN_HASTA is not None and mm_c > MIN_HASTA: continue
+                            fids_v.add(str(fid_c))
+                            break
+                    df_eq = df_eq[df_eq['fixture_id'].astype(str).str.split('.').str[0].isin(fids_v)]
+            except:
+                pass
             df_eq = df_eq.sort_values(['Jornada','Date'], ascending=[False, False]).head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
