@@ -307,11 +307,14 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 return f"{p[0][0]}. {p[-1]}"
             gol_ab = abrev(gol).upper()
             asi_ab = abrev(asi).lower()
-            if mj == "ON" and gol:
+            if (mj == "ON" or es_mio) and gol:
                 txt_extra = f' "{gol_ab}" ({asi_ab})({abbr})' if asi_ab else f' "{gol_ab}" ({abbr})'
             else:
                 txt_extra = f'({abbr})'
-            html_gol = f"<span style='color:#8A2BE2;font-weight:900'>{m}'{txt_extra}</span>" if es_mio else f"<span style='color:#000'>{m}'{txt_extra}</span>"
+            if es_mio:
+                html_gol = f"<span style='background-color:#39FF14; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:2px solid #2aff00; box-shadow:0 0 0 1px #39FF14'>{m}'{txt_extra}</span>"
+            else:
+                html_gol = f"<span style='color:#000'>{m}'{txt_extra}</span>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
