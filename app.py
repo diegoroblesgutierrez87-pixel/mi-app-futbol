@@ -403,6 +403,15 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
+    # Si hay filtro MIN y no hay goles en ese rango, no renderizar
+    try:
+        md_f = globals().get('MIN_DESDE', None)
+        mh_f = globals().get('MIN_HASTA', None)
+        if (md_f is not None or mh_f is not None) and txt_mins == "-":
+            return ""
+    except:
+        pass
+
     # FIX L/V - ahora sí usa el equipo del bloque
     loc_tag = ""
     if current_eq_orig:
