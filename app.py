@@ -300,21 +300,25 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
             def abrev(n):
-                n = str(n).strip()
-                if not n: return ""
-                p = n.split()
+                s = str(n).strip()
+                if not s or s.lower() == 'nan': return ""
+                p = s.split()
                 if len(p) == 1: return p[0]
                 return f"{p[0][0]}. {p[-1]}"
-            gol_ab = abrev(gol).upper()
-            asi_ab = abrev(asi).lower()
-            if mj == "ON" and gol:
+            gol_raw = str(gol).strip()
+            asi_raw = str(asi).strip()
+            if gol_raw.lower() == 'nan': gol_raw = ""
+            if asi_raw.lower() == 'nan': asi_raw = ""
+            gol_ab = abrev(gol_raw).upper()
+            asi_ab = abrev(asi_raw).lower()
+            if mj == "ON" and gol_raw:
                 txt_extra = f' "{gol_ab}" ({asi_ab})({abbr})' if asi_ab else f' "{gol_ab}" ({abbr})'
             else:
                 txt_extra = f'({abbr})'
             if es_mio:
-                html_gol = f"<span style='background-color:#E0E0E0; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:1px solid #CCCCCC'>{m}'{txt_extra}</span>"
+                html_gol = f"<span style='background-color:#E0E0E0; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:1px solid #CCCCCC; display:inline-block; margin:2px 0'>{m}'{txt_extra}</span>"
             else:
-                html_gol = f"<span style='color:#000'>{m}'{txt_extra}</span>"
+                html_gol = f"<span style='color:#000; display:inline-block; margin:2px 0'>{m}'{txt_extra}</span>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
