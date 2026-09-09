@@ -312,7 +312,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             else:
                 txt_extra = f'({abbr})'
             if es_mio:
-                html_gol = f"<span style='background-color:#39FF14; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:2px solid #2aff00; box-shadow:0 0 0 1px #39FF14'>{m}'{txt_extra}</span>"
+                html_gol = f"<span style='background-color:#E0E0E0; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:1px solid #CCCCCC'>{m}'{txt_extra}</span>"
             else:
                 html_gol = f"<span style='color:#000'>{m}'{txt_extra}</span>"
             if m <= 45:
