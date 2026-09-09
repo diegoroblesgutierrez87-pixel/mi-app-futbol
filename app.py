@@ -406,8 +406,27 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                     extra += f" <span style='color:#888'>[{tot_f}f]</span>"
     except: pass
 
-    btts = hg > 0 and ag > 0
-    btts_txt = "G/G" if btts else "NG/NG"
+    # G/E/P del equipo seleccionado en 1P y 2P
+    def res_eq(gf, gc):
+        if gf > gc: return "G"
+        if gf == gc: return "E"
+        return "P"
+
+    es_local = current_eq_orig and r.get('HomeTeam','') == current_eq_orig
+    es_visit = current_eq_orig and r.get('AwayTeam','') == current_eq_orig
+
+    if es_local:
+        r1 = res_eq(hthg, htag)
+        r2 = res_eq(hg - hthg, ag - htag)
+        btts_txt = f"{r1}/{r2}"
+    elif es_visit:
+        r1 = res_eq(htag, hthg)
+        r2 = res_eq(ag - htag, hg - hthg)
+        btts_txt = f"{r1}/{r2}"
+    else:
+        # sin equipo seleccionado -> dejamos G/G = BTTS
+        btts = hg > 0 and ag > 0
+        btts_txt = "G/G" if btts else "NG/NG"
 
     hab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{hab}</u>" if eq_refs_norm and normaliza(h) in eq_refs_norm else hab
     aab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{aab}</u>" if eq_refs_norm and normaliza(a) in eq_refs_norm else aab
