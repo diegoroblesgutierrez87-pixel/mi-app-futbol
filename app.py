@@ -358,11 +358,11 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     # goles uno debajo de otro ordenados
     if mins_1t and mins_2t:
-        txt_mins = "<br>".join(mins_1t) + "<br><span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
+        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 1T ---</span><br>" + "<br>".join(mins_1t) + "<br><span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
     elif mins_1t:
-        txt_mins = "<br>".join(mins_1t)
+        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 1T ---</span><br>" + "<br>".join(mins_1t)
     elif mins_2t:
-        txt_mins = "<br>".join(mins_2t)
+        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
     else:
         txt_mins = "-"
 
