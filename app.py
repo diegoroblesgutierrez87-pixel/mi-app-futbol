@@ -336,7 +336,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if not txt_extra.strip():
                 txt_extra = f'({abbr}){alterador}'
 
-            html_gol = f'<span style="color:#000; display:inline-block; margin:2px 0">{m}&#39;{txt_extra}</span>'
+            team_full = r.get('HomeTeam','') if team == h_norm else r.get('AwayTeam','') if team == a_norm else abbr
+            html_gol = f'<span style="color:#000; display:inline-block; margin:2px 0">{team_full} | {m}\' |{alterador}</span>'
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
