@@ -370,7 +370,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             else:
                 extra_jug = ""
             # minuto resaltado
-            min_bold = f"<span style='font-weight:900; background:#EFEFEF; padding:0 4px; border-radius:3px'>{m}'</span>"
+            min_bold = f"{m}'"
             if is_local:
                 html_gol = f"<div style='text-align:left; color:{color_gol}; margin:0; padding:0; line-height:1.0; font-size:11px'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             else:
