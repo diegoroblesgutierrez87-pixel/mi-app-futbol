@@ -65,6 +65,11 @@ def abreviar_equipo(nombre):
     return parts[0][:3].upper()
 
 def get_base():
+    # 1 - si hay parquet nuevo en el repo, usa repo
+    for p in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
+        if (p / "base_partidos.parquet").exists():
+            return p
+    # 2 - si no, busca csv
     for p in [pathlib.Path("/mnt/data"), pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
         if (p / "europa_actual.csv").exists():
             return p
