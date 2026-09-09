@@ -306,7 +306,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 abbr = ev.get('abbr') or abreviar_equipo(team)
             if not abbr or abbr == "XXX":
                 abbr = "A."
-            if abbr.upper() == home_abbr_fix:
+            if team == h_norm:
                 marc_h += 1
             else:
                 marc_a += 1
