@@ -408,7 +408,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     hab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{hab}</u>" if eq_refs_norm and normaliza(h) in eq_refs_norm else hab
     aab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{aab}</u>" if eq_refs_norm and normaliza(a) in eq_refs_norm else aab
-    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee;line-height:1.35'><span style='color:{col};font-weight:900'>|J{j}|</span>{extra}<br><span style='color:{col};font-weight:900'>{hab_u} {hg}-{ag} {aab_u}</span><br><span style='color:#555;font-weight:700'>{hab} {hthg}-{htag} {aab}</span><br><span style='color:#000'> | {txt_mins}</span></div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee;line-height:1.35'><span style='color:{col};font-weight:900'>|J{j}| {hthg}-{htag} / {hg}-{ag}{loc_tag}</span>{extra}<br><span style='color:{col};font-weight:900'>{hab_u} {hg}-{ag} {aab_u}</span><br><span style='color:#555;font-weight:700'>{hab} {hthg}-{htag} {aab}</span><br><span style='color:#000'> | {txt_mins}</span></div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
