@@ -248,6 +248,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     aab = a.strip()
     try: hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
     except: hg = 0; ag = 0
+    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+    except: hthg = 0; htag = 0
 
     col = "#0A2342"
     if eq_refs_norm:
@@ -393,7 +395,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     hab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{hab}</u>" if eq_refs_norm and normaliza(h) in eq_refs_norm else hab
     aab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{aab}</u>" if eq_refs_norm and normaliza(a) in eq_refs_norm else aab
-    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {hab_u} {hg}-{ag} {aab_u}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:4px 2px;border-bottom:1px solid #eee'><span style='color:{col};font-weight:900'>|J{j}| {hab_u} {hthg}-{htag} / {hg}-{ag} {aab_u}{loc_tag}</span>{extra} <span style='color:#000'>| {txt_mins}</span></div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
