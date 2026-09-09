@@ -179,6 +179,14 @@ df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 if not df_f.empty and 'Date' in df_f.columns:
     if df_f['League'].astype(str).str.contains('J1 League|J2 League|K League', case=False, na=False).any():
         df_f = df_f[pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce') >= pd.to_datetime('2026-08-07')]
+        # RECALCULA JORNADA PARA NUEVA TEMPORADA
+        df_f = df_f.sort_values(['League','Date']).copy()
+        for l_name, g in df_f.groupby('League', sort=False):
+            g_s = g.sort_values('Date')
+            idxs = g_s.index.to_numpy()
+            n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
+            ppj = max(n_teams // 2, 1)
+            df_f.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
 
 # --- FILTRO FECHA POR LIGA ---
 # saca las fechas que realmente existen en esa liga
