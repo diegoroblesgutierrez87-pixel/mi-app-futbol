@@ -307,7 +307,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 return f"{p[0][0]}. {p[-1]}"
             gol_ab = abrev(gol).upper()
             asi_ab = abrev(asi).lower()
-            if (mj == "ON" or es_mio) and gol:
+            if mj == "ON" and gol:
                 txt_extra = f' "{gol_ab}" ({asi_ab})({abbr})' if asi_ab else f' "{gol_ab}" ({abbr})'
             else:
                 txt_extra = f'({abbr})'
