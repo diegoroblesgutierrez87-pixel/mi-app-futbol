@@ -174,7 +174,19 @@ if df.empty:
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
 c1,c2,c3,c4d = st.columns(4)
 with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
-df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
+# FIX TEMPORADA NUEVA J1/J2 - empieza 07/08/2026
+if not df_f.empty and 'Date' in df_f.columns:
+    es_japon_korea = False
+    try:
+        if liga_sel in ['J1 League','J2 League','K League 1','K League 2','Chinese Super League']:
+            es_japon_korea = True
+        elif df_f['League'].astype(str).str.contains('J1|J2|K League|Chinese', case=False, na=False).any():
+            es_japon_korea = True
+    except: pass
+
+    if es_japon_korea:
+        # solo nueva temporada
+        df_f = df_f[pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce') >= pd.to_datetime('2026-08-07')]
 
 # --- FILTRO FECHA POR LIGA ---
 # saca las fechas que realmente existen en esa liga
