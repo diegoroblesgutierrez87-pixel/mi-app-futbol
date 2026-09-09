@@ -637,7 +637,23 @@ else:
             for _, r in df_eq.iterrows():
                 html += fmt_rapido(r.to_dict(), [eq_norm_single], eq_norm_single, eq_orig)
     else:
-        df_mostrar = df_mostrar.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_mostrar.empty else df_mostrar
+        # Pre-filtro por MIN para que el contador sea real
+        df_filtrada_min = df_mostrar.copy()
+        try:
+            if MIN_DESDE is not None or MIN_HASTA is not None:
+                fids_validos = set()
+                for fid_check, evs_check in eventos.items():
+                    for ev_c in evs_check:
+                        mm_c = ev_c.get('m', -1)
+                        if MIN_DESDE is not None and mm_c < MIN_DESDE: continue
+                        if MIN_HASTA is not None and mm_c > MIN_HASTA: continue
+                        fids_validos.add(str(fid_check))
+                        break
+                df_filtrada_min = df_mostrar[df_mostrar['fixture_id'].astype(str).str.split('.').str[0].isin(fids_validos)]
+        except:
+            pass
+
+        df_mostrar = df_filtrada_min.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_filtrada_min.empty else df_filtrada_min
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
