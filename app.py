@@ -238,9 +238,24 @@ with c7:
 with c8:
     modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
 
-c9,c10 = st.columns([1,3])
+c9,c10,c_min1,c_min2 = st.columns([1,1,1,1])
 with c9:
     modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
+with c_min1:
+    min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
+with c_min2:
+    min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
+
+def parse_min(v):
+    try:
+        if v is None or str(v).strip() in ["", "-", "–", "—"]:
+            return None
+        return int(str(v).strip().replace("'", ""))
+    except:
+        return None
+
+MIN_DESDE = parse_min(min_desde_raw)
+MIN_HASTA = parse_min(min_hasta_raw)
 
 # --- FILTRO VECTORIZADO ---
 def filtrar_equipo(dframe, equipo, condicion):
@@ -311,6 +326,17 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             else:
                 marc_a += 1
             alterador = f" {marc_h}-{marc_a}"
+
+            # --- FILTRO MINUTOS [DESDE] - [HASTA] ---
+            try:
+                md = globals().get('MIN_DESDE', None)
+                mh = globals().get('MIN_HASTA', None)
+                if md is not None and m < md:
+                    continue
+                if mh is not None and m > mh:
+                    continue
+            except:
+                pass
 
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
