@@ -291,7 +291,6 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
             gol = ev.get('gol',''); asi = ev.get('asi','')
-            # usa abbr del partido para que visitante siempre salga bien
             h_norm = normaliza(r.get('HomeTeam','')); a_norm = normaliza(r.get('AwayTeam',''))
             if team == h_norm:
                 abbr = r.get('HomeAbbr') or abreviar_equipo(r.get('HomeTeam',''))
@@ -299,12 +298,14 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 abbr = r.get('AwayAbbr') or abreviar_equipo(r.get('AwayTeam',''))
             else:
                 abbr = ev.get('abbr') or abreviar_equipo(team)
-            # marcador que deja el gol
+            if not abbr or abbr == "XXX":
+                abbr = "A."
             if abbr.upper() == home_abbr_fix:
                 marc_h += 1
             else:
                 marc_a += 1
             alterador = f" {marc_h}-{marc_a}"
+
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             mj = globals().get('modo_jugadores', 'OFF')
             def abrev(n):
@@ -319,10 +320,16 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if asi_raw.lower() == 'nan': asi_raw = ""
             gol_ab = abrev(gol_raw).upper()
             asi_ab = abrev(asi_raw).lower()
-            if mj == "ON" and gol_raw:
+
+            # si no hay goleador, no intentes pintar "" ()
+            if mj == "ON" and gol_raw and gol_ab:
                 txt_extra = f' "{gol_ab}" ({asi_ab})({abbr}){alterador}' if asi_ab else f' "{gol_ab}" ({abbr}){alterador}'
             else:
                 txt_extra = f'({abbr}){alterador}'
+
+            if not txt_extra.strip():
+                txt_extra = f'({abbr}){alterador}'
+
             if es_mio:
                 html_gol = f'<span style="background-color:#E0E0E0; color:#000; padding:2px 8px; border-radius:4px; font-weight:900; border:1px solid #CCCCCC; display:inline-block; margin:2px 0">{m}&#39;{txt_extra}</span>'
             else:
