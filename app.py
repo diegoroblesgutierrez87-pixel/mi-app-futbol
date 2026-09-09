@@ -346,9 +346,9 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             # minuto resaltado
             min_bold = f"<span style='font-weight:900; background:#EFEFEF; padding:0 4px; border-radius:3px'>{m}'</span>"
             if is_local:
-                html_gol = f"<div style='text-align:left; color:{color_gol}; margin:0; padding:0; line-height:1.1'>{min_bold} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:left; color:{color_gol}; margin:0; padding:0; line-height:1.0; font-size:11px'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             else:
-                html_gol = f"<div style='text-align:right; color:{color_gol}; margin:0; padding:0; line-height:1.1'>{min_bold} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:right; color:{color_gol}; margin:0; padding:0; line-height:1.0; font-size:11px'>{min_bold} {alterador.strip()}{extra_jug}</div>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
@@ -367,13 +367,13 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             except:
                 mins_1t.append(f"<span style='color:#000'>{x}'</span>")
 
-    # goles uno debajo de otro ordenados
+    # goles ultra comprimidos sin hueco
     if mins_1t and mins_2t:
-        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 1T ---</span><br>" + "<br>".join(mins_1t) + "<br><span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 1T ---</div>" + "".join(mins_1t) + "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 2T ---</div>" + "".join(mins_2t)
     elif mins_1t:
-        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 1T ---</span><br>" + "<br>".join(mins_1t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 1T ---</div>" + "".join(mins_1t)
     elif mins_2t:
-        txt_mins = "<span style='color:#333;font-weight:900;font-size:10px'>--- 2T ---</span><br>" + "<br>".join(mins_2t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 2T ---</div>" + "".join(mins_2t)
     else:
         txt_mins = "-"
 
