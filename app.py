@@ -51,17 +51,23 @@ def abreviar_equipo(nombre):
     if 'DARMSTADT' in n: return 'DAR'
     if 'ATLETICO' in n: return 'ATM'
     if 'BILBAO' in n or 'ATHLETIC' in n: return 'ATH'
+    if 'QADISIYAH' in n: return 'QAD'
+    if 'DIRIYAH' in n: return 'DIR'
     # quita "1. ", "2. " del inicio
     n = re.sub(r'^\d+\.?\s*', '', n)
     # quita prefijos feos
-    for pref in ['FC ','REAL ','CLUB ','DEPORTIVO ','CLUB ATLETICO ','SV ','CF ','SC ']:
+    for pref in ['FC ','REAL ','CLUB ','DEPORTIVO ','CLUB ATLETICO ','SV ','CF ','SC ','AL ']:
         if n.startswith(pref):
             n = n[len(pref):].strip()
+    if n.startswith('AL-'):
+        n = n[3:].strip()
     parts = n.split()
     if not parts: return "XXX"
     # si quedó "FC KAISERSLAUTERN", usa la 2da palabra
     if parts[0] in ['FC','CF','SC','SV'] and len(parts) > 1:
         return parts[1][:3].upper()
+    if '-' in parts[0]:
+        return parts[0].split('-')[-1][:3].upper()
     return parts[0][:3].upper()
 
 def get_base():
