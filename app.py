@@ -182,10 +182,11 @@ ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
 c1,c2,c3,c4d = st.columns(4)
 with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
 df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
-# FIX TEMPORADA NUEVA J1/J2/K - solo esas ligas empiezan 07/08/2026
+# FIX TEMPORADA NUEVA J1/J2 - solo J-League empieza 07/08/2026 (K League NO)
 if not df_f.empty and 'Date' in df_f.columns:
     try:
         mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League|K League', case=False, na=False)
+mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League|K2 League', case=False, na=False)
         if mask_new.any():
             df_f.loc[mask_new, 'Date'] = pd.to_datetime(df_f.loc[mask_new, 'Date'], dayfirst=True, errors='coerce')
             df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))]
@@ -684,6 +685,7 @@ else:
                 fids_validos = set()
                 for fid_check, evs_check in eventos.items():
                     for ev_c in evs_check:
+                        if 'Missed' in ev_c.get('tipo',''): continue
                         mm_c = ev_c.get('m', -1)
                         if MIN_DESDE is not None and mm_c < MIN_DESDE: continue
                         if MIN_HASTA is not None and mm_c > MIN_HASTA: continue
