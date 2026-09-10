@@ -416,11 +416,11 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     # goles ultra comprimidos sin hueco
     if mins_1t and mins_2t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 1T ---</div>" + "".join(mins_1t) + "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 2T ---</div>" + "".join(mins_2t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 1T ---</div>" + "".join(mins_1t) + "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 2T ---</div>" + "".join(mins_2t)
     elif mins_1t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 1T ---</div>" + "".join(mins_1t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 1T ---</div>" + "".join(mins_1t)
     elif mins_2t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0'>--- 2T ---</div>" + "".join(mins_2t)
+        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 2T ---</div>" + "".join(mins_2t)
     else:
         txt_mins = "-"
 
