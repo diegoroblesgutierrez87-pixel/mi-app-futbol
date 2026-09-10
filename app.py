@@ -163,7 +163,8 @@ def cargar_goles_lite():
                     if gol.lower() == 'nan': gol = ""
                     if asi.lower() == 'nan': asi = ""
                     abbr = abreviar_equipo(team)
-                    lista.append({"m": m, "team": team, "gol": gol, "asi": asi, "abbr": abbr})
+                    tipo = str(r.get('tipo','Normal Goal')).strip()
+                    lista.append({"m": m, "team": team, "gol": gol, "asi": asi, "abbr": abbr, "tipo": tipo})
                 except: continue
             if lista:
                 ev[fid_c] = sorted(lista, key=lambda x: x['m'])
@@ -327,11 +328,25 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 abbr = ev.get('abbr') or abreviar_equipo(team)
             if not abbr or abbr == "XXX":
                 abbr = "A."
-            if team == h_norm:
-                marc_h += 1
-            else:
-                marc_a += 1
+            tipo_ev = ev.get('tipo','Normal Goal')
+            es_fallado = 'Missed' in tipo_ev
+            es_propia = 'Own Goal' in tipo_ev
+
+            if not es_fallado:
+                if es_propia:
+                    # gol en propia: cuenta para el rival
+                    if team == h_norm:
+                        marc_a += 1
+                    else:
+                        marc_h += 1
+                else:
+                    if team == h_norm:
+                        marc_h += 1
+                    else:
+                        marc_a += 1
             alterador = f" {marc_h}-{marc_a}"
+            if es_fallado:
+                alterador = f" {marc_h}-{marc_a} [PEN FALLADO]"
 
             # --- NO filtrar goles aquí, el filtro de partido se hace fuera ---
 
