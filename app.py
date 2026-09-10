@@ -185,8 +185,7 @@ df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 # FIX TEMPORADA NUEVA J1/J2 - solo J-League empieza 07/08/2026 (K League NO)
 if not df_f.empty and 'Date' in df_f.columns:
     try:
-        mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League|K League', case=False, na=False)
-mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League|K2 League', case=False, na=False)
+        mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League', case=False, na=False)
         if mask_new.any():
             df_f.loc[mask_new, 'Date'] = pd.to_datetime(df_f.loc[mask_new, 'Date'], dayfirst=True, errors='coerce')
             df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))]
