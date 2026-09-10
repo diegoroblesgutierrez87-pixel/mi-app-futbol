@@ -377,16 +377,17 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             is_local = (team == h_norm)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             en_rango = (MIN_DESDE is None or m >= MIN_DESDE) and (MIN_HASTA is None or m <= MIN_HASTA) and (MIN_DESDE is not None or MIN_HASTA is not None)
-            # filtro minuto = rojo + negrita, equipo seleccionado = subrayado
-            color_gol = "#FF0000" if en_rango else "#000"
+            # filtro minuto = rotulado gris + negrita, equipo seleccionado = subrayado, color siempre negro
+            color_gol = "#000"
             deco = "text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1.5px;" if es_mio else ""
             bold = "font-weight:900;" if en_rango else ""
-            extra_style = f"{deco} {bold}"
+            gris = "background:#D3D3D3; border-radius:3px; padding:1px 4px;" if en_rango else ""
+            extra_style = f"{deco} {bold} {gris}"
             if mj == "ON" and gol_ab:
                 extra_jug = f' "{gol_ab}"' + (f' ({asi_ab})' if asi_ab else '')
             else:
                 extra_jug = ""
-            min_txt = f"<span style='font-size:12px; {bold} {deco}'>{m}'</span>"
+            min_txt = f"<span style='font-size:12px; {bold} {deco} {gris}'>{m}'</span>"
             if is_local:
                 html_gol = f"<div style='text-align:left; color:{color_gol}; {extra_style} margin:0; padding:0; line-height:1.0; font-size:11px'>{min_txt} {alterador.strip()}{extra_jug}</div>"
             else:
