@@ -362,8 +362,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             is_local = (team == h_norm)
             es_mio = any(ern in team or team in ern for ern in eq_refs_norm) if eq_refs_norm else False
             en_rango = (MIN_DESDE is None or m >= MIN_DESDE) and (MIN_HASTA is None or m <= MIN_HASTA) and (MIN_DESDE is not None or MIN_HASTA is not None)
-            # 1. equipo seleccionado -> subrayado, 2. filtro minuto -> negrita, 3. color normal
-            color_gol = "#000"
+            # filtro minuto = rojo + negrita, equipo seleccionado = subrayado
+            color_gol = "#FF0000" if en_rango else "#000"
             deco = "text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1.5px;" if es_mio else ""
             bold = "font-weight:900;" if en_rango else ""
             extra_style = f"{deco} {bold}"
