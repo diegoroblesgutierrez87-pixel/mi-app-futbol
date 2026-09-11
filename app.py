@@ -414,13 +414,15 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             except:
                 mins_1t.append(f"<span style='color:#000'>{x}'</span>")
 
-    # goles ultra comprimidos sin hueco
+    # separador 1T/2T linea continua gris flojita ancho completo
+    sep_1t = "<div style='display:flex;align-items:center;gap:8px;margin:6px 0'><div style='flex:1;height:1px;background:#D3D3D3'></div><span style='color:#A9A9A9;font-weight:900;font-size:9px;white-space:nowrap'>1T</span><div style='flex:1;height:1px;background:#D3D3D3'></div></div>"
+    sep_2t = "<div style='display:flex;align-items:center;gap:8px;margin:6px 0'><div style='flex:1;height:1px;background:#D3D3D3'></div><span style='color:#A9A9A9;font-weight:900;font-size:9px;white-space:nowrap'>2T</span><div style='flex:1;height:1px;background:#D3D3D3'></div></div>"
     if mins_1t and mins_2t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 1T ---</div>" + "".join(mins_1t) + "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 2T ---</div>" + "".join(mins_2t)
+        txt_mins = sep_1t + "".join(mins_1t) + sep_2t + "".join(mins_2t)
     elif mins_1t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 1T ---</div>" + "".join(mins_1t)
+        txt_mins = sep_1t + "".join(mins_1t)
     elif mins_2t:
-        txt_mins = "<div style='color:#333;font-weight:900;font-size:9px;line-height:1.0;margin:0;padding:0;text-align:center'>--- 2T ---</div>" + "".join(mins_2t)
+        txt_mins = sep_2t + "".join(mins_2t)
     else:
         txt_mins = "-"
 
