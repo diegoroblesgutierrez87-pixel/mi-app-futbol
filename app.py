@@ -544,8 +544,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         btts = hg > 0 and ag > 0
         btts_txt = "G/G" if btts else "NG/NG"
 
-    hab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{hab}</u>" if eq_refs_norm and normaliza(h) in eq_refs_norm else hab
-    aab_u = f"<u style='text-decoration-thickness:2px;text-underline-offset:3px'>{aab}</u>" if eq_refs_norm and normaliza(a) in eq_refs_norm else aab
+    hab_u = hab
+    aab_u = aab
     # solo pinta el equipo seleccionado + marcador final
     es_home_sel = bool(current_eq_orig and h == current_eq_orig)
     es_away_sel = bool(current_eq_orig and a == current_eq_orig)
