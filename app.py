@@ -745,64 +745,66 @@ else:
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos)} | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
-    # SOPORTE PARA 2 EQUIPOS
+
+    # lista de equipos a mostrar
+    lista_equipos = []
     if 'modo_doble' in locals() and modo_doble:
-        # junta los 2 equipos que ya tienes filtrados
-        df_jfix = pd.concat([df_eq1, df_eq2], ignore_index=True).drop_duplicates(subset=['fixture_id'])
+        if eq1!= "Ninguno": lista_equipos.append((eq1, df_eq1))
+        if eq2!= "Ninguno": lista_equipos.append((eq2, df_eq2))
     else:
-        df_jfix = df_mostrar if 'df_mostrar' in locals() and not df_mostrar.empty else df_f.head(300)
+        if eq_refs_orig:
+            lista_equipos.append((eq_refs_orig[0], df_mostrar))
+        else:
+            # si no hay equipo seleccionado no muestra nada
+            st.info("Selecciona al menos 1 equipo")
+            lista_equipos = []
 
-    jornadas = sorted(df_jfix['Jornada'].dropna().unique(), reverse=True)
+    for nombre_eq, df_team in lista_equipos:
+        if df_team.empty: continue
 
-    for j in jornadas:
-        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:2px 6px;margin:8px 0 2px 0'>J{int(j)}</div>", unsafe_allow_html=True)
-        d_j = df_jfix[df_jfix['Jornada']==j].sort_values('Date', ascending=False)
+        # TITULO EQUIPO
+        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:4px 8px;margin:12px 0 4px 0;font-size:13px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
 
-        html_lineas = ""
-        for _, r in d_j.iterrows():
-            h = str(r.get('HomeTeam','')).strip()
-            a = str(r.get('AwayTeam','')).strip()
-            try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
-            except: hg=0; ag=0
+        norm_eq = normaliza(nombre_eq)
+        jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
 
-            hn = normaliza(h); an = normaliza(a)
+        for j in jornadas:
+            st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:6px 0 2px 0'>J{int(j)}</div>", unsafe_allow_html=True)
+            d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
 
-            # COLOR DEL PARTIDO - si esta eq1 usa eq1, si no usa eq2
-            col_main = "#000"
-            eq_en_partido = None
-            if eq_refs_norm:
-                for ern in eq_refs_norm:
-                    if ern == hn or ern == an:
-                        eq_en_partido = ern
-                        break
+            html_lineas = ""
+            for _, r in d_j.iterrows():
+                h = str(r.get('HomeTeam','')).strip()
+                a = str(r.get('AwayTeam','')).strip()
+                try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
+                except: hg=0; ag=0
 
-            if eq_en_partido:
-                if eq_en_partido == hn:
+                hn = normaliza(h); an = normaliza(a)
+
+                # color solo de ESTE equipo
+                if norm_eq == hn:
                     col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
-                else:
+                elif norm_eq == an:
                     col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#FFA500"
+                else:
+                    col_main = "#000"
 
-            # TODOS LOS GOLES
-            fid = str(r.get('fixture_id','')).split('.')[0]
-            mins_html = ""
-            for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
-                if 'Missed' in ev.get('tipo',''): continue
-                m = ev['m']
-                team_ev = ev['team']
-                tipo = ev.get('tipo','')
-                benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
+                # todos los goles
+                fid = str(r.get('fixture_id','')).split('.')[0]
+                mins_html = ""
+                for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                    if 'Missed' in ev.get('tipo',''): continue
+                    m = ev['m']
+                    team_ev = ev['team']
+                    tipo = ev.get('tipo','')
+                    benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
 
-                # si el gol es de CUALQUIERA de los 2 equipos seleccionados -> con color, si no -> negro
-                if eq_refs_norm:
-                    es_mio = any(ern in benef for ern in eq_refs_norm)
+                    es_mio = norm_eq in benef
                     col_min = col_main if es_mio else "#000"
                     peso = "font-weight:900;" if es_mio else "font-weight:400;"
-                else:
-                    col_min = "#000"
-                    peso = ""
 
-                mins_html += f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                    mins_html += f"<span style='color:{col_min};{peso}'> {m}'</span>"
 
-            html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:12px;font-weight:900;white-space:nowrap;margin-right:18px'>{h} {hg}-{ag} {a}{mins_html}</span>"
+                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:12px;font-weight:900;white-space:nowrap;margin-right:18px'>{h} {hg}-{ag} {a}{mins_html}</span>"
 
-        st.markdown(f"<div style='line-height:2.0;white-space:normal;word-break:break-word'>{html_lineas}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='line-height:2.0;white-space:normal;word-break:break-word;margin-bottom:6px'>{html_lineas}</div>", unsafe_allow_html=True)
