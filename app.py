@@ -746,8 +746,6 @@ st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
     df_jfix = df_mostrar if 'df_mostrar' in locals() and not df_mostrar.empty else df_f.head(300)
-
-    # ORDEN INVERSO: J5, J4, J3...
     jornadas = sorted(df_jfix['Jornada'].dropna().unique(), reverse=True)
 
     for j in jornadas:
@@ -761,38 +759,42 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
             except: hg=0; ag=0
 
-            # color por tu equipo
+            # color del partido por tu equipo
             col_main = "#000"
+            hn = normaliza(h); an = normaliza(a)
             if eq_refs_norm:
-                hn = normaliza(h); an = normaliza(a)
                 for ern in eq_refs_norm:
                     if ern == hn:
                         col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
                     if ern == an:
                         col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#FFA500"
 
-            # ultimo gol >=80'
+            # TODOS los goles del partido
             fid = str(r.get('fixture_id','')).split('.')[0]
-            ultimo_min = ""
-            es_gol_rival = False
-            for ev in reversed(eventos.get(fid, [])):
-                if ev['m'] >= 80 and 'Missed' not in ev.get('tipo',''):
-                    ultimo_min = f" {ev['m']}'"
-                    if eq_refs_norm:
-                        t_gol = ev['team']
-                        if not any(ern in t_gol for ern in eq_refs_norm):
-                            es_gol_rival = True
-                    break
+            mins_html = ""
+            for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                if 'Missed' in ev.get('tipo',''): continue
+                m = ev['m']
+                team_ev = ev['team'] # quien marca
+                tipo = ev.get('tipo','')
 
-            if ultimo_min:
-                if es_gol_rival:
-                    txt_min = f"<span style='color:#000;font-weight:400'>{ultimo_min}</span>"
+                # beneficiario del gol (por si es propia puerta)
+                if 'Own Goal' in tipo:
+                    benef = an if team_ev == hn else hn
                 else:
-                    txt_min = f"<span style='color:{col_main}'>{ultimo_min}</span>"
-            else:
-                txt_min = ""
+                    benef = team_ev
 
-            # NOMBRES COMPLETOS, 1 LINEA
-            html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:12px;font-weight:900;white-space:nowrap;margin-right:18px'>{h} {hg}-{ag} {a}{txt_min}</span>"
+                # si el gol es de tu equipo -> color del resultado, si es rival -> negro
+                if eq_refs_norm:
+                    es_mio = any(ern in benef for ern in eq_refs_norm)
+                    col_min = col_main if es_mio else "#000"
+                    peso = "font-weight:900;" if es_mio else "font-weight:400;"
+                else:
+                    col_min = "#000"
+                    peso = ""
+
+                mins_html += f"<span style='color:{col_min};{peso}'> {m}'</span>"
+
+            html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:12px;font-weight:900;white-space:nowrap;margin-right:18px'>{h} {hg}-{ag} {a}{mins_html}</span>"
 
         st.markdown(f"<div style='line-height:2.0;white-space:normal;word-break:break-word'>{html_lineas}</div>", unsafe_allow_html=True)
