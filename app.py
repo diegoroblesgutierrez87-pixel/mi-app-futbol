@@ -745,7 +745,13 @@ else:
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos)} | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
-    df_jfix = df_mostrar if 'df_mostrar' in locals() and not df_mostrar.empty else df_f.head(300)
+    # SOPORTE PARA 2 EQUIPOS
+    if 'modo_doble' in locals() and modo_doble:
+        # junta los 2 equipos que ya tienes filtrados
+        df_jfix = pd.concat([df_eq1, df_eq2], ignore_index=True).drop_duplicates(subset=['fixture_id'])
+    else:
+        df_jfix = df_mostrar if 'df_mostrar' in locals() and not df_mostrar.empty else df_f.head(300)
+
     jornadas = sorted(df_jfix['Jornada'].dropna().unique(), reverse=True)
 
     for j in jornadas:
@@ -759,32 +765,34 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
             except: hg=0; ag=0
 
-            # color del partido por tu equipo
-            col_main = "#000"
             hn = normaliza(h); an = normaliza(a)
+
+            # COLOR DEL PARTIDO - si esta eq1 usa eq1, si no usa eq2
+            col_main = "#000"
+            eq_en_partido = None
             if eq_refs_norm:
                 for ern in eq_refs_norm:
-                    if ern == hn:
-                        col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
-                    if ern == an:
-                        col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#FFA500"
+                    if ern == hn or ern == an:
+                        eq_en_partido = ern
+                        break
 
-            # TODOS los goles del partido
+            if eq_en_partido:
+                if eq_en_partido == hn:
+                    col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
+                else:
+                    col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#FFA500"
+
+            # TODOS LOS GOLES
             fid = str(r.get('fixture_id','')).split('.')[0]
             mins_html = ""
             for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
                 if 'Missed' in ev.get('tipo',''): continue
                 m = ev['m']
-                team_ev = ev['team'] # quien marca
+                team_ev = ev['team']
                 tipo = ev.get('tipo','')
+                benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
 
-                # beneficiario del gol (por si es propia puerta)
-                if 'Own Goal' in tipo:
-                    benef = an if team_ev == hn else hn
-                else:
-                    benef = team_ev
-
-                # si el gol es de tu equipo -> color del resultado, si es rival -> negro
+                # si el gol es de CUALQUIERA de los 2 equipos seleccionados -> con color, si no -> negro
                 if eq_refs_norm:
                     es_mio = any(ern in benef for ern in eq_refs_norm)
                     col_min = col_main if es_mio else "#000"
