@@ -224,16 +224,21 @@ if fecha_sel_str != "Todas" and fechas_unicas:
     except:
         pass
 
-# Equipo lista más rápida - DESPUES del filtro de fecha para que solo salgan equipos de ese rango
+# Equipo lista más rápida - FIX DEDUP POR NORMALIZA
 if not df_f.empty:
-    equipos = sorted(pd.unique(pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna()).tolist())
+    seen = {}
+    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
+        n = normaliza(t)
+        if n not in seen:
+            seen[n] = t.upper() # fuerza UPPER -> AREMA FC = Arema FC
+    equipos = sorted(seen.values())
 else:
     equipos = []
 
 with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
 c4,c5 = st.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e!= eq1])
+with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
@@ -264,13 +269,16 @@ def parse_min(v):
 MIN_DESDE = parse_min(min_desde_raw)
 MIN_HASTA = parse_min(min_hasta_raw)
 
-# --- FILTRO VECTORIZADO ---
+# --- FILTRO VECTORIZADO - FIX POR NORMALIZA ---
 def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
-    if condicion == "Local": return dframe[dframe['HomeTeam'] == equipo]
-    if condicion == "Visitante": return dframe[dframe['AwayTeam'] == equipo]
-    return dframe[(dframe['HomeTeam'] == equipo) | (dframe['AwayTeam'] == equipo)]
+    n_eq = normaliza(equipo)
+    if condicion == "Local":
+        return dframe[dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)]
+    if condicion == "Visitante":
+        return dframe[dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq)]
+    return dframe[(dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
 
 if eq1!= "Ninguno" and eq2!= "Ninguno":
     df_eq1 = filtrar_equipo(df_f, eq1, eq1_loc)
