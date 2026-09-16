@@ -746,6 +746,7 @@ st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
+    # lista de equipos a mostrar
     lista_equipos = []
     if 'modo_doble' in locals() and modo_doble:
         if eq1!= "Ninguno": lista_equipos.append((eq1, df_eq1))
@@ -754,20 +755,21 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
         if eq_refs_orig:
             lista_equipos.append((eq_refs_orig[0], df_mostrar))
         else:
+            # si no hay equipo seleccionado no muestra nada
             st.info("Selecciona al menos 1 equipo")
             lista_equipos = []
 
     for nombre_eq, df_team in lista_equipos:
         if df_team.empty: continue
 
-        # TITULO - mas pequeño y pegado
-        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+        # TITULO EQUIPO
+        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:4px 8px;margin:12px 0 4px 0;font-size:13px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
 
         norm_eq = normaliza(nombre_eq)
         jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
 
         for j in jornadas:
-            st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:6px 0 2px 0'>J{int(j)}</div>", unsafe_allow_html=True)
             d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
 
             html_lineas = ""
@@ -779,6 +781,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
                 hn = normaliza(h); an = normaliza(a)
 
+                # color solo de ESTE equipo
                 if norm_eq == hn:
                     col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
                 elif norm_eq == an:
@@ -786,6 +789,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 else:
                     col_main = "#000"
 
+                # todos los goles
                 fid = str(r.get('fixture_id','')).split('.')[0]
                 mins_html = ""
                 for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
@@ -794,12 +798,13 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     team_ev = ev['team']
                     tipo = ev.get('tipo','')
                     benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
+
                     es_mio = norm_eq in benef
-                    col_min = col_main if es_mio else "#555"
+                    col_min = col_main if es_mio else "#000"
                     peso = "font-weight:900;" if es_mio else "font-weight:400;"
+
                     mins_html += f"<span style='color:{col_min};{peso}'> {m}'</span>"
 
-                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}</span>"
+                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:12px;font-weight:900;white-space:nowrap;margin-right:18px'>{h} {hg}-{ag} {a}{mins_html}</span>"
 
-            # AQUI ESTA EL FIX DEL HUECO - line-height 1.15 y margin 2px
-            st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='line-height:2.0;white-space:normal;word-break:break-word;margin-bottom:6px'>{html_lineas}</div>", unsafe_allow_html=True)
