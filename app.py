@@ -24,11 +24,16 @@ html, body, [data-testid="stAppViewContainer"] {
         width: 100%!important;
     }
     div[data-testid="column"] {
-        width: calc(50% - 3px)!important;
         min-width: 0!important;
-        flex: 1 1 calc(50% - 3px)!important;
+        flex: 1 1 0!important;
+        width: 50%!important;
         padding-left: 0!important;
         padding-right: 0!important;
+    }
+    /* Si el bloque solo tiene 1 casilla (Liga, Desde fecha, Filtro) ocupa 100% */
+    div[data-testid="stHorizontalBlock"]:has(> div:only-child) > div[data-testid="column"] {
+        width: 100%!important;
+        flex: 1 1 100%!important;
     }
     div[data-testid="column"] * {
         max-width: 100%!important;
