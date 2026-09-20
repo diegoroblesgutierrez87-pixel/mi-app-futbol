@@ -6,41 +6,37 @@ import unicodedata
 import numpy as np
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
-# --- FIX SCROLL + COLUMNAS EN MOVIL ---
+# --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA ---
 st.markdown("""
 <style>
-html, body, [data-testid="stAppViewContainer"] {
+html, body {
     overscroll-behavior-y: contain!important;
+    overscroll-behavior: none!important;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
-/* ESTO ES LO QUE ARREGLA TU CAPTURA - fuerza 2 columnas en movil */
-@media (max-width: 768px) {
-    html, body {
-        overflow-x: hidden!important;
-        max-width: 100vw!important;
-    }
-    div[data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap!important;
-        gap: 6px!important;
-        width: 100%!important;
-    }
-    div[data-testid="column"] {
-        min-width: 0!important;
-        flex: 1 1 0!important;
-        width: 50%!important;
-        padding-left: 0!important;
-        padding-right: 0!important;
-    }
-    /* Si el bloque solo tiene 1 casilla (Liga, Desde fecha, Filtro) ocupa 100% */
-    div[data-testid="stHorizontalBlock"]:has(> div:only-child) > div[data-testid="column"] {
-        width: 100%!important;
-        flex: 1 1 100%!important;
-    }
-    div[data-testid="column"] * {
-        max-width: 100%!important;
-        box-sizing: border-box!important;
-    }
+[data-testid="stAppViewContainer"] {
+    overscroll-behavior-y: contain!important;
+    overscroll-behavior: none!important;
+}
+[data-testid="stHeader"] {
+    overscroll-behavior: none!important;
 }
 </style>
+<script>
+// bloquea pull-to-refresh en movil
+let startY = 0;
+document.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+}, {passive: false});
+document.addEventListener('touchmove', e => {
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+    if (window.scrollY <= 0 && diff > 0) {
+        e.preventDefault();
+    }
+}, {passive: false});
+</script>
 """, unsafe_allow_html=True)
 # --- UTILS ---
 def normaliza(s):
@@ -181,8 +177,10 @@ if df.empty:
     st.error("No CSVs encontrados en /mnt/data")
     st.stop()
 
+# --- UI ---
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
-liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
+c1,c2,c3,c4d = st.columns(4)
+with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
 df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 # FIX TEMPORADA NUEVA J1/J2 - solo J-League empieza 07/08/2026 (K League NO)
 if not df_f.empty and 'Date' in df_f.columns:
@@ -191,6 +189,7 @@ if not df_f.empty and 'Date' in df_f.columns:
         if mask_new.any():
             df_f.loc[mask_new, 'Date'] = pd.to_datetime(df_f.loc[mask_new, 'Date'], dayfirst=True, errors='coerce')
             df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))]
+            # RECALCULA JORNADA SOLO PARA ESAS LIGAS
             df_f = df_f.sort_values(['League','Date']).copy()
             for l_name in df_f[mask_new]['League'].dropna().unique():
                 g_mask = df_f['League'] == l_name
@@ -202,40 +201,22 @@ if not df_f.empty and 'Date' in df_f.columns:
     except:
         pass
 
+# --- FILTRO FECHA POR LIGA ---
+# saca las fechas que realmente existen en esa liga
 if not df_f.empty and 'Date' in df_f.columns:
+    # solo fechas validas
     fechas_dt = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dropna()
-    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True)
+    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True) # mas reciente primero
     fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
 else:
     fechas_unicas = []
     fechas_str = ["Todas"]
 
-if not df_f.empty:
-    seen = {}
-    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
-        n = normaliza(t)
-        if n not in seen:
-            seen[n] = t.upper()
-    equipos = sorted(seen.values())
-else:
-    equipos = []
+with c4d:
+    fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
 
-# ORDEN NUEVO QUE PEDISTE
-c_eq1, c_eq2 = st.columns(2)
-with c_eq1:
-    eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
-with c_eq2:
-    eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
-
-c_cond1, c_cond2 = st.columns(2)
-with c_cond1:
-    eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
-with c_cond2:
-    eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
-
-fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
-
-if fecha_sel_str!= "Todas" and fechas_unicas:
+# filtra df_f desde esa fecha en adelante
+if fecha_sel_str != "Todas" and fechas_unicas:
     try:
         fecha_sel_date = pd.to_datetime(fecha_sel_str, dayfirst=True).date()
         mask_fecha = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dt.date >= fecha_sel_date
@@ -243,20 +224,38 @@ if fecha_sel_str!= "Todas" and fechas_unicas:
     except:
         pass
 
-filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
+# Equipo lista más rápida - FIX DEDUP POR NORMALIZA
+if not df_f.empty:
+    seen = {}
+    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
+        n = normaliza(t)
+        if n not in seen:
+            seen[n] = t.upper() # fuerza UPPER -> AREMA FC = Arema FC
+    equipos = sorted(seen.values())
+else:
+    equipos = []
 
-filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
+with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
+c4,c5 = st.columns(2)
+with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
-c_stats, c_jug = st.columns(2)
-with c_stats:
+# --- BUSCADOR POR % ---
+c6,c7,c8 = st.columns([2,1,1])
+with c6:
+    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
+with c7:
+    filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
+with c8:
     modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
-with c_jug:
-    modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
 
-c_m1, c_m2 = st.columns(2)
-with c_m1:
+c9,c10,c_min1,c_min2 = st.columns([1,1,1,1])
+with c9:
+    modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
+with c_min1:
     min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
-with c_m2:
+with c_min2:
     min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
 
 def parse_min(v):
