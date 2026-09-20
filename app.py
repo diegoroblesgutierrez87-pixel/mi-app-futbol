@@ -177,10 +177,8 @@ if df.empty:
     st.error("No CSVs encontrados en /mnt/data")
     st.stop()
 
-# --- UI ---
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
-c1,c2,c3,c4d = st.columns(4)
-with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
+liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
 df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 # FIX TEMPORADA NUEVA J1/J2 - solo J-League empieza 07/08/2026 (K League NO)
 if not df_f.empty and 'Date' in df_f.columns:
@@ -189,7 +187,6 @@ if not df_f.empty and 'Date' in df_f.columns:
         if mask_new.any():
             df_f.loc[mask_new, 'Date'] = pd.to_datetime(df_f.loc[mask_new, 'Date'], dayfirst=True, errors='coerce')
             df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))]
-            # RECALCULA JORNADA SOLO PARA ESAS LIGAS
             df_f = df_f.sort_values(['League','Date']).copy()
             for l_name in df_f[mask_new]['League'].dropna().unique():
                 g_mask = df_f['League'] == l_name
@@ -201,22 +198,40 @@ if not df_f.empty and 'Date' in df_f.columns:
     except:
         pass
 
-# --- FILTRO FECHA POR LIGA ---
-# saca las fechas que realmente existen en esa liga
 if not df_f.empty and 'Date' in df_f.columns:
-    # solo fechas validas
     fechas_dt = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dropna()
-    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True) # mas reciente primero
+    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True)
     fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
 else:
     fechas_unicas = []
     fechas_str = ["Todas"]
 
-with c4d:
-    fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
+if not df_f.empty:
+    seen = {}
+    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
+        n = normaliza(t)
+        if n not in seen:
+            seen[n] = t.upper()
+    equipos = sorted(seen.values())
+else:
+    equipos = []
 
-# filtra df_f desde esa fecha en adelante
-if fecha_sel_str != "Todas" and fechas_unicas:
+# ORDEN NUEVO QUE PEDISTE
+c_eq1, c_eq2 = st.columns(2)
+with c_eq1:
+    eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+with c_eq2:
+    eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+
+c_cond1, c_cond2 = st.columns(2)
+with c_cond1:
+    eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
+with c_cond2:
+    eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
+
+fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
+
+if fecha_sel_str!= "Todas" and fechas_unicas:
     try:
         fecha_sel_date = pd.to_datetime(fecha_sel_str, dayfirst=True).date()
         mask_fecha = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dt.date >= fecha_sel_date
@@ -224,38 +239,20 @@ if fecha_sel_str != "Todas" and fechas_unicas:
     except:
         pass
 
-# Equipo lista más rápida - FIX DEDUP POR NORMALIZA
-if not df_f.empty:
-    seen = {}
-    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
-        n = normaliza(t)
-        if n not in seen:
-            seen[n] = t.upper() # fuerza UPPER -> AREMA FC = Arema FC
-    equipos = sorted(seen.values())
-else:
-    equipos = []
+filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
 
-with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
-with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
-c4,c5 = st.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
-with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
+filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
 
-# --- BUSCADOR POR % ---
-c6,c7,c8 = st.columns([2,1,1])
-with c6:
-    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
-with c7:
-    filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
-with c8:
+c_stats, c_jug = st.columns(2)
+with c_stats:
     modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
-
-c9,c10,c_min1,c_min2 = st.columns([1,1,1,1])
-with c9:
+with c_jug:
     modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
-with c_min1:
+
+c_m1, c_m2 = st.columns(2)
+with c_m1:
     min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
-with c_min2:
+with c_m2:
     min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
 
 def parse_min(v):
