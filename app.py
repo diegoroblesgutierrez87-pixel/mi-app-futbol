@@ -6,37 +6,25 @@ import unicodedata
 import numpy as np
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
-# --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA ---
+# --- FIX SCROLL + COLUMNAS EN MOVIL ---
 st.markdown("""
 <style>
-html, body {
+html, body, [data-testid="stAppViewContainer"] {
     overscroll-behavior-y: contain!important;
-    overscroll-behavior: none!important;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
 }
-[data-testid="stAppViewContainer"] {
-    overscroll-behavior-y: contain!important;
-    overscroll-behavior: none!important;
-}
-[data-testid="stHeader"] {
-    overscroll-behavior: none!important;
+/* ESTO ES LO QUE ARREGLA TU CAPTURA - fuerza 2 columnas en movil */
+@media (max-width: 640px) {
+    div[data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap!important;
+        gap: 0.5rem!important;
+    }
+    div[data-testid="column"] {
+        width: 50%!important;
+        flex: 1 1 50%!important;
+        min-width: calc(50% - 0.5rem)!important;
+    }
 }
 </style>
-<script>
-// bloquea pull-to-refresh en movil
-let startY = 0;
-document.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY;
-}, {passive: false});
-document.addEventListener('touchmove', e => {
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
-    if (window.scrollY <= 0 && diff > 0) {
-        e.preventDefault();
-    }
-}, {passive: false});
-</script>
 """, unsafe_allow_html=True)
 # --- UTILS ---
 def normaliza(s):
