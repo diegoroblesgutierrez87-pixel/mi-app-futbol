@@ -13,15 +13,26 @@ html, body, [data-testid="stAppViewContainer"] {
     overscroll-behavior-y: contain!important;
 }
 /* ESTO ES LO QUE ARREGLA TU CAPTURA - fuerza 2 columnas en movil */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden!important;
+        max-width: 100vw!important;
+    }
     div[data-testid="stHorizontalBlock"] {
         flex-wrap: nowrap!important;
-        gap: 0.5rem!important;
+        gap: 6px!important;
+        width: 100%!important;
     }
     div[data-testid="column"] {
-        width: 50%!important;
-        flex: 1 1 50%!important;
-        min-width: calc(50% - 0.5rem)!important;
+        width: calc(50% - 3px)!important;
+        min-width: 0!important;
+        flex: 1 1 calc(50% - 3px)!important;
+        padding-left: 0!important;
+        padding-right: 0!important;
+    }
+    div[data-testid="column"] * {
+        max-width: 100%!important;
+        box-sizing: border-box!important;
     }
 }
 </style>
