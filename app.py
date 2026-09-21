@@ -554,14 +554,24 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
 
     hab_u = hab
     aab_u = aab
-    # solo pinta el equipo seleccionado + marcador final
     es_home_sel = bool(current_eq_orig and h == current_eq_orig)
     es_away_sel = bool(current_eq_orig and a == current_eq_orig)
     col_home = col if es_home_sel else "#000"
     col_away = col if es_away_sel else "#000"
     col_score = col if current_eq_orig else col
     col_j = "#0A2342"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:center;color:{col_j};font-weight:900'>|J{j}| {btts_txt}{loc_tag}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:900'><span style='text-align:left;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_home}'>{hab_u}</span><span style='text-align:center;flex:0 0 auto;color:{col_score}'>[ {hg}-{ag} ]</span><span style='text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_away}'>{aab_u}</span></div><div style='text-align:center;color:#555;font-weight:700'>[ {hthg}-{htag} ]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1'>{txt_mins}</div></div>"
+    
+    return f"""
+    <div style='font-family:monospace;font-size:11px;padding:8px 4px;border-bottom:2px solid #333;line-height:1.3;max-width:380px;margin:0 auto;text-align:center'>
+        <div style='color:{col_j};font-weight:900'>|Jornada {j}|{loc_tag}</div>
+        <div style='font-weight:900;color:{col_home};margin-top:2px'>{hab_u}</div>
+        <div style='font-weight:900;color:{col_score}'>[ {hg}-{ag} ]</div>
+        <div style='font-weight:900;color:{col_away}'>{aab_u}</div>
+        <div style='color:#555;font-weight:700'>[ {hthg}-{htag} ]</div>
+        <div style='font-weight:900;word-break:break-word'>{extra}</div>
+        <div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:4px'>{txt_mins}</div>
+    </div>
+    """
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
