@@ -485,23 +485,23 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             hpos = _iv(r.get('HomePos')); apos = _iv(r.get('AwayPos'))
 
             if hy is not None or ay is not None:
-                extra += f" <span style='color:#b8860b'>[Amarillas Local {hy if hy is not None else '-'}]</span> <span style='color:#DAA520'>[Amarillas Visitante {ay if ay is not None else '-'}]</span>"
+                extra += f" <span style='color:#b8860b'>Amarillas Local {hy if hy is not None else '-'} - Visitante {ay if ay is not None else '-'}</span><br>"
             if hr is not None or ar is not None:
-                extra += f" <span style='color:#FF0000'>[Rojas Local {hr if hr is not None else '-'}]</span> <span style='color:#FF4500'>[Rojas Visitante {ar if ar is not None else '-'}]</span>"
+                extra += f" <span style='color:#FF0000'>Rojas Local {hr if hr is not None else '-'} - Visitante {ar if ar is not None else '-'}</span><br>"
             if hc is not None or ac is not None:
-                extra += f" <span style='color:#1E90FF'>[Corners Local {hc if hc is not None else '-'}]</span> <span style='color:#4682B4'>[Corners Visitante {ac if ac is not None else '-'}]</span>"
+                extra += f" <span style='color:#1E90FF'>Corners Local {hc if hc is not None else '-'} - Visitante {ac if ac is not None else '-'}</span><br>"
             if hst is not None or ast is not None:
-                extra += f" <span style='color:#0066cc'>[Tiros Puerta Local {hst if hst is not None else '-'}]</span> <span style='color:#0099FF'>[Tiros Puerta Visitante {ast if ast is not None else '-'}]</span>"
+                extra += f" <span style='color:#0066cc'>Tiros Puerta Local {hst if hst is not None else '-'} - Visitante {ast if ast is not None else '-'}</span><br>"
             if hs is not None or _as is not None:
-                extra += f" <span style='color:#004080'>[Tiros Totales Local {hs if hs is not None else '-'}]</span> <span style='color:#5A8AC0'>[Tiros Totales Visitante {_as if _as is not None else '-'}]</span>"
+                extra += f" <span style='color:#004080'>Tiros Totales Local {hs if hs is not None else '-'} - Visitante {_as if _as is not None else '-'}</span><br>"
             if hf is not None or af is not None:
-                extra += f" <span style='color:#666'>[Faltas Local {hf if hf is not None else '-'}]</span> <span style='color:#999'>[Faltas Visitante {af if af is not None else '-'}]</span>"
+                extra += f" <span style='color:#666'>Faltas Local {hf if hf is not None else '-'} - Visitante {af if af is not None else '-'}</span><br>"
             if hsv is not None or asv is not None:
-                extra += f" <span style='color:#008080'>[Paradas Local {hsv if hsv is not None else '-'}]</span> <span style='color:#20B2AA'>[Paradas Visitante {asv if asv is not None else '-'}]</span>"
+                extra += f" <span style='color:#008080'>Paradas Local {hsv if hsv is not None else '-'} - Visitante {asv if asv is not None else '-'}</span><br>"
             if hp is not None or ap is not None:
-                extra += f" <span style='color:#2E8B57'>[Pases Local {hp if hp is not None else '-'}]</span> <span style='color:#3CB371'>[Pases Visitante {ap if ap is not None else '-'}]</span>"
+                extra += f" <span style='color:#2E8B57'>Pases Local {hp if hp is not None else '-'} - Visitante {ap if ap is not None else '-'}</span><br>"
             if hpos is not None or apos is not None:
-                extra += f" <span style='color:#8B4513'>[Posesion Local {hpos if hpos is not None else '-'}% - Visitante {apos if apos is not None else '-'}%]</span>"
+                extra += f" <span style='color:#8B4513'>Posesion Local {hpos if hpos is not None else '-'}% - Visitante {apos if apos is not None else '-'}%</span><br>"
         else:
             # OFF - comportamiento original tuyo
             if "Corners" in filtro_tipo:
