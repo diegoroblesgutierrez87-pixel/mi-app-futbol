@@ -259,16 +259,16 @@ else:
     with c_min2:
         min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
 
-def parse_min(v):
-    try:
-        if v is None or str(v).strip() in ["", "-", "–", "—"]:
+    def parse_min(v):
+        try:
+            if v is None or str(v).strip() in ["", "-", "–", "—"]:
+                return None
+            return int(str(v).strip().replace("'", ""))
+        except:
             return None
-        return int(str(v).strip().replace("'", ""))
-    except:
-        return None
 
-MIN_DESDE = parse_min(min_desde_raw)
-MIN_HASTA = parse_min(min_hasta_raw)
+    MIN_DESDE = parse_min(min_desde_raw)
+    MIN_HASTA = parse_min(min_hasta_raw)
 
 # --- FILTRO VECTORIZADO - FIX POR NORMALIZA ---
 def filtrar_equipo(dframe, equipo, condicion):
