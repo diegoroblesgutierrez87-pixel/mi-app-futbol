@@ -179,8 +179,9 @@ if df.empty:
 
 # --- UI ---
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
-c1,c2,c3,c4d = st.columns(4)
-with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
+with st.expander("🎛️ FILTROS", expanded=False):
+    c1,c2,c3,c4d = st.columns(4)
+    with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
 df_f = df if liga_sel == "Todas" else df[df['League'] == liga_sel]
 # FIX TEMPORADA NUEVA J1/J2 - solo J-League empieza 07/08/2026 (K League NO)
 if not df_f.empty and 'Date' in df_f.columns:
@@ -235,28 +236,28 @@ if not df_f.empty:
 else:
     equipos = []
 
-with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
-with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
-c4,c5 = st.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
-with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
+    with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+    with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
+    c4,c5 = st.columns(2)
+    with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+    with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
-c6,c7,c8 = st.columns([2,1,1])
-with c6:
-    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
-with c7:
-    filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
-with c8:
-    modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
+    c6,c7,c8 = st.columns([2,1,1])
+    with c6:
+        filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
+    with c7:
+        filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
+    with c8:
+        modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
 
-c9,c10,c_min1,c_min2 = st.columns([1,1,1,1])
-with c9:
-    modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
-with c_min1:
-    min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
-with c_min2:
-    min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
+    c9,c10,c_min1,c_min2 = st.columns([1,1,1,1])
+    with c9:
+        modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
+    with c_min1:
+        min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
+    with c_min2:
+        min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
 
 def parse_min(v):
     try:
