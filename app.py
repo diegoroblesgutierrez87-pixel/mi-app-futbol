@@ -236,10 +236,14 @@ if not df_f.empty:
 else:
     equipos = []
 
-with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+with c2:
+    st.markdown("<div style='background:#000;color:#fff;padding:2px 6px;font-size:10px;font-weight:900;text-align:center;margin-bottom:2px'>EQUIPO 1</div>", unsafe_allow_html=True)
+    eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos, label_visibility="collapsed")
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
 c4,c5 = filtros.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+with c4:
+    st.markdown("<div style='background:#000;color:#fff;padding:2px 6px;font-size:10px;font-weight:900;text-align:center;margin-bottom:2px'>EQUIPO 2</div>", unsafe_allow_html=True)
+    eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)], label_visibility="collapsed")
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
