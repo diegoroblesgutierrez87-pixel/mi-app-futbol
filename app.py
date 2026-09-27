@@ -204,29 +204,6 @@ def cargar_momentum_lite():
     except:
         pass
     return mom_by_id, mom_by_teams
-    f_parquet = BASE / "base_momentum.parquet"
-    f_pkl = BASE / "base_momentum.pkl"
-    if f_parquet.exists():
-        dm = pd.read_parquet(f_parquet)
-        mom = {}
-        try:
-            for fid, g in dm.groupby('fixture_id'):
-                fid_c = str(fid).split('.')[0]
-                mom[fid_c] = g.sort_values('minute').to_dict('records')
-        except:
-            pass
-        return mom
-    elif f_pkl.exists():
-        dm = pd.read_pickle(f_pkl)
-        mom = {}
-        try:
-            for fid, g in dm.groupby('fixture_id'):
-                fid_c = str(fid).split('.')[0]
-                mom[fid_c] = g.sort_values('minute').to_dict('records')
-        except:
-            pass
-        return mom
-    return {}
 
 df = cargar_todo_lite()
 eventos = cargar_goles_lite()
@@ -499,22 +476,18 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     try:
         fid_m = str(r.get('fixture_id','')).split('.')[0]
         mom_data = []
-        # 1. intenta por ID directo (por si algun dia coinciden)
         mid_dict = globals().get('momentum_by_id', {})
         if fid_m in mid_dict:
             mom_data = mid_dict[fid_m]
         else:
-            # 2. por equipos normalizados
             h_norm = normaliza(r.get('HomeTeam',''))
             a_norm = normaliza(r.get('AwayTeam',''))
             teams_dict = globals().get('momentum_by_teams', {})
-            # busca exacta y tambien contiene
             if (h_norm, a_norm) in teams_dict:
                 mom_data = teams_dict[(h_norm, a_norm)]
             elif (a_norm, h_norm) in teams_dict:
                 mom_data = teams_dict[(a_norm, h_norm)]
             else:
-                # busqueda por contains por si viene "HEIDENHEIM" vs "1. FC HEIDENHEIM"
                 for (hn, an), recs in teams_dict.items():
                     if (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
                         mom_data = recs
@@ -522,7 +495,6 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                     if (h_norm in an or an in h_norm) and (a_norm in hn or hn in a_norm):
                         mom_data = recs
                         break
-
         if mom_data:
             bars = ""
             for mm in mom_data:
@@ -532,19 +504,6 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                 col_bar = "#0f8105" if v>0.25 else "#f31818" if v<-0.25 else "#a0a0a0"
                 bars += f"<span style='display:inline-block;width:3px;height:{h_px}px;background:{col_bar};margin:0 1px;vertical-align:bottom;border-radius:1px'></span>"
             mom_html = f"<div style='margin:5px 0 2px 0;white-space:nowrap;overflow:hidden;line-height:1;background:#f5f5f5;padding:2px 0'>{bars}</div>"
-    except:
-        mom_html = ""
-        if mom_data:
-            # crea barritas de 0-100
-            bars = ""
-            for mm in mom_data:
-                v = float(mm.get('momentumValue',0))
-                # Flashscore: -1 a 1, lo pasamos a 0-100
-                h = int((v+1)*20) # 0-40px
-                h = max(1, min(40, h))
-                col_bar = "#0f8105" if v>0.2 else "#f31818" if v<-0.2 else "#888"
-                bars += f"<span style='display:inline-block;width:2px;height:{h}px;background:{col_bar};margin:0 1px;vertical-align:bottom'></span>"
-            mom_html = f"<div style='margin:4px 0 2px 0;white-space:nowrap;overflow:hidden;line-height:1'>{bars}</div>"
     except:
         mom_html = ""
 
@@ -857,7 +816,7 @@ else:
     else:
         st.info("Selecciona equipo")
 
-st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
+st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
