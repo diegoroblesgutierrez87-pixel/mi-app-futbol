@@ -838,43 +838,58 @@ else:
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("momentum JSON - copiar para IA", expanded=False):
-    # recolecta competiciones y equipos del parquet de momentum
     try:
+        import json as _json
+        # junta todos los recs una sola vez y limpia NaN/float
         all_recs = []
-        for fid, recs in momentum_by_id.items():
-            all_recs.extend(recs)
-        comps_mom = sorted(set([r.get('competition','') for r in all_recs if r.get('competition')]))
+        for recs in momentum_by_id.values():
+            if recs:
+                all_recs.extend(recs)
+
+        def safe_str(v):
+            if v is None: return ""
+            try:
+                if pd.isna(v): return ""
+            except: pass
+            s = str(v).strip()
+            if s.lower() == "nan": return ""
+            return s
+
+        comps_mom = sorted(set([safe_str(r.get('competition')) for r in all_recs if safe_str(r.get('competition'))]))
         if not comps_mom:
-            comps_mom = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
+            comps_mom = sorted([safe_str(x) for x in df['League'].dropna().unique().tolist()]) if 'League' in df.columns else []
         comp_sel = st.selectbox("Competicion momentum", ["Todas"] + comps_mom, key="comp_mom_json")
-        # equipos de esa competicion
+
         equipos_mom_set = set()
         for rec in all_recs:
-            if comp_sel!= "Todas" and rec.get('competition')!= comp_sel:
+            if comp_sel!= "Todas" and safe_str(rec.get('competition'))!= comp_sel:
                 continue
-            if rec.get('home'): equipos_mom_set.add(rec.get('home'))
-            if rec.get('away'): equipos_mom_set.add(rec.get('away'))
-        equipos_mom = sorted(list(equipos_mom_set))
+            h = safe_str(rec.get('home'))
+            a = safe_str(rec.get('away'))
+            if h: equipos_mom_set.add(h)
+            if a: equipos_mom_set.add(a)
+        equipos_mom = sorted([x for x in equipos_mom_set if x])
+
         eq_sel_mom = st.selectbox("Equipo momentum", ["Todos"] + equipos_mom, key="eq_mom_json")
 
-        # filtra fixtures
         fixtures_filtrados = []
         for fid, recs in momentum_by_id.items():
             if not recs: continue
             r0 = recs[0]
-            if comp_sel!= "Todas" and r0.get('competition')!= comp_sel:
+            if comp_sel!= "Todas" and safe_str(r0.get('competition'))!= comp_sel:
                 continue
-            h = r0.get('home','')
-            a = r0.get('away','')
-            if eq_sel_mom!= "Todos" and eq_sel_mom not in (h, a) and normaliza_fuzzy(eq_sel_mom) not in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
-                continue
-            fixtures_filtrados.append((fid, f"{h} VS {a} - {fid} - {r0.get('competition','')}"))
+            h = safe_str(r0.get('home'))
+            a = safe_str(r0.get('away'))
+            if eq_sel_mom!= "Todos":
+                if eq_sel_mom not in (h, a) and normaliza_fuzzy(eq_sel_mom) not in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
+                    continue
+            label = f"{h} VS {a} - {fid} - {safe_str(r0.get('competition'))}"
+            fixtures_filtrados.append((fid, label))
 
-        fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: x[1])[:200]
+        fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: str(x[1]))[:200]
         if fixtures_filtrados:
             sel = st.selectbox("Partido", [f[1] for f in fixtures_filtrados], key="fid_mom_json")
-            fid_elegido = sel.split(" - ")[-2].strip() if " - " in sel else fixtures_filtrados[0][0]
-            # busca fid real
+            fid_elegido = fixtures_filtrados[0][0]
             for fid, label in fixtures_filtrados:
                 if label == sel:
                     fid_elegido = fid
@@ -882,20 +897,19 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
             recs_show = momentum_by_id.get(fid_elegido, [])
             if recs_show:
                 r0 = recs_show[0]
-                st.markdown(f"**{r0.get('home','')} VS {r0.get('away','')}**")
-                st.markdown(f"**{fid_elegido} - {r0.get('competition','')}**")
-                # JSON bonito para copiar a IA
-                import json as _json
+                h0 = safe_str(r0.get('home'))
+                a0 = safe_str(r0.get('away'))
+                st.markdown(f"**{h0} VS {a0}**")
+                st.markdown(f"**{fid_elegido} - {safe_str(r0.get('competition'))}**")
                 json_out = {
                     "fixture_id": fid_elegido,
-                    "home": r0.get('home'),
-                    "away": r0.get('away'),
-                    "competition": r0.get('competition'),
+                    "home": h0,
+                    "away": a0,
+                    "competition": safe_str(r0.get('competition')),
                     "entries": recs_show
                 }
                 st.code(_json.dumps(json_out, indent=2, ensure_ascii=False), language="json")
-                # tambien formato que pediste: NOMBRE y debajo JSON
-                st.text(f"{r0.get('home','')} VS {r0.get('away','')}\n" + _json.dumps(json_out, indent=2, ensure_ascii=False))
+                st.text(f"{h0} VS {a0}\n" + _json.dumps(json_out, indent=2, ensure_ascii=False))
         else:
             st.info("No hay momentum para ese filtro")
     except Exception as e:
