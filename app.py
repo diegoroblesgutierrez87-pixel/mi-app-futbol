@@ -175,6 +175,37 @@ def cargar_goles_lite():
 def cargar_momentum_lite():
     f_parquet = BASE / "base_momentum.parquet"
     f_pkl = BASE / "base_momentum.pkl"
+    dm = None
+    if f_parquet.exists():
+        dm = pd.read_parquet(f_parquet)
+    elif f_pkl.exists():
+        dm = pd.read_pickle(f_pkl)
+    else:
+        return {}, {}
+
+    mom_by_id = {}
+    mom_by_teams = {}
+    try:
+        for fid, g in dm.groupby('fixture_id'):
+            fid_c = str(fid).split('.')[0]
+            g_sorted = g.sort_values('minute')
+            recs = g_sorted.to_dict('records')
+            mom_by_id[fid_c] = recs
+            # guarda tambien por equipos normalizados
+            if not g_sorted.empty:
+                h_raw = str(g_sorted.iloc[0].get('home',''))
+                a_raw = str(g_sorted.iloc[0].get('away',''))
+                hn = normaliza(h_raw.split(' vs ')[0] if ' vs ' in h_raw else h_raw)
+                an = normaliza(a_raw)
+                # Heidenheim puede venir como HEIDENHEIM o 1. FC HEIDENHEIM
+                # guardamos las dos direcciones
+                mom_by_teams[(hn, an)] = recs
+                mom_by_teams[(an, hn)] = recs
+    except:
+        pass
+    return mom_by_id, mom_by_teams
+    f_parquet = BASE / "base_momentum.parquet"
+    f_pkl = BASE / "base_momentum.pkl"
     if f_parquet.exists():
         dm = pd.read_parquet(f_parquet)
         mom = {}
@@ -199,7 +230,7 @@ def cargar_momentum_lite():
 
 df = cargar_todo_lite()
 eventos = cargar_goles_lite()
-momentum = cargar_momentum_lite()
+momentum_by_id, momentum_by_teams = cargar_momentum_lite()
 if df.empty:
     st.error("No CSVs encontrados en /mnt/data")
     st.stop()
@@ -463,11 +494,46 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
-    # --- MOMENTUM MINI GRAFICA ---
+    # --- MOMENTUM MINI GRAFICA - FIX POR EQUIPOS ---
     mom_html = ""
     try:
         fid_m = str(r.get('fixture_id','')).split('.')[0]
-        mom_data = globals().get('momentum', {}).get(fid_m, [])
+        mom_data = []
+        # 1. intenta por ID directo (por si algun dia coinciden)
+        mid_dict = globals().get('momentum_by_id', {})
+        if fid_m in mid_dict:
+            mom_data = mid_dict[fid_m]
+        else:
+            # 2. por equipos normalizados
+            h_norm = normaliza(r.get('HomeTeam',''))
+            a_norm = normaliza(r.get('AwayTeam',''))
+            teams_dict = globals().get('momentum_by_teams', {})
+            # busca exacta y tambien contiene
+            if (h_norm, a_norm) in teams_dict:
+                mom_data = teams_dict[(h_norm, a_norm)]
+            elif (a_norm, h_norm) in teams_dict:
+                mom_data = teams_dict[(a_norm, h_norm)]
+            else:
+                # busqueda por contains por si viene "HEIDENHEIM" vs "1. FC HEIDENHEIM"
+                for (hn, an), recs in teams_dict.items():
+                    if (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
+                        mom_data = recs
+                        break
+                    if (h_norm in an or an in h_norm) and (a_norm in hn or hn in a_norm):
+                        mom_data = recs
+                        break
+
+        if mom_data:
+            bars = ""
+            for mm in mom_data:
+                v = float(mm.get('momentumValue',0))
+                h_px = int((v+1)*18)
+                h_px = max(2, min(36, h_px))
+                col_bar = "#0f8105" if v>0.25 else "#f31818" if v<-0.25 else "#a0a0a0"
+                bars += f"<span style='display:inline-block;width:3px;height:{h_px}px;background:{col_bar};margin:0 1px;vertical-align:bottom;border-radius:1px'></span>"
+            mom_html = f"<div style='margin:5px 0 2px 0;white-space:nowrap;overflow:hidden;line-height:1;background:#f5f5f5;padding:2px 0'>{bars}</div>"
+    except:
+        mom_html = ""
         if mom_data:
             # crea barritas de 0-100
             bars = ""
