@@ -171,8 +171,35 @@ def cargar_goles_lite():
     except: pass
     return ev
 
+@st.cache_data(show_spinner=False)
+def cargar_momentum_lite():
+    f_parquet = BASE / "base_momentum.parquet"
+    f_pkl = BASE / "base_momentum.pkl"
+    if f_parquet.exists():
+        dm = pd.read_parquet(f_parquet)
+        mom = {}
+        try:
+            for fid, g in dm.groupby('fixture_id'):
+                fid_c = str(fid).split('.')[0]
+                mom[fid_c] = g.sort_values('minute').to_dict('records')
+        except:
+            pass
+        return mom
+    elif f_pkl.exists():
+        dm = pd.read_pickle(f_pkl)
+        mom = {}
+        try:
+            for fid, g in dm.groupby('fixture_id'):
+                fid_c = str(fid).split('.')[0]
+                mom[fid_c] = g.sort_values('minute').to_dict('records')
+        except:
+            pass
+        return mom
+    return {}
+
 df = cargar_todo_lite()
 eventos = cargar_goles_lite()
+momentum = cargar_momentum_lite()
 if df.empty:
     st.error("No CSVs encontrados en /mnt/data")
     st.stop()
@@ -436,6 +463,25 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
+    # --- MOMENTUM MINI GRAFICA ---
+    mom_html = ""
+    try:
+        fid_m = str(r.get('fixture_id','')).split('.')[0]
+        mom_data = globals().get('momentum', {}).get(fid_m, [])
+        if mom_data:
+            # crea barritas de 0-100
+            bars = ""
+            for mm in mom_data:
+                v = float(mm.get('momentumValue',0))
+                # Flashscore: -1 a 1, lo pasamos a 0-100
+                h = int((v+1)*20) # 0-40px
+                h = max(1, min(40, h))
+                col_bar = "#0f8105" if v>0.2 else "#f31818" if v<-0.2 else "#888"
+                bars += f"<span style='display:inline-block;width:2px;height:{h}px;background:{col_bar};margin:0 1px;vertical-align:bottom'></span>"
+            mom_html = f"<div style='margin:4px 0 2px 0;white-space:nowrap;overflow:hidden;line-height:1'>{bars}</div>"
+    except:
+        mom_html = ""
+
     # Si hay filtro MIN y no hay goles en ese rango, no renderizar
     try:
         md_f = globals().get('MIN_DESDE', None)
@@ -556,7 +602,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     col_away = col if es_away_sel else "#000"
     col_score = col if current_eq_orig else col
     col_j = "#0A2342"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h} vs {a}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:900;margin-top:3px'><span style='text-align:left;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_home}'>{hab_u}</span><span style='text-align:center;flex:0 0 auto;color:{col_score};background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px'>Final {hg}-{ag}</span><span style='text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_away}'>{aab_u}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div></div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h} vs {a}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:900;margin-top:3px'><span style='text-align:left;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_home}'>{hab_u}</span><span style='text-align:center;flex:0 0 auto;color:{col_score};background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px'>Final {hg}-{ag}</span><span style='text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_away}'>{aab_u}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
@@ -745,7 +791,7 @@ else:
     else:
         st.info("Selecciona equipo")
 
-st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos)} | Filtro: {filtro_tipo} {filtro_pct}%")
+st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
