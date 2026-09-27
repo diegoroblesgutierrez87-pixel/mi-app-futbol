@@ -692,11 +692,10 @@ eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
 html = ""
 
 if not st.session_state.show_partidos:
-    st.info("👁️ Partidos ocultos - dale a Mostrar partidos. Usa el botón ↑ flotante abajo a la derecha para subir.")
-    st.stop()
+    st.info("👁 Partidos ocultos - dale a Mostrar partidos. Usa el botón ↑ flotante abajo a la derecha para subir.")
 
 # MODO FILTRO POR % - PRIORITARIO
-if filtro_tipo!= "Ninguno":
+if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
     def get_val(r, keys):
         for k in keys:
             if k in r and pd.notna(r.get(k)):
@@ -804,7 +803,7 @@ if filtro_tipo!= "Ninguno":
                 html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
         st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
 
-else:
+elif st.session_state.show_partidos:
     # MODO NORMAL (tu logica original intacta)
     if modo_doble:
         for eq_orig, df_eq in [(eq1, df_eq1), (eq2, df_eq2)]:
@@ -878,6 +877,10 @@ else:
         st.info("Selecciona equipo")
 
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
+
+if st.button("👁️ Ocultar partidos 2" if st.session_state.show_partidos else "👁️ Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
+    st.session_state.show_partidos = not st.session_state.show_partidos
+    st.rerun()
 
 with st.expander("momentum JSON - copiar para IA", expanded=False):
     try:
