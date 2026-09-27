@@ -4,8 +4,6 @@ import pathlib
 import re
 import unicodedata
 import numpy as np
-import matplotlib.pyplot as plt
-import io, base64
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
 # --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA ---
@@ -45,59 +43,6 @@ def normaliza(s):
     if pd.isna(s): return ""
     n = unicodedata.normalize('NFKD', str(s)).encode('ASCII','ignore').decode('ASCII')
     return n.upper().strip()
-
-def normaliza_fuzzy(s):
-    n = normaliza(s)
-    n = re.sub(r'\(.*?\)', '', n)
-    n = re.sub(r'\bII\b|\bAM\b|\bRESERVAS\b|\bB\b', '', n)
-    n = re.sub(r'^\d+\.?\s*', '', n)
-    for pref in ['FC ','CF ','SC ','SV ','REAL ','CLUB ','DEPORTIVO ','CLUB ATLETICO ','AL-','AL ']:
-        if n.startswith(pref):
-            n = n[len(pref):].strip()
-    return n.strip()
-
-@st.cache_data(show_spinner=False, max_entries=500)
-def plot_momentum_base64_cached(fixture_id, titulo, n_points):
-    # usa globals para no pasar dataframes gigantes al cache
-    mom_data = momentum_by_id.get(fixture_id, [])
-    if not mom_data:
-        # busca por teams key que es "HOME___AWAY"
-        for k,v in momentum_by_teams.items():
-            if fixture_id in k:
-                mom_data = v
-                break
-    if not mom_data:
-        return ""
-    try:
-        mins = [int(m.get('minute',0)) for m in mom_data][::2] # cada 2 min = mitad de barras = 2x rapido
-        vals = [float(m.get('momentumValue',0)) for m in mom_data][::2]
-        fig, ax = plt.subplots(figsize=(5,1.6), dpi=100) # mas pequeño = 3x rapido
-        colors = ['#e74c3c' if v>=0 else '#3498db' for v in vals]
-        ax.bar(mins, vals, color=colors, width=1.2, alpha=0.9)
-        ax.axhline(0, color='black', linewidth=0.6)
-        ax.set_xlim(-1, 100)
-        ax.set_title(titulo, fontsize=8, fontweight='bold')
-        ax.tick_params(labelsize=5)
-        ax.set_xticks([])
-        fig.tight_layout(pad=0.3)
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight')
-        plt.close(fig)
-        buf.seek(0)
-        b64 = base64.b64encode(buf.read()).decode()
-        return f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:380px;margin:4px 0;border:1px solid #ddd'/>"
-    except:
-        return ""
-
-def plot_momentum_base64(mom_data, goles_list, titulo=""):
-    # wrapper compat para que no pete nada de lo que ya tienes
-    if not mom_data:
-        return ""
-    try:
-        fid = str(goles_list[0].get('fixture_id','')) if goles_list else titulo
-        return plot_momentum_base64_cached(titulo, titulo, len(mom_data))
-    except:
-        return plot_momentum_base64_cached(titulo, titulo, len(mom_data))
 
 def abreviar_equipo(nombre):
     n = normaliza(nombre)
@@ -226,40 +171,8 @@ def cargar_goles_lite():
     except: pass
     return ev
 
-@st.cache_data(show_spinner=False)
-def cargar_momentum_lite():
-    f_parquet = BASE / "base_momentum.parquet"
-    f_pkl = BASE / "base_momentum.pkl"
-    dm = None
-    if f_parquet.exists():
-        dm = pd.read_parquet(f_parquet)
-    elif f_pkl.exists():
-        dm = pd.read_pickle(f_pkl)
-    else:
-        return {}, {}
-    mom_by_id = {}
-    mom_by_teams = {}
-    try:
-        for fid, g in dm.groupby('fixture_id'):
-            fid_c = str(fid).split('.')[0]
-            g_sorted = g.sort_values('minute')
-            recs = g_sorted.to_dict('records')
-            mom_by_id[fid_c] = recs
-            if not g_sorted.empty:
-                h_raw = str(g_sorted.iloc[0].get('home',''))
-                a_raw = str(g_sorted.iloc[0].get('away',''))
-                hn = normaliza_fuzzy(h_raw)
-                an = normaliza_fuzzy(a_raw)
-                if hn and an:
-                    mom_by_teams[(hn, an)] = recs
-                    mom_by_teams[(an, hn)] = recs
-    except:
-        pass
-    return mom_by_id, mom_by_teams
-
 df = cargar_todo_lite()
 eventos = cargar_goles_lite()
-momentum_by_id, momentum_by_teams = cargar_momentum_lite()
 if df.empty:
     st.error("No CSVs encontrados en /mnt/data")
     st.stop()
@@ -341,8 +254,6 @@ with c8:
 c9,c10,c_min1,c_min2 = filtros.columns([1,1,1,1])
 with c9:
     modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
-with c10:
-    modo_momentum = st.selectbox("MOMENTUM", ["OFF","BARRAS","GRAFICO"], key="mom", index=1)
 with c_min1:
     min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
 with c_min2:
@@ -525,46 +436,6 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
-    # --- MOMENTUM RAPIDO CON MODO ---
-    mom_html = ""
-    try:
-        modo_m = globals().get('modo_momentum','BARRAS')
-        if modo_m == "OFF":
-            mom_html = ""
-        else:
-            fid_m = str(r.get('fixture_id','')).split('.')[0]
-            mom_data = []
-            mid_dict = globals().get('momentum_by_id', {})
-            teams_dict = globals().get('momentum_by_teams', {})
-            if fid_m in mid_dict:
-                mom_data = mid_dict[fid_m]
-            else:
-                h_norm = normaliza_fuzzy(r.get('HomeTeam',''))
-                a_norm = normaliza_fuzzy(r.get('AwayTeam',''))
-                if (h_norm, a_norm) in teams_dict:
-                    mom_data = teams_dict[(h_norm, a_norm)]
-                elif (a_norm, h_norm) in teams_dict:
-                    mom_data = teams_dict[(a_norm, h_norm)]
-                else:
-                    for (hn, an), recs in teams_dict.items():
-                        if hn and an and (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
-                            mom_data = recs
-                            break
-            if mom_data:
-                if modo_m == "GRAFICO":
-                    titulo = f"{r.get('HomeTeam','')} {hg}-{ag} {r.get('AwayTeam','')}"
-                    mom_html = plot_momentum_base64(mom_data, [], titulo)
-                else:
-                    bars = ""
-                    for mm in mom_data[::2]:
-                        v = float(mm.get('momentumValue',0))
-                        h_px = int((v+1)*12); h_px = max(2, min(24, h_px))
-                        col_bar = "#0f8105" if v>0.25 else "#f31818" if v<-0.25 else "#a0a0a0"
-                        bars += f"<span style='display:inline-block;width:2px;height:{h_px}px;background:{col_bar};margin:0 1px;vertical-align:bottom'></span>"
-                    mom_html = f"<div style='margin:3px 0;background:#f5f5f5;padding:2px 0;white-space:nowrap;overflow:hidden'>{bars}</div>"
-    except:
-        mom_html = ""
-
     # Si hay filtro MIN y no hay goles en ese rango, no renderizar
     try:
         md_f = globals().get('MIN_DESDE', None)
@@ -685,7 +556,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     col_away = col if es_away_sel else "#000"
     col_score = col if current_eq_orig else col
     col_j = "#0A2342"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h} vs {a}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:900;margin-top:3px'><span style='text-align:left;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_home}'>{hab_u}</span><span style='text-align:center;flex:0 0 auto;color:{col_score};background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px'>Final {hg}-{ag}</span><span style='text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_away}'>{aab_u}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h} vs {a}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:900;margin-top:3px'><span style='text-align:left;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_home}'>{hab_u}</span><span style='text-align:center;flex:0 0 auto;color:{col_score};background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px'>Final {hg}-{ag}</span><span style='text-align:right;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{col_away}'>{aab_u}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div></div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
@@ -874,7 +745,7 @@ else:
     else:
         st.info("Selecciona equipo")
 
-st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
+st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles indexados: {len(eventos)} | Filtro: {filtro_tipo} {filtro_pct}%")
 
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
