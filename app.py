@@ -4,6 +4,8 @@ import pathlib
 import re
 import unicodedata
 import numpy as np
+import matplotlib.pyplot as plt
+import io, base64
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
 # --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA ---
@@ -53,6 +55,37 @@ def normaliza_fuzzy(s):
         if n.startswith(pref):
             n = n[len(pref):].strip()
     return n.strip()
+
+def plot_momentum_base64(mom_data, goles_list, titulo=""):
+    if not mom_data:
+        return ""
+    try:
+        mins = [int(m.get('minute',0)) for m in mom_data]
+        vals = [float(m.get('momentumValue',0)) for m in mom_data]
+        fig, ax = plt.subplots(figsize=(6,2.4), dpi=150)
+        colors = ['#e74c3c' if v>=0 else '#3498db' for v in vals]
+        ax.bar(mins, vals, color=colors, width=0.9, alpha=0.85)
+        ax.axhline(0, color='black', linewidth=0.8)
+        for g in goles_list:
+            m = g.get('m',0)
+            team_abbr = g.get('abbr','')
+            ax.axvline(m, color='#8B0000', linestyle='--', linewidth=1.3)
+            ax.text(m, 0.95, f"{team_abbr} {m}'", fontsize=6, ha='center', va='bottom', color='white', bbox=dict(facecolor='#8B0000', boxstyle='round,pad=0.2'))
+        ax.set_xlim(-1, 100)
+        ax.set_ylim(min(vals)-0.2, max(vals)+0.3)
+        ax.set_xlabel("Minuto", fontsize=7)
+        ax.set_ylabel("Momentum", fontsize=7)
+        ax.set_title(titulo, fontsize=9, fontweight='bold')
+        ax.tick_params(labelsize=6)
+        fig.tight_layout()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        plt.close(fig)
+        buf.seek(0)
+        b64 = base64.b64encode(buf.read()).decode()
+        return f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:380px;margin:6px 0;border:1px solid #ddd;border-radius:4px'/>"
+    except:
+        return ""
 
 def abreviar_equipo(nombre):
     n = normaliza(nombre)
@@ -478,13 +511,14 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
-    # --- MOMENTUM MINI GRAFICA - FUZZY FIX ---
+    # --- MOMENTUM GRAFICO REAL COMO TU FOTO 2 ---
     mom_html = ""
     try:
         fid_m = str(r.get('fixture_id','')).split('.')[0]
         mom_data = []
         mid_dict = globals().get('momentum_by_id', {})
         teams_dict = globals().get('momentum_by_teams', {})
+        goles_for_chart = eventos.get(fid_m, [])
         if fid_m in mid_dict:
             mom_data = mid_dict[fid_m]
         else:
@@ -500,14 +534,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                         mom_data = recs
                         break
         if mom_data:
-            bars = ""
-            for mm in mom_data:
-                v = float(mm.get('momentumValue',0))
-                h_px = int((v+1)*18)
-                h_px = max(2, min(36, h_px))
-                col_bar = "#0f8105" if v>0.25 else "#f31818" if v<-0.25 else "#a0a0a0"
-                bars += f"<span style='display:inline-block;width:3px;height:{h_px}px;background:{col_bar};margin:0 1px;vertical-align:bottom;border-radius:1px'></span>"
-            mom_html = f"<div style='margin:5px 0 2px 0;white-space:nowrap;overflow:hidden;line-height:1;background:#f5f5f5;padding:2px 0'>{bars}</div>"
+            titulo = f"{r.get('HomeTeam','')} {hg}-{ag} {r.get('AwayTeam','')} - Momentum"
+            mom_html = plot_momentum_base64(mom_data, goles_for_chart, titulo)
     except:
         mom_html = ""
 
