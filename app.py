@@ -24,7 +24,28 @@ html, body {
 [data-testid="stHeader"] {
     overscroll-behavior: none!important;
 }
+#btn-top-float {
+    position: fixed!important;
+    bottom: 20px!important;
+    right: 20px!important;
+    z-index: 999999!important;
+    background: #0A2342!important;
+    color: white!important;
+    border: none!important;
+    border-radius: 50%!important;
+    width: 56px!important;
+    height: 56px!important;
+    font-size: 26px!important;
+    font-weight: 900!important;
+    cursor: pointer!important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4)!important;
+    display: none;
+}
+#btn-top-float:hover { background: #0f8105!important; }
+#top-ancla { position: absolute; top: 0; }
 </style>
+<div id="top-ancla"></div>
+<button id="btn-top-float" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 <script>
 // bloquea pull-to-refresh en movil
 let startY = 0;
@@ -38,6 +59,10 @@ document.addEventListener('touchmove', e => {
         e.preventDefault();
     }
 }, {passive: false});
+window.addEventListener('scroll', function() {
+    const btn = document.getElementById('btn-top-float');
+    if (btn) btn.style.display = window.scrollY > 400? 'block' : 'none';
+});
 </script>
 """, unsafe_allow_html=True)
 # --- UTILS ---
@@ -265,7 +290,20 @@ if df.empty:
     st.stop()
 
 # --- UI ---
+if 'show_partidos' not in st.session_state:
+    st.session_state.show_partidos = True
+
 filtros = st.expander("FILTROS", expanded=True)
+with filtros:
+    ct1, ct2 = st.columns([1,1])
+    with ct1:
+        if st.button("👁️ Ocultar partidos" if st.session_state.show_partidos else "👁️ Mostrar partidos", key="toggle_partidos", use_container_width=True):
+            st.session_state.show_partidos = not st.session_state.show_partidos
+            st.rerun()
+    with ct2:
+        if st.button("⬆️ Ir arriba", key="btn_ir_arriba_manual", use_container_width=True):
+            st.markdown("<script>window.scrollTo({top:0, behavior:'smooth'})</script>", unsafe_allow_html=True)
+
 ligas = sorted(df['League'].dropna().unique()) if 'League' in df.columns else []
 c1,c2,c3,c4d = filtros.columns(4)
 with c1: liga_sel = st.selectbox("Liga", ["Todas"] + ligas)
@@ -652,6 +690,10 @@ eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
 
 html = ""
+
+if not st.session_state.show_partidos:
+    st.info("👁️ Partidos ocultos - dale a Mostrar partidos. Usa el botón ↑ flotante abajo a la derecha para subir.")
+    st.stop()
 
 # MODO FILTRO POR % - PRIORITARIO
 if filtro_tipo!= "Ninguno":
