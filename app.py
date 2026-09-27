@@ -295,7 +295,7 @@ if 'show_partidos' not in st.session_state:
 
 filtros = st.expander("FILTROS", expanded=True)
 with filtros:
-    if st.button("Ocultar partidos" if st.session_state.show_partidos else "👁 Mostrar partidos", key="toggle_partidos", use_container_width=True):
+    if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
         st.session_state.show_partidos = not st.session_state.show_partidos
         st.rerun()
 
@@ -873,7 +873,7 @@ elif st.session_state.show_partidos:
 
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
 
-if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "👁️ Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
+if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
     st.session_state.show_partidos = not st.session_state.show_partidos
     st.rerun()
 
