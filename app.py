@@ -338,11 +338,9 @@ with c7:
 with c8:
     modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
 
-c9,c10,c_min1,c_min2 = filtros.columns([1,1,1,1])
+c9,c_min1,c_min2 = filtros.columns([1,1,1])
 with c9:
     modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
-with c10:
-    modo_momentum = st.selectbox("MOMENTUM", ["OFF","BARRAS","GRAFICO"], key="mom", index=1)
 with c_min1:
     min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
 with c_min2:
@@ -525,45 +523,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
-    # --- MOMENTUM RAPIDO CON MODO ---
+    # --- MOMENTUM DESACTIVADO TOTAL - CERO GRAFICAS ---
     mom_html = ""
-    try:
-        modo_m = globals().get('modo_momentum','BARRAS')
-        if modo_m == "OFF":
-            mom_html = ""
-        else:
-            fid_m = str(r.get('fixture_id','')).split('.')[0]
-            mom_data = []
-            mid_dict = globals().get('momentum_by_id', {})
-            teams_dict = globals().get('momentum_by_teams', {})
-            if fid_m in mid_dict:
-                mom_data = mid_dict[fid_m]
-            else:
-                h_norm = normaliza_fuzzy(r.get('HomeTeam',''))
-                a_norm = normaliza_fuzzy(r.get('AwayTeam',''))
-                if (h_norm, a_norm) in teams_dict:
-                    mom_data = teams_dict[(h_norm, a_norm)]
-                elif (a_norm, h_norm) in teams_dict:
-                    mom_data = teams_dict[(a_norm, h_norm)]
-                else:
-                    for (hn, an), recs in teams_dict.items():
-                        if hn and an and (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
-                            mom_data = recs
-                            break
-            if mom_data:
-                if modo_m == "GRAFICO":
-                    titulo = f"{r.get('HomeTeam','')} {hg}-{ag} {r.get('AwayTeam','')}"
-                    mom_html = plot_momentum_base64(mom_data, [], titulo)
-                else:
-                    bars = ""
-                    for mm in mom_data[::2]:
-                        v = float(mm.get('momentumValue',0))
-                        h_px = int((v+1)*12); h_px = max(2, min(24, h_px))
-                        col_bar = "#0f8105" if v>0.25 else "#f31818" if v<-0.25 else "#a0a0a0"
-                        bars += f"<span style='display:inline-block;width:2px;height:{h_px}px;background:{col_bar};margin:0 1px;vertical-align:bottom'></span>"
-                    mom_html = f"<div style='margin:3px 0;background:#f5f5f5;padding:2px 0;white-space:nowrap;overflow:hidden'>{bars}</div>"
-    except:
-        mom_html = ""
 
     # Si hay filtro MIN y no hay goles en ese rango, no renderizar
     try:
