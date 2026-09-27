@@ -878,14 +878,9 @@ elif st.session_state.show_partidos:
 
 st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
 
-c_top2a, c_top2b = st.columns([1,1])
-with c_top2a:
-    if st.button("👁 Ocultar partidos 2" if st.session_state.show_partidos else "👁 Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
-        st.session_state.show_partidos = not st.session_state.show_partidos
-        st.rerun()
-with c_top2b:
-    if st.button("⬆ Arriba 2", key="btn_arriba_2", use_container_width=True):
-        st.markdown("<script>window.scrollTo({top:0, behavior:'smooth'})</script>", unsafe_allow_html=True)
+if st.button("👁️ Ocultar partidos 2" if st.session_state.show_partidos else "👁️ Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
+    st.session_state.show_partidos = not st.session_state.show_partidos
+    st.rerun()
 
 with st.expander("momentum JSON - copiar para IA", expanded=False):
     try:
