@@ -44,6 +44,16 @@ def normaliza(s):
     n = unicodedata.normalize('NFKD', str(s)).encode('ASCII','ignore').decode('ASCII')
     return n.upper().strip()
 
+def normaliza_fuzzy(s):
+    n = normaliza(s)
+    n = re.sub(r'\(.*?\)', '', n)
+    n = re.sub(r'\bII\b|\bAM\b|\bRESERVAS\b|\bB\b', '', n)
+    n = re.sub(r'^\d+\.?\s*', '', n)
+    for pref in ['FC ','CF ','SC ','SV ','REAL ','CLUB ','DEPORTIVO ','CLUB ATLETICO ','AL-','AL ']:
+        if n.startswith(pref):
+            n = n[len(pref):].strip()
+    return n.strip()
+
 def abreviar_equipo(nombre):
     n = normaliza(nombre)
     if not n or n == "NAN": return "XXX"
@@ -182,7 +192,6 @@ def cargar_momentum_lite():
         dm = pd.read_pickle(f_pkl)
     else:
         return {}, {}
-
     mom_by_id = {}
     mom_by_teams = {}
     try:
@@ -191,16 +200,14 @@ def cargar_momentum_lite():
             g_sorted = g.sort_values('minute')
             recs = g_sorted.to_dict('records')
             mom_by_id[fid_c] = recs
-            # guarda tambien por equipos normalizados
             if not g_sorted.empty:
                 h_raw = str(g_sorted.iloc[0].get('home',''))
                 a_raw = str(g_sorted.iloc[0].get('away',''))
-                hn = normaliza(h_raw.split(' vs ')[0] if ' vs ' in h_raw else h_raw)
-                an = normaliza(a_raw)
-                # Heidenheim puede venir como HEIDENHEIM o 1. FC HEIDENHEIM
-                # guardamos las dos direcciones
-                mom_by_teams[(hn, an)] = recs
-                mom_by_teams[(an, hn)] = recs
+                hn = normaliza_fuzzy(h_raw)
+                an = normaliza_fuzzy(a_raw)
+                if hn and an:
+                    mom_by_teams[(hn, an)] = recs
+                    mom_by_teams[(an, hn)] = recs
     except:
         pass
     return mom_by_id, mom_by_teams
@@ -471,28 +478,25 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     else:
         txt_mins = "-"
 
-    # --- MOMENTUM MINI GRAFICA - FIX POR EQUIPOS ---
+    # --- MOMENTUM MINI GRAFICA - FUZZY FIX ---
     mom_html = ""
     try:
         fid_m = str(r.get('fixture_id','')).split('.')[0]
         mom_data = []
         mid_dict = globals().get('momentum_by_id', {})
+        teams_dict = globals().get('momentum_by_teams', {})
         if fid_m in mid_dict:
             mom_data = mid_dict[fid_m]
         else:
-            h_norm = normaliza(r.get('HomeTeam',''))
-            a_norm = normaliza(r.get('AwayTeam',''))
-            teams_dict = globals().get('momentum_by_teams', {})
+            h_norm = normaliza_fuzzy(r.get('HomeTeam',''))
+            a_norm = normaliza_fuzzy(r.get('AwayTeam',''))
             if (h_norm, a_norm) in teams_dict:
                 mom_data = teams_dict[(h_norm, a_norm)]
             elif (a_norm, h_norm) in teams_dict:
                 mom_data = teams_dict[(a_norm, h_norm)]
             else:
                 for (hn, an), recs in teams_dict.items():
-                    if (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
-                        mom_data = recs
-                        break
-                    if (h_norm in an or an in h_norm) and (a_norm in hn or hn in a_norm):
+                    if hn and an and (h_norm in hn or hn in h_norm) and (a_norm in an or an in a_norm):
                         mom_data = recs
                         break
         if mom_data:
