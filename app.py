@@ -880,12 +880,11 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
 with st.expander("momentum JSON - copiar para IA", expanded=False):
     st.markdown("""
     <style>
-    div[data-testid="stExpander"] div[data-testid="stSelectbox"] {margin-bottom:-18px!important; margin-top:-10px!important;}
-    div[data-testid="stExpander"] label {font-size:8px!important; font-weight:800!important; margin-bottom:-2px!important; letter-spacing:0.3px!important; opacity:0.7;}
-    div[data-testid="stExpander"] .stSelectbox div[data-baseweb="select"] {min-height:26px!important; font-size:9px!important; line-height:1!important;}
-    div[data-testid="stExpander"] div[data-baseweb="select"] div {font-size:9px!important;}
-    div[data-testid="stExpander"] hr {margin:3px 0!important;}
-    div[data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {font-size:9px!important; line-height:1.0!important; margin:1px 0!important;}
+    div[data-testid="stExpander"] div[data-testid="stSelectbox"] {margin-bottom:-12px!important; margin-top:-6px!important;}
+    div[data-testid="stExpander"] label {font-size:10px!important; font-weight:800!important; margin-bottom:0px!important; padding-bottom:0px!important;}
+    div[data-testid="stExpander"] .stSelectbox div[data-baseweb="select"] {min-height:30px!important; font-size:11px!important;}
+    div[data-testid="stExpander"] hr {margin:6px 0!important;}
+    .mom-compact {font-family:monospace; font-size:10px; line-height:1.0; margin:1px 0; padding:0; font-weight:900;}
     </style>
     """, unsafe_allow_html=True)
     try:
