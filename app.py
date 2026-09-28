@@ -948,8 +948,27 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
                     "competition": safe_str(r0.get('competition')),
                     "entries": recs_show
                 }
-                st.code(_json.dumps(json_out, indent=2, ensure_ascii=False), language="json")
-                st.text(f"{h0} VS {a0}\n" + _json.dumps(json_out, indent=2, ensure_ascii=False))
+                import streamlit.components.v1 as components
+                import html as _html
+                _json_str = _json.dumps(json_out, indent=2, ensure_ascii=False)
+                _json_escaped = _html.escape(_json_str)
+                components.html(f"""
+                <div style="font-family:monospace;">
+                    <button id="btn-copy" style="background:#0A2342;color:white;border:none;border-radius:6px;padding:8px 14px;font-weight:900;cursor:pointer;">📋 COPIAR JSON</button>
+                    <span id="msg" style="margin-left:10px;color:#0f8105;font-weight:700;display:none;">¡Copiado!</span>
+                    <textarea id="txt" style="position:absolute;left:-9999px;top:-9999px;">{_json_escaped}</textarea>
+                </div>
+                <script>
+                document.getElementById('btn-copy').onclick = function(){{
+                    const t = document.getElementById('txt').value;
+                    navigator.clipboard.writeText(t).then(()=>{{
+                        const m = document.getElementById('msg');
+                        m.style.display='inline';
+                        setTimeout(()=>m.style.display='none',1500);
+                    }});
+                }}
+                </script>
+                """, height=50)
         else:
             st.info("No hay momentum para ese filtro")
     except Exception as e:
