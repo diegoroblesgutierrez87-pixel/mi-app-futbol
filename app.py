@@ -878,14 +878,15 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
     st.rerun()
 
 with st.expander("momentum JSON - copiar para IA", expanded=False):
+    st.markdown('<div id="mom-only"></div>', unsafe_allow_html=True)
     st.markdown("""
     <style>
-    div[data-testid="stExpander"] div[data-testid="stSelectbox"] {margin-bottom:-18px!important; margin-top:-10px!important;}
-    div[data-testid="stExpander"] label {font-size:8px!important; font-weight:800!important; margin-bottom:-2px!important; letter-spacing:0.3px!important; opacity:0.7;}
-    div[data-testid="stExpander"] .stSelectbox div[data-baseweb="select"] {min-height:26px!important; font-size:9px!important; line-height:1!important;}
-    div[data-testid="stExpander"] div[data-baseweb="select"] div {font-size:9px!important;}
-    div[data-testid="stExpander"] hr {margin:3px 0!important;}
-    div[data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {font-size:9px!important; line-height:1.0!important; margin:1px 0!important;}
+    /* SOLO afecta al expander que contiene #mom-only = el de momentum */
+    div[data-testid="stExpander"]:has(#mom-only) div[data-testid="stSelectbox"] {margin-bottom:-18px!important; margin-top:-10px!important;}
+    div[data-testid="stExpander"]:has(#mom-only) label {font-size:8px!important; font-weight:800!important; margin-bottom:-2px!important; opacity:0.7;}
+    div[data-testid="stExpander"]:has(#mom-only) div[data-baseweb="select"] {min-height:26px!important; font-size:9px!important; line-height:1!important;}
+    div[data-testid="stExpander"]:has(#mom-only) hr {margin:3px 0!important;}
+    div[data-testid="stExpander"]:has(#mom-only) p {font-size:9px!important; line-height:1.0!important; margin:1px 0!important;}
     </style>
     """, unsafe_allow_html=True)
     try:
