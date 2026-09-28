@@ -878,9 +878,17 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
     st.rerun()
 
 with st.expander("momentum JSON - copiar para IA", expanded=False):
+    st.markdown("""
+    <style>
+    div[data-testid="stExpander"] div[data-testid="stSelectbox"] {margin-bottom:-12px!important; margin-top:-6px!important;}
+    div[data-testid="stExpander"] label {font-size:10px!important; font-weight:800!important; margin-bottom:0px!important; padding-bottom:0px!important;}
+    div[data-testid="stExpander"] .stSelectbox div[data-baseweb="select"] {min-height:30px!important; font-size:11px!important;}
+    div[data-testid="stExpander"] hr {margin:6px 0!important;}
+    .mom-compact {font-family:monospace; font-size:10px; line-height:1.0; margin:1px 0; padding:0; font-weight:900;}
+    </style>
+    """, unsafe_allow_html=True)
     try:
         import json as _json
-        # junta todos los recs una sola vez y limpia NaN/float
         all_recs = []
         for recs in momentum_by_id.values():
             if recs:
