@@ -954,7 +954,7 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
                 _json_escaped = _html.escape(_json_str)
                 components.html(f"""
                 <div style="font-family:monospace;">
-                    <button id="btn-copy" style="background:#0A2342;color:white;border:none;border-radius:6px;padding:8px 14px;font-weight:900;cursor:pointer;">📋 COPIAR JSON</button>
+                    <button id="btn-copy" style="background:#0A2342;color:white;border:none;border-radius:6px;padding:8px 14px;font-weight:900;cursor:pointer;"> COPIAR JSON</button>
                     <span id="msg" style="margin-left:10px;color:#0f8105;font-weight:700;display:none;">¡Copiado!</span>
                     <textarea id="txt" style="position:absolute;left:-9999px;top:-9999px;">{_json_escaped}</textarea>
                 </div>
@@ -963,6 +963,65 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
                     const t = document.getElementById('txt').value;
                     navigator.clipboard.writeText(t).then(()=>{{
                         const m = document.getElementById('msg');
+                        m.style.display='inline';
+                        setTimeout(()=>m.style.display='none',1500);
+                    }});
+                }}
+                </script>
+                """, height=50)
+
+        st.divider()
+        st.markdown("**PARTIDO 2**")
+        comp_sel2 = st.selectbox("Competicion momentum", ["Todas"] + comps_mom, key="comp_mom_json2")
+        equipos_mom_set2 = set()
+        for rec in all_recs:
+            if comp_sel2!= "Todas" and safe_str(rec.get('competition'))!= comp_sel2:
+                continue
+            h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
+            if h: equipos_mom_set2.add(h)
+            if a: equipos_mom_set2.add(a)
+        equipos_mom2 = sorted([x for x in equipos_mom_set2 if x])
+        eq_sel_mom2 = st.selectbox("Equipo momentum", ["Todos"] + equipos_mom2, key="eq_mom_json2")
+        fixtures_filtrados2 = []
+        for fid, recs in momentum_by_id.items():
+            if not recs: continue
+            r0 = recs[0]
+            if comp_sel2!= "Todas" and safe_str(r0.get('competition'))!= comp_sel2:
+                continue
+            h = safe_str(r0.get('home')); a = safe_str(r0.get('away'))
+            if eq_sel_mom2!= "Todos":
+                if eq_sel_mom2 not in (h, a) and normaliza_fuzzy(eq_sel_mom2) not in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
+                    continue
+            label = f"{h} VS {a} - {fid} - {safe_str(r0.get('competition'))}"
+            fixtures_filtrados2.append((fid, label))
+        fixtures_filtrados2 = sorted(fixtures_filtrados2, key=lambda x: str(x[1]))[:200]
+        if fixtures_filtrados2:
+            sel2 = st.selectbox("Partido", [f[1] for f in fixtures_filtrados2], key="fid_mom_json2")
+            fid_elegido2 = fixtures_filtrados2[0][0]
+            for fid, label in fixtures_filtrados2:
+                if label == sel2:
+                    fid_elegido2 = fid
+                    break
+            recs_show2 = momentum_by_id.get(fid_elegido2, [])
+            if recs_show2:
+                r0 = recs_show2[0]
+                h0 = safe_str(r0.get('home')); a0 = safe_str(r0.get('away'))
+                st.markdown(f"**{h0} VS {a0}**")
+                st.markdown(f"**{fid_elegido2} - {safe_str(r0.get('competition'))}**")
+                json_out2 = {"fixture_id": fid_elegido2,"home": h0,"away": a0,"competition": safe_str(r0.get('competition')),"entries": recs_show2}
+                _json_str2 = _json.dumps(json_out2, indent=2, ensure_ascii=False)
+                _json_escaped2 = _html.escape(_json_str2)
+                components.html(f"""
+                <div style="font-family:monospace;">
+                    <button id="btn-copy2" style="background:#0A2342;color:white;border:none;border-radius:6px;padding:8px 14px;font-weight:900;cursor:pointer;">COPIAR JSON2</button>
+                    <span id="msg2" style="margin-left:10px;color:#0f8105;font-weight:700;display:none;">¡Copiado!</span>
+                    <textarea id="txt2" style="position:absolute;left:-9999px;top:-9999px;">{_json_escaped2}</textarea>
+                </div>
+                <script>
+                document.getElementById('btn-copy2').onclick = function(){{
+                    const t = document.getElementById('txt2').value;
+                    navigator.clipboard.writeText(t).then(()=>{{
+                        const m = document.getElementById('msg2');
                         m.style.display='inline';
                         setTimeout(()=>m.style.display='none',1500);
                     }});
