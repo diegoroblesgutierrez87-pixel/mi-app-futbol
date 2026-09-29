@@ -867,7 +867,25 @@ elif st.session_state.show_partidos:
             html += fmt_rapido(r.to_dict(), eq_refs_norm, curr_norm, curr_orig)
 
     if (modo_doble and (not df_eq1.empty or not df_eq2.empty)) or (not modo_doble and not df_mostrar.empty):
-        st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
+        import streamlit.components.v1 as components
+        bloque_copy = f"""
+        <div>
+            <button onclick="copyPartidos()" id="btnCopyPartidos" style="position:sticky;top:0;z-index:99999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS</button>
+            <div id="targetPartidos">{html}</div>
+        </div>
+        <script>
+        function copyPartidos(){{
+            var txt = document.getElementById('targetPartidos').innerText;
+            navigator.clipboard.writeText(txt).then(()=>{{
+                var b = document.getElementById('btnCopyPartidos');
+                b.innerText = '✓ COPIADO';
+                b.style.background = '#0f8105';
+                setTimeout(()=>{{ b.innerText='📋 COPIAR PARTIDOS'; b.style.background='#0A2342'; }},1200);
+            }});
+        }}
+        </script>
+        """
+        components.html(bloque_copy, height=900, scrolling=True)
     else:
         st.info("Selecciona equipo")
 
