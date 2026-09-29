@@ -1076,8 +1076,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     tipo = ev.get('tipo','')
                     benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
                     es_mio = norm_eq in benef
-                    col_min = col_main if es_mio else "#555"
-                    peso = "font-weight:900;" if es_mio else "font-weight:400;"
+                    col_min = col_main if es_mio else "#000"
+                    peso = "font-weight:900;" if es_mio else "font-weight:700;"
                     span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
                     if m <= 45:
                         mins_1t.append(span)
