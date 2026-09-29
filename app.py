@@ -796,7 +796,32 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
             for _, r in d_team_cumple.iterrows():
                 html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
-        st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
+        if html:
+            html_copy = f"""
+            <div style="position:relative;">
+                <button id="btn-copy-all" onclick="copyAllPartidos()" style="position:sticky; top:0; z-index:9999; background:#0A2342; color:white; border:none; border-radius:6px; padding:10px 16px; font-weight:900; width:100%; cursor:pointer; margin-bottom:8px;">📋 COPIAR TODO LO VISIBLE ({len(html)//100} partidos)</button>
+                <span id="msg-copy-all" style="display:none; position:sticky; top:50px; z-index:9999; background:#0f8105; color:white; padding:6px 12px; border-radius:4px; font-weight:900; width:100%; text-align:center;">✓ COPIADO</span>
+                <div id="partidos-container">{html}</div>
+            </div>
+            <script>
+            function copyAllPartidos(){{
+                const cont = document.getElementById('partidos-container');
+                if(!cont) return;
+                const text = cont.innerText || cont.textContent;
+                navigator.clipboard.writeText(text).then(()=>{{
+                    const msg = document.getElementById('msg-copy-all');
+                    const btn = document.getElementById('btn-copy-all');
+                    if(msg) msg.style.display='block';
+                    if(btn) {{ btn.innerText='✓ COPIADO'; btn.style.background='#0f8105'; }}
+                    setTimeout(()=>{{ 
+                        if(msg) msg.style.display='none'; 
+                        if(btn) {{ btn.innerText='📋 COPIAR TODO LO VISIBLE'; btn.style.background='#0A2342'; }}
+                    }},1500);
+                }});
+            }}
+            </script>
+            """
+            components.html(html_copy, height=800, scrolling=True)
 
 elif st.session_state.show_partidos:
     # MODO NORMAL (tu logica original intacta)
@@ -867,7 +892,32 @@ elif st.session_state.show_partidos:
             html += fmt_rapido(r.to_dict(), eq_refs_norm, curr_norm, curr_orig)
 
     if (modo_doble and (not df_eq1.empty or not df_eq2.empty)) or (not modo_doble and not df_mostrar.empty):
-        st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
+        if html:
+            html_copy2 = f"""
+            <div style="position:relative;">
+                <button id="btn-copy-all2" onclick="copyAllPartidos2()" style="position:sticky; top:0; z-index:9999; background:#0A2342; color:white; border:none; border-radius:6px; padding:12px 16px; font-weight:900; width:100%; cursor:pointer; margin-bottom:8px; font-size:14px;">📋 COPIAR TODO</button>
+                <span id="msg-copy-all2" style="display:none; position:sticky; top:50px; z-index:9999; background:#0f8105; color:white; padding:6px 12px; border-radius:4px; font-weight:900; width:100%; text-align:center;">✓ COPIADO AL PORTAPAPELES</span>
+                <div id="partidos-container2">{html}</div>
+            </div>
+            <script>
+            function copyAllPartidos2(){{
+                const cont = document.getElementById('partidos-container2');
+                if(!cont) return;
+                const text = cont.innerText || cont.textContent;
+                navigator.clipboard.writeText(text).then(()=>{{
+                    const msg = document.getElementById('msg-copy-all2');
+                    const btn = document.getElementById('btn-copy-all2');
+                    if(msg) msg.style.display='block';
+                    if(btn) {{ btn.innerText='✓ COPIADO'; btn.style.background='#0f8105'; }}
+                    setTimeout(()=>{{ 
+                        if(msg) msg.style.display='none'; 
+                        if(btn) {{ btn.innerText='📋 COPIAR TODO'; btn.style.background='#0A2342'; }}
+                    }},1500);
+                }});
+            }}
+            </script>
+            """
+            components.html(html_copy2, height=900, scrolling=True)
     else:
         st.info("Selecciona equipo")
 
