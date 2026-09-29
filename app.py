@@ -1088,7 +1088,14 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 else:
                     mins_html = "".join(mins_1t + mins_2t)
 
-                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}</span>"
+                if norm_eq == hn:
+                    estado = " GANA" if hg>ag else " EMPATE" if hg==ag else " PIERDE"
+                elif norm_eq == an:
+                    estado = " GANA" if ag>hg else " EMPATE" if ag==hg else " PIERDE"
+                else:
+                    estado = ""
+
+                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}<span style='color:#000;background:#eee;padding:0 3px;border-radius:2px;margin-left:4px'>{estado}</span></span>"
 
             # AQUI ESTA EL FIX DEL HUECO - line-height 1.15 y margin 2px
             st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
