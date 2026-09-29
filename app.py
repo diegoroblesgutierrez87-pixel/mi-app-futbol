@@ -433,11 +433,11 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             if ern == an and ag > hg: col = "#0f8105"
             if ern == hn and hg < ag: col = "#f31818"
             if ern == an and ag < hg: col = "#f31818"
-            if ern == hn and hg == ag: col = "#FFA500"
-            if ern == an and hg == ag: col = "#FFA500"
+            if ern == hn and hg == ag: col = "#8B4513"
+            if ern == an and hg == ag: col = "#8B4513"
     else:
         if hg == ag:
-            col = "#FFA500"
+            col = "#8B4513"
 
     mins_1t = []
     mins_2t = []
