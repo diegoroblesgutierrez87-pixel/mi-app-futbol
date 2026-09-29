@@ -1060,9 +1060,9 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 hn = normaliza(h); an = normaliza(a)
 
                 if norm_eq == hn:
-                    col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#FFA500"
+                    col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
                 elif norm_eq == an:
-                    col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#FFA500"
+                    col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                 else:
                     col_main = "#000"
 
