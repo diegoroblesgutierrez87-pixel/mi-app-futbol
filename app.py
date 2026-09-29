@@ -1067,7 +1067,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     col_main = "#000"
 
                 fid = str(r.get('fixture_id','')).split('.')[0]
-                mins_html = ""
+                mins_1t = []
+                mins_2t = []
                 for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
                     if 'Missed' in ev.get('tipo',''): continue
                     m = ev['m']
@@ -1077,7 +1078,15 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     es_mio = norm_eq in benef
                     col_min = col_main if es_mio else "#555"
                     peso = "font-weight:900;" if es_mio else "font-weight:400;"
-                    mins_html += f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                    span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                    if m <= 45:
+                        mins_1t.append(span)
+                    else:
+                        mins_2t.append(span)
+                if mins_1t and mins_2t:
+                    mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                else:
+                    mins_html = "".join(mins_1t + mins_2t)
 
                 html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}</span>"
 
