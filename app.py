@@ -956,7 +956,7 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
 
             st.markdown(f"<div style='font-family:monospace;font-size:11px;font-weight:900;margin:6px 0'>{len(fixtures_filtrados)} partidos | Seleccionados: {len(st.session_state.selected_moms)}</div>", unsafe_allow_html=True)
 
-            col_all1, col_all2, col_all3 = st.columns(3)
+            col_all1, col_all2, col_all3, col_all4 = st.columns(4)
             with col_all1:
                 if st.button("✅ Todo", key="sel_all_mom", use_container_width=True):
                     for fid,_,_,_,_,_,_ in fixtures_filtrados:
@@ -967,9 +967,11 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
                     st.session_state.selected_moms = set()
                     if 'big_copy_text' in st.session_state:
                         del st.session_state.big_copy_text
+                    if 'big_copy_text_wa' in st.session_state:
+                        del st.session_state.big_copy_text_wa
                     st.rerun()
             with col_all3:
-                if st.button(f"📋 COPIAR {len(st.session_state.selected_moms)}", type="primary", key="copy_sel_mom", use_container_width=True):
+                if st.button(f"📋 JSON {len(st.session_state.selected_moms)}", type="primary", key="copy_sel_mom", use_container_width=True):
                     combined = []
                     for fid, _, r0, h0, a0, comp0, recs_show in fixtures_filtrados:
                         if str(fid) not in st.session_state.selected_moms:
@@ -990,6 +992,18 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
                     if combined:
                         st.session_state.big_copy_text = "\n\n".join(combined)
                         st.rerun()
+
+            if 'big_copy_text_wa' in st.session_state and st.session_state.big_copy_text_wa:
+                txt_esc_wa = _html.escape(st.session_state.big_copy_text_wa)
+                html_big_wa = f"""
+                <div>
+                    <textarea id="big_txt_wa" style="width:100%;height:200px;font-family:monospace;font-size:11px;">{txt_esc_wa}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('big_txt_wa').value).then(()=>{{document.getElementById('msg_big_wa').innerText='✓ COPIADO WA '+document.getElementById('big_txt_wa').value.length+' chars';}})"
+                            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px;">📱 COPIAR FORMATO WHATSAPP ({len(st.session_state.big_copy_text_wa)} chars = {len(st.session_state.selected_moms)} partidos)</button>
+                    <div id="msg_big_wa" style="font-family:monospace;font-weight:900;color:#0f8105;margin-top:4px;">9 partidos por mensaje WA (4.096 limite) / 156 (65k)</div>
+                </div>
+                """
+                components.html(html_big_wa, height=280, scrolling=True)
 
             if 'big_copy_text' in st.session_state and st.session_state.big_copy_text:
                 txt_esc = _html.escape(st.session_state.big_copy_text)
