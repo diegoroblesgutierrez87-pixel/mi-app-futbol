@@ -967,15 +967,21 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
             cards = ""
             for fid, label, r0 in fixtures_filtrados:
                 recs_show = momentum_by_id.get(fid, [])
+                recs_show = sorted(recs_show, key=lambda x: int(x.get('minute',0)))
                 h0 = safe_str(r0.get('home')); a0 = safe_str(r0.get('away'))
+                comp0 = safe_str(r0.get('competition'))
+                vals = [round(float(x.get('momentumValue',0)),3) for x in recs_show]
                 json_out = {
-                    "fixture_id": fid,
+                    "match": f"{h0} vs {a0}",
+                    "id": str(fid),
                     "home": h0,
                     "away": a0,
-                    "competition": safe_str(r0.get('competition')),
-                    "entries": recs_show
+                    "competition": comp0,
+                    "legend": f"+ = {h0} (home) dominates, - = {a0} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}",
+                    "momentum": vals,
+                    "count": len(vals)
                 }
-                json_str = _json.dumps(json_out, indent=2, ensure_ascii=False)
+                json_str = _json.dumps(json_out, separators=(',',':'), ensure_ascii=False)
                 json_esc = _html.escape(json_str)
                 label_esc = _html.escape(label)
                 # id seguro para html
