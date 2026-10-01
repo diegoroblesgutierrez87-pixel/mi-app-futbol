@@ -972,12 +972,44 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
 
             st.markdown(f"<div style='font-family:monospace;font-size:11px;font-weight:900;margin:6px 0'>{len(fixtures_filtrados)} partidos | Seleccionados: {len(st.session_state.selected_moms)}</div>", unsafe_allow_html=True)
 
-            col_all1, col_all2, col_all3, col_all4 = st.columns(4)
+            col_all1, col_all2, col_all3 = st.columns(3)
             with col_all1:
                 if st.button("✅ Todo", key="sel_all_mom", use_container_width=True):
                     for fid,_,_,_,_,_,_ in fixtures_filtrados:
-                        st.session_state.selected_moms.add(str(fid))
+                        fid_s = str(fid)
+                        st.session_state.selected_moms.add(fid_s)
+                        st.session_state[f"chk_{fid_s}"] = True
                     st.rerun()
+            with col_all2:
+                if st.button("❌ Limpiar", key="clear_all_mom", use_container_width=True):
+                    st.session_state.selected_moms = set()
+                    for fid,_,_,_,_,_,_ in fixtures_filtrados:
+                        st.session_state[f"chk_{str(fid)}"] = False
+                    if 'big_copy_text' in st.session_state:
+                        del st.session_state.big_copy_text
+                    st.rerun()
+            with col_all3:
+                if st.button(f"📋 JSON {len(st.session_state.selected_moms)}", type="primary", key="copy_sel_mom", use_container_width=True):
+                    combined = []
+                    for fid, _, r0, h0, a0, comp0, recs_show in fixtures_filtrados:
+                        if str(fid) not in st.session_state.selected_moms:
+                            continue
+                        recs_show = sorted(recs_show, key=lambda x: int(x.get('minute',0)))
+                        vals = [round(float(x.get('momentumValue',0)),3) for x in recs_show]
+                        json_out = {
+                            "match": f"{h0} vs {a0}",
+                            "id": str(fid),
+                            "home": h0,
+                            "away": a0,
+                            "competition": comp0,
+                            "legend": f"+ = {h0} (home) dominates, - = {a0} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}",
+                            "momentum": vals,
+                            "count": len(vals)
+                        }
+                        combined.append(_json.dumps(json_out, separators=(',',':'), ensure_ascii=False))
+                    if combined:
+                        st.session_state.big_copy_text = "\n\n".join(combined)
+                        st.rerun()
             with col_all2:
                 if st.button("❌ Limpiar", key="clear_all_mom", use_container_width=True):
                     st.session_state.selected_moms = set()
