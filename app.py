@@ -914,27 +914,32 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
             comps_mom = sorted([safe_str(x) for x in df['League'].dropna().unique().tolist()]) if 'League' in df.columns else []
         c1_m, c2_m = st.columns(2)
         with c1_m:
-            comp_sel = st.selectbox("Competicion momentum", ["Todas"] + comps_mom, key="comp_mom_json")
+            comp_sels = st.multiselect("Competicion momentum", comps_mom, default=[], key="comp_mom_json", placeholder="Todas")
         equipos_mom_set = set()
         for rec in all_recs:
-            if comp_sel!= "Todas" and safe_str(rec.get('competition'))!= comp_sel:
+            if comp_sels and safe_str(rec.get('competition')) not in comp_sels:
                 continue
             h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
             if h: equipos_mom_set.add(h)
             if a: equipos_mom_set.add(a)
         equipos_mom = sorted([x for x in equipos_mom_set if x])
         with c2_m:
-            eq_sel_mom = st.selectbox("Equipo momentum", ["Todos"] + equipos_mom, key="eq_mom_json")
+            eq_sels_mom = st.multiselect("Equipo momentum", equipos_mom, default=[], key="eq_mom_json", placeholder="Todos")
 
         fixtures_filtrados = []
         for fid, recs in momentum_by_id.items():
             if not recs: continue
             r0 = recs[0]
-            if comp_sel!= "Todas" and safe_str(r0.get('competition'))!= comp_sel:
+            if comp_sels and safe_str(r0.get('competition')) not in comp_sels:
                 continue
             h = safe_str(r0.get('home')); a = safe_str(r0.get('away'))
-            if eq_sel_mom!= "Todos":
-                if eq_sel_mom not in (h, a) and normaliza_fuzzy(eq_sel_mom) not in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
+            if eq_sels_mom:
+                ok = False
+                for eq in eq_sels_mom:
+                    if eq in (h, a) or normaliza_fuzzy(eq) in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
+                        ok = True
+                        break
+                if not ok:
                     continue
             label = f"{h} VS {a} - {fid} - {safe_str(r0.get('competition'))}"
             fixtures_filtrados.append((fid, label, r0, h, a, safe_str(r0.get('competition')), recs))
