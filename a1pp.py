@@ -890,15 +890,6 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
 ##########################################
 with st.expander("momentum JSON - copiar para IA", expanded=False):
     st.markdown('<div id="mom-only"></div>', unsafe_allow_html=True)
-    st.markdown("""
-    <style>
-    div[data-testid="stExpander"]:has(#mom-only) div[data-testid="stSelectbox"] {margin-bottom:-18px!important; margin-top:-10px!important;}
-    div[data-testid="stExpander"]:has(#mom-only) label {font-size:8px!important; font-weight:800!important; margin-bottom:-2px!important; opacity:0.7;}
-    div[data-testid="stExpander"]:has(#mom-only) div[data-baseweb="select"] {min-height:26px!important; font-size:9px!important; line-height:1!important;}
-    div[data-testid="stExpander"]:has(#mom-only) hr {margin:3px 0!important;}
-    div[data-testid="stExpander"]:has(#mom-only) p {font-size:9px!important; line-height:1.0!important; margin:1px 0!important;}
-    </style>
-    """, unsafe_allow_html=True)
     try:
         import json as _json
         import html as _html
@@ -921,111 +912,149 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
         comps_mom = sorted(set([safe_str(r.get('competition')) for r in all_recs if safe_str(r.get('competition'))]))
         if not comps_mom:
             comps_mom = sorted([safe_str(x) for x in df['League'].dropna().unique().tolist()]) if 'League' in df.columns else []
-        comp_sel = st.selectbox("Competicion momentum", ["Todas"] + comps_mom, key="comp_mom_json")
+        c1_m, c2_m = st.columns(2)
+        with c1_m:
+            comp_sels = st.multiselect("Competicion momentum", comps_mom, default=[], key="comp_mom_json", placeholder="Todas")
+
+        # --- PRECACHE para no recalcular fuzzy 1000 veces ---
+        if 'fuzzy_cache' not in st.session_state:
+            st.session_state.fuzzy_cache = {}
+        def fast_fuzzy(s):
+            if s not in st.session_state.fuzzy_cache:
+                st.session_state.fuzzy_cache[s] = normaliza_fuzzy(s)
+            return st.session_state.fuzzy_cache[s]
 
         equipos_mom_set = set()
-        for rec in all_recs:
-            if comp_sel!= "Todas" and safe_str(rec.get('competition'))!= comp_sel:
-                continue
-            h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
-            if h: equipos_mom_set.add(h)
-            if a: equipos_mom_set.add(a)
-        equipos_mom = sorted([x for x in equipos_mom_set if x])
-        eq_sel_mom = st.selectbox("Equipo momentum", ["Todos"] + equipos_mom, key="eq_mom_json")
+        if not comp_sels:
+            for rec in all_recs:
+                h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
+                if h: equipos_mom_set.add(h)
+                if a: equipos_mom_set.add(a)
+        else:
+            comp_set = set(comp_sels)
+            for rec in all_recs:
+                if safe_str(rec.get('competition')) not in comp_set:
+                    continue
+                h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
+                if h: equipos_mom_set.add(h)
+                if a: equipos_mom_set.add(a)
+        equipos_mom = sorted(equipos_mom_set)
+        with c2_m:
+            eq_sels_mom = st.multiselect("Equipo momentum", equipos_mom, default=[], key="eq_mom_json", placeholder="Todos")
 
-        # --- NUEVO: lista instantanea en vez de selectbox Partido ---
+        # FILTRO ULTRA RAPIDO - sin to_datetime, sin fuzzy repetido
         fixtures_filtrados = []
+        eq_fuzzy_set = set(fast_fuzzy(x) for x in eq_sels_mom) if eq_sels_mom else set()
+        eq_raw_set = set(eq_sels_mom) if eq_sels_mom else set()
+        comp_set2 = set(comp_sels) if comp_sels else None
+
         for fid, recs in momentum_by_id.items():
             if not recs: continue
             r0 = recs[0]
-            if comp_sel!= "Todas" and safe_str(r0.get('competition'))!= comp_sel:
+            c0 = safe_str(r0.get('competition'))
+            if comp_set2 and c0 not in comp_set2:
                 continue
             h = safe_str(r0.get('home')); a = safe_str(r0.get('away'))
-            if eq_sel_mom!= "Todos":
-                if eq_sel_mom not in (h, a) and normaliza_fuzzy(eq_sel_mom) not in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
-                    continue
-            label = f"{h} VS {a} - {fid} - {safe_str(r0.get('competition'))}"
-            fixtures_filtrados.append((fid, label, r0))
+            if eq_raw_set:
+                if h not in eq_raw_set and a not in eq_raw_set:
+                    if fast_fuzzy(h) not in eq_fuzzy_set and fast_fuzzy(a) not in eq_fuzzy_set:
+                        continue
+            label = f"{h} VS {a} - {fid} - {c0}"
+            fixtures_filtrados.append((fid, label, r0, h, a, c0, recs))
 
-        # orden por fecha si tienes Date en df, si no por label (tu J5 J4...)
-        # intenta ordenar por Date del fixture si existe en df
-        try:
-            fecha_map = {str(int(float(fid))).split('.')[0]: pd.to_datetime(d, dayfirst=True, errors='coerce')
-                         for fid, d in zip(df['fixture_id'].astype(str), df['Date']) if pd.notna(fid)}
-            fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: fecha_map.get(str(x[0]).split('.')[0], pd.Timestamp.min), reverse=True)
-        except:
-            fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: x[1], reverse=True)
-
-        fixtures_filtrados = fixtures_filtrados[:150] # limite para no petar
+        fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: x[1], reverse=True)[:100]
 
         if not fixtures_filtrados:
             st.info("No hay momentum para ese filtro")
         else:
-            st.markdown(f"<div style='font-family:monospace;font-size:10px;font-weight:900;margin:8px 0'>{len(fixtures_filtrados)} partidos - clic para copiar</div>", unsafe_allow_html=True)
+            if 'selected_moms' not in st.session_state:
+                st.session_state.selected_moms = set()
 
-            # construye todas las tarjetas en un solo HTML para que el copy sea instantaneo
-            cards = ""
-            for fid, label, r0 in fixtures_filtrados:
-                recs_show = momentum_by_id.get(fid, [])
-                recs_show = sorted(recs_show, key=lambda x: int(x.get('minute',0)))
-                h0 = safe_str(r0.get('home')); a0 = safe_str(r0.get('away'))
-                comp0 = safe_str(r0.get('competition'))
-                vals = [round(float(x.get('momentumValue',0)),3) for x in recs_show]
-                json_out = {
-                    "match": f"{h0} vs {a0}",
-                    "id": str(fid),
-                    "home": h0,
-                    "away": a0,
-                    "competition": comp0,
-                    "legend": f"+ = {h0} (home) dominates, - = {a0} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}",
-                    "momentum": vals,
-                    "count": len(vals)
-                }
-                json_str = _json.dumps(json_out, separators=(',',':'), ensure_ascii=False)
-                json_esc = _html.escape(json_str)
-                label_esc = _html.escape(label)
-                # id seguro para html
-                fid_safe = re.sub(r'[^a-zA-Z0-9]', '_', str(fid))
-                cards += f"""
-                <div id="card_{fid_safe}" class="mom-card" onclick="copyCard('{fid_safe}')"
-                     style="border:1px solid #ddd; border-radius:6px; padding:6px 8px; margin:4px 0; cursor:pointer; font-family:monospace; font-size:11px; background:#fafafa; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        <b>{label_esc}</b><br>
-                        <span style="font-size:10px; color:#666;">{h0} VS {a0} - {len(recs_show)} pts</span>
-                    </div>
-                    <div style="margin-left:8px;">
-                        <span id="check_{fid_safe}" style="display:none; color:#0f8105; font-weight:900; font-size:12px;">✓ COPIADO</span>
-                        <span id="btn_{fid_safe}" style="background:#0A2342; color:white; padding:4px 8px; border-radius:4px; font-weight:900; font-size:10px;">COPIAR</span>
-                    </div>
-                    <textarea id="txt_{fid_safe}" style="position:absolute; left:-9999px; top:-9999px;">{json_esc}</textarea>
+            st.markdown(f"<div style='font-family:monospace;font-size:11px;font-weight:900;margin:6px 0'>{len(fixtures_filtrados)} partidos | Seleccionados: {len(st.session_state.selected_moms)}</div>", unsafe_allow_html=True)
+
+            col_all1, col_all2, col_all3, col_all4 = st.columns(4)
+            with col_all1:
+                if st.button("✅ Todo", key="sel_all_mom", use_container_width=True):
+                    for fid,_,_,_,_,_,_ in fixtures_filtrados:
+                        st.session_state.selected_moms.add(str(fid))
+                    st.rerun()
+            with col_all2:
+                if st.button("❌ Limpiar", key="clear_all_mom", use_container_width=True):
+                    st.session_state.selected_moms = set()
+                    if 'big_copy_text' in st.session_state:
+                        del st.session_state.big_copy_text
+                    if 'big_copy_text_wa' in st.session_state:
+                        del st.session_state.big_copy_text_wa
+                    st.rerun()
+            with col_all3:
+                if st.button(f"📋 JSON {len(st.session_state.selected_moms)}", type="primary", key="copy_sel_mom", use_container_width=True):
+                    combined = []
+                    for fid, _, r0, h0, a0, comp0, recs_show in fixtures_filtrados:
+                        if str(fid) not in st.session_state.selected_moms:
+                            continue
+                        recs_show = sorted(recs_show, key=lambda x: int(x.get('minute',0)))
+                        vals = [round(float(x.get('momentumValue',0)),3) for x in recs_show]
+                        json_out = {
+                            "match": f"{h0} vs {a0}",
+                            "id": str(fid),
+                            "home": h0,
+                            "away": a0,
+                            "competition": comp0,
+                            "legend": f"+ = {h0} (home) dominates, - = {a0} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}",
+                            "momentum": vals,
+                            "count": len(vals)
+                        }
+                        combined.append(_json.dumps(json_out, separators=(',',':'), ensure_ascii=False))
+                    if combined:
+                        st.session_state.big_copy_text = "\n\n".join(combined)
+                        st.rerun()
+
+            if 'big_copy_text_wa' in st.session_state and st.session_state.big_copy_text_wa:
+                txt_esc_wa = _html.escape(st.session_state.big_copy_text_wa)
+                html_big_wa = f"""
+                <div>
+                    <textarea id="big_txt_wa" style="width:100%;height:200px;font-family:monospace;font-size:11px;">{txt_esc_wa}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('big_txt_wa').value).then(()=>{{document.getElementById('msg_big_wa').innerText='✓ COPIADO WA '+document.getElementById('big_txt_wa').value.length+' chars';}})"
+                            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px;">📱 COPIAR FORMATO WHATSAPP ({len(st.session_state.big_copy_text_wa)} chars = {len(st.session_state.selected_moms)} partidos)</button>
+                    <div id="msg_big_wa" style="font-family:monospace;font-weight:900;color:#0f8105;margin-top:4px;">9 partidos por mensaje WA (4.096 limite) / 156 (65k)</div>
                 </div>
                 """
+                components.html(html_big_wa, height=280, scrolling=True)
 
-            html_final = f"""
-            <div style="max-height:500px; overflow-y:auto; padding-right:4px;">
-                {cards}
-            </div>
-            <script>
-            function copyCard(fid_safe){{
-                const txt = document.getElementById('txt_'+fid_safe);
-                if(!txt) return;
-                navigator.clipboard.writeText(txt.value).then(()=>{{
-                    const check = document.getElementById('check_'+fid_safe);
-                    const btn = document.getElementById('btn_'+fid_safe);
-                    const card = document.getElementById('card_'+fid_safe);
-                    if(check) check.style.display='inline';
-                    if(btn) btn.style.display='none';
-                    if(card) card.style.background='#e8f5e9';
-                    setTimeout(()=>{{
-                        if(check) check.style.display='none';
-                        if(btn) btn.style.display='inline';
-                        if(card) card.style.background='#fafafa';
-                    }},1200);
-                }});
-            }}
-            </script>
-            """
-            components.html(html_final, height=520, scrolling=True)
+            if 'big_copy_text' in st.session_state and st.session_state.big_copy_text:
+                txt_esc = _html.escape(st.session_state.big_copy_text)
+                html_big = f"""
+                <div>
+                    <textarea id="big_txt" style="width:100%;height:200px;font-family:monospace;font-size:11px;">{txt_esc}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('big_txt').value).then(()=>{{document.getElementById('msg_big').innerText='✓ COPIADO '+document.getElementById('big_txt').value.length+' chars';}})"
+                            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px;">📋 COPIAR TODO ({len(st.session_state.big_copy_text)} chars)</button>
+                    <div id="msg_big" style="font-family:monospace;font-weight:900;color:#0f8105;margin-top:4px;"></div>
+                </div>
+                """
+                components.html(html_big, height=280, scrolling=True)
+
+            st.markdown("---")
+            for fid, label, r0, h0, a0, comp0, recs_show in fixtures_filtrados:
+                fid_str = str(fid)
+                checked = fid_str in st.session_state.selected_moms
+                col_chk, col_lab, col_btn = st.columns([0.6, 3.5, 1])
+                with col_chk:
+                    new_val = st.checkbox("", value=checked, key=f"chk_{fid_str}")
+                    if new_val!= checked:
+                        if new_val:
+                            st.session_state.selected_moms.add(fid_str)
+                        else:
+                            st.session_state.selected_moms.discard(fid_str)
+                        st.rerun()
+                with col_lab:
+                    st.markdown(f"<div style='font-family:monospace;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'><b>{_html.escape(label)}</b><br><span style='font-size:10px;color:#666'>{h0} vs {a0} - {len(recs_show)} pts</span></div>", unsafe_allow_html=True)
+                with col_btn:
+                    recs_s = sorted(recs_show, key=lambda x: int(x.get('minute',0)))
+                    vals = [round(float(x.get('momentumValue',0)),3) for x in recs_s]
+                    json_out = {"match": f"{h0} vs {a0}","id": str(fid),"home": h0,"away": a0,"competition": comp0,"legend": f"+ = {h0} (home) dominates, - = {a0} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}","momentum": vals,"count": len(vals)}
+                    j_str = _json.dumps(json_out, separators=(',',':'), ensure_ascii=False)
+                    html_one = f"""<textarea id="txt_{fid_str}" style="position:absolute;left:-9999px">{_html.escape(j_str)}</textarea><button onclick="navigator.clipboard.writeText(document.getElementById('txt_{fid_str}').value).then(()=>{{let b=document.getElementById('btn_{fid_str}'); b.innerText='✓'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='COPIAR'; b.style.background='#0A2342';}},1000);}})" id="btn_{fid_str}" style="background:#0A2342;color:white;border:none;border-radius:4px;padding:4px 6px;font-weight:900;font-size:9px;cursor:pointer;width:100%">COPIAR</button>"""
+                    components.html(html_one, height=35, scrolling=False)
 
     except Exception as e:
         st.error(f"Error momentum JSON: {e}")
