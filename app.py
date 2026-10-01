@@ -915,43 +915,54 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
         c1_m, c2_m = st.columns(2)
         with c1_m:
             comp_sels = st.multiselect("Competicion momentum", comps_mom, default=[], key="comp_mom_json", placeholder="Todas")
+
+        # --- PRECACHE para no recalcular fuzzy 1000 veces ---
+        if 'fuzzy_cache' not in st.session_state:
+            st.session_state.fuzzy_cache = {}
+        def fast_fuzzy(s):
+            if s not in st.session_state.fuzzy_cache:
+                st.session_state.fuzzy_cache[s] = normaliza_fuzzy(s)
+            return st.session_state.fuzzy_cache[s]
+
         equipos_mom_set = set()
-        for rec in all_recs:
-            if comp_sels and safe_str(rec.get('competition')) not in comp_sels:
-                continue
-            h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
-            if h: equipos_mom_set.add(h)
-            if a: equipos_mom_set.add(a)
-        equipos_mom = sorted([x for x in equipos_mom_set if x])
+        if not comp_sels:
+            for rec in all_recs:
+                h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
+                if h: equipos_mom_set.add(h)
+                if a: equipos_mom_set.add(a)
+        else:
+            comp_set = set(comp_sels)
+            for rec in all_recs:
+                if safe_str(rec.get('competition')) not in comp_set:
+                    continue
+                h = safe_str(rec.get('home')); a = safe_str(rec.get('away'))
+                if h: equipos_mom_set.add(h)
+                if a: equipos_mom_set.add(a)
+        equipos_mom = sorted(equipos_mom_set)
         with c2_m:
             eq_sels_mom = st.multiselect("Equipo momentum", equipos_mom, default=[], key="eq_mom_json", placeholder="Todos")
 
+        # FILTRO ULTRA RAPIDO - sin to_datetime, sin fuzzy repetido
         fixtures_filtrados = []
+        eq_fuzzy_set = set(fast_fuzzy(x) for x in eq_sels_mom) if eq_sels_mom else set()
+        eq_raw_set = set(eq_sels_mom) if eq_sels_mom else set()
+        comp_set2 = set(comp_sels) if comp_sels else None
+
         for fid, recs in momentum_by_id.items():
             if not recs: continue
             r0 = recs[0]
-            if comp_sels and safe_str(r0.get('competition')) not in comp_sels:
+            c0 = safe_str(r0.get('competition'))
+            if comp_set2 and c0 not in comp_set2:
                 continue
             h = safe_str(r0.get('home')); a = safe_str(r0.get('away'))
-            if eq_sels_mom:
-                ok = False
-                for eq in eq_sels_mom:
-                    if eq in (h, a) or normaliza_fuzzy(eq) in (normaliza_fuzzy(h), normaliza_fuzzy(a)):
-                        ok = True
-                        break
-                if not ok:
-                    continue
-            label = f"{h} VS {a} - {fid} - {safe_str(r0.get('competition'))}"
-            fixtures_filtrados.append((fid, label, r0, h, a, safe_str(r0.get('competition')), recs))
+            if eq_raw_set:
+                if h not in eq_raw_set and a not in eq_raw_set:
+                    if fast_fuzzy(h) not in eq_fuzzy_set and fast_fuzzy(a) not in eq_fuzzy_set:
+                        continue
+            label = f"{h} VS {a} - {fid} - {c0}"
+            fixtures_filtrados.append((fid, label, r0, h, a, c0, recs))
 
-        try:
-            fecha_map = {str(int(float(fid))).split('.')[0]: pd.to_datetime(d, dayfirst=True, errors='coerce')
-                         for fid, d in zip(df['fixture_id'].astype(str), df['Date']) if pd.notna(fid)}
-            fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: fecha_map.get(str(x[0]).split('.')[0], pd.Timestamp.min), reverse=True)
-        except:
-            fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: x[1], reverse=True)
-
-        fixtures_filtrados = fixtures_filtrados[:150]
+        fixtures_filtrados = sorted(fixtures_filtrados, key=lambda x: x[1], reverse=True)[:100]
 
         if not fixtures_filtrados:
             st.info("No hay momentum para ese filtro")
