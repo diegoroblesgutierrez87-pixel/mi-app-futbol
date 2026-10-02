@@ -1097,6 +1097,22 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
     with c_eq_fix:
         equipos_fix_sel = st.multiselect("Equipos FIX", equipos_fix_lista, default=[], key="equipos_fix", placeholder="Elige 1 o mas")
 
+    c_min_fix1, c_min_fix2 = st.columns(2)
+    with c_min_fix1:
+        min_desde_fix_raw = st.text_input("MIN DESDE FIX", key="min_desde_fix", placeholder="-")
+    with c_min_fix2:
+        min_hasta_fix_raw = st.text_input("MIN HASTA FIX", key="min_hasta_fix", placeholder="-")
+
+    def _parse_min_fix(v):
+        try:
+            if v is None or str(v).strip() in ["", "-", "–", "—"]:
+                return None
+            return int(str(v).strip().replace("'", ""))
+        except:
+            return None
+    MIN_DESDE_FIX = _parse_min_fix(min_desde_fix_raw)
+    MIN_HASTA_FIX = _parse_min_fix(min_hasta_fix_raw)
+
     if not equipos_fix_sel:
         st.info("Selecciona al menos 1 liga y 1 equipo en FIX")
     else:
@@ -1112,6 +1128,19 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
                 html_lineas = ""
                 for _, r in d_j.iterrows():
+                    fid = str(r.get('fixture_id','')).split('.')[0]
+                    # FILTRO MIN FIX independiente - solo partidos con gol en ese tramo
+                    if MIN_DESDE_FIX is not None or MIN_HASTA_FIX is not None:
+                        _tiene = False
+                        for _ev in eventos.get(fid, []):
+                            if 'Missed' in _ev.get('tipo',''): continue
+                            _mm = _ev.get('m', -1)
+                            if MIN_DESDE_FIX is not None and _mm < MIN_DESDE_FIX: continue
+                            if MIN_HASTA_FIX is not None and _mm > MIN_HASTA_FIX: continue
+                            _tiene = True
+                            break
+                        if not _tiene:
+                            continue
                     h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
                     try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                     except: hg=0; ag=0
@@ -1119,9 +1148,10 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
                     elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                     else: col_main = "#000"
-                    fid = str(r.get('fixture_id','')).split('.')[0]
                     mins_1t = []; mins_2t = []
                     for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if MIN_DESDE_FIX is not None and ev.get('m',-1) < MIN_DESDE_FIX: continue
+                        if MIN_HASTA_FIX is not None and ev.get('m',-1) > MIN_HASTA_FIX: continue
                         if 'Missed' in ev.get('tipo',''): continue
                         m = ev['m']; team_ev = ev['team']; tipo = ev.get('tipo','')
                         benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
