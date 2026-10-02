@@ -379,6 +379,12 @@ with c_min1:
 with c_min2:
     min_hasta_raw = st.text_input("MIN HASTA", key="min_hasta", placeholder="-")
 
+c_res1, c_res2 = filtros.columns(2)
+with c_res1:
+    filtro_resultado = st.selectbox("RESULTADO", ["Todos","Gana","Empata","Pierde","GanaEmpata (1X)","GanaPierde (12)","PierdeEmpata (X2)"], key="filtro_resultado")
+with c_res2:
+    filtro_resultado_1t = st.selectbox("RESULTADO 1T", ["Todos","Gana","Empata","Pierde","GanaEmpata (1X)","GanaPierde (12)","PierdeEmpata (X2)"], key="filtro_resultado_1t")
+
 def parse_min(v):
     try:
         if v is None or str(v).strip() in ["", "-", "–", "—"]:
@@ -401,18 +407,92 @@ def filtrar_equipo(dframe, equipo, condicion):
         return dframe[dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq)]
     return dframe[(dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
 
+def aplicar_filtro_res(dframe, tipo_res, tipo_res_1t, eq_norm_list):
+    # eq_norm_list = lista de normalizados para evaluar G/E/P relativo al equipo
+    if dframe.empty:
+        return dframe
+    if tipo_res == "Todos" and tipo_res_1t == "Todos":
+        return dframe
+
+    def cumple(r):
+        try: hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
+        except: hg=0; ag=0
+        try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+        except: hthg=0; htag=0
+
+        # --- FILTRO FINAL ---
+        ok_final = True
+        if tipo_res != "Todos":
+            if not eq_norm_list: # sin equipo -> 1/X/2 puro
+                if tipo_res == "Gana": ok_final = hg > ag
+                elif tipo_res == "Empata": ok_final = hg == ag
+                elif tipo_res == "Pierde": ok_final = hg < ag
+                elif tipo_res == "GanaEmpata (1X)": ok_final = hg >= ag
+                elif tipo_res == "GanaPierde (12)": ok_final = hg != ag
+                elif tipo_res == "PierdeEmpata (X2)": ok_final = hg <= ag
+            else:
+                # con equipo: mira si ALGUNO de los equipos de referencia cumple
+                ok_final = False
+                for en in eq_norm_list:
+                    hn = normaliza(r.get('HomeTeam','')); an = normaliza(r.get('AwayTeam',''))
+                    if en == hn: gf, gc = hg, ag
+                    elif en == an: gf, gc = ag, hg
+                    else: continue
+                    if tipo_res == "Gana" and gf > gc: ok_final = True
+                    if tipo_res == "Empata" and gf == gc: ok_final = True
+                    if tipo_res == "Pierde" and gf < gc: ok_final = True
+                    if tipo_res == "GanaEmpata (1X)" and gf >= gc: ok_final = True
+                    if tipo_res == "GanaPierde (12)" and gf != gc: ok_final = True
+                    if tipo_res == "PierdeEmpata (X2)" and gf <= gc: ok_final = True
+                # si no coincide ningun equipo pero si hay filtro, no pasa
+                if not eq_norm_list:
+                    ok_final = False
+
+        # --- FILTRO 1T ---
+        ok_1t = True
+        if tipo_res_1t != "Todos":
+            if not eq_norm_list:
+                if tipo_res_1t == "Gana": ok_1t = hthg > htag
+                elif tipo_res_1t == "Empata": ok_1t = hthg == htag
+                elif tipo_res_1t == "Pierde": ok_1t = hthg < htag
+                elif tipo_res_1t == "GanaEmpata (1X)": ok_1t = hthg >= htag
+                elif tipo_res_1t == "GanaPierde (12)": ok_1t = hthg != htag
+                elif tipo_res_1t == "PierdeEmpata (X2)": ok_1t = hthg <= htag
+            else:
+                ok_1t = False
+                for en in eq_norm_list:
+                    hn = normaliza(r.get('HomeTeam','')); an = normaliza(r.get('AwayTeam',''))
+                    if en == hn: gf, gc = hthg, htag
+                    elif en == an: gf, gc = htag, hthg
+                    else: continue
+                    if tipo_res_1t == "Gana" and gf > gc: ok_1t = True
+                    if tipo_res_1t == "Empata" and gf == gc: ok_1t = True
+                    if tipo_res_1t == "Pierde" and gf < gc: ok_1t = True
+                    if tipo_res_1t == "GanaEmpata (1X)" and gf >= gc: ok_1t = True
+                    if tipo_res_1t == "GanaPierde (12)" and gf != gc: ok_1t = True
+                    if tipo_res_1t == "PierdeEmpata (X2)" and gf <= gc: ok_1t = True
+
+        return ok_final and ok_1t
+
+    return dframe[dframe.apply(lambda rr: cumple(rr.to_dict()), axis=1)]
+
 if eq1!= "Ninguno" and eq2!= "Ninguno":
     df_eq1 = filtrar_equipo(df_f, eq1, eq1_loc)
     df_eq2 = filtrar_equipo(df_f, eq2, eq2_loc)
+    # aplica resultado a cada bloque por separado
+    df_eq1 = aplicar_filtro_res(df_eq1, filtro_resultado, filtro_resultado_1t, [normaliza(eq1)])
+    df_eq2 = aplicar_filtro_res(df_eq2, filtro_resultado, filtro_resultado_1t, [normaliza(eq2)])
     modo_doble = True
 elif eq1!= "Ninguno":
     df_mostrar = filtrar_equipo(df_f, eq1, eq1_loc)
+    df_mostrar = aplicar_filtro_res(df_mostrar, filtro_resultado, filtro_resultado_1t, [normaliza(eq1)])
     modo_doble = False
 elif eq2!= "Ninguno":
     df_mostrar = filtrar_equipo(df_f, eq2, eq2_loc)
+    df_mostrar = aplicar_filtro_res(df_mostrar, filtro_resultado, filtro_resultado_1t, [normaliza(eq2)])
     modo_doble = False
 else:
-    df_mostrar = df_f
+    df_mostrar = aplicar_filtro_res(df_f, filtro_resultado, filtro_resultado_1t, [])
     modo_doble = False
 
 def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
