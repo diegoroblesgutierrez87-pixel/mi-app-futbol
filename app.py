@@ -1136,7 +1136,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     if gf > gc: return "G"
                     if gf == gc: return "E"
                     return "P"
-                
+
                 if norm_eq == hn:
                     r1 = res_eq(hthg, htag)
                     rF = res_eq(hg, ag)
@@ -1145,7 +1145,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     rF = res_eq(ag, hg)
                 else:
                     r1 = "E"; rF = "E"
-                
+
                 estado_1p_final = f"{r1}/{rF}"
 
                 html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
