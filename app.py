@@ -1063,92 +1063,129 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
     except Exception as e:
         st.error(f"Error momentum JSON: {e}")
 #########################################
-with st.expander("JORNADAS FIX - vista rapida", expanded=False):
+with st.expander("JORNADAS FIX 1 - vista rapida", expanded=False):
+    c_fix1_a, c_fix1_b = st.columns(2)
+    with c_fix1_a:
+        liga_fix1 = st.selectbox("Liga FIX 1", ["Todas"] + ligas, key="liga_fix1")
+    df_base_fix1 = df if liga_fix1 == "Todas" else df[df['League'] == liga_fix1]
+    # lista equipos deduplicada como la tuya
+    seen1 = {}
+    for t in pd.concat([df_base_fix1['HomeTeam'], df_base_fix1['AwayTeam']]).dropna().astype(str):
+        n = normaliza(t)
+        if n not in seen1:
+            seen1[n] = t.upper()
+    equipos_fix1 = sorted(seen1.values())
+    with c_fix1_b:
+        eq_fix1 = st.selectbox("Equipo FIX 1", ["Ninguno"] + equipos_fix1, key="eq_fix1")
 
-    lista_equipos = []
-    if 'modo_doble' in locals() and modo_doble:
-        if eq1!= "Ninguno": lista_equipos.append((eq1, df_eq1))
-        if eq2!= "Ninguno": lista_equipos.append((eq2, df_eq2))
+    if eq_fix1 == "Ninguno":
+        st.info("Selecciona equipo FIX 1")
     else:
-        if eq_refs_orig:
-            lista_equipos.append((eq_refs_orig[0], df_mostrar))
-        else:
-            st.info("Selecciona al menos 1 equipo")
-            lista_equipos = []
+        nombre_eq = eq_fix1
+        n_eq = normaliza(nombre_eq)
+        df_team = df_base_fix1[(df_base_fix1['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (df_base_fix1['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
+        if not df_team.empty:
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+            norm_eq = normaliza(nombre_eq)
+            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
+            for j in jornadas:
+                st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
+                d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
+                html_lineas = ""
+                for _, r in d_j.iterrows():
+                    h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
+                    try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
+                    except: hg=0; ag=0
+                    hn = normaliza(h); an = normaliza(a)
+                    if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
+                    elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
+                    else: col_main = "#000"
+                    fid = str(r.get('fixture_id','')).split('.')[0]
+                    mins_1t = []; mins_2t = []
+                    for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if 'Missed' in ev.get('tipo',''): continue
+                        m = ev['m']; team_ev = ev['team']; tipo = ev.get('tipo','')
+                        benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
+                        es_mio = norm_eq in benef
+                        col_min = col_main if es_mio else "#000"
+                        peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                        span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                        if m <= 45: mins_1t.append(span)
+                        else: mins_2t.append(span)
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    else: mins_html = "".join(mins_1t + mins_2t)
+                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+                    except: hthg=0; htag=0
+                    def res_eq(gf, gc):
+                        if gf > gc: return "G"
+                        if gf == gc: return "E"
+                        return "P"
+                    if norm_eq == hn: r1 = res_eq(hthg, htag); rF = res_eq(hg, ag)
+                    elif norm_eq == an: r1 = res_eq(htag, hthg); rF = res_eq(ag, hg)
+                    else: r1="E"; rF="E"
+                    estado_1p_final = f"{r1}/{rF}"
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
+                st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
 
-    for nombre_eq, df_team in lista_equipos:
-        if df_team.empty: continue
+with st.expander("JORNADAS FIX 2 - vista rapida", expanded=False):
+    c_fix2_a, c_fix2_b = st.columns(2)
+    with c_fix2_a:
+        liga_fix2 = st.selectbox("Liga FIX 2", ["Todas"] + ligas, key="liga_fix2")
+    df_base_fix2 = df if liga_fix2 == "Todas" else df[df['League'] == liga_fix2]
+    seen2 = {}
+    for t in pd.concat([df_base_fix2['HomeTeam'], df_base_fix2['AwayTeam']]).dropna().astype(str):
+        n = normaliza(t)
+        if n not in seen2:
+            seen2[n] = t.upper()
+    equipos_fix2 = sorted(seen2.values())
+    with c_fix2_b:
+        eq_fix2 = st.selectbox("Equipo FIX 2", ["Ninguno"] + equipos_fix2, key="eq_fix2")
 
-        # TITULO - mas pequeño y pegado
-        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
-
-        norm_eq = normaliza(nombre_eq)
-        jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
-
-        for j in jornadas:
-            st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
-            d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
-
-            html_lineas = ""
-            for _, r in d_j.iterrows():
-                h = str(r.get('HomeTeam','')).strip()
-                a = str(r.get('AwayTeam','')).strip()
-                try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
-                except: hg=0; ag=0
-
-                hn = normaliza(h); an = normaliza(a)
-
-                if norm_eq == hn:
-                    col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
-                elif norm_eq == an:
-                    col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
-                else:
-                    col_main = "#000"
-
-                fid = str(r.get('fixture_id','')).split('.')[0]
-                mins_1t = []
-                mins_2t = []
-                for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
-                    if 'Missed' in ev.get('tipo',''): continue
-                    m = ev['m']
-                    team_ev = ev['team']
-                    tipo = ev.get('tipo','')
-                    benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
-                    es_mio = norm_eq in benef
-                    col_min = col_main if es_mio else "#000"
-                    peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                    span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
-                    if m <= 45:
-                        mins_1t.append(span)
-                    else:
-                        mins_2t.append(span)
-                if mins_1t and mins_2t:
-                    mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                else:
-                    mins_html = "".join(mins_1t + mins_2t)
-
-                # 1P / FINAL del equipo seleccionado
-                try:
-                    hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
-                except:
-                    hthg = 0; htag = 0
-                def res_eq(gf, gc):
-                    if gf > gc: return "G"
-                    if gf == gc: return "E"
-                    return "P"
-
-                if norm_eq == hn:
-                    r1 = res_eq(hthg, htag)
-                    rF = res_eq(hg, ag)
-                elif norm_eq == an:
-                    r1 = res_eq(htag, hthg)
-                    rF = res_eq(ag, hg)
-                else:
-                    r1 = "E"; rF = "E"
-
-                estado_1p_final = f"{r1}/{rF}"
-
-                html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
-
-            # AQUI ESTA EL FIX DEL HUECO - line-height 1.15 y margin 2px
-            st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
+    if eq_fix2 == "Ninguno":
+        st.info("Selecciona equipo FIX 2")
+    else:
+        nombre_eq = eq_fix2
+        n_eq = normaliza(nombre_eq)
+        df_team = df_base_fix2[(df_base_fix2['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (df_base_fix2['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
+        if not df_team.empty:
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+            norm_eq = normaliza(nombre_eq)
+            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
+            for j in jornadas:
+                st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
+                d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
+                html_lineas = ""
+                for _, r in d_j.iterrows():
+                    h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
+                    try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
+                    except: hg=0; ag=0
+                    hn = normaliza(h); an = normaliza(a)
+                    if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
+                    elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
+                    else: col_main = "#000"
+                    fid = str(r.get('fixture_id','')).split('.')[0]
+                    mins_1t = []; mins_2t = []
+                    for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if 'Missed' in ev.get('tipo',''): continue
+                        m = ev['m']; team_ev = ev['team']; tipo = ev.get('tipo','')
+                        benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
+                        es_mio = norm_eq in benef
+                        col_min = col_main if es_mio else "#000"
+                        peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                        span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                        if m <= 45: mins_1t.append(span)
+                        else: mins_2t.append(span)
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    else: mins_html = "".join(mins_1t + mins_2t)
+                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+                    except: hthg=0; htag=0
+                    def res_eq(gf, gc):
+                        if gf > gc: return "G"
+                        if gf == gc: return "E"
+                        return "P"
+                    if norm_eq == hn: r1 = res_eq(hthg, htag); rF = res_eq(hg, ag)
+                    elif norm_eq == an: r1 = res_eq(htag, hthg); rF = res_eq(ag, hg)
+                    else: r1="E"; rF="E"
+                    estado_1p_final = f"{r1}/{rF}"
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h} {hg}-{ag} {a}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
+                st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
