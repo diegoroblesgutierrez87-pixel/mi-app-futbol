@@ -1112,20 +1112,6 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
                 html_lineas = ""
                 for _, r in d_j.iterrows():
-                    fid = str(r.get('fixture_id','')).split('.')[0]
-                    # --- FILTRO MIN FIX A NIVEL PARTIDO ---
-                    if MIN_DESDE_FIX is not None or MIN_HASTA_FIX is not None:
-                        tiene_en_rango = False
-                        for ev_check in eventos.get(fid, []):
-                            mm = ev_check.get('m', -1)
-                            if MIN_DESDE_FIX is not None and mm < MIN_DESDE_FIX: continue
-                            if MIN_HASTA_FIX is not None and mm > MIN_HASTA_FIX: continue
-                            if 'Missed' in ev_check.get('tipo',''): continue
-                            tiene_en_rango = True
-                            break
-                        if not tiene_en_rango:
-                            continue
-
                     h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
                     try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                     except: hg=0; ag=0
@@ -1133,11 +1119,9 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
                     elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                     else: col_main = "#000"
+                    fid = str(r.get('fixture_id','')).split('.')[0]
                     mins_1t = []; mins_2t = []
                     for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
-                        # filtro min fix en visualizacion
-                        if MIN_DESDE_FIX is not None and ev.get('m',-1) < MIN_DESDE_FIX: continue
-                        if MIN_HASTA_FIX is not None and ev.get('m',-1) > MIN_HASTA_FIX: continue
                         if 'Missed' in ev.get('tipo',''): continue
                         m = ev['m']; team_ev = ev['team']; tipo = ev.get('tipo','')
                         benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
