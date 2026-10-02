@@ -395,6 +395,14 @@ def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
     n_eq = normaliza(equipo)
+    # usa columna pre-calculada si existe
+    if 'HomeNorm' in dframe.columns:
+        if condicion == "Local":
+            return dframe[dframe['HomeNorm']==n_eq]
+        if condicion == "Visitante":
+            return dframe[dframe['AwayNorm']==n_eq]
+        return dframe[(dframe['HomeNorm']==n_eq) | (dframe['AwayNorm']==n_eq)]
+    # fallback por si es un df sin HomeNorm
     if condicion == "Local":
         return dframe[dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)]
     if condicion == "Visitante":
