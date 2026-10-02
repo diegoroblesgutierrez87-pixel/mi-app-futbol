@@ -365,7 +365,7 @@ with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"],
 # --- BUSCADOR POR % ---
 c6,c7,c8 = filtros.columns([2,1,1])
 with c6:
-    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5"], key="filtro_tipo")
+    filtro_tipo = st.selectbox("Filtro %", ["Ninguno","Ambos SI","Ambos NO","Over 2.5","Under 2.5","Corners Over 9.5","Corners Under 9.5","Amarillas Over 4.5","Amarillas Under 4.5","Tiros Puerta Over 8.5","Tiros Puerta Under 8.5","Tiros Totales Over 24.5","Tiros Totales Under 24.5","Faltas Over 24.5","Faltas Under 24.5","Gana","Pierde","Empata","GanaEmpata","GanaPierde","PierdeEmpata"], key="filtro_tipo")
 with c7:
     filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
 with c8:
@@ -689,7 +689,7 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
                 try: return float(r.get(k))
                 except: pass
         return None
-    def cumple(r):
+    def cumple(r, team_norm=None):
         try: hg = int(float(r.get('FTHG',0) or 0)); ag = int(float(r.get('FTAG',0) or 0))
         except: hg=0; ag=0
         hc = get_val(r, ['HC']) or 0; ac = get_val(r, ['AC']) or 0
@@ -721,6 +721,18 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
         if filtro_tipo == "Tiros Totales Under 24.5": return tot_s < 24.5 and tot_s>0
         if filtro_tipo == "Faltas Over 24.5": return tot_f > 24.5
         if filtro_tipo == "Faltas Under 24.5": return tot_f < 24.5 and tot_f>0
+        # --- NUEVOS: resultado relativo al equipo ---
+        if team_norm is not None:
+            hn = normaliza(r.get('HomeTeam','')); an = normaliza(r.get('AwayTeam',''))
+            if team_norm == hn: gf, gc = hg, ag
+            elif team_norm == an: gf, gc = ag, hg
+            else: return False
+            if filtro_tipo == "Gana": return gf > gc
+            if filtro_tipo == "Pierde": return gf < gc
+            if filtro_tipo == "Empata": return gf == gc
+            if filtro_tipo == "GanaEmpata": return gf >= gc
+            if filtro_tipo == "GanaPierde": return gf != gc
+            if filtro_tipo == "PierdeEmpata": return gf <= gc
         return False
 
     columnas = set(df_f.columns)
@@ -764,8 +776,9 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             if len(d_team_valid) < 1:
                 continue
             c_ok = 0
+            t_norm = normaliza(team)
             for _, rr in d_team_valid.iterrows():
-                if cumple(rr.to_dict()):
+                if cumple(rr.to_dict(), t_norm):
                     c_ok+=1
             pct = (c_ok / len(d_team_valid) * 100) if len(d_team_valid)>0 else 0
             if pct >= filtro_pct:
@@ -778,7 +791,7 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
     else:
         for team, loc_cond, pct, total, ok in calificados:
             d_team_full = filtrar_equipo(df_f, team, loc_cond)
-            d_team_cumple = d_team_full[d_team_full.apply(lambda rr: cumple(rr.to_dict()), axis=1)]
+            d_team_cumple = d_team_full[d_team_full.apply(lambda rr: cumple(rr.to_dict(), normaliza(team)), axis=1)]
             d_team_cumple = d_team_cumple.sort_values(['Jornada','Date'], ascending=[False, False]).head(20)
             try:
                 liga_team = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]['League'].mode().iloc[0]
