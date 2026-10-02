@@ -1122,7 +1122,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             if df_team.empty:
                 continue
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
-            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)
+            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)[:15]
             for j in jornadas:
                 st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
                 d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
