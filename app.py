@@ -1132,9 +1132,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
             jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)[:15]
             for j in jornadas:
+                st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
                 d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
-                if d_j.empty:
-                    continue
                 html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
@@ -1192,5 +1191,5 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     else:
                         h_txt = h
                         a_txt = a
-                    html_lineas += f"<div style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;line-height:1.1;margin-bottom:1px'>J{int(j)} {h_txt} {hg}-{ag} {a_txt} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:4px'>{estado_1p_final}</span></div><div style='font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;line-height:1.1;margin-bottom:7px;color:#000'>{mins_html if mins_html else '-'}</div>"
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
                 st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
