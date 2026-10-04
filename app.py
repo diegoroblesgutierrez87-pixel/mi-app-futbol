@@ -1085,19 +1085,23 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
         st.error(f"Error momentum JSON: {e}")
 #########################################
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
-    # --- PARCHE ANTI-REINICIO POR INACTIVIDAD ---
+    # --- PERSISTENCIA REAL 8 HORAS (URL) ---
     if "ligas_fix" not in st.session_state:
         st.session_state.ligas_fix = st.query_params.get_all("ligas_fix")
     if "equipos_fix" not in st.session_state:
         st.session_state.equipos_fix = st.query_params.get_all("equipos_fix")
+    if "min_desde_fix" not in st.session_state:
+        st.session_state.min_desde_fix = st.query_params.get("min_desde_fix", "")
+    if "min_hasta_fix" not in st.session_state:
+        st.session_state.min_hasta_fix = st.query_params.get("min_hasta_fix", "")
 
     if st.button("🧹 Limpiar FIX", key="btn_limpiar_fix", use_container_width=True):
-        st.session_state.ligas_fix = []
-        st.session_state.equipos_fix = []
-        st.session_state.min_desde_fix = ""
-        st.session_state.min_hasta_fix = ""
-        if "ligas_fix" in st.query_params:
-            del st.query_params["ligas_fix"]
+        for k in ["ligas_fix","equipos_fix","min_desde_fix","min_hasta_fix"]:
+            if k in st.session_state:
+                del st.session_state[k]
+        for k in ["ligas_fix","equipos_fix","min_desde_fix","min_hasta_fix"]:
+            if k in st.query_params:
+                del st.query_params[k]
         st.rerun()
 
     c_liga_fix, c_eq_fix = st.columns(2)
@@ -1119,7 +1123,10 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
     equipos_fix_lista = sorted(seen_fix.values())
 
     with c_eq_fix:
-        equipos_fix_sel = st.multiselect("Equipos FIX", equipos_fix_lista, default=[], key="equipos_fix", placeholder="Elige 1 o mas")
+        equipos_fix_sel = st.multiselect("Equipos FIX", equipos_fix_lista, default=st.session_state.equipos_fix, key="equipos_fix", placeholder="Elige 1 o mas")
+        st.query_params["equipos_fix"] = equipos_fix_sel
+        st.query_params["min_desde_fix"] = st.session_state.min_desde_fix
+        st.query_params["min_hasta_fix"] = st.session_state.min_hasta_fix
 
     c_min_fix1, c_min_fix2 = st.columns(2)
     with c_min_fix1:
@@ -1247,6 +1254,6 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             <button onclick="navigator.clipboard.writeText(document.getElementById('txt_fix').value).then(()=>{{let b=document.getElementById('btn_fix_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR FIX'; b.style.background='#0A2342'}},1200)}})"
             id="btn_fix_copy"
             style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
-            📋 COPIAR FIX
+             COPIAR FIX
             </button>
             """, height=55, scrolling=False)
