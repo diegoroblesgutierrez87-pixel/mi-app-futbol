@@ -1225,9 +1225,9 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
                 st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
 
-        # --- BOTON COPIAR FIX - SIN TEXTO DUPLICADO ---
+        # --- BOTON COPIAR FIX - SOLO BOTON ---
         if partidos_fix_copy:
-            import json as _js
+            import html as _html
             lineas_final = []
             for eq in equipos_fix_sel:
                 lineas_final.append(f"{eq}")
@@ -1240,12 +1240,13 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     last_j = j_part
                 lineas_final.append(resto.strip())
             texto_final = "\n".join(lineas_final)
-            txt_json = _js.dumps(texto_final)
+            safe_txt = _html.escape(texto_final)
             import streamlit.components.v1 as components
             components.html(f"""
-            <button onclick="navigator.clipboard.writeText({txt_json}).then(()=>{{let b=document.getElementById('btn_fix_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR FIX'; b.style.background='#0A2342'}},1200)}})"
+            <textarea id="txt_fix" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('txt_fix').value).then(()=>{{let b=document.getElementById('btn_fix_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR FIX'; b.style.background='#0A2342'}},1200)}})"
             id="btn_fix_copy"
             style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
-             COPIAR FIX ({len(lineas_final)} lineas)
+            📋 COPIAR FIX
             </button>
-            """, height=60, scrolling=False)
+            """, height=55, scrolling=False)
