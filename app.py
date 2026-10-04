@@ -1085,9 +1085,16 @@ with st.expander("momentum JSON - copiar para IA", expanded=False):
         st.error(f"Error momentum JSON: {e}")
 #########################################
 with st.expander("JORNADAS FIX - vista rapida", expanded=False):
+    # --- PARCHE ANTI-REINICIO POR INACTIVIDAD ---
+    if "ligas_fix" not in st.session_state:
+        st.session_state.ligas_fix = st.query_params.get_all("ligas_fix")
+    if "equipos_fix" not in st.session_state:
+        st.session_state.equipos_fix = st.query_params.get_all("equipos_fix")
+
     c_liga_fix, c_eq_fix = st.columns(2)
     with c_liga_fix:
-        ligas_fix_sel = st.multiselect("Ligas FIX", ligas, default=[], key="ligas_fix", placeholder="Todas")
+        ligas_fix_sel = st.multiselect("Ligas FIX", ligas, default=st.session_state.ligas_fix, key="ligas_fix", placeholder="Todas")
+        st.query_params["ligas_fix"] = ligas_fix_sel
     # base segun ligas seleccionadas
     if ligas_fix_sel:
         df_base_fix = df[df['League'].isin(ligas_fix_sel)]
