@@ -1137,6 +1137,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
     MIN_DESDE_FIX = _parse_min_fix(min_desde_fix_raw)
     MIN_HASTA_FIX = _parse_min_fix(min_hasta_fix_raw)
 
+    partidos_fix_copy = []
+
     if not equipos_fix_sel:
         st.info("Selecciona al menos 1 liga y 1 equipo en FIX")
     else:
@@ -1208,4 +1210,20 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                         h_txt = h
                         a_txt = a
                     html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
+                    # --- PARA COPIAR ---
+                    try:
+                        fecha_txt = str(r.get('Date',''))[:10]
+                        partidos_fix_copy.append(f"{h} {hg}-{ag} {a} | J{int(j)} | {fecha_txt} | MIN:{mins_html.replace('<span','').replace('</span>','')}")
+                    except:
+                        partidos_fix_copy.append(f"{h} {hg}-{ag} {a}")
+
                 st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
+
+        # --- BOTON COPIAR FIX ---
+        if partidos_fix_copy:
+            texto_copy = "\n".join(partidos_fix_copy)
+            # limpia tags html para que copie limpio
+            import re as re_copy
+            texto_copy_clean = re_copy.sub(r'<[^>]+>', '', texto_copy)
+            st.code(texto_copy_clean, language=None)
+            st.caption(f"📋 {len(partidos_fix_copy)} partidos filtrados - usa el botón copiar de arriba a la derecha del cuadro")
