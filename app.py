@@ -291,7 +291,7 @@ if df.empty:
 
 # --- UI ---
 if 'show_partidos' not in st.session_state:
-    st.session_state.show_partidos = True
+    st.session_state.show_partidos = False
 
 filtros = st.expander("FILTROS", expanded=True)
 with filtros:
