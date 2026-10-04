@@ -1210,20 +1210,35 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                         h_txt = h
                         a_txt = a
                     html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado_1p_final}</span></span>"
-                    # --- PARA COPIAR ---
-                    try:
-                        fecha_txt = str(r.get('Date',''))[:10]
-                        partidos_fix_copy.append(f"{h} {hg}-{ag} {a} | J{int(j)} | {fecha_txt} | MIN:{mins_html.replace('<span','').replace('</span>','')}")
-                    except:
-                        partidos_fix_copy.append(f"{h} {hg}-{ag} {a}")
+                    # --- PARA COPIAR LIMPIO SIN HTML ---
+                    m1 = []; m2 = []
+                    for evc in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if MIN_DESDE_FIX is not None and evc.get('m',-1) < MIN_DESDE_FIX: continue
+                        if MIN_HASTA_FIX is not None and evc.get('m',-1) > MIN_HASTA_FIX: continue
+                        if 'Missed' in evc.get('tipo',''): continue
+                        mm = evc.get('m',0)
+                        if mm <= 45: m1.append(f"{mm}'")
+                        else: m2.append(f"{mm}'")
+                    if m1 and m2: mins_txt = " ".join(m1) + "| " + " ".join(m2)
+                    else: mins_txt = " ".join(m1 + m2)
+                    partidos_fix_copy.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado_1p_final}")
 
                 st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
 
-        # --- BOTON COPIAR FIX ---
+        # --- BOTON COPIAR FIX LIMPIO ---
         if partidos_fix_copy:
-            texto_copy = "\n".join(partidos_fix_copy)
-            # limpia tags html para que copie limpio
-            import re as re_copy
-            texto_copy_clean = re_copy.sub(r'<[^>]+>', '', texto_copy)
-            st.code(texto_copy_clean, language=None)
-            st.caption(f"📋 {len(partidos_fix_copy)} partidos filtrados - usa el botón copiar de arriba a la derecha del cuadro")
+            # formatea como quieres: 1. FC HEIDENHEIM / J6 / partido
+            lineas_final = []
+            for eq in equipos_fix_sel:
+                lineas_final.append(f"{eq}")
+            last_j = ""
+            for item in partidos_fix_copy:
+                if "|" not in item: continue
+                j_part, resto = item.split("|",1)
+                if j_part != last_j:
+                    lineas_final.append(j_part)
+                    last_j = j_part
+                lineas_final.append(resto.strip())
+            texto_final = "\n".join(lineas_final)
+            st.code(texto_final, language=None)
+            st.caption(f"📋 {len(lineas_final)} lineas - boton copiar arriba a la derecha")
