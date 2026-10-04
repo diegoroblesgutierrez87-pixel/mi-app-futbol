@@ -1091,6 +1091,15 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
     if "equipos_fix" not in st.session_state:
         st.session_state.equipos_fix = st.query_params.get_all("equipos_fix")
 
+    if st.button("🧹 Limpiar FIX", key="btn_limpiar_fix", use_container_width=True):
+        st.session_state.ligas_fix = []
+        st.session_state.equipos_fix = []
+        st.session_state.min_desde_fix = ""
+        st.session_state.min_hasta_fix = ""
+        if "ligas_fix" in st.query_params:
+            del st.query_params["ligas_fix"]
+        st.rerun()
+
     c_liga_fix, c_eq_fix = st.columns(2)
     with c_liga_fix:
         ligas_fix_sel = st.multiselect("Ligas FIX", ligas, default=st.session_state.ligas_fix, key="ligas_fix", placeholder="Todas")
