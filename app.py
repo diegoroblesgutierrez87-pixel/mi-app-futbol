@@ -1265,14 +1265,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 ##########################################
 # BLOQUE INDEPENDIENTE V2 - MOMENTUM VS - CON LISTADO EQUIPOS
 ##########################################
-##########################################
-# BLOQUE V3 - MOMENTUM LIVE FLASH SCORE - SCRAPEA ONLINE PARA IA
-##########################################
-##########################################
-# BLOQUE V4 - MOMENTUM LIVE FIX ERROR 400
-##########################################
-##########################################
-# BLOQUE V6 - FINAL SIMPLE - PEGA URL Y GENERA
+## BLOQUE V6 - FINAL SIMPLE - PEGA URL Y GENERA - FIX URL NUEVA CON mid=
 ##########################################
 with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     import requests, re, json
@@ -1280,16 +1273,31 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
 
     def get_momentum_from_url(url):
-        # Saca ID largo tipo /partido/futbol/.../AbCdEfGh/
-        m = re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})/', url)
-        if not m:
-            return None, "Pega la URL completa del partido, no la de resultados. Ej: https://www.flashscore.es/partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/#/resumen"
-        eid = m.group(1)
+        url = url.strip()
+        eid = None
+        # 1. FORMATO NUEVO: ?mid=ML4DjdZa  -> este es el bueno
+        m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, re.I)
+        if m_mid:
+            eid = m_mid.group(1)
+        else:
+            # 2. FORMATO VIEJO: /partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/
+            m = re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})/', url)
+            if m:
+                eid = m.group(1)
+            else:
+                # 3. Fallback: ultimo segmento de 8 caracteres antes de /#/
+                m2 = re.search(r'/([A-Za-z0-9]{8,12})/#/resumen', url)
+                if m2:
+                    eid = m2.group(1)
+        
+        if not eid:
+            return None, "No encuentro el ID. Pega la URL completa con ?mid= . Ej: https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa"
+        
         try:
             api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
             r = requests.get(api, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/"}, timeout=12)
             if r.status_code!=200:
-                return None, f"Error {r.status_code} - el partido aun no empezo o Flashscore bloqueo"
+                return None, f"Error {r.status_code} - el partido aun no empezo o Flashscore bloqueo el IP de Streamlit. Usa el metodo F12 manual si da 400/408"
             data = r.json()
             entries = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
             if not entries:
@@ -1299,25 +1307,25 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
         except Exception as e:
             return None, str(e)
 
-    st.caption("Abre el partido en Flashscore y copia la URL de la barra")
-    url = st.text_input("URL Flashscore del partido", placeholder="https://www.flashscore.es/partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/...", key="v6_url")
+    st.caption("Abre el partido en Flashscore y copia la URL de la barra (con ?mid=)")
+    url = st.text_input("URL Flashscore del partido", placeholder="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa", key="v6_url")
 
     if st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True):
         if not url:
             st.error("Pega la URL")
         else:
-            with st.spinner("Sacando momentum..."):
+            with st.spinner(f"Sacando momentum... ID detectado: {url}"):
                 res, err = get_momentum_from_url(url)
                 if err:
                     st.error(err)
                 else:
                     vals = res["vals"]
                     eid = res["eid"]
-                    # Formato reducido para tu IA
                     m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
                     reducido = {"id":eid, "momentum":vals, "count":len(vals)}
                     txt_ia = f"|ID| {eid} |M| {m_txt}"
 
-                    st.success(f"OK - {len(vals)} minutos")
+                    st.success(f"OK - {eid} - {len(vals)} minutos")
                     st.code(json.dumps(reducido, separators=(',',':')), language="json")
                     st.code(txt_ia, language="text")
+                    st.button("📋 COPIAR JSON (usa Ctrl+C del cuadro)", key="dummy")
