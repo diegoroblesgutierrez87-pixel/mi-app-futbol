@@ -1343,11 +1343,19 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
     input_url = st.text_input("URL Flashscore LIVE", placeholder="https://www.flashscore.es/partido/futbol/real-sociedad-b-granada/...", key="live_v4_url")
     mid_manual = st.text_input("O pega solo MID (si falla, usa URL completa)", placeholder="126263 o el codigo largo", key="live_v4_mid")
 
+    @st.cache_data(show_spinner=False)
+    def get_equipos_v4():
+        try:
+            return sorted(set(df['HomeTeam'].dropna().astype(str).tolist() + df['AwayTeam'].dropna().astype(str).tolist()))
+        except:
+            return ["Real Sociedad B","Granada"]
+    todos_v4 = get_equipos_v4()
+
     c1,c2 = st.columns(2)
     with c1:
-        eq1 = st.text_input("Equipo 1 para nombre", value="Real Sociedad B", key="live_v4_eq1")
+        eq1 = st.selectbox("Equipo 1 para nombre", ["Ninguno"]+todos_v4, index=todos_v4.index("Real Sociedad B")+1 if "Real Sociedad B" in todos_v4 else 0, key="live_v4_eq1", placeholder="Escribe 1 letra y aparece lista...")
     with c2:
-        eq2 = st.text_input("Equipo 2 para nombre", value="Granada", key="live_v4_eq2")
+        eq2 = st.selectbox("Equipo 2 para nombre", ["Ninguno"]+todos_v4, index=todos_v4.index("Granada")+1 if "Granada" in todos_v4 else 0, key="live_v4_eq2", placeholder="Escribe 1 letra y aparece lista...")
 
     if st.button("⚡ SACAR MOMENTUM LIVE - FIX 400", key="btn_v4"):
         mid_to_use = extract_mid(input_url) or extract_mid(mid_manual)
@@ -1361,8 +1369,8 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
                     st.info("Tip: Abre el partido en Flashscore, copia la URL entera de la barra del navegador, no solo el numero del final.")
                 else:
                     vals=res['vals']
-                    home=eq1 or "Local"
-                    away=eq2 or "Visitante"
+                    home=eq1 if eq1!="Ninguno" else "Local"
+                    away=eq2 if eq2!="Ninguno" else "Visitante"
                     reducido={
                         "match": f"{home} vs {away}",
                         "id": res['eid'],
