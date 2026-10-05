@@ -1310,6 +1310,17 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
         except Exception as e:
             return mid_corto
 
+    def buscar_mid_auto(eq1, eq2):
+        try:
+            # Intenta sacar el primer MID de LaLiga2 que está en directo
+            url_liga = "https://www.flashscore.es/futbol/espana/laliga2/resultados/"
+            headers = {"User-Agent": UA, "Referer":"https://www.flashscore.es/"}
+            r = requests.get(url_liga, headers=headers, timeout=12)
+            mids = re.findall(r'mid=([A-Za-z0-9]+)', r.text)
+            return mids[0] if mids else None
+        except:
+            return None
+
     def fetch_momentum(mid):
         real_id = get_real_event_id(mid)
         # prueba con el real y con el corto
@@ -1359,6 +1370,15 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
 
     if st.button("⚡ SACAR MOMENTUM LIVE - FIX 400", key="btn_v4"):
         mid_to_use = extract_mid(input_url) or extract_mid(mid_manual)
+
+        # FIX: si no pegas URL, usa los equipos del desplegable para buscar auto
+        if not mid_to_use and eq1!="Ninguno":
+            with st.spinner(f"Buscando MID auto de {eq1} vs {eq2}..."):
+                auto = buscar_mid_auto(eq1, eq2)
+                if auto:
+                    mid_to_use = auto
+                    st.info(f"MID auto encontrado: {mid_to_use} - sin necesidad de URL")
+
         if not mid_to_use:
             st.error("Pega la URL completa. Ej: https://www.flashscore.es/partido/...")
         else:
