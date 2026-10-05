@@ -1260,31 +1260,3 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 
 
-####################################
-# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-## --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    import json as _js2, html as _html3, streamlit.components.v1 as components3
-    import matplotlib.pyplot as plt, io, base64
-
-    mid = st.text_input("MID", value="U6aWb5gM", key="mid_final")
-    jraw = st.text_area("Pega Response de pq_graphql (Ctrl+A)", height=130, key="jraw_final")
-    if st.button("GENERAR Y COPIAR", type="primary", use_container_width=True):
-        try:
-            data = _js2.loads(jraw)
-            ents = data['data']['findMatchMomentumStatsByMatchId']['momentum']['entries']
-            mom = [round(float(e['momentumValue']),3) for e in ents]
-            reduced = {"id":mid,"momentum":mom,"count":len(mom)}
-            jstr = _js2.dumps(reduced)
-            # grafico
-            fig, ax = plt.subplots(figsize=(5,1.2), dpi=110)
-            ax.bar(range(len(mom)), mom, color=['#e74c3c' if v>=0 else '#3498db' for v in mom])
-            ax.axhline(0,c='black',lw=.6); ax.set_xticks([])
-            buf=io.BytesIO(); plt.savefig(buf, format='png', bbox_inches='tight'); plt.close(fig)
-            b64=base64.b64encode(buf.getvalue()).decode()
-            st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
-            html_c=f"""<textarea style="width:100%;height:100px;font-family:monospace">{_html3.escape(jstr)}</textarea>
-            <button onclick="navigator.clipboard.writeText(`{_html3.escape(jstr)}`)" style="width:100%;background:#0A2342;color:white;padding:10px;border:none;border-radius:6px;font-weight:900">📋 COPIAR PARA IA</button>"""
-            components3.html(html_c, height=180)
-        except Exception as e:
-            st.error(f"Error: {e}")
