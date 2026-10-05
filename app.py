@@ -1268,122 +1268,113 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 ##########################################
 # BLOQUE V3 - MOMENTUM LIVE FLASH SCORE - SCRAPEA ONLINE PARA IA
 ##########################################
+##########################################
+# BLOQUE V4 - MOMENTUM LIVE FIX ERROR 400
+##########################################
 with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded=False):
-    st.caption("Pega URL de Flashscore de un partido EN DIRECTO y saca el momentum sin captura")
-
-    import requests, re, json, random
+    import requests, re, json, random, time
     from datetime import datetime
 
-    USER_AGENTS = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"]
+    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
 
-    LEAGUES_URL = {
-        "ES2_LaLiga_Hypermotion": "https://www.flashscore.es/futbol/espana/laliga2/resultados/",
-        "ES1_LaLiga": "https://www.flashscore.es/futbol/espana/laliga/resultados/",
-        "EN1_Premier": "https://www.flashscore.es/futbol/inglaterra/premier-league/resultados/",
-        "EN2_Championship": "https://www.flashscore.es/futbol/inglaterra/championship/resultados/",
-        "DE1_Bundesliga": "https://www.flashscore.es/futbol/alemania/bundesliga/resultados/",
-        "IT1_SerieA": "https://www.flashscore.es/futbol/italia/serie-a/resultados/",
-    }
-
-    def get_mid_from_input(s):
+    def extract_mid(s):
         s=s.strip()
         m=re.search(r"mid=([A-Za-z0-9]+)", s)
         if m: return m.group(1)
-        if re.match(r"^[A-Za-z0-9]{8,12}$", s): return s
+        s=s.strip()
+        if re.match(r"^[A-Za-z0-9]{6,12}$", s): return s
         return None
 
-    def fetch_momentum_live(mid):
-        url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7"
+    def get_real_event_id(mid_corto):
+        """Saca el eventId largo de la pagina del partido"""
         try:
-            headers={"User-Agent":random.choice(USER_AGENTS),"Referer":"https://www.flashscore.es/"}
-            r=requests.get(url, headers=headers, timeout=10)
-            if r.status_code!=200: return None, f"Error {r.status_code}"
-            data=r.json()
-            base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
-            entries=base.get("momentum",{}).get("entries",[]) or []
-            if not entries: return None, "Sin momentum aun (partido no empezado o sin datos)"
-            vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
-            # info equipos
-            home = base.get("homeTeam",{}).get("name","Local") if isinstance(base.get("homeTeam"),dict) else "Local"
-            away = base.get("awayTeam",{}).get("name","Visitante") if isinstance(base.get("awayTeam"),dict) else "Visitante"
-            # fallback del HTML del partido si no viene
-            return {"vals":vals, "home":home, "away":away, "raw":data}, None
+            url = f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}" if len(mid_corto)<15 else mid_corto if mid_corto.startswith("http") else f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}"
+            if not url.startswith("http"):
+                url = f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}"
+            headers = {"User-Agent": UA, "Referer":"https://www.flashscore.es/", "Accept-Language":"es-ES,es;q=0.9"}
+            r = requests.get(url, headers=headers, timeout=12)
+            html = r.text
+            # busca eventId real en el html
+            patterns = [
+                r'"eventId"\s*:\s*"([A-Za-z0-9]{8,12})"',
+                r'eventId=([A-Za-z0-9]{8,12})',
+                r'"id"\s*:\s*"([A-Z0-9]{8,12})".*?momentum',
+                r'pq_graphql\?_hash=mmts&eventId=([A-Za-z0-9]+)',
+                r'data-event-id="([A-Za-z0-9]+)"'
+            ]
+            for pat in patterns:
+                m=re.search(pat, html)
+                if m: return m.group(1)
+            # si no lo encuentra, devuelve el mismo (puede que ya sea el largo)
+            return mid_corto
         except Exception as e:
-            return None, str(e)
+            return mid_corto
 
-    c1,c2 = st.columns([2,1])
+    def fetch_momentum(mid):
+        real_id = get_real_event_id(mid)
+        # prueba con el real y con el corto
+        for eid in [real_id, mid]:
+            try:
+                url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
+                headers = {
+                    "User-Agent": UA,
+                    "Referer":"https://www.flashscore.es/",
+                    "Accept":"*/*",
+                    "Origin":"https://www.flashscore.es"
+                }
+                r = requests.get(url, headers=headers, timeout=12)
+                if r.status_code==400:
+                    continue # prueba con el otro id
+                if r.status_code!=200:
+                    continue
+                data=r.json()
+                base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
+                entries=base.get("momentum",{}).get("entries",[]) or []
+                if not entries:
+                    continue
+                vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
+                return {"vals":vals, "eid":eid, "raw":data}, None
+            except Exception as e:
+                continue
+        return None, f"Error 400 - No se pudo sacar momentum para {mid}. Prueba pegando la URL completa del partido en directo, no solo el numero. El partido debe estar empezado."
+
+    # --- UI ---
+    st.caption("Pega URL completa de Flashscore, no solo el numero")
+    input_url = st.text_input("URL Flashscore LIVE", placeholder="https://www.flashscore.es/partido/futbol/real-sociedad-b-granada/...", key="live_v4_url")
+    mid_manual = st.text_input("O pega solo MID (si falla, usa URL completa)", placeholder="126263 o el codigo largo", key="live_v4_mid")
+
+    c1,c2 = st.columns(2)
     with c1:
-        input_url = st.text_input("Pega URL Flashscore o MID", placeholder="https://www.flashscore.es/partido/futbol/... mid=xxx o solo el MID", key="live_mom_url")
+        eq1 = st.text_input("Equipo 1 para nombre", value="Real Sociedad B", key="live_v4_eq1")
     with c2:
-        liga_live = st.selectbox("Liga (opcional para nombre)", ["Auto"]+list(LEAGUES_URL.keys()), key="live_mom_liga")
+        eq2 = st.text_input("Equipo 2 para nombre", value="Granada", key="live_v4_eq2")
 
-    # Tambien busqueda por equipos si no tienes URL
-    c3,c4,c5 = st.columns(3)
-    with c3:
-        eq1_live = st.text_input("Equipo 1 (si no tienes URL)", key="live_eq1", placeholder="Granada")
-    with c4:
-        eq2_live = st.text_input("Equipo 2", key="live_eq2", placeholder="Real Sociedad B")
-    with c5:
-        st.markdown("<br>", unsafe_allow_html=True)
-        btn_buscar = st.button("🔍 Buscar MID en liga", key="btn_buscar_mid")
-
-    mid_a_usar = get_mid_from_input(input_url) if input_url else None
-
-    # Si no pega MID, intenta buscar en la pagina de resultados de esa liga
-    if btn_buscar and not mid_a_usar:
-        if liga_live=="Auto":
-            st.warning("Selecciona liga para buscar")
-        elif not eq1_live:
-            st.warning("Pon al menos Equipo 1")
+    if st.button("⚡ SACAR MOMENTUM LIVE - FIX 400", key="btn_v4"):
+        mid_to_use = extract_mid(input_url) or extract_mid(mid_manual)
+        if not mid_to_use:
+            st.error("Pega la URL completa. Ej: https://www.flashscore.es/partido/...")
         else:
-            with st.spinner(f"Buscando {eq1_live} vs {eq2_live} en {liga_live}..."):
-                try:
-                    url_liga=LEAGUES_URL[liga_live]
-                    headers={"User-Agent":random.choice(USER_AGENTS)}
-                    html=requests.get(url_liga, headers=headers, timeout=12).text
-                    # saca todos los mids
-                    mids=re.findall(r"mid=([A-Za-z0-9]+)", html)
-                    st.info(f"Encontrados {len(mids)} mids en la pagina, filtrando...")
-                    # No podemos saber equipos sin playwright, asi que muestra los 10 primeros mids para que pegue
-                    for mid in mids[:10]:
-                        st.code(f"{mid} - https://www.flashscore.es/partido/futbol/?mid={mid}")
-                except Exception as e:
-                    st.error(f"Error buscando: {e}")
-
-    if st.button("⚡ SACAR MOMENTUM LIVE", key="btn_sacar_live"):
-        if not mid_a_usar:
-            st.error("Pega primero la URL o el MID del partido en directo")
-        else:
-            with st.spinner(f"Bajando momentum de {mid_a_usar}..."):
-                res, err = fetch_momentum_live(mid_a_usar)
+            with st.spinner(f"Resolviendo ID real de {mid_to_use}..."):
+                res, err = fetch_momentum(mid_to_use)
                 if err:
                     st.error(err)
+                    st.info("Tip: Abre el partido en Flashscore, copia la URL entera de la barra del navegador, no solo el numero del final.")
                 else:
                     vals=res['vals']
-                    home=res['home']
-                    away=res['away']
-                    # si el usuario escribio nombres, usalos
-                    if eq1_live: home=eq1_live
-                    if eq2_live: away=eq2_live
-
+                    home=eq1 or "Local"
+                    away=eq2 or "Visitante"
                     reducido={
                         "match": f"{home} vs {away}",
-                        "id": mid_a_usar,
-                        "home": home,
-                        "away": away,
-                        "competition": liga_live,
-                        "legend": f"+={home} domina, -={away} domina, 0-100 min",
+                        "id": res['eid'],
+                        "home": home, "away": away,
+                        "competition": "LaLiga Hypermotion",
+                        "legend": f"+={home} domina, -={away} domina",
                         "momentum": vals,
-                        "count": len(vals),
-                        "timestamp": datetime.now().isoformat()
+                        "count": len(vals)
                     }
-
                     m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
-                    txt_ia = f"|MATCH| {home} vs {away} |COMP| {liga_live} |ID| {mid_a_usar} |M| {m_txt}"
+                    txt_ia = f"|MATCH| {home} vs {away} |ID| {res['eid']} |M| {m_txt}"
 
-                    st.success(f"{home} vs {away} - {len(vals)} minutos de momentum LIVE")
+                    st.success(f"LIVE OK - {len(vals)} minutos")
                     st.code(json.dumps(reducido, separators=(',',':'), ensure_ascii=False), language="json")
                     st.code(txt_ia, language="text")
-
-                    st.download_button("⬇️ JSON LIVE", json.dumps(reducido, ensure_ascii=False), f"live_{mid_a_usar}.json", key="dl_live_json")
-                    st.download_button("⬇️ TXT IA LIVE", txt_ia, f"live_{mid_a_usar}.txt", key="dl_live_txt")
