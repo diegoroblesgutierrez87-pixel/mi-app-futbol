@@ -1316,22 +1316,15 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
                     
                     j_str = json.dumps(reducido, separators=(',',':'))
                     j_esc = html.escape(j_str)
-                    t_esc = html.escape(txt_ia)
 
-                    st.success(f"OK - {eid} - {len(vals)} mins")
+                    st.success(f"OK - {eid} - {len(vals)} mins - Cordoba CF local")
 
                     copy_html = f"""
                     <div style="font-family:monospace">
-                        <div style="font-size:11px;color:#666;margin:6px 0">JSON REDUCIDO PARA IA ({len(j_str)} chars)</div>
-                        <textarea id="json_v6" style="width:100%;height:90px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{j_esc}</textarea>
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('json_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ JSON COPIADO'; setTimeout(()=>{{document.getElementById('msg_v6').innerText=''}},2000)}})" 
-                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR JSON</button>
-                        
-                        <div style="font-size:11px;color:#666;margin:12px 0 6px 0">TXT PARA IA</div>
-                        <textarea id="txt_v6" style="width:100%;height:70px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{t_esc}</textarea>
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ TXT COPIADO';}})" 
-                        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📱 COPIAR TXT</button>
+                        <textarea id="json_v6" style="width:100%;height:80px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{j_esc}</textarea>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('json_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ COPIADO - pegalo en tu IA'}})" 
+                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:6px">📋 COPIAR JSON PARA IA</button>
                         <div id="msg_v6" style="font-weight:900;color:#0f8105;text-align:center;margin-top:8px"></div>
                     </div>
                     """
-                    components.html(copy_html, height=300)
+                    components.html(copy_html, height=160)
