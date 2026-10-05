@@ -1350,3 +1350,79 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
+            
+            with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
+                import requests as _rq2, re as _re2, json as _js2, html as _hl2, time as _tm2
+                import streamlit.components.v1 as _comp2
+
+                UA2 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
+
+                def get_stats_from_url(url):
+                    url = url.strip()
+                    home = "local"
+                    away = "visitante"
+                    mt = _re2.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+                    if mt:
+                        def clean(s):
+                            s = _re2.sub(r'-[A-Za-z0-9]{6,8}$','',s)
+                            return s.replace('-',' ').title().strip()
+                        away = clean(mt.group(1))
+                        home = clean(mt.group(2))
+                    m_mid = _re2.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, _re2.I)
+                    if not m_mid:
+                        return None, "Sin ?mid="
+                    eid = m_mid.group(1)
+                    try:
+                        # intenta feed de stats directo de flashscore
+                        api = f"https://www.flashscore.es/x/feed/df_sui_1_{eid}_es_1"
+                        r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/"}, timeout=12)
+                        txt = r.text
+                        out = {"id":eid, "home":home, "away":away}
+                        # extrae pares tipo Posesion 60% 40%
+                        for line in txt.split("\n"):
+                            if "Poses" in line or "Tiros" in line or "Corners" in line or "Faltas" in line or "Amarillas" in line:
+                                out[line[:30]] = line.strip()
+                        if len(out) <= 3:
+                            out["raw_html"] = txt[:1500]
+                        return out, None
+                    except Exception as e:
+                        return None, str(e)
+
+                st.caption("2º URL = LOCAL - igual que momentum")
+                urls_s = []
+                for i in range(15):
+                    u = st.text_input(f"E{i+1}", value="", key=f"stat_url_{i}", placeholder=f"Stats {i+1} ?mid=")
+                    urls_s.append(u)
+
+                if st.button("📊 GENERAR 15 ESTADISTICAS", key="stat_btn15", use_container_width=True):
+                    todo_s = []
+                    for idx, url in enumerate(urls_s):
+                        if not url.strip():
+                            continue
+                        with st.spinner(f"E{idx+1}..."):
+                            res, err = get_stats_from_url(url)
+                            if err:
+                                st.error(f"E{idx+1} {err}")
+                            else:
+                                todo_s.append(res)
+                                j_str = _js2.dumps(res, separators=(',',':'), ensure_ascii=False)
+                                j_esc = _hl2.escape(j_str)
+                                st.success(f"E{idx+1} OK {res.get('home')} vs {res.get('away')}")
+                                c_html = f"""
+                                <div style="font-family:monospace">
+                                    <textarea id="stat_{idx}" style="width:100%;height:70px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:4px">{j_esc}</textarea>
+                                    <button onclick="navigator.clipboard.writeText(document.getElementById('stat_{idx}').value).then(()=>{{document.getElementById('smsg_{idx}').innerText='✅ E{idx+1} COPIADO'}})"
+                                    style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:8px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR STATS P{idx+1}</button>
+                                    <div id="smsg_{idx}" style="font-weight:900;color:#0f8105;text-align:center;font-size:11px"></div>
+                                </div>
+                                """
+                                _comp2.html(c_html, height=120)
+                    if todo_s:
+                        mega = _hl2.escape(_js2.dumps(todo_s, separators=(',',':'), ensure_ascii=False))
+                        mega_html2 = f"""
+                        <textarea id="mega_stat" style="width:100%;height:100px;font-size:10px;font-family:monospace;border:2px solid #0A2342;border-radius:6px;padding:6px">{mega}</textarea>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('mega_stat').value).then(()=>{{document.getElementById('mega_smsg').innerText='✅ MEGA STATS COPIADO'}})"
+                        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px">📋 COPIAR LOS {len(todo_s)} STATS JUNTOS</button>
+                        <div id="mega_smsg" style="font-weight:900;color:#0f8105;text-align:center"></div>
+                        """
+                        _comp2.html(mega_html2, height=170)
