@@ -1372,33 +1372,53 @@ with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
             return None, "Sin?mid="
         eid = m_mid.group(1)
         try:
-            import time as _tt2
+            import time as _tt2, json as _js_tmp
             out = {"id":eid, "home":home, "away":away}
-            # HASH SUI = STATS REAL - mismo que momentum
-            for _hash in ["sui","st"]:
-                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash={_hash}&eventId={eid}&providerId=7&_t={int(_tt2.time())}"
-                r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Cache-Control":"no-cache", "Pragma":"no-cache"}, timeout=12)
-                if r.status_code == 200:
-                    data = r.json()
-                    # 2 formatos posibles
-                    stats = data.get("data",{}).get("findMatchStatsByMatchId",{}).get("statistics",[]) or data.get("data",{}).get("findDetailedStatsByMatchId",{}).get("groups",[])
-                    if stats:
-                        # formato lista directa
-                        if isinstance(stats, list) and stats and "name" in stats[0]:
-                            for it in stats:
-                                nm = (it.get("name") or it.get("type") or "").strip()
-                                if nm:
-                                    out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue"), "home_pct": it.get("homeValue"), "away_pct": it.get("awayValue")}
-                        else:
-                            # formato groups
-                            for g in stats:
-                                for it in g.get("statistics",[]):
-                                    nm = (it.get("name") or "").strip()
-                                    if nm:
-                                        out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
-                        break
-            if len(out) <= 3:
-                return {"id":eid, "home":home, "away":away, "raw_len":0, "error":"Sin stats aun - partido no empezo"}, None
+            # 1) prueba graphql con varios hash y dominios
+            for domain in ["https://13.ds.lsapp.eu/pq_graphql","https://14.ds.lsapp.eu/pq_graphql"]:
+                for _hash in ["sui","st","sts","mc","fs"]:
+                    try:
+                        api = f"{domain}?_hash={_hash}&eventId={eid}&providerId=7&_t={int(_tt2.time())}"
+                        r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Cache-Control":"no-cache"}, timeout=8)
+                        if r.status_code==200:
+                            data = r.json()
+                            stats = data.get("data",{}).get("findMatchStatsByMatchId",{}).get("statistics",[]) or data.get("data",{}).get("findDetailedStatsByMatchId",{}).get("groups",[]) or data.get("data",{}).get("findMatchDetailedStatsByMatchId",{}).get("groups",[])
+                            if stats:
+                                if stats and isinstance(stats[0], dict) and "name" in stats[0]:
+                                    for it in stats:
+                                        nm = (it.get("name") or "").strip()
+                                        if nm:
+                                            out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
+                                else:
+                                    for g in stats:
+                                        for it in g.get("statistics",[]):
+                                            nm = (it.get("name") or "").strip()
+                                            if nm:
+                                                out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
+                                if len(out)>3:
+                                    break
+                    except:
+                        continue
+                if len(out)>3:
+                    break
+            # 2) si sigue vacio, intenta feed d_sui con firma movil (muchas veces da 200)
+            if len(out)<=3:
+                for fb in [f"https://d.flashscore.com/x/feed/df_sui_1_{eid}", f"https://46.ds.lsapp.eu/x/feed/df_sui_1_{eid}"]:
+                    try:
+                        r = _rq2.get(fb, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "X-Requested-With":"XMLHttpRequest"}, timeout=8)
+                        if r.status_code==200 and len(r.text)>100 and "401" not in r.text:
+                            txt = r.text
+                            # parsea rapido tipo {"stat":"Ball possession","homeValue":"62%","awayValue":"38%"}
+                            import re as _re_tmp
+                            for m in _re_tmp.finditer(r'"name":\s*"([^"]+)"[^}]*"homeValue":\s*"([^"]+)"[^}]*"awayValue":\s*"([^"]+)"', txt):
+                                out[m.group(1)] = {"home": m.group(2), "away": m.group(3)}
+                            if len(out)>3:
+                                break
+                    except:
+                        continue
+            if len(out)<=3:
+                out["error"] = "Sin stats oficiales aun - Flashscore no publica hasta descanso en este partido"
+                out["raw_len"] = 0
             return out, None
         except Exception as e:
             return None, str(e)
