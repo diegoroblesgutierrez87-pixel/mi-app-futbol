@@ -1280,8 +1280,8 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             def clean(s):
                 s = re.sub(r'-[A-Za-z0-9]{6,8}$','',s)
                 return s.replace('-',' ').title().strip()
-            home = clean(mt.group(1))
-            away = clean(mt.group(2))
+            away = clean(mt.group(1))
+            home = clean(mt.group(2))
         m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, re.I)
         if m_mid:
             eid = m_mid.group(1)
