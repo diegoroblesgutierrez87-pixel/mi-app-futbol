@@ -1271,154 +1271,53 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 ##########################################
 # BLOQUE V4 - MOMENTUM LIVE FIX ERROR 400
 ##########################################
-with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded=False):
-    import requests, re, json, random, time
-    from datetime import datetime
+##########################################
+# BLOQUE V6 - FINAL SIMPLE - PEGA URL Y GENERA
+##########################################
+with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
+    import requests, re, json
 
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
 
-    def extract_mid(s):
-        if not s: return None
-        s=str(s).strip()
-        # 1 - Si la URL viene tipo /partido/futbol/equipo1-equipo2/AbCdEfGh/ -> ese ultimo es el bueno
-        m=re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})(?:/|$|#)', s)
-        if m: return m.group(1)
-        # 2 - mid= param
-        m=re.search(r"mid=([A-Za-z0-9]+)", s)
-        if m: return m.group(1)
-        # 3 - solo codigo largo pegado
-        if re.match(r"^[A-Za-z0-9]{8,12}$", s): return s
-        return None
-
-    def get_real_event_id(mid_corto):
-        """Saca el eventId largo de la pagina del partido"""
+    def get_momentum_from_url(url):
+        # Saca ID largo tipo /partido/futbol/.../AbCdEfGh/
+        m = re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})/', url)
+        if not m:
+            return None, "Pega la URL completa del partido, no la de resultados. Ej: https://www.flashscore.es/partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/#/resumen"
+        eid = m.group(1)
         try:
-            url = f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}" if len(mid_corto)<15 else mid_corto if mid_corto.startswith("http") else f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}"
-            if not url.startswith("http"):
-                url = f"https://www.flashscore.es/partido/futbol/?mid={mid_corto}"
-            headers = {"User-Agent": UA, "Referer":"https://www.flashscore.es/", "Accept-Language":"es-ES,es;q=0.9"}
-            r = requests.get(url, headers=headers, timeout=12)
-            html = r.text
-            # busca eventId real en el html
-            patterns = [
-                r'"eventId"\s*:\s*"([A-Za-z0-9]{8,12})"',
-                r'eventId=([A-Za-z0-9]{8,12})',
-                r'"id"\s*:\s*"([A-Z0-9]{8,12})".*?momentum',
-                r'pq_graphql\?_hash=mmts&eventId=([A-Za-z0-9]+)',
-                r'data-event-id="([A-Za-z0-9]+)"'
-            ]
-            for pat in patterns:
-                m=re.search(pat, html)
-                if m: return m.group(1)
-            # si no lo encuentra, devuelve el mismo (puede que ya sea el largo)
-            return mid_corto
+            api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
+            r = requests.get(api, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/"}, timeout=12)
+            if r.status_code!=200:
+                return None, f"Error {r.status_code} - el partido aun no empezo o Flashscore bloqueo"
+            data = r.json()
+            entries = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
+            if not entries:
+                return None, "Sin momentum aun - el partido debe estar empezado"
+            vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
+            return {"eid":eid, "vals":vals}, None
         except Exception as e:
-            return mid_corto
+            return None, str(e)
 
-    def buscar_mid_auto(eq1, eq2):
-        try:
-            url_liga = "https://www.flashscore.es/futbol/espana/laliga2/resultados/"
-            headers = {"User-Agent": UA, "Referer":"https://www.flashscore.es/"}
-            r = requests.get(url_liga, headers=headers, timeout=12)
-            html = r.text.lower()
-            # saca todos los partidos tipo /partido/futbol/castellon-ad-ceuta-fc/ab12cd34/
-            partidos = re.findall(r'/partido/futbol/([^/]+)/([a-z0-9]{8,12})/', html)
-            if not partidos:
-                return None
-            # normaliza equipos buscados
-            n1 = eq1.lower().split()[0] if eq1 else ""
-            n2 = eq2.lower().split()[0] if eq2 else ""
-            # busca el que contenga los dos
-            for slug, eid in partidos:
-                if n1 in slug and (not n2 or n2 in slug):
-                    return eid
-            # si no encuentra exacto, devuelve el primero largo (no el corto 126263)
-            return partidos[0][1]
-        except Exception as e:
-            return None
+    st.caption("Abre el partido en Flashscore y copia la URL de la barra")
+    url = st.text_input("URL Flashscore del partido", placeholder="https://www.flashscore.es/partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/...", key="v6_url")
 
-    def fetch_momentum(mid):
-        real_id = get_real_event_id(mid)
-        # prueba con el real y con el corto
-        for eid in [real_id, mid]:
-            try:
-                url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
-                headers = {
-                    "User-Agent": UA,
-                    "Referer":"https://www.flashscore.es/",
-                    "Accept":"*/*",
-                    "Origin":"https://www.flashscore.es"
-                }
-                r = requests.get(url, headers=headers, timeout=12)
-                if r.status_code==400:
-                    continue # prueba con el otro id
-                if r.status_code!=200:
-                    continue
-                data=r.json()
-                base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
-                entries=base.get("momentum",{}).get("entries",[]) or []
-                if not entries:
-                    continue
-                vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
-                return {"vals":vals, "eid":eid, "raw":data}, None
-            except Exception as e:
-                continue
-        return None, f"Error 400 - No se pudo sacar momentum para {mid}. Prueba pegando la URL completa del partido en directo, no solo el numero. El partido debe estar empezado."
-
-    # --- UI ---
-    st.caption("Pega URL completa de Flashscore, no solo el numero")
-    input_url = st.text_input("URL Flashscore LIVE", placeholder="https://www.flashscore.es/partido/futbol/real-sociedad-b-granada/...", key="live_v4_url")
-    mid_manual = st.text_input("O pega solo MID (si falla, usa URL completa)", placeholder="126263 o el codigo largo", key="live_v4_mid")
-
-    @st.cache_data(show_spinner=False)
-    def get_equipos_v4():
-        try:
-            return sorted(set(df['HomeTeam'].dropna().astype(str).tolist() + df['AwayTeam'].dropna().astype(str).tolist()))
-        except:
-            return ["Real Sociedad B","Granada"]
-    todos_v4 = get_equipos_v4()
-
-    c1,c2 = st.columns(2)
-    with c1:
-        eq1 = st.selectbox("Equipo 1 para nombre", ["Ninguno"]+todos_v4, index=todos_v4.index("Real Sociedad B")+1 if "Real Sociedad B" in todos_v4 else 0, key="live_v4_eq1", placeholder="Escribe 1 letra y aparece lista...")
-    with c2:
-        eq2 = st.selectbox("Equipo 2 para nombre", ["Ninguno"]+todos_v4, index=todos_v4.index("Granada")+1 if "Granada" in todos_v4 else 0, key="live_v4_eq2", placeholder="Escribe 1 letra y aparece lista...")
-
-    if st.button("⚡ SACAR MOMENTUM LIVE - FIX 400", key="btn_v4"):
-        mid_to_use = extract_mid(input_url) or extract_mid(mid_manual)
-
-        # FIX: si no pegas URL, usa los equipos del desplegable para buscar auto
-        if not mid_to_use and eq1!="Ninguno":
-            with st.spinner(f"Buscando MID auto de {eq1} vs {eq2}..."):
-                auto = buscar_mid_auto(eq1, eq2)
-                if auto:
-                    mid_to_use = auto
-                    st.info(f"MID auto encontrado: {mid_to_use} - sin necesidad de URL")
-
-        if not mid_to_use:
-            st.error("Pega la URL completa. Ej: https://www.flashscore.es/partido/...")
+    if st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True):
+        if not url:
+            st.error("Pega la URL")
         else:
-            with st.spinner(f"Resolviendo ID real de {mid_to_use}..."):
-                res, err = fetch_momentum(mid_to_use)
+            with st.spinner("Sacando momentum..."):
+                res, err = get_momentum_from_url(url)
                 if err:
                     st.error(err)
-                    st.info("Tip: Abre el partido en Flashscore, copia la URL entera de la barra del navegador, no solo el numero del final.")
                 else:
-                    vals=res['vals']
-                    home=eq1 if eq1!="Ninguno" else "Local"
-                    away=eq2 if eq2!="Ninguno" else "Visitante"
-                    reducido={
-                        "match": f"{home} vs {away}",
-                        "id": res['eid'],
-                        "home": home, "away": away,
-                        "competition": "LaLiga Hypermotion",
-                        "legend": f"+={home} domina, -={away} domina",
-                        "momentum": vals,
-                        "count": len(vals)
-                    }
+                    vals = res["vals"]
+                    eid = res["eid"]
+                    # Formato reducido para tu IA
                     m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
-                    txt_ia = f"|MATCH| {home} vs {away} |ID| {res['eid']} |M| {m_txt}"
+                    reducido = {"id":eid, "momentum":vals, "count":len(vals)}
+                    txt_ia = f"|ID| {eid} |M| {m_txt}"
 
-                    st.success(f"LIVE OK - {len(vals)} minutos")
-                    st.code(json.dumps(reducido, separators=(',',':'), ensure_ascii=False), language="json")
+                    st.success(f"OK - {len(vals)} minutos")
+                    st.code(json.dumps(reducido, separators=(',',':')), language="json")
                     st.code(txt_ia, language="text")
