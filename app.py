@@ -1317,13 +1317,24 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
 
     def buscar_mid_auto(eq1, eq2):
         try:
-            # Intenta sacar el primer MID de LaLiga2 que está en directo
             url_liga = "https://www.flashscore.es/futbol/espana/laliga2/resultados/"
             headers = {"User-Agent": UA, "Referer":"https://www.flashscore.es/"}
             r = requests.get(url_liga, headers=headers, timeout=12)
-            mids = re.findall(r'mid=([A-Za-z0-9]+)', r.text)
-            return mids[0] if mids else None
-        except:
+            html = r.text.lower()
+            # saca todos los partidos tipo /partido/futbol/castellon-ad-ceuta-fc/ab12cd34/
+            partidos = re.findall(r'/partido/futbol/([^/]+)/([a-z0-9]{8,12})/', html)
+            if not partidos:
+                return None
+            # normaliza equipos buscados
+            n1 = eq1.lower().split()[0] if eq1 else ""
+            n2 = eq2.lower().split()[0] if eq2 else ""
+            # busca el que contenga los dos
+            for slug, eid in partidos:
+                if n1 in slug and (not n2 or n2 in slug):
+                    return eid
+            # si no encuentra exacto, devuelve el primero largo (no el corto 126263)
+            return partidos[0][1]
+        except Exception as e:
             return None
 
     def fetch_momentum(mid):
