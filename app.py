@@ -1312,7 +1312,14 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
         u = st.text_input(f"P{i+1}", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa" if i==0 else "", key=f"v6_url_{i}", placeholder=f"Partido {i+1} ?mid=")
         urls.append(u)
 
-    auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
+    c1, c2 = st.columns([3,1])
+    with c1:
+        auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
+    with c2:
+        if st.button("🧹 LIMPIAR", key="v6_clear", use_container_width=True):
+            for i in range(15):
+                st.session_state[f"v6_url_{i}"] = ""
+            st.rerun()
     btn = st.button("⚡ GENERAR 15 MOMENTUMS", key="v6_btn", use_container_width=True)
 
     if btn or auto:
@@ -1350,144 +1357,4 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-            
-with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
-    import requests as _rq2, re as _re2, json as _js2, html as _hl2
-    import streamlit.components.v1 as _comp2
-
-    UA2 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
-
-    def get_stats_from_url(url):
-        url = url.strip()
-        home = "local"
-        away = "visitante"
-        mt = _re2.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
-        if mt:
-            def clean(s):
-                s = _re2.sub(r'-[A-Za-z0-9]{6,8}$','',s)
-                return s.replace('-',' ').title().strip()
-            away = clean(mt.group(1))
-            home = clean(mt.group(2))
-        m_mid = _re2.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, _re2.I)
-        if not m_mid:
-            return None, "Sin?mid="
-        eid = m_mid.group(1)
-        try:
-            headers = {"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Accept-Language":"es-ES,es;q=0.9"}
-            fetch_url = url
-            if "/estadisticas/" not in url:
-                base = url.split("?")[0].rstrip("/")
-                fetch_url = base + "/resumen/estadisticas/general/"
-                if "?mid=" in url:
-                    fetch_url = url[url.find("?mid="):]
-                    fetch_url = base + "/resumen/estadisticas/general/" + fetch_url
-                else:
-                    fetch_url = base + "/resumen/estadisticas/general/?mid=" + eid
-            r = _rq2.get(fetch_url, headers=headers, timeout=12)
-            txt = r.text
-            out = {"id":eid, "home":home, "away":away}
-            clean_txt = _re2.sub(r'<[^>]+>', ' ', txt)
-            clean_txt = _re2.sub(r'\s+', ' ', clean_txt)
-            for pat, name in [
-                (r'([\d\.]+)\s*Goles esperados \(xG\)\s*([\d\.]+)', 'xG'),
-                (r'(\d+%)\s*Posesi[oó]n\s*(\d+%)', 'Posesion'),
-                (r'(\d+)\s*Remates totales\s*(\d+)', 'Remates_totales'),
-                (r'(\d+)\s*Remates a puerta\s*(\d+)', 'Remates_puerta'),
-                (r'(\d+)\s*C[oó]rneres\s*(\d+)', 'Corners'),
-                (r'(\d+)\s*Grandes ocasiones\s*(\d+)', 'Grandes_oc'),
-            ]:
-                m = _re2.search(pat, clean_txt, _re2.I)
-                if m:
-                    out[name] = {"home": m.group(1), "away": m.group(2)}
-            if len(out) <= 3:
-                out["error"] = "Sin stats en HTML"
-            return out, None
-        except Exception as e:
-            return None, str(e)
-            # 1) prueba graphql con varios hash y dominios
-            for domain in ["https://13.ds.lsapp.eu/pq_graphql","https://14.ds.lsapp.eu/pq_graphql"]:
-                for _hash in ["sui","st","sts","mc","fs"]:
-                    try:
-                        api = f"{domain}?_hash={_hash}&eventId={eid}&providerId=7&_t={int(_tt2.time())}"
-                        r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Cache-Control":"no-cache"}, timeout=8)
-                        if r.status_code==200:
-                            data = r.json()
-                            stats = data.get("data",{}).get("findMatchStatsByMatchId",{}).get("statistics",[]) or data.get("data",{}).get("findDetailedStatsByMatchId",{}).get("groups",[]) or data.get("data",{}).get("findMatchDetailedStatsByMatchId",{}).get("groups",[])
-                            if stats:
-                                if stats and isinstance(stats[0], dict) and "name" in stats[0]:
-                                    for it in stats:
-                                        nm = (it.get("name") or "").strip()
-                                        if nm:
-                                            out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
-                                else:
-                                    for g in stats:
-                                        for it in g.get("statistics",[]):
-                                            nm = (it.get("name") or "").strip()
-                                            if nm:
-                                                out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
-                                if len(out)>3:
-                                    break
-                    except:
-                        continue
-                if len(out)>3:
-                    break
-            # 2) si sigue vacio, intenta feed d_sui con firma movil (muchas veces da 200)
-            if len(out)<=3:
-                for fb in [f"https://d.flashscore.com/x/feed/df_sui_1_{eid}", f"https://46.ds.lsapp.eu/x/feed/df_sui_1_{eid}"]:
-                    try:
-                        r = _rq2.get(fb, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "X-Requested-With":"XMLHttpRequest"}, timeout=8)
-                        if r.status_code==200 and len(r.text)>100 and "401" not in r.text:
-                            txt = r.text
-                            # parsea rapido tipo {"stat":"Ball possession","homeValue":"62%","awayValue":"38%"}
-                            import re as _re_tmp
-                            for m in _re_tmp.finditer(r'"name":\s*"([^"]+)"[^}]*"homeValue":\s*"([^"]+)"[^}]*"awayValue":\s*"([^"]+)"', txt):
-                                out[m.group(1)] = {"home": m.group(2), "away": m.group(3)}
-                            if len(out)>3:
-                                break
-                    except:
-                        continue
-            if len(out)<=3:
-                out["error"] = "Sin stats oficiales aun - Flashscore no publica hasta descanso en este partido"
-                out["raw_len"] = 0
-            return out, None
-        except Exception as e:
-            return None, str(e)
-
-    st.caption("2º URL = LOCAL - igual que momentum")
-    urls_s = []
-    for i in range(15):
-        u = st.text_input(f"E{i+1}", value="", key=f"stat_url_{i}", placeholder=f"Stats {i+1} ?mid=")
-        urls_s.append(u)
-
-    if st.button("📊 GENERAR 15 ESTADISTICAS", key="stat_btn15", use_container_width=True):
-        todo_s = []
-        for idx, url in enumerate(urls_s):
-            if not url.strip():
-                continue
-            with st.spinner(f"E{idx+1}..."):
-                res, err = get_stats_from_url(url)
-                if err:
-                    st.error(f"E{idx+1} {err}")
-                else:
-                    todo_s.append(res)
-                    j_str = _js2.dumps(res, separators=(',',':'), ensure_ascii=False)
-                    j_esc = _hl2.escape(j_str)
-                    st.success(f"E{idx+1} OK {res.get('home')} vs {res.get('away')}")
-                    c_html = f"""
-                    <div style="font-family:monospace">
-                        <textarea id="stat_{idx}" style="width:100%;height:70px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:4px">{j_esc}</textarea>
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('stat_{idx}').value).then(()=>{{document.getElementById('smsg_{idx}').innerText='✅ E{idx+1} COPIADO'}})"
-                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:8px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR STATS P{idx+1}</button>
-                        <div id="smsg_{idx}" style="font-weight:900;color:#0f8105;text-align:center;font-size:11px"></div>
-                    </div>
-                    """
-                    _comp2.html(c_html, height=120)
-        if todo_s:
-            mega = _hl2.escape(_js2.dumps(todo_s, separators=(',',':'), ensure_ascii=False))
-            mega_html2 = f"""
-            <textarea id="mega_stat" style="width:100%;height:100px;font-size:10px;font-family:monospace;border:2px solid #0A2342;border-radius:6px;padding:6px">{mega}</textarea>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('mega_stat').value).then(()=>{{document.getElementById('mega_smsg').innerText='✅ MEGA STATS COPIADO'}})"
-            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px">📋 COPIAR LOS {len(todo_s)} STATS JUNTOS</button>
-            <div id="mega_smsg" style="font-weight:900;color:#0f8105;text-align:center"></div>
-            """
-            _comp2.html(mega_html2, height=170)
+ 
