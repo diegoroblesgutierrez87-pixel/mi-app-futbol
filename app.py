@@ -1262,10 +1262,13 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
 ####################################
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-## --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+## # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>v9 FIX - MID con valor por defecto U6aWb5gM para probar</div>", unsafe_allow_html=True)
-    import requests, json as _js2, re as _re2, html as _html3
+    st.markdown("""
+    <div style='font-family:monospace;font-size:11px;color:#666'>
+    v10 FINAL - Streamlit Cloud bloqueado (400). Usa JSON manual o Bookmarklet 1-click. Liga -> Equipos OK (22 Hypermotion).
+    </div>""", unsafe_allow_html=True)
+    import json as _js2, re as _re2, html as _html3
     import streamlit.components.v1 as components3, matplotlib.pyplot as plt, io, base64
 
     LEAGUES_MAP = {
@@ -1300,7 +1303,7 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         "Brasileirao Serie B - Brasil": ["Serie B Brasil", "BR2"],
     }
 
-    def _get_equipos_v9(nombre_display):
+    def _get_equipos_v10(nombre_display):
         try:
             if 'df' not in globals() or df.empty: return []
             keywords = LEAGUES_MAP.get(nombre_display, [nombre_display.split(" - ")[0]])
@@ -1309,8 +1312,7 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             for kw in keywords:
                 m = dff['League'].astype(str).str.upper().str.contains(kw.upper(), na=False)
                 mask_final = m if mask_final is None else (mask_final | m)
-            if mask_final is None or not mask_final.any():
-                return []
+            if mask_final is None or not mask_final.any(): return []
             dff = dff[mask_final]
             seen={}
             for t in pd.concat([dff['HomeTeam'], dff['AwayTeam']]).dropna().astype(str):
@@ -1319,19 +1321,18 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             return sorted(seen.values())
         except: return []
 
-    def _parse_mid_v9(s):
+    def _parse_mid_v10(s):
         if not s: return ""
-        s=str(s).strip()
-        m=_re2.search(r"mid=([A-Za-z0-9]{6,12})", s, _re2.I)
+        m=_re2.search(r"mid=([A-Za-z0-9]{6,12})", str(s), _re2.I)
         if m: return m.group(1)
-        clean=_re2.sub(r'[^A-Za-z0-9]', '', s)
+        clean=_re2.sub(r'[^A-Za-z0-9]', '', str(s).strip())
         return clean if 6<=len(clean)<=12 else ""
 
-    def _build_v9(data, home, away, comp, mid):
+    def _build_v10(data, home, away, comp, mid):
         base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
         entries=base.get("momentum",{}).get("entries",[]) or []
         mom_vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
-        if not mom_vals: return None, "Sin momentum en JSON (partido no empezado)", []
+        if not mom_vals: return None, "JSON sin momentum", []
         me=base.get("matchEvents",{}).get("entries",[]) or []
         goals=[{"minute": (ev.get("timeFrame",{}) or {}).get("elapsedMinute")} for ev in me if ev.get("type",{}).get("type","")=="goal"]
         reduced={"match": f"{home} vs {away}","id": str(mid),"home": home,"away": away,"competition": comp,
@@ -1340,80 +1341,71 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         txt_g=" ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
         return reduced, f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}", mom_vals
 
-    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=5, key="comp_v9")
-    equipos_lista = _get_equipos_v9(comp_sel)
+    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=5, key="comp_v10")
+    equipos_lista = _get_equipos_v10(comp_sel)
 
     c1,c2 = st.columns(2)
     if equipos_lista:
-        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v9")
+        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v10")
         with c2:
             away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
-            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v9")
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v10")
     else:
-        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v9", value="REAL SOCIEDAD II")
-        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v9", value="GRANADA CF")
+        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v10", value="REAL SOCIEDAD II")
+        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v10", value="GRANADA CF")
 
-    # VALOR POR DEFECTO YA PUESTO - asi no necesitas escribir para probar
-    url_input = st.text_input("Link con mid= o solo MID", key="url_v9", value="U6aWb5gM")
-    json_input = st.text_area("O pega JSON crudo", key="json_v9", height=70)
+    url_input = st.text_input("MID del partido (ej: U6aWb5gM)", key="url_v10", value="U6aWb5gM")
+    json_input = st.text_area("Pega JSON crudo de F12 > Network > pq_graphql > Response", key="json_v10", height=120, placeholder='{"data":{"findMatchMomentumStatsByMatchId":...}}')
 
-    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_v9"):
-        raw_mid = url_input.strip() or st.session_state.get("url_v9","").strip()
-        raw_json = json_input.strip() or st.session_state.get("json_v9","").strip()
-        mid_i = _parse_mid_v9(raw_mid) if not raw_json else (_parse_mid_v9(raw_mid) or "manual")
+    # BOOKMARKLET GENERADOR
+    bookmarklet_js = """javascript:(async()=>{const mid=location.href.match(/mid=([A-Za-z0-9]+)/)?.[1]||prompt('MID?');if(!mid)return;const r=await fetch(`https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId=${mid}&providerId=7`);const data=await r.json();const entries=data?.data?.findMatchMomentumStatsByMatchId?.momentum?.entries||[];const mom=entries.map(e=>+e.momentumValue.toFixed(3));const goals=(data?.data?.findMatchMomentumStatsByMatchId?.matchEvents?.entries||[]).filter(e=>e.type?.type==='goal').map(e=>e.timeFrame?.elapsedMinute);const home=document.querySelector('.duelParticipant__home.participant__participantName')?.innerText||'HOME';const away=document.querySelector('.duelParticipant__away.participant__participantName')?.innerText||'AWAY';const reduced={match:`${home} vs ${away}`,id:mid,home,away,momentum:mom,goals,count:mom.length};const txt=`|MATCH| ${home} vs ${away} |ID| ${mid} |M| `+mom.map((v,i)=>`${i}:${v>0?'+':''}${v.toFixed(2)}`).join(' ');await navigator.clipboard.writeText(JSON.stringify(reduced));prompt('JSON REDUCIDO COPIADO - pegalo en tu app o IA:', JSON.stringify(reduced));})();"""
 
-        st.write(f"DEBUG raw_mid: '{raw_mid}' -> parsed: '{mid_i}' | json len: {len(raw_json)} | equipos: {len(equipos_lista)}")
+    st.markdown("**Solución al bloqueo 400:** Crea un marcador en tu navegador con este código:")
+    st.code(bookmarklet_js, language="javascript")
+    st.caption("1. Abre cualquier partido en flashscore.es 2. Click en el marcador 3. Te copia el JSON reducido automaticamente")
 
-        data_i=None
-        if raw_json:
-            try: data_i=_js2.loads(raw_json)
-            except Exception as e: st.error(f"JSON invalido {e}")
+    if st.button("GENERAR DESDE JSON PEGADO", type="primary", use_container_width=True, key="btn_v10"):
+        raw_mid = _parse_mid_v10(url_input) or "manual"
+        raw_json = json_input.strip()
 
-        if not data_i:
-            if not mid_i:
-                st.warning("⚠ Borra el campo y escribe de nuevo U6aWb5gM y dale Enter")
-                st.stop()
-            api=f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
-            st.write(f"DEBUG fetching {api}")
+        if not raw_json:
+            st.warning("Pega el JSON crudo de la pestaña Network. El fetch directo desde Streamlit da 400 (bloqueado).")
+            st.stop()
+
+        try:
+            data_i=_js2.loads(raw_json)
+        except Exception as e:
+            st.error(f"JSON invalido: {e}")
+            st.stop()
+
+        hf=(home_sel or "Local").strip()
+        af=(away_sel or "Visitante").strip()
+        reduced_i, txt_ia_i, mom_vals_i = _build_v10(data_i, hf, af, comp_sel, raw_mid)
+
+        if reduced_i:
+            st.success(f"OK {hf} vs {af} | {comp_sel} | {len(mom_vals_i)} mins")
             try:
-                r=requests.get(api, headers={"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}, timeout=15)
-                st.write(f"DEBUG status {r.status_code} len {len(r.text)}")
-                if r.status_code==200:
-                    data_i=r.json()
-                else:
-                    st.error(f"HTTP {r.status_code} bloqueado")
-                    st.info("Abre el partido > F12 > Network > filtra pq_graphql > copia Response y pegalo en JSON crudo")
-                    st.code(r.text[:500])
-            except Exception as e:
-                st.error(f"Fetch error {e}")
+                fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
+                cols=['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
+                ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
+                ax.axhline(0,color='black',linewidth=0.6)
+                ax.set_xticks([])
+                ax.set_title(f"{hf} vs {af} - {comp_sel}", fontsize=8, fontweight='bold')
+                fig.tight_layout(pad=0.2)
+                buf=io.BytesIO(); plt.savefig(buf, format='png', bbox_inches='tight'); plt.close(fig); buf.seek(0)
+                b64=base64.b64encode(buf.read()).decode()
+                st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
+            except: pass
 
-        if data_i:
-            hf=(home_sel or "Local").strip()
-            af=(away_sel or "Visitante").strip()
-            reduced_i, txt_ia_i, mom_vals_i = _build_v9(data_i, hf, af, comp_sel, mid_i or "manual")
-            if reduced_i:
-                st.success(f"OK {hf} vs {af} | {len(mom_vals_i)} pts | {comp_sel}")
-                try:
-                    fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
-                    cols=['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
-                    ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
-                    ax.axhline(0,color='black',linewidth=0.6)
-                    ax.set_xticks([])
-                    ax.set_title(f"{hf} vs {af} - {comp_sel}", fontsize=8, fontweight='bold')
-                    fig.tight_layout(pad=0.2)
-                    buf=io.BytesIO(); plt.savefig(buf, format='png', bbox_inches='tight'); plt.close(fig); buf.seek(0)
-                    b64=base64.b64encode(buf.read()).decode()
-                    st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
-                except: pass
-                j_str=_js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
-                html_c=f"""<div>
-                <textarea id="v9_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('v9_json').value).then(()=>{{document.getElementById('msg_v9').innerText='✓ COPIADO {len(j_str)}';}})"
-                style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-                <div id="msg_v9" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                <textarea id="v9_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('v9_txt').value).then(()=>{{document.getElementById('msg_v9t').innerText='✓ TXT COPIADO';}})"
-                style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-                <div id="msg_v9t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                </div>"""
-                components3.html(html_c, height=360, scrolling=True)
+            j_str=_js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
+            html_c=f"""<div>
+            <textarea id="v10_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('v10_json').value).then(()=>{{document.getElementById('msg_v10').innerText='✓ JSON COPIADO {len(j_str)}';}})"
+            style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
+            <div id="msg_v10" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+            <textarea id="v10_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('v10_txt').value).then(()=>{{document.getElementById('msg_v10t').innerText='✓ TXT COPIADO';}})"
+            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
+            <div id="msg_v10t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+            </div>"""
+            components3.html(html_c, height=360, scrolling=True)
