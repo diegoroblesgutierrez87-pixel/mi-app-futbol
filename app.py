@@ -1278,11 +1278,16 @@ with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
 
     def extract_mid(s):
-        s=s.strip()
+        if not s: return None
+        s=str(s).strip()
+        # 1 - Si la URL viene tipo /partido/futbol/equipo1-equipo2/AbCdEfGh/ -> ese ultimo es el bueno
+        m=re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})(?:/|$|#)', s)
+        if m: return m.group(1)
+        # 2 - mid= param
         m=re.search(r"mid=([A-Za-z0-9]+)", s)
         if m: return m.group(1)
-        s=s.strip()
-        if re.match(r"^[A-Za-z0-9]{6,12}$", s): return s
+        # 3 - solo codigo largo pegado
+        if re.match(r"^[A-Za-z0-9]{8,12}$", s): return s
         return None
 
     def get_real_event_id(mid_corto):
