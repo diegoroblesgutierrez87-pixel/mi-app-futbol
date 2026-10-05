@@ -1264,7 +1264,7 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>Liga y equipos en desplegable. Elige y pega mid= para generar JSON reducido IA.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>Desplegable 29 ligas + equipos. Si el directo falla por bloqueo, pega el JSON crudo de la consola del navegador.</div>", unsafe_allow_html=True)
     import requests, json as _js2, random, re as _re2
     import html as _html3
     import streamlit.components.v1 as components3
@@ -1272,47 +1272,21 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
     import io, base64
 
     LEAGUES_29 = [
-        "Bundesliga - Alemania",
-        "2. Bundesliga - Alemania",
-        "Bundesliga Austria",
-        "Jupiler Pro League - Belgica",
-        "Superliga Dinamarca",
-        "LaLiga EA Sports - España",
-        "LaLiga Hypermotion - España",
-        "Ligue 1 Francia",
-        "Ligue 2 Francia",
-        "Super League Grecia",
-        "NB I Hungria",
-        "Premier League - Inglaterra",
-        "Championship Inglaterra",
-        "Serie A Italia",
-        "Serie B Italia",
-        "J1 League Japon",
-        "Eliteserien Noruega",
-        "Eredivisie - Paises Bajos",
-        "Ekstraklasa Polonia",
-        "Liga Portugal",
-        "Liga 1 Rumania",
-        "Allsvenskan Suecia",
-        "Super League Suiza",
-        "Super Lig Turquia",
-        "1. Lig Turquia",
-        "Champions League",
-        "Europa League",
-        "Brasileirao Serie A - Brasil",
-        "Brasileirao Serie B - Brasil",
+        "Bundesliga - Alemania","2. Bundesliga - Alemania","Bundesliga Austria","Jupiler Pro League - Belgica",
+        "Superliga Dinamarca","LaLiga EA Sports - España","LaLiga Hypermotion - España","Ligue 1 Francia",
+        "Ligue 2 Francia","Super League Grecia","NB I Hungria","Premier League - Inglaterra","Championship Inglaterra",
+        "Serie A Italia","Serie B Italia","J1 League Japon","Eliteserien Noruega","Eredivisie - Paises Bajos",
+        "Ekstraklasa Polonia","Liga Portugal","Liga 1 Rumania","Allsvenskan Suecia","Super League Suiza",
+        "Super Lig Turquia","1. Lig Turquia","Champions League","Europa League",
+        "Brasileirao Serie A - Brasil","Brasileirao Serie B - Brasil",
     ]
 
-    # --- EQUIPOS DESDE TU DF EXISTENTE ---
-    def _get_equipos_por_liga(nombre_liga_sel):
+    def _get_equipos_por_liga_v3(nombre_liga_sel):
         try:
             if 'df' not in globals() or df.empty:
                 return []
-            # intenta filtrar por contenido de League
             dff = df.copy()
-            # mapea nombre corto
-            key = nombre_liga_sel.split(" - ")[0].split(" ")[0].upper() # BUNDESLIGA, LALIGA, etc
-            # busca ligas que contengan esa palabra
+            key = nombre_liga_sel.split(" - ")[0].split(" ")[0].upper()
             mask = dff['League'].astype(str).str.upper().str.contains(key, na=False)
             if mask.any():
                 dff = dff[mask]
@@ -1322,7 +1296,8 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 if n not in seen:
                     seen[n] = t.strip()
             return sorted(seen.values())
-        except:
+        except Exception as e:
+            st.write(f"DEBUG equipos error: {e}")
             return []
 
     def _build_reducido_ind(data, home, away, comp, mid):
@@ -1336,13 +1311,15 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 if ev.get("type",{}).get("type","")=="goal":
                     tf = ev.get("timeFrame",{}) or {}
                     goals.append({"minute": tf.get("elapsedMinute")})
+            if not mom_vals:
+                return None, "JSON sin momentum - partido sin empezar o liga sin datos", []
             reduced = {
                 "match": f"{home} vs {away}",
                 "id": str(mid),
                 "home": home,
                 "away": away,
                 "competition": comp,
-                "legend": f"+ = {home} (home) dominates, - = {away} (away) dominates, value -1 to 1, index = minute 0-{len(mom_vals)-1}",
+                "legend": f"+ = {home} (home) dominates, - = {away} (away) dominates",
                 "momentum": mom_vals,
                 "goals": goals,
                 "count": len(mom_vals)
@@ -1352,68 +1329,76 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             txt_ia = f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}"
             return reduced, txt_ia, mom_vals
         except Exception as e:
-            return None, f"Error: {e}", []
+            return None, f"Error build: {e}", []
 
-    UA = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"]
-
-    comp_sel = st.selectbox("Liga/Competicion (29 que funcionan)", LEAGUES_29, key="mom_comp_ind_v3")
-
-    equipos_lista = _get_equipos_por_liga(comp_sel)
+    comp_sel = st.selectbox("Liga/Competicion (29)", LEAGUES_29, key="mom_comp_v4")
+    equipos_lista = _get_equipos_por_liga_v3(comp_sel)
 
     c1e, c2e = st.columns(2)
     if equipos_lista and len(equipos_lista) > 1:
         with c1e:
-            home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)} equipos)", equipos_lista, key="mom_home_sel_v3")
+            home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="mom_home_v4")
         with c2e:
-            away_opts = [e for e in equipos_lista if normaliza(e)!= normaliza(home_sel)]
-            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="mom_away_sel_v3")
+            away_opts = [e for e in equipos_lista if normaliza(e)!= normaliza(home_sel)] or equipos_lista
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="mom_away_v4")
     else:
-        # fallback si tu df no tiene esa liga cargada
         with c1e:
-            home_sel = st.text_input("Equipo 1 HOME", key="mom_home_txt_v3", placeholder="Real Madrid")
+            home_sel = st.text_input("Equipo 1 HOME", key="mom_home_txt_v4", placeholder="Real Madrid")
         with c2e:
-            away_sel = st.text_input("Equipo 2 AWAY", key="mom_away_txt_v3", placeholder="Barcelona")
-        st.caption(f"⚠ No hay equipos en df para {comp_sel}, usando texto manual. Carga la liga en filtros arriba para que aparezca el desplegable.")
+            away_sel = st.text_input("Equipo 2 AWAY", key="mom_away_txt_v4", placeholder="Barcelona")
+        if not equipos_lista:
+            st.caption(f"⚠ No hay equipos en df para {comp_sel} -> usando texto manual")
 
-    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_ind_v3", placeholder="mid=U6aWb5gM o https://...")
-    json_i = st.text_area("O pega JSON crudo de 13.ds.lsapp.eu", key="mom_json_ind_v3", height=60)
+    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_v4", placeholder="mid=U6aWb5gM")
+    json_i = st.text_area("O pega JSON crudo de Network > pq_graphql (si el directo falla)", key="mom_json_v4", height=70)
 
-    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_ind_v3"):
+    btn = st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_v4")
+    if btn:
+        st.write(f"DEBUG click -> url: {url_i} | json_manual: {len(json_i)} chars | liga: {comp_sel} | {home_sel} vs {away_sel}")
         mid_i = ""
         if url_i:
             m = _re2.search(r"mid=([A-Za-z0-9]+)", url_i)
             mid_i = m.group(1) if m else _re2.sub(r'[^A-Za-z0-9]', '', url_i.strip())[:20]
+        st.write(f"DEBUG mid detectado: {mid_i}")
 
         data_i = None
         if json_i.strip():
-            try: data_i = _js2.loads(json_i.strip())
-            except: st.error("JSON manual invalido")
+            try:
+                data_i = _js2.loads(json_i.strip())
+                st.write(f"DEBUG JSON manual OK -> {len(str(data_i))} chars")
+            except Exception as e:
+                st.error(f"JSON manual invalido: {e}")
 
         if not data_i and mid_i:
+            api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
+            st.write(f"DEBUG fetching: {api}")
             try:
-                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
-                r = requests.get(api, headers={"User-Agent": random.choice(UA), "Referer":"https://www.flashscore.es/"}, timeout=12)
+                r = requests.get(api, headers={"User-Agent": "Mozilla/5.0", "Referer":"https://www.flashscore.es/"}, timeout=15)
+                st.write(f"DEBUG status: {r.status_code} len: {len(r.text)}")
                 if r.status_code==200:
                     data_i = r.json()
+                elif r.status_code==429:
+                    st.warning("429 bloqueo IP - espera 60s o usa JSON manual")
                 else:
-                    st.error(f"HTTP {r.status_code}")
+                    st.error(f"HTTP {r.status_code}: {r.text[:300]}")
+                    st.info("SOLUCION: Abre el partido en Flashscore > F12 > Network > filtra 'pq_graphql' > copia Response y pegalo arriba en JSON crudo")
             except Exception as e:
                 st.error(f"Fetch error: {e}")
+                st.info("SOLUCION manual: F12 > Network > copia el JSON de momentum")
 
         if data_i:
             hf = (home_sel or "Local").strip()
             af = (away_sel or "Visitante").strip()
-            cf = comp_sel
-            reduced_i, txt_ia_i, mom_vals_i = _build_reducido_ind(data_i, hf, af, cf, mid_i or "manual")
-            if reduced_i and mom_vals_i:
-                st.success(f"OK {hf} vs {af} | {cf} | {len(mom_vals_i)} mins | Goles: {len(reduced_i['goals'])}")
+            reduced_i, txt_ia_i, mom_vals_i = _build_reducido_ind(data_i, hf, af, comp_sel, mid_i or "manual")
+            if reduced_i:
+                st.success(f"OK {hf} vs {af} | {len(mom_vals_i)} puntos")
                 try:
                     fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
                     cols = ['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
                     ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
                     ax.axhline(0, color='black', linewidth=0.6)
                     ax.set_xticks([])
-                    ax.set_title(f"{hf} vs {af} - {cf}", fontsize=8, fontweight='bold')
+                    ax.set_title(f"{hf} vs {af} - {comp_sel}", fontsize=8, fontweight='bold')
                     fig.tight_layout(pad=0.2)
                     buf = io.BytesIO()
                     plt.savefig(buf, format='png', bbox_inches='tight')
@@ -1421,19 +1406,25 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                     buf.seek(0)
                     b64 = base64.b64encode(buf.read()).decode()
                     st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
-                except: pass
+                except Exception as e:
+                    st.write(f"plot error {e}")
 
                 j_str_i = _js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
                 html_c = f"""
                 <div>
-                    <textarea id="txt_mom_v3_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_v3_json').value).then(()=>{{document.getElementById('msg_v3_json').innerText='✓ JSON COPIADO {len(j_str_i)} chars';}})"
+                    <textarea id="txt_v4_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v4_json').value).then(()=>{{document.getElementById('msg_v4_json').innerText='✓ COPIADO {len(j_str_i)} chars';}})"
                         style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-                    <div id="msg_v3_json" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                    <textarea id="txt_mom_v3_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_v3_txt').value).then(()=>{{document.getElementById('msg_v3_txt').innerText='✓ TXT COPIADO';}})"
+                    <div id="msg_v4_json" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                    <textarea id="txt_v4_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v4_txt').value).then(()=>{{document.getElementById('msg_v4_txt').innerText='✓ TXT COPIADO';}})"
                         style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-                    <div id="msg_v3_txt" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                    <div id="msg_v4_txt" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
                 </div>
                 """
                 components3.html(html_c, height=360, scrolling=True)
+            else:
+                st.error(f"Fallo build: {txt_ia_i}")
+        else:
+            if not mid_i and not json_i.strip():
+                st.warning("Mete un mid= o pega JSON crudo - si no, no hace nada")
