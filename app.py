@@ -1262,8 +1262,9 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
 ####################################
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>Desplegable de 29 ligas que sí tienen momentum. Elige liga + equipos + mid= y genera JSON para IA.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>Liga y equipos en desplegable. Elige y pega mid= para generar JSON reducido IA.</div>", unsafe_allow_html=True)
     import requests, json as _js2, random, re as _re2
     import html as _html3
     import streamlit.components.v1 as components3
@@ -1302,6 +1303,28 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         "Brasileirao Serie B - Brasil",
     ]
 
+    # --- EQUIPOS DESDE TU DF EXISTENTE ---
+    def _get_equipos_por_liga(nombre_liga_sel):
+        try:
+            if 'df' not in globals() or df.empty:
+                return []
+            # intenta filtrar por contenido de League
+            dff = df.copy()
+            # mapea nombre corto
+            key = nombre_liga_sel.split(" - ")[0].split(" ")[0].upper() # BUNDESLIGA, LALIGA, etc
+            # busca ligas que contengan esa palabra
+            mask = dff['League'].astype(str).str.upper().str.contains(key, na=False)
+            if mask.any():
+                dff = dff[mask]
+            seen = {}
+            for t in pd.concat([dff['HomeTeam'], dff['AwayTeam']]).dropna().astype(str):
+                n = normaliza(t)
+                if n not in seen:
+                    seen[n] = t.strip()
+            return sorted(seen.values())
+        except:
+            return []
+
     def _build_reducido_ind(data, home, away, comp, mid):
         try:
             base = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
@@ -1312,7 +1335,7 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             for ev in me:
                 if ev.get("type",{}).get("type","")=="goal":
                     tf = ev.get("timeFrame",{}) or {}
-                    goals.append({"minute": tf.get("elapsedMinute"), "display": tf.get("displayTime")})
+                    goals.append({"minute": tf.get("elapsedMinute")})
             reduced = {
                 "match": f"{home} vs {away}",
                 "id": str(mid),
@@ -1333,20 +1356,29 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
 
     UA = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"]
 
-    c0, c1i, c2i, c3i = st.columns([1.6,1,1,1])
-    with c0:
-        comp_i = st.selectbox("Liga/Competicion (29 que funcionan)", LEAGUES_29, key="mom_comp_ind_sel")
-    with c1i:
-        home_i = st.text_input("Equipo 1 HOME", key="mom_home_ind2", placeholder="Real Madrid")
-    with c2i:
-        away_i = st.text_input("Equipo 2 AWAY", key="mom_away_ind2", placeholder="Barcelona")
-    with c3i:
-        custom_comp = st.text_input("O escribe otra", key="mom_comp_custom", placeholder="opcional")
+    comp_sel = st.selectbox("Liga/Competicion (29 que funcionan)", LEAGUES_29, key="mom_comp_ind_v3")
 
-    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_ind2", placeholder="mid=U6aWb5gM o https://...")
-    json_i = st.text_area("O pega JSON crudo de 13.ds.lsapp.eu (si lo tienes)", key="mom_json_ind2", height=60)
+    equipos_lista = _get_equipos_por_liga(comp_sel)
 
-    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_ind2"):
+    c1e, c2e = st.columns(2)
+    if equipos_lista and len(equipos_lista) > 1:
+        with c1e:
+            home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)} equipos)", equipos_lista, key="mom_home_sel_v3")
+        with c2e:
+            away_opts = [e for e in equipos_lista if normaliza(e)!= normaliza(home_sel)]
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="mom_away_sel_v3")
+    else:
+        # fallback si tu df no tiene esa liga cargada
+        with c1e:
+            home_sel = st.text_input("Equipo 1 HOME", key="mom_home_txt_v3", placeholder="Real Madrid")
+        with c2e:
+            away_sel = st.text_input("Equipo 2 AWAY", key="mom_away_txt_v3", placeholder="Barcelona")
+        st.caption(f"⚠ No hay equipos en df para {comp_sel}, usando texto manual. Carga la liga en filtros arriba para que aparezca el desplegable.")
+
+    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_ind_v3", placeholder="mid=U6aWb5gM o https://...")
+    json_i = st.text_area("O pega JSON crudo de 13.ds.lsapp.eu", key="mom_json_ind_v3", height=60)
+
+    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_ind_v3"):
         mid_i = ""
         if url_i:
             m = _re2.search(r"mid=([A-Za-z0-9]+)", url_i)
@@ -1364,17 +1396,17 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 if r.status_code==200:
                     data_i = r.json()
                 else:
-                    st.error(f"HTTP {r.status_code} - sin momentum")
+                    st.error(f"HTTP {r.status_code}")
             except Exception as e:
                 st.error(f"Fetch error: {e}")
 
         if data_i:
-            hf = home_i.strip() or "Local"
-            af = away_i.strip() or "Visitante"
-            cf = (custom_comp.strip() or comp_i) or "Competicion"
+            hf = (home_sel or "Local").strip()
+            af = (away_sel or "Visitante").strip()
+            cf = comp_sel
             reduced_i, txt_ia_i, mom_vals_i = _build_reducido_ind(data_i, hf, af, cf, mid_i or "manual")
             if reduced_i and mom_vals_i:
-                st.success(f"OK {hf} vs {af} | {cf} | {len(mom_vals_i)} mins")
+                st.success(f"OK {hf} vs {af} | {cf} | {len(mom_vals_i)} mins | Goles: {len(reduced_i['goals'])}")
                 try:
                     fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
                     cols = ['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
@@ -1394,14 +1426,14 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 j_str_i = _js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
                 html_c = f"""
                 <div>
-                    <textarea id="txt_mom_ind_json2" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_ind_json2').value).then(()=>{{document.getElementById('msg_ind_json2').innerText='✓ COPIADO {len(j_str_i)} chars';}})"
+                    <textarea id="txt_mom_v3_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_v3_json').value).then(()=>{{document.getElementById('msg_v3_json').innerText='✓ JSON COPIADO {len(j_str_i)} chars';}})"
                         style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-                    <div id="msg_ind_json2" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                    <textarea id="txt_mom_ind_txt2" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_ind_txt2').value).then(()=>{{document.getElementById('msg_ind_txt2').innerText='✓ TXT COPIADO';}})"
+                    <div id="msg_v3_json" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                    <textarea id="txt_mom_v3_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_v3_txt').value).then(()=>{{document.getElementById('msg_v3_txt').innerText='✓ TXT COPIADO';}})"
                         style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-                    <div id="msg_ind_txt2" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                    <div id="msg_v3_txt" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
                 </div>
                 """
                 components3.html(html_c, height=360, scrolling=True)
