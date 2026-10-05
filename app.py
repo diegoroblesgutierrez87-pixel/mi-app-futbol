@@ -1283,8 +1283,9 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
         if not eid:
             return None, "No encuentro ?mid= en la URL. Pega la URL completa: ...?mid=ML4DjdZa"
         try:
-            api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
-            r = requests.get(api, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/"}, timeout=12)
+            import time as _tt
+            api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7&_t={int(_tt.time())}"
+            r = requests.get(api, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/", "Cache-Control":"no-cache", "Pragma":"no-cache"}, timeout=12)
             if r.status_code!=200:
                 return None, f"Error {r.status_code} - Flashscore bloquea Streamlit Cloud. Ejecuta la app en local y si funcionara"
             data = r.json()
