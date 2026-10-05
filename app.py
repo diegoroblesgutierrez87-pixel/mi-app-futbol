@@ -1299,7 +1299,10 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     st.caption("URL con ?mid=  Ej: tu Tenerife vs Cordoba")
     url = st.text_input("URL Flashscore del partido", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa", key="v6_url")
 
-    if st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True):
+    auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
+    btn = st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True)
+
+    if btn or auto:
         if not url:
             st.error("Pega la URL")
         else:
@@ -1310,9 +1313,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
                 else:
                     vals = res["vals"]
                     eid = res["eid"]
-                    m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
                     reducido = {"id":eid, "momentum":vals, "count":len(vals)}
-                    txt_ia = f"|ID| {eid} |M| {m_txt}"
                     
                     j_str = json.dumps(reducido, separators=(',',':'))
                     j_esc = html.escape(j_str)
