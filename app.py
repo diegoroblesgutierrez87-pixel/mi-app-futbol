@@ -1262,33 +1262,30 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
 ####################################
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-### --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#0f8105;font-weight:900'>v11 FINAL - Bookmarklet OK + Parser tolerante. Liga->Equipos OK</div>", unsafe_allow_html=True)
-    import json as _js2, re as _re2, html as _html3
-    import streamlit.components.v1 as components3, matplotlib.pyplot as plt, io, base64
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#0f8105;font-weight:900'>v12 AUTO - 1 click, sin pegar JSON, copia directa</div>", unsafe_allow_html=True)
+    import streamlit.components.v1 as components3, html as _html3, json as _js2
 
     LEAGUES_MAP = {
-        "Bundesliga - Alemania": ["Bundesliga", "DE1"],
-        "2. Bundesliga - Alemania": ["2. Bundesliga", "DE2"],
-        "LaLiga EA Sports - España": ["LaLiga EA", "ES1"],
         "LaLiga Hypermotion - España": ["LaLiga2", "Hypermotion", "ES2"],
+        "LaLiga EA Sports - España": ["LaLiga EA", "ES1"],
         "Premier League - Inglaterra": ["Premier League", "EN1"],
-        "Championship Inglaterra": ["Championship", "EN2"],
+        "Bundesliga - Alemania": ["Bundesliga", "DE1"], "2. Bundesliga - Alemania": ["2. Bundesliga", "DE2"],
         "Serie A Italia": ["Serie A", "IT1"], "Serie B Italia": ["Serie B", "IT2"],
         "Ligue 1 Francia": ["Ligue 1", "FR1"], "Ligue 2 Francia": ["Ligue 2", "FR2"],
-        "Eredivisie - Paises Bajos": ["Eredivisie", "NL1"], "Liga Portugal": ["Liga Portugal", "PT1"],
-        "Jupiler Pro League - Belgica": ["Jupiler", "BE1"], "Superliga Dinamarca": ["Superliga", "DK1"],
+        "Eredivisie - Paises Bajos": ["Eredivisie"], "Liga Portugal": ["Liga Portugal"],
+        "Champions League": ["Champions League", "UCL"], "Europa League": ["Europa League", "UEL"],
+        "Jupiler Pro League - Belgica": ["Jupiler"], "Superliga Dinamarca": ["Superliga"],
         "Bundesliga Austria": ["Austria Bundesliga"], "Super League Grecia": ["Super League Grecia"],
         "NB I Hungria": ["NB I"], "J1 League Japon": ["J1 League"], "Eliteserien Noruega": ["Eliteserien"],
         "Ekstraklasa Polonia": ["Ekstraklasa"], "Liga 1 Rumania": ["Liga 1 Rumania"],
         "Allsvenskan Suecia": ["Allsvenskan"], "Super League Suiza": ["Super League Suiza"],
         "Super Lig Turquia": ["Super Lig", "TR1"], "1. Lig Turquia": ["1. Lig", "TR2"],
-        "Champions League": ["Champions League", "UCL"], "Europa League": ["Europa League", "UEL"],
         "Brasileirao Serie A - Brasil": ["Serie A Brasil", "BR1"], "Brasileirao Serie B - Brasil": ["Serie B Brasil", "BR2"],
     }
 
-    def _get_equipos_v11(name):
+    def _get_equipos_v12(name):
         try:
             if 'df' not in globals() or df.empty: return []
             kws = LEAGUES_MAP.get(name, [name.split(" - ")[0]])
@@ -1306,104 +1303,100 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             return sorted(seen.values())
         except: return []
 
-    def _parse_mid_v11(s):
-        if not s: return ""
-        m=_re2.search(r"mid=([A-Za-z0-9]{6,12})", str(s), _re2.I)
-        if m: return m.group(1)
-        clean=_re2.sub(r'[^A-Za-z0-9]', '', str(s).strip())
-        return clean if 6<=len(clean)<=12 else ""
-
-    def _clean_json_v11(s):
-        # tolera que pegues ["data":...] o con comillas mal
-        s=s.strip()
-        if not s: return ""
-        # si empieza con ["data" -> arregla a {"data"
-        s=_re2.sub(r'^\s*\[\s*"data"\s*:\s*', '{"data":', s)
-        s=_re2.sub(r'^\s*\[', '{', s)
-        s=_re2.sub(r'\]\s*$', '}', s)
-        return s
-
-    def _build_v11(data, home, away, comp, mid):
-        base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
-        entries=base.get("momentum",{}).get("entries",[]) or []
-        mom_vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
-        if not mom_vals: return None, "Sin momentum - partido no empezado o JSON incompleto", []
-        me=base.get("matchEvents",{}).get("entries",[]) or []
-        goals=[{"minute": (ev.get("timeFrame",{}) or {}).get("elapsedMinute")} for ev in me if ev.get("type",{}).get("type","")=="goal"]
-        reduced={"match": f"{home} vs {away}","id": str(mid),"home": home,"away": away,"competition": comp,
-                 "legend": f"+ = {home} dominates","momentum": mom_vals,"goals": goals,"count": len(mom_vals)}
-        txt_m=" ".join([f"{i}:{v:+.2f}" for i,v in enumerate(mom_vals)])
-        txt_g=" ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
-        return reduced, f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}", mom_vals
-
-    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=3, key="comp_v11")
-    equipos_lista = _get_equipos_v11(comp_sel)
+    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=0, key="comp_v12")
+    equipos_lista = _get_equipos_v12(comp_sel)
 
     c1,c2 = st.columns(2)
     if equipos_lista:
-        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v11")
+        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v12")
         with c2:
             away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
-            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v11")
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v12")
     else:
-        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v11", value="REAL SOCIEDAD II")
-        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v11", value="GRANADA CF")
+        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v12", value="REAL SOCIEDAD II")
+        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v12", value="GRANADA CF")
 
-    url_input = st.text_input("MID del partido", key="url_v11", value="U6aWb5gM")
-    json_input = st.text_area("Pega JSON crudo de Network > pq_graphql > Response (Ctrl+A)", key="json_v11", height=140)
+    mid_default = st.text_input("MID del partido", key="mid_v12", value="U6aWb5gM")
 
-    # BOOKMARKLET CORREGIDO - copia JSON reducido + TXT IA
-    bm = """javascript:(async()=>{try{let mid=location.href.match(/mid=([A-Za-z0-9]{6,12})/)?.[1];if(!mid){mid=prompt('Pega MID:');}if(!mid)return;const url=`https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId=${mid}&providerId=7`;const r=await fetch(url,{headers:{'x-fsign':'*'}});const data=await r.json();const ents=data?.data?.findMatchMomentumStatsByMatchId?.momentum?.entries||[];const mom=ents.map(e=>+Number(e.momentumValue).toFixed(3));const goals=(data?.data?.findMatchMomentumStatsByMatchId?.matchEvents?.entries||[]).filter(e=>e.type?.type==='goal').map(e=>e.timeFrame?.elapsedMinute);const h=document.querySelector('.duelParticipant__home.participant__participantName')?.innerText||document.querySelector('[class*=home]')?.innerText||'HOME';const a=document.querySelector('.duelParticipant__away.participant__participantName')?.innerText||'AWAY';const reduced={match:`${h} vs ${a}`,id:mid,home:h,away:a,momentum:mom,goals,count:mom.length};const j=JSON.stringify(reduced);await navigator.clipboard.writeText(j);prompt('✅ MOMENTUM COPIADO ('+mom.length+' mins). Pégalo en la app:',j);}catch(e){alert('Error: '+e+'\\nAbre F12 > Network > copia JSON manual');}})();"""
+    # HTML AUTOMATICO - fetch desde tu navegador, no desde Streamlit Cloud
+    auto_html = f"""
+    <div style="font-family:monospace;background:#f8f9fa;padding:12px;border-radius:8px;border:1px solid #ddd">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="mid_auto" value="{_html3.escape(mid_default)}" style="flex:1;padding:10px;border:1px solid #ccc;border-radius:6px;font-weight:900" placeholder="U6aWb5gM">
+            <button id="btn_auto" onclick="fetchAuto()" style="background:#e74c3c;color:white;border:none;border-radius:6px;padding:10px 18px;font-weight:900;cursor:pointer">⚡ GENERAR AUTOMATICO</button>
+        </div>
+        <div id="status_auto" style="font-size:11px;color:#666;margin-bottom:8px">Listo para generar { _html3.escape(home_sel) } vs { _html3.escape(away_sel) } - { _html3.escape(comp_sel) }</div>
+        <canvas id="chart_auto" width="520" height="110" style="width:100%;max-width:520px;border:1px solid #ddd;display:none;background:white"></canvas>
+        <textarea id="json_auto" style="width:100%;height:110px;font-family:monospace;font-size:11px;display:none;margin-top:8px"></textarea>
+        <button id="copy_json_auto" onclick="copyJson()" style="display:none;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR JSON PARA IA</button>
+        <textarea id="txt_auto" style="width:100%;height:70px;font-family:monospace;font-size:11px;display:none;margin-top:8px"></textarea>
+        <button id="copy_txt_auto" onclick="copyTxt()" style="display:none;width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📱 COPIAR TXT IA</button>
+        <div id="msg_auto" style="font-weight:900;color:#0f8105;margin-top:6px"></div>
+    </div>
+    <script>
+    async function fetchAuto(){{
+        const mid = document.getElementById('mid_auto').value.trim().replace(/[^A-Za-z0-9]/g,'');
+        if(mid.length<6){{document.getElementById('status_auto').innerText='❌ MID invalido';return;}}
+        document.getElementById('status_auto').innerText='⏳ Capturando momentum de '+mid+'...';
+        document.getElementById('btn_auto').innerText='⏳...';
+        try{{
+            const url = `https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId=${{mid}}&providerId=7`;
+            const r = await fetch(url, {{headers:{{'Referer':'https://www.flashscore.es/'}}}});
+            if(!r.ok) throw new Error('HTTP '+r.status);
+            const data = await r.json();
+            const base = data?.data?.findMatchMomentumStatsByMatchId;
+            const entries = base?.momentum?.entries||[];
+            if(!entries.length) throw new Error('Sin momentum - partido no empezado');
+            const mom = entries.map(e=>+Number(e.momentumValue).toFixed(3));
+            const goals = (base?.matchEvents?.entries||[]).filter(e=>e.type?.type==='goal').map(e=>e.timeFrame?.elapsedMinute);
+            const home = `{ _html3.escape(home_sel).replace("'", "\\'") }`;
+            const away = `{ _html3.escape(away_sel).replace("'", "\\'") }`;
+            const comp = `{ _html3.escape(comp_sel).replace("'", "\\'") }`;
+            const reduced = {{match: home+' vs '+away, id: mid, home: home, away: away, competition: comp, legend: '+ = '+home+' dominates', momentum: mom, goals: goals.map(m=>({{minute:m}})), count: mom.length }};
+            const jstr = JSON.stringify(reduced);
+            const txt = `|MATCH| ${{home}} vs ${{away}} |ID| ${{mid}} |COMP| ${{comp}} |GOALS| ${{goals.length?goals.map(g=>g+"'").join(' '):'-'}} |M| `+mom.map((v,i)=>`${{i}}:${{v>=0?'+':''}}${{v.toFixed(2)}}`).join(' ');
 
-    st.markdown("**Bookmarklet 1-click (arrástralo a marcadores):**")
-    st.code(bm, language="javascript")
-    st.caption("Abre el partido en flashscore.es > click en el marcador > te copia el JSON reducido automáticamente")
+            // chart
+            const canvas = document.getElementById('chart_auto');
+            const ctx = canvas.getContext('2d');
+            canvas.style.display='block';
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            const w = canvas.width, h = canvas.height;
+            const step = w / mom.length;
+            mom.forEach((v,i)=>{{
+                const x = i*step;
+                const bh = Math.abs(v)* (h*0.4);
+                const y = v>=0? (h/2 - bh) : (h/2);
+                ctx.fillStyle = v>=0? '#e74c3c' : '#3498db';
+                ctx.fillRect(x, y, step*0.9, bh);
+            }});
+            ctx.fillStyle='#000'; ctx.fillRect(0,h/2,w,1);
 
-    if st.button("GENERAR DESDE JSON PEGADO", type="primary", use_container_width=True, key="btn_v11"):
-        raw_mid = _parse_mid_v11(url_input)
-        raw_json = _clean_json_v11(json_input)
-
-        if not raw_json:
-            st.warning("Pega el JSON de F12 > Network > Response")
-            st.stop()
-
-        try:
-            data_i=_js2.loads(raw_json)
-        except Exception as e:
-            st.error(f"JSON invalido: {e}")
-            st.code(raw_json[:800])
-            st.stop()
-
-        hf=(home_sel or "Local").strip()
-        af=(away_sel or "Visitante").strip()
-        reduced_i, txt_ia_i, mom_vals_i = _build_v11(data_i, hf, af, comp_sel, raw_mid or "manual")
-
-        if reduced_i:
-            st.success(f"OK {hf} vs {af} | {comp_sel} | {len(mom_vals_i)} mins | {len(reduced_i['goals'])} goles")
-            try:
-                fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
-                cols=['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
-                ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
-                ax.axhline(0,color='black',linewidth=0.6)
-                ax.set_xticks([])
-                ax.set_title(f"{hf} vs {af} - {comp_sel}", fontsize=8, fontweight='bold')
-                fig.tight_layout(pad=0.2)
-                buf=io.BytesIO(); plt.savefig(buf, format='png', bbox_inches='tight'); plt.close(fig); buf.seek(0)
-                b64=base64.b64encode(buf.read()).decode()
-                st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
-            except: pass
-
-            j_str=_js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
-            html_c=f"""<div>
-            <textarea id="v11_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('v11_json').value).then(()=>{{document.getElementById('msg_v11').innerText='✓ COPIADO {len(j_str)} chars';}})"
-            style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-            <div id="msg_v11" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-            <textarea id="v11_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('v11_txt').value).then(()=>{{document.getElementById('msg_v11t').innerText='✓ TXT COPIADO';}})"
-            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-            <div id="msg_v11t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-            </div>"""
-            components3.html(html_c, height=360, scrolling=True)
-        else:
-            st.error(f"{txt_ia_i}")
+            document.getElementById('json_auto').value=jstr;
+            document.getElementById('json_auto').style.display='block';
+            document.getElementById('copy_json_auto').style.display='block';
+            document.getElementById('txt_auto').value=txt;
+            document.getElementById('txt_auto').style.display='block';
+            document.getElementById('copy_txt_auto').style.display='block';
+            document.getElementById('status_auto').innerText='✅ OK '+home+' vs '+away+' | '+mom.length+' mins | '+goals.length+' goles';
+            document.getElementById('msg_auto').innerText='✅ Generado automatico - dale a COPIAR';
+        }}catch(e){{
+            document.getElementById('status_auto').innerText='❌ Error: '+e.message+' - prueba abrir el partido en flashscore y recargar';
+            document.getElementById('msg_auto').innerText='Si falla, usa F12 > Network > pq_graphql como antes';
+        }}finally{{
+            document.getElementById('btn_auto').innerText='⚡ GENERAR AUTOMATICO';
+        }}
+    }}
+    function copyJson(){{
+        const v=document.getElementById('json_auto').value;
+        navigator.clipboard.writeText(v).then(()=>{{document.getElementById('msg_auto').innerText='✓ JSON COPIADO '+v.length+' chars';}});
+    }}
+    function copyTxt(){{
+        const v=document.getElementById('txt_auto').value;
+        navigator.clipboard.writeText(v).then(()=>{{document.getElementById('msg_auto').innerText='✓ TXT COPIADO';}});
+    }}
+    // auto-generar al cargar si hay mid
+    window.addEventListener('load', ()=>{{ if(document.getElementById('mid_auto').value){{ /* no auto para no gastar */ }} }});
+    </script>
+    """
+    components3.html(auto_html, height=520, scrolling=False)
