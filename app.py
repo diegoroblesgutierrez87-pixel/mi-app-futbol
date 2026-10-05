@@ -1306,20 +1306,18 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
         except Exception as e:
             return None, str(e)
 
+    if st.button("🧹 LIMPIAR MOMENTUMS", key="v6_clear"):
+        for i in range(15):
+            if f"v6_url_{i}" in st.session_state:
+                del st.session_state[f"v6_url_{i}"]
+        st.rerun()
     st.caption("URL con ?mid= - 15 huecos para directo")
     urls = []
     for i in range(15):
         u = st.text_input(f"P{i+1}", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa" if i==0 else "", key=f"v6_url_{i}", placeholder=f"Partido {i+1} ?mid=")
         urls.append(u)
 
-    c1, c2 = st.columns([3,1])
-    with c1:
-        auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
-    with c2:
-        if st.button("🧹 LIMPIAR", key="v6_clear", use_container_width=True):
-            for i in range(15):
-                st.session_state[f"v6_url_{i}"] = ""
-            st.rerun()
+    auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
     btn = st.button("⚡ GENERAR 15 MOMENTUMS", key="v6_btn", use_container_width=True)
 
     if btn or auto:
