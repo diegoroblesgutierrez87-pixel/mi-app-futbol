@@ -1297,36 +1297,47 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
         except Exception as e:
             return None, str(e)
 
-    st.caption("URL con ?mid=  Ej: tu Tenerife vs Cordoba")
-    url = st.text_input("URL Flashscore del partido", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa", key="v6_url")
+    st.caption("URL con ?mid= - 15 huecos para directo")
+    urls = []
+    for i in range(15):
+        u = st.text_input(f"P{i+1}", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa" if i==0 else "", key=f"v6_url_{i}", placeholder=f"Partido {i+1} ?mid=")
+        urls.append(u)
 
     auto = st.checkbox("🔄 Auto-actualizar cada 60s", value=False, key="v6_auto")
-    btn = st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True)
+    btn = st.button("⚡ GENERAR 15 MOMENTUMS", key="v6_btn", use_container_width=True)
 
     if btn or auto:
-        if not url:
-            st.error("Pega la URL")
-        else:
-            with st.spinner("Sacando momentum..."):
+        todo = []
+        for idx, url in enumerate(urls):
+            if not url.strip():
+                continue
+            with st.spinner(f"P{idx+1}..."):
                 res, err = get_momentum_from_url(url)
                 if err:
-                    st.error(err)
+                    st.error(f"P{idx+1} {err}")
                 else:
                     vals = res["vals"]
                     eid = res["eid"]
                     reducido = {"id":eid, "momentum":vals, "count":len(vals)}
-                    
+                    todo.append(reducido)
                     j_str = json.dumps(reducido, separators=(',',':'))
                     j_esc = html.escape(j_str)
-
-                    st.success(f"OK - {eid} - {len(vals)} mins - Cordoba CF local")
-
+                    st.success(f"P{idx+1} OK {eid} {len(vals)} mins")
                     copy_html = f"""
                     <div style="font-family:monospace">
-                        <textarea id="json_v6" style="width:100%;height:80px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{j_esc}</textarea>
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('json_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ COPIADO - pegalo en tu IA'}})" 
-                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:6px">📋 COPIAR JSON PARA IA</button>
-                        <div id="msg_v6" style="font-weight:900;color:#0f8105;text-align:center;margin-top:8px"></div>
+                        <textarea id="json_{idx}" style="width:100%;height:60px;font-size:10px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:4px">{j_esc}</textarea>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('json_{idx}').value).then(()=>{{document.getElementById('msg_{idx}').innerText='✅ P{idx+1} COPIADO'}})" 
+                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:8px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR P{idx+1}</button>
+                        <div id="msg_{idx}" style="font-weight:900;color:#0f8105;text-align:center;font-size:11px"></div>
                     </div>
                     """
-                    components.html(copy_html, height=160)
+                    components.html(copy_html, height=110)
+        if todo:
+            mega = html.escape(json.dumps(todo, separators=(',',':')))
+            mega_html = f"""
+            <textarea id="mega" style="width:100%;height:90px;font-size:10px;font-family:monospace;border:2px solid #0A2342;border-radius:6px;padding:6px">{mega}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('mega').value).then(()=>{{document.getElementById('mega_msg').innerText='✅ MEGA 15 COPIADO'}})" 
+            style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:6px">📋 COPIAR LOS {len(todo)} JUNTOS PARA IA</button>
+            <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
+            """
+            components.html(mega_html, height=160)
