@@ -1259,4 +1259,124 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             """, height=55, scrolling=False)
             # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 
+##########################################
+# BLOQUE INDEPENDIENTE - MOMENTUM / ESTADISTICAS PARA IA - SIN ERROR 400
+##########################################
+with st.expander("MOMENTUM / ESTADISTICAS - COPIAR IA", expanded=False):
+    st.caption("Bloque independiente - Equipo vs Equipo + Liga = Texto reducido IA")
+
+    if 'momentum_by_id' not in globals() or not momentum_by_id:
+        st.warning("No hay momentum_by_id cargado")
+        st.stop()
+
+    # 1 - Construye lista rápida de partidos con momentum
+    @st.cache_data(show_spinner=False)
+    def get_lista_momentum():
+        lista=[]
+        for fid, recs in momentum_by_id.items():
+            if not recs: continue
+            r0=recs[0]
+            h=str(r0.get('home','')).strip()
+            a=str(r0.get('away','')).strip()
+            comp=str(r0.get('competition','')).strip() or str(r0.get('league','')).strip()
+            if not h or not a: continue
+            lista.append((fid, f"{h} vs {a}", h, a, comp))
+        return sorted(lista, key=lambda x: x[1])
+
+    lista_mom = get_lista_momentum()
+    ligas_mom = sorted(set([x[4] for x in lista_mom if x[4]]))
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        liga_f = st.selectbox("Liga momentum", ["Todas"]+ligas_mom, key="mom_ia_liga")
+    with c2:
+        # filtro texto para buscar rapido
+        txt_busca = st.text_input("Buscar equipo", placeholder="ej: Barcelona", key="mom_ia_busca")
+    with c3:
+        max_mostrar = st.selectbox("Mostrar", [20,50,100], index=0, key="mom_ia_max")
+
+    # filtra
+    filtrados = lista_mom
+    if liga_f!= "Todas":
+        filtrados = [x for x in filtrados if x[4]==liga_f]
+    if txt_busca.strip():
+        n = normaliza(txt_busca)
+        filtrados = [x for x in filtrados if n in normaliza(x[1])]
+
+    filtrados = filtrados[:max_mostrar]
+
+    if not filtrados:
+        st.info("No hay partidos para ese filtro")
+    else:
+        # selector multi para copiar
+        opciones = {f"{lab} | {fid} | {comp}": fid for fid, lab, h, a, comp in filtrados}
+        sel = st.multiselect("Selecciona partidos para IA (se copian en reducido)", list(opciones.keys()), key="mom_ia_sel")
+
+        if sel:
+            bloques_json = []
+            bloques_txt = []
+            bloques_cortos = []
+
+            for key in sel:
+                fid = opciones[key]
+                recs = momentum_by_id.get(fid, [])
+                if not recs: continue
+                r0 = recs[0]
+                home = str(r0.get('home','')).strip()
+                away = str(r0.get('away','')).strip()
+                comp = str(r0.get('competition','')).strip() or liga_f
+                # momentum vals
+                recs_sorted = sorted(recs, key=lambda x: int(x.get('minute',0)))
+                vals = [round(float(x.get('momentumValue',0)),3) for x in recs_sorted]
+
+                # goles de tu dict eventos (misma logica que tu script)
+                goles = []
+                for ev in eventos.get(str(fid), []):
+                    goles.append({"m":ev.get('m'), "team":ev.get('abbr'), "tipo":ev.get('tipo','')})
+
+                # JSON REDUCIDO EXACTO COMO TU SCRIPT DE 29 LIGAS
+                reducido = {
+                    "match": f"{home} vs {away}",
+                    "id": str(fid),
+                    "home": home,
+                    "away": away,
+                    "competition": comp,
+                    "legend": f"+ = {home} (home) dominates, - = {away} (away) dominates, value -1 to 1, index = minute 0-{len(vals)-1}",
+                    "momentum": vals,
+                    "goals": goles,
+                    "count": len(vals)
+                }
+                bloques_json.append(reducido)
+
+                # TXT IA - FORMATO ULTRA COMPACTO PARA PEGAR EN DIRECTO (como pedias foto Flashscore -> texto)
+                # |MATCH| Home vs Away |COMP| |ID| xxx |M| 0:+0.12 1:-0.34...
+                m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
+                g_txt = " ".join([f"{g['m']}'{g['team']}" for g in goles]) if goles else "0 goles"
+                txt_line = f"|MATCH| {home} vs {away} |COMP| {comp} |ID| {fid} |GOALS| {g_txt} |M| {m_txt}"
+                bloques_txt.append(txt_line)
+                bloques_cortos.append(f"{home} vs {away} - {g_txt}")
+
+            # --- SALIDA 1: JSON REDUCIDO (para IA) ---
+            import json
+            json_final = "\n".join([json.dumps(b, separators=(',',':'), ensure_ascii=False) for b in bloques_json])
+
+            st.markdown(f"**JSON REDUCIDO - {len(bloques_json)} partidos - {len(json_final)} chars**")
+            st.code(json_final, language="json") # <- tiene boton copiar nativo, no da 400
+
+            # --- SALIDA 2: TXT IA DIRECTO (el que usas en vivo) ---
+            txt_final = "\n".join(bloques_txt)
+            st.markdown(f"**TXT IA EN DIRECTO - Formato Flashscore**")
+            st.code(txt_final, language="text")
+
+            # Botones descarga para no saturar clipboard
+            st.download_button(" DESCARGAR JSON", data=json_final, file_name=f"momentum_{liga_f}_{len(bloques_json)}partidos.json", mime="application/json", key="dl_json_mom")
+            st.download_button(" DESCARGAR TXT IA", data=txt_final, file_name=f"momentum_{liga_f}_{len(bloques_json)}partidos.txt", mime="text/plain", key="dl_txt_mom")
+
+            # --- SALIDA 3: EQUIPO VS EQUIPO ESPECIFICO ---
+            st.divider()
+            st.markdown("**PEGADO RAPIDO - 1 partido a la vez**")
+            for b in bloques_json:
+                with st.container(border=True):
+                    st.markdown(f"**{b['match']}** - {b['competition']} - {b['count']} mins")
+                    st.code(json.dumps(b, separators=(',',':'), ensure_ascii=False), language="json")
 
