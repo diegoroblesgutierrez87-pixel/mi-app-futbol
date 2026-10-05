@@ -1369,14 +1369,36 @@ with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
             home = clean(mt.group(2))
         m_mid = _re2.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, _re2.I)
         if not m_mid:
-            return None, "Sin ?mid="
+            return None, "Sin?mid="
         eid = m_mid.group(1)
         try:
-            api = f"https://www.flashscore.es/x/feed/df_sui_1_{eid}_es_1"
-            r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/"}, timeout=12)
-            txt = r.text
-            out = {"id":eid, "home":home, "away":away, "raw_len": len(txt)}
-            out["stats_txt"] = txt[:2000]
+            import time as _tt2
+            out = {"id":eid, "home":home, "away":away}
+            # HASH SUI = STATS REAL - mismo que momentum
+            for _hash in ["sui","st"]:
+                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash={_hash}&eventId={eid}&providerId=7&_t={int(_tt2.time())}"
+                r = _rq2.get(api, headers={"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Cache-Control":"no-cache", "Pragma":"no-cache"}, timeout=12)
+                if r.status_code == 200:
+                    data = r.json()
+                    # 2 formatos posibles
+                    stats = data.get("data",{}).get("findMatchStatsByMatchId",{}).get("statistics",[]) or data.get("data",{}).get("findDetailedStatsByMatchId",{}).get("groups",[])
+                    if stats:
+                        # formato lista directa
+                        if isinstance(stats, list) and stats and "name" in stats[0]:
+                            for it in stats:
+                                nm = (it.get("name") or it.get("type") or "").strip()
+                                if nm:
+                                    out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue"), "home_pct": it.get("homeValue"), "away_pct": it.get("awayValue")}
+                        else:
+                            # formato groups
+                            for g in stats:
+                                for it in g.get("statistics",[]):
+                                    nm = (it.get("name") or "").strip()
+                                    if nm:
+                                        out[nm] = {"home": it.get("homeValue"), "away": it.get("awayValue")}
+                        break
+            if len(out) <= 3:
+                return {"id":eid, "home":home, "away":away, "raw_len":0, "error":"Sin stats aun - partido no empezo"}, None
             return out, None
         except Exception as e:
             return None, str(e)
