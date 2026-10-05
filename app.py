@@ -1262,48 +1262,47 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
 ####################################
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-# --# -# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+# --## --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>v7 FIX LIGA->EQUIPOS - La liga ahora si filtra equipos. Liga fuera del form.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>v8 FIX - sin form, liga filtra equipos bien (22 Hypermotion ok)</div>", unsafe_allow_html=True)
     import requests, json as _js2, re as _re2, html as _html3
     import streamlit.components.v1 as components3, matplotlib.pyplot as plt, io, base64
 
     LEAGUES_MAP = {
-        "Bundesliga - Alemania": ["Bundesliga", "DE1", "ALEMANIA BUNDESLIGA"],
-        "2. Bundesliga - Alemania": ["2. Bundesliga", "DE2", "2. BUNDESLIGA"],
+        "Bundesliga - Alemania": ["Bundesliga", "DE1"],
+        "2. Bundesliga - Alemania": ["2. Bundesliga", "DE2"],
         "Bundesliga Austria": ["Austria Bundesliga", "AT1"],
-        "Jupiler Pro League - Belgica": ["Jupiler", "BE1", "BELGICA"],
-        "Superliga Dinamarca": ["Superliga", "DK1", "DINAMARCA"],
-        "LaLiga EA Sports - España": ["LaLiga EA", "ES1", "LALIGA", "PRIMERA DIVISION ESPANA"],
-        "LaLiga Hypermotion - España": ["LaLiga2", "LaLiga Hypermotion", "ES2", "SEGUNDA ESPANA", "HYPERMOTION"],
-        "Ligue 1 Francia": ["Ligue 1", "FR1", "FRANCIA LIGUE 1"],
+        "Jupiler Pro League - Belgica": ["Jupiler", "BE1"],
+        "Superliga Dinamarca": ["Superliga", "DK1"],
+        "LaLiga EA Sports - España": ["LaLiga EA", "ES1", "LALIGA EA"],
+        "LaLiga Hypermotion - España": ["LaLiga2", "Hypermotion", "ES2", "SEGUNDA ESPANA"],
+        "Ligue 1 Francia": ["Ligue 1", "FR1"],
         "Ligue 2 Francia": ["Ligue 2", "FR2"],
-        "Super League Grecia": ["Super League Grecia", "GR1", "GRECIA"],
-        "NB I Hungria": ["NB I", "HU1", "HUNGRIA"],
-        "Premier League - Inglaterra": ["Premier League", "EN1", "INGLATERRA PREMIER"],
+        "Super League Grecia": ["Super League Grecia", "GR1"],
+        "NB I Hungria": ["NB I", "HU1"],
+        "Premier League - Inglaterra": ["Premier League", "EN1"],
         "Championship Inglaterra": ["Championship", "EN2"],
-        "Serie A Italia": ["Serie A", "IT1", "ITALIA SERIE A"],
+        "Serie A Italia": ["Serie A", "IT1"],
         "Serie B Italia": ["Serie B", "IT2"],
-        "J1 League Japon": ["J1 League", "JP1", "JAPON"],
-        "Eliteserien Noruega": ["Eliteserien", "NO1", "NORUEGA"],
+        "J1 League Japon": ["J1 League", "JP1"],
+        "Eliteserien Noruega": ["Eliteserien", "NO1"],
         "Eredivisie - Paises Bajos": ["Eredivisie", "NL1"],
-        "Ekstraklasa Polonia": ["Ekstraklasa", "PL1", "POLONIA"],
-        "Liga Portugal": ["Liga Portugal", "PT1", "PORTUGAL"],
+        "Ekstraklasa Polonia": ["Ekstraklasa", "PL1"],
+        "Liga Portugal": ["Liga Portugal", "PT1"],
         "Liga 1 Rumania": ["Liga 1 Rumania", "RO1"],
-        "Allsvenskan Suecia": ["Allsvenskan", "SE1", "SUECIA"],
-        "Super League Suiza": ["Super League Suiza", "CH1", "SUIZA"],
-        "Super Lig Turquia": ["Super Lig", "TR1", "TURQUIA SUPER"],
+        "Allsvenskan Suecia": ["Allsvenskan", "SE1"],
+        "Super League Suiza": ["Super League Suiza", "CH1"],
+        "Super Lig Turquia": ["Super Lig", "TR1"],
         "1. Lig Turquia": ["1. Lig", "TR2"],
-        "Champions League": ["Champions League", "UCL", "CHAMPIONS"],
-        "Europa League": ["Europa League", "UEL", "EUROPA LEAGUE"],
-        "Brasileirao Serie A - Brasil": ["Serie A Brasil", "BR1", "BRASILEIRAO A"],
-        "Brasileirao Serie B - Brasil": ["Serie B Brasil", "BR2", "BRASILEIRAO B"],
+        "Champions League": ["Champions League", "UCL"],
+        "Europa League": ["Europa League", "UEL"],
+        "Brasileirao Serie A - Brasil": ["Serie A Brasil", "BR1"],
+        "Brasileirao Serie B - Brasil": ["Serie B Brasil", "BR2"],
     }
 
-    def _get_equipos_v7(nombre_display):
+    def _get_equipos_v8(nombre_display):
         try:
-            if 'df' not in globals() or df.empty:
-                return []
+            if 'df' not in globals() or df.empty: return []
             keywords = LEAGUES_MAP.get(nombre_display, [nombre_display.split(" - ")[0]])
             dff = df.copy()
             mask_final = None
@@ -1311,7 +1310,6 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 m = dff['League'].astype(str).str.upper().str.contains(kw.upper(), na=False)
                 mask_final = m if mask_final is None else (mask_final | m)
             if mask_final is None or not mask_final.any():
-                # si no encuentra, devuelve vacio para no contaminar con alemanes
                 return []
             dff = dff[mask_final]
             seen={}
@@ -1319,75 +1317,81 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 n=normaliza(t)
                 if n not in seen: seen[n]=t.strip()
             return sorted(seen.values())
-        except Exception as e:
-            return []
+        except: return []
 
-    def _parse_mid_v7(s):
+    def _parse_mid_v8(s):
         if not s: return ""
-        m=_re2.search(r"mid=([A-Za-z0-9]+)", str(s), _re2.I)
+        s=str(s).strip()
+        m=_re2.search(r"mid=([A-Za-z0-9]{6,12})", s, _re2.I)
         if m: return m.group(1)
-        clean=_re2.sub(r'[^A-Za-z0-9]', '', str(s).strip())
+        clean=_re2.sub(r'[^A-Za-z0-9]', '', s)
         return clean if 6<=len(clean)<=12 else ""
 
-    def _build_v7(data, home, away, comp, mid):
+    def _build_v8(data, home, away, comp, mid):
         base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
         entries=base.get("momentum",{}).get("entries",[]) or []
         mom_vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
-        if not mom_vals: return None, "Sin momentum", []
+        if not mom_vals: return None, "Sin momentum en JSON", []
         me=base.get("matchEvents",{}).get("entries",[]) or []
         goals=[{"minute": (ev.get("timeFrame",{}) or {}).get("elapsedMinute")} for ev in me if ev.get("type",{}).get("type","")=="goal"]
         reduced={"match": f"{home} vs {away}","id": str(mid),"home": home,"away": away,"competition": comp,
-                 "legend": f"+ = {home} dominates, - = {away} dominates","momentum": mom_vals,"goals": goals,"count": len(mom_vals)}
+                 "legend": f"+ = {home} dominates","momentum": mom_vals,"goals": goals,"count": len(mom_vals)}
         txt_m=" ".join([f"{i}:{v:+.2f}" for i,v in enumerate(mom_vals)])
         txt_g=" ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
         return reduced, f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}", mom_vals
 
-    # LIGA FUERA DEL FORM para que al cambiarla se actualicen los equipos al instante
-    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), key="comp_v7_OUTSIDE")
-    equipos_lista = _get_equipos_v7(comp_sel)
+    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), key="comp_v8")
+    equipos_lista = _get_equipos_v8(comp_sel)
+    st.write(f"DEBUG equipos encontrados en tu base para {comp_sel}: {len(equipos_lista)}")
 
-    if not equipos_lista:
-        st.warning(f"⚠ Tu base no tiene partidos de '{comp_sel}'. Carga CSVs de esa liga o usa texto manual abajo.")
-        equipos_lista = []
+    c1,c2 = st.columns(2)
+    if equipos_lista:
+        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v8")
+        with c2:
+            away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v8")
+    else:
+        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v8", placeholder="REAL SOCIEDAD II")
+        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v8", placeholder="GRANADA CF")
 
-    with st.form(key="form_mom_v7"):
-        c1,c2 = st.columns(2)
-        if equipos_lista:
-            with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v7")
-            with c2:
-                away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
-                away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v7")
-        else:
-            with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v7", placeholder="Real Sociedad B")
-            with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v7", placeholder="Granada CF")
+    # ESTOS FUERA DEL FORM - asi no se vacian
+    url_input = st.text_input("Link con mid= o solo MID", key="url_v8_FINAL", placeholder="U6aWb5gM")
+    json_input = st.text_area("O pega JSON crudo", key="json_v8_FINAL", height=70)
 
-        url_i = st.text_input("Link con mid= o solo MID", key="url_v7", placeholder="U6aWb5gM")
-        json_i = st.text_area("O pega JSON crudo", key="json_v7", height=60)
-        submitted = st.form_submit_button("CAPTURAR MOMENTUM", type="primary", use_container_width=True)
+    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_v8"):
+        # lee directo de session_state para que no se vacie
+        raw_mid = st.session_state.get("url_v8_FINAL", "") or url_input or ""
+        raw_json = st.session_state.get("json_v8_FINAL", "") or json_input or ""
+        mid_i = _parse_mid_v8(raw_mid) if not raw_json.strip() else (_parse_mid_v8(raw_mid) or "manual")
 
-    if submitted:
-        mid_i = _parse_mid_v7(url_i) if not json_i.strip() else (_parse_mid_v7(url_i) or "manual")
-        st.write(f"DEBUG liga: {comp_sel} | equipos df: {len(equipos_lista)} | mid: '{mid_i}'")
+        st.write(f"DEBUG raw_mid: '{raw_mid}' -> parsed: '{mid_i}' | json len: {len(raw_json)}")
+
         data_i=None
-        if json_i.strip():
-            try: data_i=_js2.loads(json_i.strip())
-            except: st.error("JSON invalido")
+        if raw_json.strip():
+            try: data_i=_js2.loads(raw_json.strip())
+            except Exception as e: st.error(f"JSON invalido {e}")
 
         if not data_i:
             if not mid_i:
-                st.warning("Escribe el MID: U6aWb5gM"); st.stop()
+                st.warning("⚠ Escribe U6aWb5gM y pulsa Enter antes de CAPTURAR")
+                st.stop()
             api=f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
+            st.write(f"DEBUG fetching {api}")
             try:
                 r=requests.get(api, headers={"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}, timeout=15)
-                st.write(f"DEBUG status {r.status_code}")
-                if r.status_code==200: data_i=r.json()
-                else: st.error(f"HTTP {r.status_code} bloqueado - usa metodo F12")
-            except Exception as e: st.error(f"Fetch {e}")
+                st.write(f"DEBUG status {r.status_code} len {len(r.text)}")
+                if r.status_code==200:
+                    data_i=r.json()
+                else:
+                    st.error(f"HTTP {r.status_code} bloqueado")
+                    st.code(r.text[:400])
+            except Exception as e:
+                st.error(f"Fetch error {e}")
 
         if data_i:
             hf=(home_sel or "Local").strip()
             af=(away_sel or "Visitante").strip()
-            reduced_i, txt_ia_i, mom_vals_i = _build_v7(data_i, hf, af, comp_sel, mid_i or "manual")
+            reduced_i, txt_ia_i, mom_vals_i = _build_v8(data_i, hf, af, comp_sel, mid_i or "manual")
             if reduced_i:
                 st.success(f"OK {hf} vs {af} | {len(mom_vals_i)} pts")
                 try:
@@ -1404,13 +1408,15 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
                 except: pass
                 j_str=_js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
                 html_c=f"""<div>
-                <textarea id="v7_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('v7_json').value).then(()=>{{document.getElementById('msg_v7').innerText='✓ COPIADO';}})"
+                <textarea id="v8_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('v8_json').value).then(()=>{{document.getElementById('msg_v8').innerText='✓ COPIADO {len(j_str)}';}})"
                 style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-                <div id="msg_v7" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                <textarea id="v7_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('v7_txt').value).then(()=>{{document.getElementById('msg_v7t').innerText='✓ TXT COPIADO';}})"
+                <div id="msg_v8" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                <textarea id="v8_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('v8_txt').value).then(()=>{{document.getElementById('msg_v8t').innerText='✓ TXT COPIADO';}})"
                 style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-                <div id="msg_v7t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                <div id="msg_v8t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
                 </div>"""
                 components3.html(html_c, height=360, scrolling=True)
+            else:
+                st.error(f"{txt_ia_i}")
