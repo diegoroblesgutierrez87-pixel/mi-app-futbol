@@ -1273,6 +1273,15 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     def get_momentum_from_url(url):
         url = url.strip()
         eid = None
+        home = "local"
+        away = "visitante"
+        mt = re.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+        if mt:
+            def clean(s):
+                s = re.sub(r'-[A-Za-z0-9]{6,8}$','',s)
+                return s.replace('-',' ').title().strip()
+            home = clean(mt.group(1))
+            away = clean(mt.group(2))
         m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, re.I)
         if m_mid:
             eid = m_mid.group(1)
@@ -1293,7 +1302,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             if not entries:
                 return None, "Sin momentum aun - partido no empezado"
             vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
-            return {"eid":eid, "vals":vals}, None
+            return {"eid":eid, "vals":vals, "home":home, "away":away}, None
         except Exception as e:
             return None, str(e)
 
