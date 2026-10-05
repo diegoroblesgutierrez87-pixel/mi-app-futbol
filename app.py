@@ -1257,3 +1257,113 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
              COPIAR FIX
             </button>
             """, height=55, scrolling=False)
+            # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>Independiente. Mete Liga + Home vs Away + link con mid= y te genera JSON reducido listo para IA.</div>", unsafe_allow_html=True)
+    import requests, json as _js2, random, re as _re2
+    import html as _html3
+    import streamlit.components.v1 as components3
+    import matplotlib.pyplot as plt
+    import io, base64
+
+    def _build_reducido_ind(data, home, away, comp, mid):
+        try:
+            base = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
+            entries = base.get("momentum",{}).get("entries",[]) or []
+            mom_vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
+            me = base.get("matchEvents",{}).get("entries",[]) or []
+            goals=[]
+            for ev in me:
+                if ev.get("type",{}).get("type","")=="goal":
+                    tf = ev.get("timeFrame",{}) or {}
+                    goals.append({"minute": tf.get("elapsedMinute"), "display": tf.get("displayTime")})
+            reduced = {
+                "match": f"{home} vs {away}",
+                "id": str(mid),
+                "home": home,
+                "away": away,
+                "competition": comp,
+                "legend": f"+ = {home} (home) dominates, - = {away} (away) dominates, value -1 to 1, index = minute 0-{len(mom_vals)-1}",
+                "momentum": mom_vals,
+                "goals": goals,
+                "count": len(mom_vals)
+            }
+            txt_m = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(mom_vals)])
+            txt_g = " ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
+            txt_ia = f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}"
+            return reduced, txt_ia, mom_vals
+        except Exception as e:
+            return None, f"Error: {e}", []
+
+    UA = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"]
+
+    c1i, c2i, c3i = st.columns([1.5,1,1])
+    with c1i:
+        comp_i = st.text_input("Liga/Competicion", key="mom_comp_ind", placeholder="LaLiga EA Sports")
+    with c2i:
+        home_i = st.text_input("Equipo 1 HOME", key="mom_home_ind", placeholder="Real Madrid")
+    with c3i:
+        away_i = st.text_input("Equipo 2 AWAY", key="mom_away_ind", placeholder="Barcelona")
+
+    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_ind", placeholder="mid=U6aWb5gM o https://...")
+    json_i = st.text_area("O pega JSON crudo de 13.ds.lsapp.eu (si lo tienes)", key="mom_json_ind", height=70)
+
+    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_ind"):
+        mid_i = ""
+        if url_i:
+            m = _re2.search(r"mid=([A-Za-z0-9]+)", url_i)
+            mid_i = m.group(1) if m else _re2.sub(r'[^A-Za-z0-9]', '', url_i.strip())[:20]
+
+        data_i = None
+        if json_i.strip():
+            try: data_i = _js2.loads(json_i.strip())
+            except: st.error("JSON manual invalido")
+
+        if not data_i and mid_i:
+            try:
+                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
+                r = requests.get(api, headers={"User-Agent": random.choice(UA), "Referer":"https://www.flashscore.es/"}, timeout=12)
+                if r.status_code==200:
+                    data_i = r.json()
+                else:
+                    st.error(f"HTTP {r.status_code} - sin momentum")
+            except Exception as e:
+                st.error(f"Fetch error: {e}")
+
+        if data_i:
+            hf = home_i.strip() or "Local"
+            af = away_i.strip() or "Visitante"
+            cf = comp_i.strip() or "Competicion"
+            reduced_i, txt_ia_i, mom_vals_i = _build_reducido_ind(data_i, hf, af, cf, mid_i or "manual")
+            if reduced_i and mom_vals_i:
+                st.success(f"OK {hf} vs {af} - {len(mom_vals_i)} mins")
+                try:
+                    fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
+                    cols = ['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
+                    ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
+                    ax.axhline(0, color='black', linewidth=0.6)
+                    ax.set_xticks([])
+                    ax.set_title(f"{hf} vs {af} - {cf}", fontsize=8, fontweight='bold')
+                    fig.tight_layout(pad=0.2)
+                    buf = io.BytesIO()
+                    plt.savefig(buf, format='png', bbox_inches='tight')
+                    plt.close(fig)
+                    buf.seek(0)
+                    b64 = base64.b64encode(buf.read()).decode()
+                    st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
+                except: pass
+
+                j_str_i = _js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
+                html_c = f"""
+                <div>
+                    <textarea id="txt_mom_ind_json" style="width:100%;height:140px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_ind_json').value).then(()=>{{document.getElementById('msg_ind_json').innerText='✓ COPIADO {len(j_str_i)} chars';}})"
+                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
+                    <div id="msg_ind_json" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                    <textarea id="txt_mom_ind_txt" style="width:100%;height:90px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_mom_ind_txt').value).then(()=>{{document.getElementById('msg_ind_txt').innerText='✓ TXT COPIADO';}})"
+                        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
+                    <div id="msg_ind_txt" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                </div>
+                """
+                components3.html(html_c, height=380, scrolling=True)
