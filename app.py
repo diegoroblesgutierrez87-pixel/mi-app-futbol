@@ -1264,8 +1264,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#0f8105;font-weight:900'>v12 AUTO - 1 click, sin pegar JSON, copia directa</div>", unsafe_allow_html=True)
-    import streamlit.components.v1 as components3, html as _html3, json as _js2
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#0f8105;font-weight:900'>v13 AUTO FIX SyntaxError - 1 click automatico</div>", unsafe_allow_html=True)
+    import streamlit.components.v1 as components3, html as _html3
 
     LEAGUES_MAP = {
         "LaLiga Hypermotion - España": ["LaLiga2", "Hypermotion", "ES2"],
@@ -1285,7 +1285,7 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         "Brasileirao Serie A - Brasil": ["Serie A Brasil", "BR1"], "Brasileirao Serie B - Brasil": ["Serie B Brasil", "BR2"],
     }
 
-    def _get_equipos_v12(name):
+    def _get_equipos_v13(name):
         try:
             if 'df' not in globals() or df.empty: return []
             kws = LEAGUES_MAP.get(name, [name.split(" - ")[0]])
@@ -1303,29 +1303,37 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             return sorted(seen.values())
         except: return []
 
-    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=0, key="comp_v12")
-    equipos_lista = _get_equipos_v12(comp_sel)
+    comp_sel = st.selectbox("Liga/Competicion (29)", list(LEAGUES_MAP.keys()), index=0, key="comp_v13")
+    equipos_lista = _get_equipos_v13(comp_sel)
 
     c1,c2 = st.columns(2)
     if equipos_lista:
-        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v12")
+        with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v13")
         with c2:
             away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
-            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v12")
+            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v13")
     else:
-        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v12", value="REAL SOCIEDAD II")
-        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v12", value="GRANADA CF")
+        with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v13", value="REAL SOCIEDAD II")
+        with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v13", value="GRANADA CF")
 
-    mid_default = st.text_input("MID del partido", key="mid_v12", value="U6aWb5gM")
+    mid_default = st.text_input("MID del partido", key="mid_v13", value="U6aWb5gM")
 
-    # HTML AUTOMATICO - fetch desde tu navegador, no desde Streamlit Cloud
-    auto_html = f"""
+    # Escapamos fuera del f-string para no usar backslash dentro
+    home_esc = _html3.escape(home_sel)
+    away_esc = _html3.escape(away_sel)
+    comp_esc = _html3.escape(comp_sel)
+    mid_esc = _html3.escape(mid_default)
+    home_js = home_sel.replace("'", " ").replace('"', ' ')
+    away_js = away_sel.replace("'", " ").replace('"', ' ')
+    comp_js = comp_sel.replace("'", " ").replace('"', ' ')
+
+    auto_html = """
     <div style="font-family:monospace;background:#f8f9fa;padding:12px;border-radius:8px;border:1px solid #ddd">
         <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input id="mid_auto" value="{_html3.escape(mid_default)}" style="flex:1;padding:10px;border:1px solid #ccc;border-radius:6px;font-weight:900" placeholder="U6aWb5gM">
+            <input id="mid_auto" value="__MID__" style="flex:1;padding:10px;border:1px solid #ccc;border-radius:6px;font-weight:900">
             <button id="btn_auto" onclick="fetchAuto()" style="background:#e74c3c;color:white;border:none;border-radius:6px;padding:10px 18px;font-weight:900;cursor:pointer">⚡ GENERAR AUTOMATICO</button>
         </div>
-        <div id="status_auto" style="font-size:11px;color:#666;margin-bottom:8px">Listo para generar { _html3.escape(home_sel) } vs { _html3.escape(away_sel) } - { _html3.escape(comp_sel) }</div>
+        <div id="status_auto" style="font-size:11px;color:#666;margin-bottom:8px">Listo para __HOME__ vs __AWAY__ - __COMP__</div>
         <canvas id="chart_auto" width="520" height="110" style="width:100%;max-width:520px;border:1px solid #ddd;display:none;background:white"></canvas>
         <textarea id="json_auto" style="width:100%;height:110px;font-family:monospace;font-size:11px;display:none;margin-top:8px"></textarea>
         <button id="copy_json_auto" onclick="copyJson()" style="display:none;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR JSON PARA IA</button>
@@ -1334,42 +1342,44 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         <div id="msg_auto" style="font-weight:900;color:#0f8105;margin-top:6px"></div>
     </div>
     <script>
-    async function fetchAuto(){{
-        const mid = document.getElementById('mid_auto').value.trim().replace(/[^A-Za-z0-9]/g,'');
-        if(mid.length<6){{document.getElementById('status_auto').innerText='❌ MID invalido';return;}}
-        document.getElementById('status_auto').innerText='⏳ Capturando momentum de '+mid+'...';
+    const HOME_JS = "__HOME_JS__";
+    const AWAY_JS = "__AWAY_JS__";
+    const COMP_JS = "__COMP_JS__";
+    async function fetchAuto(){
+        const midEl = document.getElementById('mid_auto');
+        const mid = midEl.value.trim().replace(/[^A-Za-z0-9]/g,'');
+        if(mid.length<6){document.getElementById('status_auto').innerText='❌ MID invalido';return;}
+        document.getElementById('status_auto').innerText='⏳ Capturando '+mid+'...';
         document.getElementById('btn_auto').innerText='⏳...';
-        try{{
-            const url = `https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId=${{mid}}&providerId=7`;
-            const r = await fetch(url, {{headers:{{'Referer':'https://www.flashscore.es/'}}}});
+        try{
+            const url = 'https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId='+mid+'&providerId=7';
+            const r = await fetch(url);
             if(!r.ok) throw new Error('HTTP '+r.status);
             const data = await r.json();
-            const base = data?.data?.findMatchMomentumStatsByMatchId;
-            const entries = base?.momentum?.entries||[];
-            if(!entries.length) throw new Error('Sin momentum - partido no empezado');
-            const mom = entries.map(e=>+Number(e.momentumValue).toFixed(3));
-            const goals = (base?.matchEvents?.entries||[]).filter(e=>e.type?.type==='goal').map(e=>e.timeFrame?.elapsedMinute);
-            const home = `{ _html3.escape(home_sel).replace("'", "\\'") }`;
-            const away = `{ _html3.escape(away_sel).replace("'", "\\'") }`;
-            const comp = `{ _html3.escape(comp_sel).replace("'", "\\'") }`;
-            const reduced = {{match: home+' vs '+away, id: mid, home: home, away: away, competition: comp, legend: '+ = '+home+' dominates', momentum: mom, goals: goals.map(m=>({{minute:m}})), count: mom.length }};
+            const base = data && data.data && data.data.findMatchMomentumStatsByMatchId;
+            const entries = base && base.momentum && base.momentum.entries || [];
+            if(!entries.length) throw new Error('Sin momentum');
+            const mom = entries.map(function(e){return +Number(e.momentumValue).toFixed(3);});
+            const evs = base.matchEvents && base.matchEvents.entries || [];
+            const goals = evs.filter(function(e){return e.type && e.type.type==='goal';}).map(function(e){return e.timeFrame && e.timeFrame.elapsedMinute;});
+            const reduced = {match: HOME_JS+' vs '+AWAY_JS, id: mid, home: HOME_JS, away: AWAY_JS, competition: COMP_JS, legend: '+ = '+HOME_JS+' dominates', momentum: mom, goals: goals.map(function(m){return {minute:m};}), count: mom.length};
             const jstr = JSON.stringify(reduced);
-            const txt = `|MATCH| ${{home}} vs ${{away}} |ID| ${{mid}} |COMP| ${{comp}} |GOALS| ${{goals.length?goals.map(g=>g+"'").join(' '):'-'}} |M| `+mom.map((v,i)=>`${{i}}:${{v>=0?'+':''}}${{v.toFixed(2)}}`).join(' ');
+            let gtxt = '-';
+            if(goals.length){gtxt = goals.map(function(g){return g+"'";}).join(' ');}
+            let mtxt = '';
+            for(let i=0;i<mom.length;i++){let v=mom[i]; mtxt += i+':'+(v>=0?'+':'')+v.toFixed(2)+' ';}
+            const txt = '|MATCH| '+HOME_JS+' vs '+AWAY_JS+' |ID| '+mid+' |COMP| '+COMP_JS+' |GOALS| '+gtxt+' |M| '+mtxt;
 
-            // chart
             const canvas = document.getElementById('chart_auto');
             const ctx = canvas.getContext('2d');
             canvas.style.display='block';
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            const w = canvas.width, h = canvas.height;
-            const step = w / mom.length;
-            mom.forEach((v,i)=>{{
-                const x = i*step;
-                const bh = Math.abs(v)* (h*0.4);
-                const y = v>=0? (h/2 - bh) : (h/2);
-                ctx.fillStyle = v>=0? '#e74c3c' : '#3498db';
-                ctx.fillRect(x, y, step*0.9, bh);
-            }});
+            const w=canvas.width, h=canvas.height, step=w/mom.length;
+            for(let i=0;i<mom.length;i++){
+                const v=mom[i], x=i*step, bh=Math.abs(v)*(h*0.4), y=v>=0?(h/2-bh):(h/2);
+                ctx.fillStyle=v>=0?'#e74c3c':'#3498db';
+                ctx.fillRect(x,y,step*0.9,bh);
+            }
             ctx.fillStyle='#000'; ctx.fillRect(0,h/2,w,1);
 
             document.getElementById('json_auto').value=jstr;
@@ -1378,25 +1388,27 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
             document.getElementById('txt_auto').value=txt;
             document.getElementById('txt_auto').style.display='block';
             document.getElementById('copy_txt_auto').style.display='block';
-            document.getElementById('status_auto').innerText='✅ OK '+home+' vs '+away+' | '+mom.length+' mins | '+goals.length+' goles';
-            document.getElementById('msg_auto').innerText='✅ Generado automatico - dale a COPIAR';
-        }}catch(e){{
-            document.getElementById('status_auto').innerText='❌ Error: '+e.message+' - prueba abrir el partido en flashscore y recargar';
-            document.getElementById('msg_auto').innerText='Si falla, usa F12 > Network > pq_graphql como antes';
-        }}finally{{
+            document.getElementById('status_auto').innerText='✅ OK '+HOME_JS+' vs '+AWAY_JS+' | '+mom.length+' mins | '+goals.length+' goles';
+            document.getElementById('msg_auto').innerText='✅ Generado automatico';
+        }catch(e){
+            document.getElementById('status_auto').innerText='❌ Error: '+e.message;
+            document.getElementById('msg_auto').innerText='Abre el partido en flashscore y prueba de nuevo';
+        }finally{
             document.getElementById('btn_auto').innerText='⚡ GENERAR AUTOMATICO';
-        }}
-    }}
-    function copyJson(){{
+        }
+    }
+    function copyJson(){
         const v=document.getElementById('json_auto').value;
-        navigator.clipboard.writeText(v).then(()=>{{document.getElementById('msg_auto').innerText='✓ JSON COPIADO '+v.length+' chars';}});
-    }}
-    function copyTxt(){{
+        navigator.clipboard.writeText(v).then(function(){document.getElementById('msg_auto').innerText='✓ JSON COPIADO '+v.length+' chars';});
+    }
+    function copyTxt(){
         const v=document.getElementById('txt_auto').value;
-        navigator.clipboard.writeText(v).then(()=>{{document.getElementById('msg_auto').innerText='✓ TXT COPIADO';}});
-    }}
-    // auto-generar al cargar si hay mid
-    window.addEventListener('load', ()=>{{ if(document.getElementById('mid_auto').value){{ /* no auto para no gastar */ }} }});
+        navigator.clipboard.writeText(v).then(function(){document.getElementById('msg_auto').innerText='✓ TXT COPIADO';});
+    }
     </script>
     """
+
+    auto_html = auto_html.replace("__MID__", mid_esc).replace("__HOME__", home_esc).replace("__AWAY__", away_esc).replace("__COMP__", comp_esc)
+    auto_html = auto_html.replace("__HOME_JS__", home_js).replace("__AWAY_JS__", away_js).replace("__COMP_JS__", comp_js)
+
     components3.html(auto_html, height=520, scrolling=False)
