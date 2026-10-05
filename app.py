@@ -1350,6 +1350,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
+            
 with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
     import requests as _rq2, re as _re2, json as _js2, html as _hl2
     import streamlit.components.v1 as _comp2
@@ -1372,8 +1373,37 @@ with st.expander("ESTADISTICAS LIVE - 15 PARTIDOS", expanded=False):
             return None, "Sin?mid="
         eid = m_mid.group(1)
         try:
-            import time as _tt2, json as _js_tmp
+            headers = {"User-Agent": UA2, "Referer":"https://www.flashscore.es/", "Accept-Language":"es-ES,es;q=0.9"}
+            fetch_url = url
+            if "/estadisticas/" not in url:
+                base = url.split("?")[0].rstrip("/")
+                fetch_url = base + "/resumen/estadisticas/general/"
+                if "?mid=" in url:
+                    fetch_url = url[url.find("?mid="):]
+                    fetch_url = base + "/resumen/estadisticas/general/" + fetch_url
+                else:
+                    fetch_url = base + "/resumen/estadisticas/general/?mid=" + eid
+            r = _rq2.get(fetch_url, headers=headers, timeout=12)
+            txt = r.text
             out = {"id":eid, "home":home, "away":away}
+            clean_txt = _re2.sub(r'<[^>]+>', ' ', txt)
+            clean_txt = _re2.sub(r'\s+', ' ', clean_txt)
+            for pat, name in [
+                (r'([\d\.]+)\s*Goles esperados \(xG\)\s*([\d\.]+)', 'xG'),
+                (r'(\d+%)\s*Posesi[oó]n\s*(\d+%)', 'Posesion'),
+                (r'(\d+)\s*Remates totales\s*(\d+)', 'Remates_totales'),
+                (r'(\d+)\s*Remates a puerta\s*(\d+)', 'Remates_puerta'),
+                (r'(\d+)\s*C[oó]rneres\s*(\d+)', 'Corners'),
+                (r'(\d+)\s*Grandes ocasiones\s*(\d+)', 'Grandes_oc'),
+            ]:
+                m = _re2.search(pat, clean_txt, _re2.I)
+                if m:
+                    out[name] = {"home": m.group(1), "away": m.group(2)}
+            if len(out) <= 3:
+                out["error"] = "Sin stats en HTML"
+            return out, None
+        except Exception as e:
+            return None, str(e)
             # 1) prueba graphql con varios hash y dominios
             for domain in ["https://13.ds.lsapp.eu/pq_graphql","https://14.ds.lsapp.eu/pq_graphql"]:
                 for _hash in ["sui","st","sts","mc","fs"]:
