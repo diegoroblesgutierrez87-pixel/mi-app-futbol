@@ -1327,7 +1327,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
                 else:
                     vals = res["vals"]
                     eid = res["eid"]
-                    reducido = {"id":eid, "momentum":vals, "count":len(vals)}
+                    reducido = {"id":eid,"home":res.get("home","local"),"away":res.get("away","visit"),"momentum":vals,"count":len(vals)}
                     todo.append(reducido)
                     j_str = json.dumps(reducido, separators=(',',':'))
                     j_esc = html.escape(j_str)
