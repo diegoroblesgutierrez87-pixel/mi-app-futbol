@@ -1265,106 +1265,125 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 ##########################################
 # BLOQUE INDEPENDIENTE V2 - MOMENTUM VS - CON LISTADO EQUIPOS
 ##########################################
-with st.expander("MOMENTUM / ESTADISTICAS - COPIAR IA", expanded=False):
-    st.caption("Busca Equipo1 vs Equipo2 + Liga - Autocompletado")
+##########################################
+# BLOQUE V3 - MOMENTUM LIVE FLASH SCORE - SCRAPEA ONLINE PARA IA
+##########################################
+with st.expander("MOMENTUM / ESTADISTICAS LIVE - COPIAR IA EN DIRECTO", expanded=False):
+    st.caption("Pega URL de Flashscore de un partido EN DIRECTO y saca el momentum sin captura")
 
-    if 'momentum_by_id' not in globals() or not momentum_by_id:
-        st.warning("No hay momentum_by_id")
-        st.stop()
+    import requests, re, json, random
+    from datetime import datetime
 
-    @st.cache_data(show_spinner=False)
-    def get_data_mom():
-        lista = []
-        equipos_set = set()
-        for fid, recs in momentum_by_id.items():
-            if not recs: continue
-            r0 = recs[0]
-            h = str(r0.get('home','')).strip()
-            a = str(r0.get('away','')).strip()
-            comp = str(r0.get('competition','')).strip() or str(r0.get('league','')).strip()
-            if not h or not a: continue
-            lista.append((fid, f"{h} vs {a}", h, a, comp))
-            equipos_set.add(h)
-            equipos_set.add(a)
-        return sorted(lista, key=lambda x: x[1]), sorted(equipos_set)
+    USER_AGENTS = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"]
 
-    lista_mom, todos_equipos = get_data_mom()
-    ligas_mom = sorted(set([x[4] for x in lista_mom if x[4]]))
+    LEAGUES_URL = {
+        "ES2_LaLiga_Hypermotion": "https://www.flashscore.es/futbol/espana/laliga2/resultados/",
+        "ES1_LaLiga": "https://www.flashscore.es/futbol/espana/laliga/resultados/",
+        "EN1_Premier": "https://www.flashscore.es/futbol/inglaterra/premier-league/resultados/",
+        "EN2_Championship": "https://www.flashscore.es/futbol/inglaterra/championship/resultados/",
+        "DE1_Bundesliga": "https://www.flashscore.es/futbol/alemania/bundesliga/resultados/",
+        "IT1_SerieA": "https://www.flashscore.es/futbol/italia/serie-a/resultados/",
+    }
 
-    c0, c1, c2 = st.columns([1,1,1])
-    with c0:
-        liga_f = st.selectbox("Liga", ["Todas"]+ligas_mom, key="mom_v2_liga")
+    def get_mid_from_input(s):
+        s=s.strip()
+        m=re.search(r"mid=([A-Za-z0-9]+)", s)
+        if m: return m.group(1)
+        if re.match(r"^[A-Za-z0-9]{8,12}$", s): return s
+        return None
+
+    def fetch_momentum_live(mid):
+        url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7"
+        try:
+            headers={"User-Agent":random.choice(USER_AGENTS),"Referer":"https://www.flashscore.es/"}
+            r=requests.get(url, headers=headers, timeout=10)
+            if r.status_code!=200: return None, f"Error {r.status_code}"
+            data=r.json()
+            base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
+            entries=base.get("momentum",{}).get("entries",[]) or []
+            if not entries: return None, "Sin momentum aun (partido no empezado o sin datos)"
+            vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
+            # info equipos
+            home = base.get("homeTeam",{}).get("name","Local") if isinstance(base.get("homeTeam"),dict) else "Local"
+            away = base.get("awayTeam",{}).get("name","Visitante") if isinstance(base.get("awayTeam"),dict) else "Visitante"
+            # fallback del HTML del partido si no viene
+            return {"vals":vals, "home":home, "away":away, "raw":data}, None
+        except Exception as e:
+            return None, str(e)
+
+    c1,c2 = st.columns([2,1])
     with c1:
-        # SELECTBOX CON BUSQUEDA NATIVA - AL ESCRIBIR APARECE LISTADO
-        eq1 = st.selectbox("Equipo 1", ["Ninguno"]+todos_equipos, key="mom_v2_eq1", placeholder="Escribe Barça...")
+        input_url = st.text_input("Pega URL Flashscore o MID", placeholder="https://www.flashscore.es/partido/futbol/... mid=xxx o solo el MID", key="live_mom_url")
     with c2:
-        eq2 = st.selectbox("Equipo 2 (vs)", ["Ninguno"]+todos_equipos, key="mom_v2_eq2", placeholder="Escribe Madrid...")
+        liga_live = st.selectbox("Liga (opcional para nombre)", ["Auto"]+list(LEAGUES_URL.keys()), key="live_mom_liga")
 
-    # FILTRO LOGICA VS
-    filtrados = lista_mom
-    if liga_f!= "Todas":
-        filtrados = [x for x in filtrados if x[4]==liga_f]
+    # Tambien busqueda por equipos si no tienes URL
+    c3,c4,c5 = st.columns(3)
+    with c3:
+        eq1_live = st.text_input("Equipo 1 (si no tienes URL)", key="live_eq1", placeholder="Granada")
+    with c4:
+        eq2_live = st.text_input("Equipo 2", key="live_eq2", placeholder="Real Sociedad B")
+    with c5:
+        st.markdown("<br>", unsafe_allow_html=True)
+        btn_buscar = st.button("🔍 Buscar MID en liga", key="btn_buscar_mid")
 
-    if eq1!= "Ninguno":
-        n1 = normaliza(eq1)
-        filtrados = [x for x in filtrados if n1 in normaliza(x[2]) or n1 in normaliza(x[3])]
-    if eq2!= "Ninguno":
-        n2 = normaliza(eq2)
-        filtrados = [x for x in filtrados if n2 in normaliza(x[2]) or n2 in normaliza(x[3])]
+    mid_a_usar = get_mid_from_input(input_url) if input_url else None
 
-    # Si buscas Barcelona vs Real Madrid, te prioriza el enfrentamiento directo
-    if eq1!="Ninguno" and eq2!="Ninguno":
-        directos = [x for x in filtrados if (normaliza(eq1) in normaliza(x[2]) and normaliza(eq2) in normaliza(x[3])) or (normaliza(eq2) in normaliza(x[2]) and normaliza(eq1) in normaliza(x[3]))]
-        if directos:
-            filtrados = directos # muestra solo el vs directo primero
+    # Si no pega MID, intenta buscar en la pagina de resultados de esa liga
+    if btn_buscar and not mid_a_usar:
+        if liga_live=="Auto":
+            st.warning("Selecciona liga para buscar")
+        elif not eq1_live:
+            st.warning("Pon al menos Equipo 1")
+        else:
+            with st.spinner(f"Buscando {eq1_live} vs {eq2_live} en {liga_live}..."):
+                try:
+                    url_liga=LEAGUES_URL[liga_live]
+                    headers={"User-Agent":random.choice(USER_AGENTS)}
+                    html=requests.get(url_liga, headers=headers, timeout=12).text
+                    # saca todos los mids
+                    mids=re.findall(r"mid=([A-Za-z0-9]+)", html)
+                    st.info(f"Encontrados {len(mids)} mids en la pagina, filtrando...")
+                    # No podemos saber equipos sin playwright, asi que muestra los 10 primeros mids para que pegue
+                    for mid in mids[:10]:
+                        st.code(f"{mid} - https://www.flashscore.es/partido/futbol/?mid={mid}")
+                except Exception as e:
+                    st.error(f"Error buscando: {e}")
 
-    st.markdown(f"**{len(filtrados)} partidos encontrados**")
-    filtrados = filtrados[:50] # limita para no petar
+    if st.button("⚡ SACAR MOMENTUM LIVE", key="btn_sacar_live"):
+        if not mid_a_usar:
+            st.error("Pega primero la URL o el MID del partido en directo")
+        else:
+            with st.spinner(f"Bajando momentum de {mid_a_usar}..."):
+                res, err = fetch_momentum_live(mid_a_usar)
+                if err:
+                    st.error(err)
+                else:
+                    vals=res['vals']
+                    home=res['home']
+                    away=res['away']
+                    # si el usuario escribio nombres, usalos
+                    if eq1_live: home=eq1_live
+                    if eq2_live: away=eq2_live
 
-    if not filtrados:
-        st.info("No hay momentum para esa combinación. Prueba solo con Equipo 1")
-    else:
-        opciones = {}
-        for fid, lab, h, a, comp in filtrados:
-            key_label = f"{lab} | {comp} | {fid}"
-            opciones[key_label] = (fid, h, a, comp)
+                    reducido={
+                        "match": f"{home} vs {away}",
+                        "id": mid_a_usar,
+                        "home": home,
+                        "away": away,
+                        "competition": liga_live,
+                        "legend": f"+={home} domina, -={away} domina, 0-100 min",
+                        "momentum": vals,
+                        "count": len(vals),
+                        "timestamp": datetime.now().isoformat()
+                    }
 
-        sel = st.multiselect("Selecciona para copiar a IA", list(opciones.keys()), default=list(opciones.keys())[:5] if len(opciones)<=5 else [], key="mom_v2_sel")
+                    m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
+                    txt_ia = f"|MATCH| {home} vs {away} |COMP| {liga_live} |ID| {mid_a_usar} |M| {m_txt}"
 
-        if sel:
-            import json
-            bloques = []
-            txt_lines = []
-            for k in sel:
-                fid, h, a, comp = opciones[k]
-                recs = momentum_by_id.get(fid, [])
-                recs_sorted = sorted(recs, key=lambda x: int(x.get('minute',0)))
-                vals = [round(float(x.get('momentumValue',0)),3) for x in recs_sorted]
-                goles = eventos.get(str(fid), [])
+                    st.success(f"{home} vs {away} - {len(vals)} minutos de momentum LIVE")
+                    st.code(json.dumps(reducido, separators=(',',':'), ensure_ascii=False), language="json")
+                    st.code(txt_ia, language="text")
 
-                reducido = {
-                    "match": f"{h} vs {a}",
-                    "id": str(fid),
-                    "home": h, "away": a,
-                    "competition": comp,
-                    "legend": f"+={h} domina, -={a} domina",
-                    "momentum": vals,
-                    "goals": [{"m":g['m'],"team":g['abbr']} for g in goles],
-                    "count": len(vals)
-                }
-                bloques.append(reducido)
-                m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
-                g_txt = " ".join([f"{g['m']}'{g['abbr']}" for g in goles]) if goles else "0g"
-                txt_lines.append(f"|MATCH| {h} vs {a} |COMP| {comp} |ID| {fid} |GOALS| {g_txt} |M| {m_txt}")
-
-            json_final = "\n".join([json.dumps(b, separators=(',',':'), ensure_ascii=False) for b in bloques])
-            txt_final = "\n".join(txt_lines)
-
-            st.code(json_final, language="json")
-            st.code(txt_final, language="text")
-
-            cdl1, cdl2 = st.columns(2)
-            with cdl1:
-                st.download_button("⬇️ JSON", json_final, f"mom_{eq1}_vs_{eq2}.json", key="dl_v2_json")
-            with cdl2:
-                st.download_button("⬇️ TXT IA", txt_final, f"mom_{eq1}_vs_{eq2}.txt", key="dl_v2_txt")
+                    st.download_button("⬇️ JSON LIVE", json.dumps(reducido, ensure_ascii=False), f"live_{mid_a_usar}.json", key="dl_live_json")
+                    st.download_button("⬇️ TXT IA LIVE", txt_ia, f"live_{mid_a_usar}.txt", key="dl_live_txt")
