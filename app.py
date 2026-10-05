@@ -1262,14 +1262,11 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 
 ####################################
 # --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
-# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
+# --# --- DESPLEGABLE INDEPENDIENTE MOMENTUM/ESTADISTICAS ---
 with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=False):
-    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>v5 FIX - 29 ligas + equipos desplegable. Parser de mid arreglado.</div>", unsafe_allow_html=True)
-    import requests, json as _js2, random, re as _re2
-    import html as _html3
-    import streamlit.components.v1 as components3
-    import matplotlib.pyplot as plt
-    import io, base64
+    st.markdown("<div style='font-family:monospace;font-size:11px;color:#666'>v6 FORM FIX - dale Enter o directo a CAPTURAR, ya guarda el mid.</div>", unsafe_allow_html=True)
+    import requests, json as _js2, random, re as _re2, html as _html3
+    import streamlit.components.v1 as components3, matplotlib.pyplot as plt, io, base64
 
     LEAGUES_29 = [
         "Bundesliga - Alemania","2. Bundesliga - Alemania","Bundesliga Austria","Jupiler Pro League - Belgica",
@@ -1281,157 +1278,118 @@ with st.expander("MOMENTUM/ESTADISTICAS - CAPTURA FLASHCORE DIRECTO", expanded=F
         "Brasileirao Serie A - Brasil","Brasileirao Serie B - Brasil",
     ]
 
-    def _get_equipos_por_liga_v5(nombre_liga_sel):
+    def _get_equipos_v6(nombre):
         try:
-            if 'df' not in globals() or df.empty:
-                return []
+            if 'df' not in globals() or df.empty: return []
             dff = df.copy()
-            key = nombre_liga_sel.split(" - ")[0].split(" ")[0].upper()
+            key = nombre.split(" - ")[0].split(" ")[0].upper()
             mask = dff['League'].astype(str).str.upper().str.contains(key, na=False)
-            if mask.any():
-                dff = dff[mask]
-            seen = {}
+            if mask.any(): dff = dff[mask]
+            seen={}
             for t in pd.concat([dff['HomeTeam'], dff['AwayTeam']]).dropna().astype(str):
-                n = normaliza(t)
-                if n not in seen:
-                    seen[n] = t.strip()
+                n=normaliza(t)
+                if n not in seen: seen[n]=t.strip()
             return sorted(seen.values())
-        except:
-            return []
+        except: return []
 
-    def _parse_mid_v5(s):
+    def _parse_mid_v6(s):
         if not s: return ""
-        s = str(s).strip()
-        # caso 1: mid=XXXX
-        m = _re2.search(r"mid=([A-Za-z0-9]+)", s, _re2.IGNORECASE)
-        if m:
-            return m.group(1)
-        # caso 2: url completa https://.../partido/.../XXXX#...
-        m2 = _re2.search(r"/([A-Za-z0-9]{6,12})(?:$|#|/|\?)", s)
-        if m2:
-            return m2.group(1)
-        # caso 3: solo el mid directo U6aWb5gM
-        s_clean = _re2.sub(r'[^A-Za-z0-9]', '', s)
-        if 6 <= len(s_clean) <= 12:
-            return s_clean
-        return ""
+        s=str(s).strip()
+        m=_re2.search(r"mid=([A-Za-z0-9]+)", s, _re2.I)
+        if m: return m.group(1)
+        clean=_re2.sub(r'[^A-Za-z0-9]', '', s)
+        return clean if 6<=len(clean)<=12 else ""
 
-    def _build_reducido_ind(data, home, away, comp, mid):
-        try:
-            base = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
-            entries = base.get("momentum",{}).get("entries",[]) or []
-            mom_vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
-            me = base.get("matchEvents",{}).get("entries",[]) or []
-            goals=[]
-            for ev in me:
-                if ev.get("type",{}).get("type","")=="goal":
-                    tf = ev.get("timeFrame",{}) or {}
-                    goals.append({"minute": tf.get("elapsedMinute")})
-            if not mom_vals:
-                return None, "JSON sin momentum", []
-            reduced = {
-                "match": f"{home} vs {away}",
-                "id": str(mid),
-                "home": home,
-                "away": away,
-                "competition": comp,
-                "legend": f"+ = {home} (home) dominates, - = {away} (away) dominates",
-                "momentum": mom_vals,
-                "goals": goals,
-                "count": len(mom_vals)
-            }
-            txt_m = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(mom_vals)])
-            txt_g = " ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
-            txt_ia = f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}"
-            return reduced, txt_ia, mom_vals
-        except Exception as e:
-            return None, f"Error: {e}", []
+    def _build_v6(data, home, away, comp, mid):
+        base=data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
+        entries=base.get("momentum",{}).get("entries",[]) or []
+        mom_vals=[round(float(e.get("momentumValue",0)),3) for e in entries]
+        if not mom_vals: return None, "Sin momentum", []
+        me=base.get("matchEvents",{}).get("entries",[]) or []
+        goals=[{"minute": (ev.get("timeFrame",{}) or {}).get("elapsedMinute")} for ev in me if ev.get("type",{}).get("type","")=="goal"]
+        reduced={"match": f"{home} vs {away}","id": str(mid),"home": home,"away": away,"competition": comp,
+                 "legend": f"+ = {home} dominates, - = {away} dominates","momentum": mom_vals,"goals": goals,"count": len(mom_vals)}
+        txt_m=" ".join([f"{i}:{v:+.2f}" for i,v in enumerate(mom_vals)])
+        txt_g=" ".join([f"{g['minute']}'" for g in goals]) if goals else "-"
+        txt_ia=f"|MATCH| {home} vs {away} |ID| {mid} |COMP| {comp} |GOALS| {txt_g} |M| {txt_m}"
+        return reduced, txt_ia, mom_vals
 
-    comp_sel = st.selectbox("Liga/Competicion (29)", LEAGUES_29, key="mom_comp_v5_FINAL")
-    equipos_lista = _get_equipos_por_liga_v5(comp_sel)
+    # FORM para que capture todo al pulsar
+    with st.form(key="form_mom_v6"):
+        comp_sel = st.selectbox("Liga/Competicion (29)", LEAGUES_29, key="comp_v6")
+        equipos_lista = _get_equipos_v6(comp_sel)
+        c1,c2 = st.columns(2)
+        if equipos_lista and len(equipos_lista)>1:
+            with c1: home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="home_v6")
+            with c2:
+                away_opts=[e for e in equipos_lista if normaliza(e)!=normaliza(home_sel)] or equipos_lista
+                away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="away_v6")
+        else:
+            with c1: home_sel = st.text_input("Equipo 1 HOME", key="home_txt_v6", placeholder="Real Madrid")
+            with c2: away_sel = st.text_input("Equipo 2 AWAY", key="away_txt_v6", placeholder="Granada")
 
-    c1e, c2e = st.columns(2)
-    if equipos_lista and len(equipos_lista) > 1:
-        with c1e:
-            home_sel = st.selectbox(f"Equipo 1 HOME ({len(equipos_lista)})", equipos_lista, key="mom_home_v5_FINAL")
-        with c2e:
-            away_opts = [e for e in equipos_lista if normaliza(e)!= normaliza(home_sel)] or equipos_lista
-            away_sel = st.selectbox("Equipo 2 AWAY", away_opts, key="mom_away_v5_FINAL")
-    else:
-        with c1e:
-            home_sel = st.text_input("Equipo 1 HOME", key="mom_home_txt_v5_FINAL", placeholder="Real Madrid")
-        with c2e:
-            away_sel = st.text_input("Equipo 2 AWAY", key="mom_away_txt_v5_FINAL", placeholder="Barcelona")
+        url_i = st.text_input("Link Flashscore con mid= o solo MID", key="url_v6", placeholder="U6aWb5gM o mid=U6aWb5gM")
+        json_i = st.text_area("O pega JSON crudo Network > pq_graphql", key="json_v6", height=70)
+        submitted = st.form_submit_button("CAPTURAR MOMENTUM", type="primary", use_container_width=True)
 
-    url_i = st.text_input("Link Flashscore con mid= o solo MID", key="mom_url_v5_FINAL", placeholder="mid=U6aWb5gM o U6aWb5gM")
-    json_i = st.text_area("O pega JSON crudo de Network > pq_graphql", key="mom_json_v5_FINAL", height=70)
+    if submitted:
+        st.write(f"DEBUG raw url_i: '{url_i}' | json: {len(json_i)} chars")
+        mid_i = _parse_mid_v6(url_i) if not json_i.strip() else (_parse_mid_v6(url_i) or "manual")
+        st.write(f"DEBUG mid parsed: '{mid_i}'")
 
-    if st.button("CAPTURAR MOMENTUM", type="primary", use_container_width=True, key="btn_mom_v5_FINAL"):
-        mid_i = _parse_mid_v5(url_i) if not json_i.strip() else _parse_mid_v5(url_i) or "manual"
-        # si hay json manual, no necesitamos mid
-        if not json_i.strip():
-            st.write(f"DEBUG input raw: '{url_i}' -> mid parsed: '{mid_i}'")
-
-        data_i = None
+        data_i=None
         if json_i.strip():
-            try:
-                data_i = _js2.loads(json_i.strip())
-                st.write(f"DEBUG JSON manual OK {len(json_i)} chars")
-            except Exception as e:
-                st.error(f"JSON invalido: {e}")
+            try: data_i=_js2.loads(json_i.strip())
+            except Exception as e: st.error(f"JSON invalido {e}")
 
         if not data_i:
             if not mid_i:
-                st.warning("⚠ No pude sacar el MID. Escribe solo U6aWb5gM sin 'mid=' para probar")
+                st.warning("⚠ Escribe el MID y dale Enter, luego CAPTURAR. Ej: U6aWb5gM")
                 st.stop()
-            api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
-            st.write(f"DEBUG fetching: {api}")
+            api=f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid_i}&providerId=7"
+            st.write(f"DEBUG fetching {api}")
             try:
-                r = requests.get(api, headers={"User-Agent": "Mozilla/5.0", "Referer":"https://www.flashscore.es/"}, timeout=15)
+                r=requests.get(api, headers={"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}, timeout=15)
                 st.write(f"DEBUG status {r.status_code} len {len(r.text)}")
                 if r.status_code==200:
-                    data_i = r.json()
+                    data_i=r.json()
                 else:
-                    st.error(f"HTTP {r.status_code} - bloqueado. Usa el metodo manual F12 > Network > copia JSON")
-                    st.code(r.text[:500])
+                    st.error(f"HTTP {r.status_code} bloqueado. Usa F12 > Network > copia JSON")
             except Exception as e:
-                st.error(f"Fetch error {e}")
+                st.error(f"Error fetch {e}")
 
         if data_i:
-            hf = (home_sel or "Local").strip()
-            af = (away_sel or "Visitante").strip()
-            reduced_i, txt_ia_i, mom_vals_i = _build_reducido_ind(data_i, hf, af, comp_sel, mid_i or "manual")
+            hf=(home_sel or "Local").strip()
+            af=(away_sel or "Visitante").strip()
+            reduced_i, txt_ia_i, mom_vals_i = _build_v6(data_i, hf, af, comp_sel, mid_i or "manual")
             if reduced_i:
                 st.success(f"OK {hf} vs {af} | {len(mom_vals_i)} pts")
                 try:
                     fig, ax = plt.subplots(figsize=(5,1.4), dpi=110)
-                    cols = ['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
+                    cols=['#e74c3c' if v>=0 else '#3498db' for v in mom_vals_i]
                     ax.bar(range(len(mom_vals_i)), mom_vals_i, color=cols, width=1.0)
-                    ax.axhline(0, color='black', linewidth=0.6)
+                    ax.axhline(0,color='black',linewidth=0.6)
                     ax.set_xticks([])
                     ax.set_title(f"{hf} vs {af} - {comp_sel}", fontsize=8, fontweight='bold')
                     fig.tight_layout(pad=0.2)
-                    buf = io.BytesIO()
+                    buf=io.BytesIO()
                     plt.savefig(buf, format='png', bbox_inches='tight')
                     plt.close(fig)
                     buf.seek(0)
-                    b64 = base64.b64encode(buf.read()).decode()
+                    b64=base64.b64encode(buf.read()).decode()
                     st.markdown(f"<img src='data:image/png;base64,{b64}' style='width:100%;max-width:520px;border:1px solid #ddd'/>", unsafe_allow_html=True)
                 except: pass
-
-                j_str_i = _js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
-                html_c = f"""
-                <div>
-                    <textarea id="txt_v5_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v5_json').value).then(()=>{{document.getElementById('msg_v5_json').innerText='✓ COPIADO {len(j_str_i)} chars';}})"
-                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
-                    <div id="msg_v5_json" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                    <textarea id="txt_v5_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v5_txt').value).then(()=>{{document.getElementById('msg_v5_txt').innerText='✓ TXT COPIADO';}})"
-                        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
-                    <div id="msg_v5_txt" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
-                </div>
-                """
+                j_str=_js2.dumps(reduced_i, separators=(',',':'), ensure_ascii=False)
+                html_c=f"""<div>
+                <textarea id="v6_json" style="width:100%;height:130px;font-family:monospace;font-size:11px;">{_html3.escape(j_str)}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('v6_json').value).then(()=>{{document.getElementById('msg_v6').innerText='✓ COPIADO';}})"
+                style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📋 COPIAR JSON PARA IA</button>
+                <div id="msg_v6" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                <textarea id="v6_txt" style="width:100%;height:80px;font-family:monospace;font-size:11px;margin-top:8px;">{_html3.escape(txt_ia_i)}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('v6_txt').value).then(()=>{{document.getElementById('msg_v6t').innerText='✓ TXT COPIADO';}})"
+                style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px;">📱 COPIAR TXT IA</button>
+                <div id="msg_v6t" style="font-family:monospace;font-weight:900;color:#0f8105;"></div>
+                </div>"""
                 components3.html(html_c, height=360, scrolling=True)
             else:
-                st.error(f"Sin momentum: {txt_ia_i}")
+                st.error(f"{txt_ia_i}")
