@@ -1262,59 +1262,48 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
 ##########################################
 # BLOQUE INDEPENDIENTE - MOMENTUM / ESTADISTICAS PARA IA - SIN ERROR 400
 ##########################################
-##########################################
-# BLOQUE INDEPENDIENTE V2 - MOMENTUM VS - CON LISTADO EQUIPOS
-##########################################
-## BLOQUE V6 - FINAL SIMPLE - PEGA URL Y GENERA - FIX URL NUEVA CON mid=
+# BLOQUE V6 - FINAL SIMPLE - PEGA URL Y GENERA - COPIA REAL
 ##########################################
 with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
-    import requests, re, json
+    import requests, re, json, html
+    import streamlit.components.v1 as components
 
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
 
     def get_momentum_from_url(url):
         url = url.strip()
         eid = None
-        # 1. FORMATO NUEVO: ?mid=ML4DjdZa  -> este es el bueno
         m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, re.I)
         if m_mid:
             eid = m_mid.group(1)
         else:
-            # 2. FORMATO VIEJO: /partido/futbol/castellon-ad-ceuta-fc/AbCdEfGh/
             m = re.search(r'/partido/futbol/[^/]+/([A-Za-z0-9]{8,12})/', url)
             if m:
                 eid = m.group(1)
-            else:
-                # 3. Fallback: ultimo segmento de 8 caracteres antes de /#/
-                m2 = re.search(r'/([A-Za-z0-9]{8,12})/#/resumen', url)
-                if m2:
-                    eid = m2.group(1)
-        
         if not eid:
-            return None, "No encuentro el ID. Pega la URL completa con ?mid= . Ej: https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa"
-        
+            return None, "No encuentro ?mid= en la URL. Pega la URL completa: ...?mid=ML4DjdZa"
         try:
             api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7"
             r = requests.get(api, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/"}, timeout=12)
             if r.status_code!=200:
-                return None, f"Error {r.status_code} - el partido aun no empezo o Flashscore bloqueo el IP de Streamlit. Usa el metodo F12 manual si da 400/408"
+                return None, f"Error {r.status_code} - Flashscore bloquea Streamlit Cloud. Ejecuta la app en local y si funcionara"
             data = r.json()
             entries = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
             if not entries:
-                return None, "Sin momentum aun - el partido debe estar empezado"
+                return None, "Sin momentum aun - partido no empezado"
             vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
             return {"eid":eid, "vals":vals}, None
         except Exception as e:
             return None, str(e)
 
-    st.caption("Abre el partido en Flashscore y copia la URL de la barra (con ?mid=)")
-    url = st.text_input("URL Flashscore del partido", placeholder="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa", key="v6_url")
+    st.caption("URL con ?mid=  Ej: tu Tenerife vs Cordoba")
+    url = st.text_input("URL Flashscore del partido", value="https://www.flashscore.es/partido/futbol/cd-tenerife-IHv6nz80/cordoba-cf-CWuejruc/?mid=ML4DjdZa", key="v6_url")
 
     if st.button("⚡ GENERAR MOMENTUM REDUCIDO", key="v6_btn", use_container_width=True):
         if not url:
             st.error("Pega la URL")
         else:
-            with st.spinner(f"Sacando momentum... ID detectado: {url}"):
+            with st.spinner("Sacando momentum..."):
                 res, err = get_momentum_from_url(url)
                 if err:
                     st.error(err)
@@ -1324,8 +1313,25 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
                     m_txt = " ".join([f"{i}:{v:+.2f}" for i,v in enumerate(vals)])
                     reducido = {"id":eid, "momentum":vals, "count":len(vals)}
                     txt_ia = f"|ID| {eid} |M| {m_txt}"
+                    
+                    j_str = json.dumps(reducido, separators=(',',':'))
+                    j_esc = html.escape(j_str)
+                    t_esc = html.escape(txt_ia)
 
-                    st.success(f"OK - {eid} - {len(vals)} minutos")
-                    st.code(json.dumps(reducido, separators=(',',':')), language="json")
-                    st.code(txt_ia, language="text")
-                    st.button("📋 COPIAR JSON (usa Ctrl+C del cuadro)", key="dummy")
+                    st.success(f"OK - {eid} - {len(vals)} mins")
+
+                    copy_html = f"""
+                    <div style="font-family:monospace">
+                        <div style="font-size:11px;color:#666;margin:6px 0">JSON REDUCIDO PARA IA ({len(j_str)} chars)</div>
+                        <textarea id="json_v6" style="width:100%;height:90px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{j_esc}</textarea>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('json_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ JSON COPIADO'; setTimeout(()=>{{document.getElementById('msg_v6').innerText=''}},2000)}})" 
+                        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📋 COPIAR JSON</button>
+                        
+                        <div style="font-size:11px;color:#666;margin:12px 0 6px 0">TXT PARA IA</div>
+                        <textarea id="txt_v6" style="width:100%;height:70px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:6px">{t_esc}</textarea>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_v6').value).then(()=>{{document.getElementById('msg_v6').innerText='✅ TXT COPIADO';}})" 
+                        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:4px">📱 COPIAR TXT</button>
+                        <div id="msg_v6" style="font-weight:900;color:#0f8105;text-align:center;margin-top:8px"></div>
+                    </div>
+                    """
+                    components.html(copy_html, height=300)
