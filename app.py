@@ -1340,12 +1340,26 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             if not entries:
                 return None, "Sin momentum aun - partido no empezado"
             vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
-            # FIX REAL: el propio API trae quien es home/away
-            h_name = root.get("homeParticipant",{}).get("name") or root.get("home",{}).get("name") or home
-            a_name = root.get("awayParticipant",{}).get("name") or root.get("away",{}).get("name") or away
-            # si la API no trae nombres, usa los que ya tenias
-            if h_name and h_name != "Local": home = h_name
-            if a_name and a_name != "Visitante": away = a_name
+            # FIX REAL HOME: el local de verdad es el primer slug de la URL
+            def clean_slug(s):
+                s = re.sub(r'-[A-Za-z0-9]{6,}$','',s).replace('-',' ').title().strip()
+                return s
+            m_url = re.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+            if m_url:
+                real_home_url = clean_slug(m_url.group(1))
+                real_away_url = clean_slug(m_url.group(2))
+            else:
+                real_home_url, real_away_url = home, away
+
+            # si la API dice que el home es España pero en la URL el primero es Croacia, invierte todo
+            api_home = (root.get("homeParticipant",{}).get("name") or home or "").lower()
+            if real_home_url.lower() not in api_home and real_away_url.lower() in api_home:
+                # esta al reves -> invierte momentum
+                vals = [-v for v in vals]
+                home, away = real_home_url, real_away_url
+            else:
+                home, away = real_home_url, real_away_url
+
             return {"eid":eid, "vals":vals, "home":home.title(), "away":away.title()}, None
         except Exception as e:
             return None, str(e)
