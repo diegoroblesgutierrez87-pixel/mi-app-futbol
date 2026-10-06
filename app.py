@@ -1335,11 +1335,18 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             if r.status_code!=200:
                 return None, f"Error {r.status_code} - Flashscore bloquea Streamlit Cloud. Ejecuta la app en local y si funcionara"
             data = r.json()
-            entries = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
+            root = data.get("data",{}).get("findMatchMomentumStatsByMatchId",{})
+            entries = root.get("momentum",{}).get("entries",[])
             if not entries:
                 return None, "Sin momentum aun - partido no empezado"
             vals = [round(float(e.get("momentumValue",0)),3) for e in entries]
-            return {"eid":eid, "vals":vals, "home":home, "away":away}, None
+            # FIX REAL: el propio API trae quien es home/away
+            h_name = root.get("homeParticipant",{}).get("name") or root.get("home",{}).get("name") or home
+            a_name = root.get("awayParticipant",{}).get("name") or root.get("away",{}).get("name") or away
+            # si la API no trae nombres, usa los que ya tenias
+            if h_name and h_name != "Local": home = h_name
+            if a_name and a_name != "Visitante": away = a_name
+            return {"eid":eid, "vals":vals, "home":home.title(), "away":away.title()}, None
         except Exception as e:
             return None, str(e)
 
