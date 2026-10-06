@@ -797,6 +797,22 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
     if not calificados:
         st.info(f"Ningún equipo cumple {filtro_tipo} >= {filtro_pct}%")
     else:
+        # --- HEADER RESUMEN POR LIGA ---
+        from collections import defaultdict
+        resumen = defaultdict(list)
+        for team, loc_cond, pct, total, ok in calificados:
+            try:
+                liga_r = df_f[(df_f['HomeTeam']==team)|(df_f['AwayTeam']==team)]['League'].mode().iloc[0]
+            except:
+                liga_r = liga_sel
+            resumen[liga_r].append((team, pct, ok, total))
+        header_html = "<div style='font-family:monospace;background:#111;color:#fff;padding:8px;border-radius:6px;margin:6px 0;font-size:11px'>"
+        for liga_name in sorted(resumen.keys()):
+            header_html += f"<div style='font-weight:900;margin-top:6px;color:#00FF00;text-decoration:underline'>{liga_name}:</div>"
+            for team_r, pct_r, ok_r, tot_r in sorted(resumen[liga_name], key=lambda x: x[1], reverse=True):
+                header_html += f"<div style='margin-left:10px'>{team_r} {ok_r}/{tot_r} -> {pct_r:.0f}%</div>"
+        header_html += "</div>"
+        html += header_html
         for team, loc_cond, pct, total, ok in calificados:
             d_team_full = filtrar_equipo(df_f, team, loc_cond)
             d_team_cumple = d_team_full[d_team_full.apply(lambda rr: cumple(rr.to_dict(), normaliza(team)), axis=1)]
