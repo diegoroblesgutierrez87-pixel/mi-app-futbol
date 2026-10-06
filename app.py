@@ -809,7 +809,27 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
             for _, r in d_team_cumple.iterrows():
                 html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
-        st.markdown(f"<div>{html}</div>", unsafe_allow_html=True)
+        # --- FIX COPIAR FILTRO ---
+        if html:
+            import streamlit.components.v1 as components
+            bloque_copy_filtro = f"""
+            <div>
+                <button onclick="copyFiltro()" id="btnCopyFiltro" style="position:sticky;top:0;z-index:99999;width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR FILTRO ({len(calificados)} equipos)</button>
+                <div id="targetFiltro">{html}</div>
+            </div>
+            <script>
+            function copyFiltro(){{
+                var txt = document.getElementById('targetFiltro').innerText;
+                navigator.clipboard.writeText(txt).then(()=>{{
+                    var b = document.getElementById('btnCopyFiltro');
+                    b.innerText = '✓ COPIADO';
+                    b.style.background = '#0A2342';
+                    setTimeout(()=>{{ b.innerText=' COPIAR FILTRO ({len(calificados)} equipos)'; b.style.background='#0f8105'; }},1200);
+                }});
+            }}
+            </script>
+            """
+            components.html(bloque_copy_filtro, height=900, scrolling=True)
 
 elif st.session_state.show_partidos:
     # MODO NORMAL (tu logica original intacta)
