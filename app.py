@@ -806,11 +806,11 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             except:
                 liga_r = liga_sel
             resumen[liga_r].append((team, pct, ok, total))
-        header_html = "<div style='font-family:monospace;background:#111;color:#fff;padding:8px;border-radius:6px;margin:6px 0;font-size:11px'>"
+        header_html = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
         for liga_name in sorted(resumen.keys()):
-            header_html += f"<div style='font-weight:900;margin-top:6px;color:#00FF00;text-decoration:underline'>{liga_name}:</div>"
+            header_html += f"<div style='font-weight:900;margin-top:6px;color:#000;text-decoration:underline'>{liga_name}:</div>"
             for team_r, pct_r, ok_r, tot_r in sorted(resumen[liga_name], key=lambda x: x[1], reverse=True):
-                header_html += f"<div style='margin-left:10px'>{team_r} {ok_r}/{tot_r} -> {pct_r:.0f}%</div>"
+                header_html += f"<div style='margin-left:10px;color:#000'>{team_r} {ok_r}/{tot_r} -> {pct_r:.0f}%</div>"
         header_html += "</div>"
         html += header_html
         for team, loc_cond, pct, total, ok in calificados:
