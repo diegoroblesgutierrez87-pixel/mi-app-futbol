@@ -1293,15 +1293,6 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     def get_momentum_from_url(url):
         url = url.strip()
         eid = None
-        home = "local"
-        away = "visitante"
-        mt = re.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
-        if mt:
-            def clean(s):
-                s = re.sub(r'-[A-Za-z0-9]{6,8}$','',s)
-                return s.replace('-',' ').title().strip()
-            away = clean(mt.group(1))
-            home = clean(mt.group(2))
         m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url, re.I)
         if m_mid:
             eid = m_mid.group(1)
@@ -1311,6 +1302,32 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
                 eid = m.group(1)
         if not eid:
             return None, "No encuentro ?mid= en la URL. Pega la URL completa: ...?mid=ML4DjdZa"
+        # FIX REAL HOME/AWAY - no fiarse de la URL
+        home = "Local"
+        away = "Visitante"
+        try:
+            r_html = requests.get(url, headers={"User-Agent": UA, "Referer":"https://www.flashscore.es/"}, timeout=8)
+            htxt = r_html.text
+            mh = re.search(r'duelParticipant__home[^>]*>.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
+            ma = re.search(r'duelParticipant__away[^>]*>.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
+            if mh and ma:
+                home = re.sub(r'<.*?>','', mh.group(1)).strip().title()
+                away = re.sub(r'<.*?>','', ma.group(1)).strip().title()
+            else:
+                mt2 = re.search(r'<meta property="og:title" content="([^"]+?)\s*-\s*([^"]+?)\s*\|', htxt)
+                if mt2:
+                    home = mt2.group(1).strip().title()
+                    away = mt2.group(2).strip().title()
+        except:
+            pass
+        if home == "Local":
+            mt = re.search(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+            if mt:
+                def clean(s):
+                    s = re.sub(r'-[A-Za-z0-9]{6,8}$','',s)
+                    return s.replace('-',' ').title().strip()
+                away = clean(mt.group(1))
+                home = clean(mt.group(2))
         try:
             import time as _tt
             api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={eid}&providerId=7&_t={int(_tt.time())}"
