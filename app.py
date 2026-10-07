@@ -816,7 +816,7 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
                 j_str = ", ".join([f"J{j}" for j in jors_r]) if jors_r else ""
                 header_html += f"<div style='margin-left:10px;color:#000'>{team_r} {ok_r}/{tot_r} -> {j_str} {pct_r:.0f}%</div>"
         header_html += "</div>"
-        html += header_html
+        html_partidos = ""
         for team, loc_cond, pct, total, ok, jors in calificados:
             d_team_full = filtrar_equipo(df_f, team, loc_cond)
             d_team_cumple = d_team_full[d_team_full.apply(lambda rr: cumple(rr.to_dict(), normaliza(team)), axis=1)]
@@ -826,16 +826,18 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             except:
                 liga_team = liga_sel
             color_pct = "#0f8105" if pct>=70 else "#0A2342"
-            html += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
+            html_partidos += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
             for _, r in d_team_cumple.iterrows():
-                html += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
-        # --- FIX COPIAR FILTRO ---
-        if html:
+                html_partidos += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
+        html = header_html + html_partidos
+        # --- FIX COPIAR FILTRO - SOLO PARTIDOS ---
+        if html_partidos:
             import streamlit.components.v1 as components
             bloque_copy_filtro = f"""
             <div>
-                <button onclick="copyFiltro()" id="btnCopyFiltro" style="position:sticky;top:0;z-index:99999;width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR FILTRO ({len(calificados)} equipos)</button>
-                <div id="targetFiltro">{html}</div>
+                <button onclick="copyFiltro()" id="btnCopyFiltro" style="position:sticky;top:0;z-index:99999;width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS ({len(calificados)} equipos)</button>
+                {header_html}
+                <div id="targetFiltro">{html_partidos}</div>
             </div>
             <script>
             function copyFiltro(){{
