@@ -1450,72 +1450,63 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("📊 STATS DINÁMICO - CUALQUIER PARTIDO", expanded=False):
+with st.expander("🏷️ SACAR EQUIPOS + STATS DE CUALQUIER MID", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    mid_in = st.text_input("MID del partido", value="OlJVD9i3", key="dyn_mid")
+    mid_in = st.text_input("MID", value="6whMZMJl", key="name_mid")
     m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
     mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', mid_in).group(1) if re.search(r'([A-Za-z0-9]{6,12})', mid_in) else ""
 
-    c1, c2 = st.columns(2)
-    auto_try = c1.button("🔍 Intentar sacar auto", key="btn_dyn_auto")
-    use_manual = c2.checkbox("Meter a mano (si da 0)", value=True, key="chk_manual")
-
-    data_final = {}
-
-    if auto_try and mid:
-        headers = {"User-Agent":"Mozilla/5.0","Referer":f"https://www.flashscore.es/match/{mid}/","X-Fsign":"SW9D1eZo"}
-        txt = ""
+    if st.button("🏷️ SACAR NOMBRES", key="btn_names"):
+        headers = {"User-Agent":"Mozilla/5.0"}
+        teams = {"local": "?", "visitante": "?", "url_final": ""}
         try:
-            r = requests.get(f"https://d.flashscore.com/x/feed/df_stats_1_{mid}", headers=headers, timeout=8)
+            # esta url redirige a la url con nombres: /partido/futbol/dep-santo-domingo-.../ldu-portoviejo-...
+            r = requests.get(f"https://www.flashscore.es/match/{mid}/#/resumen-del-partido",
+                             headers=headers, timeout=10, allow_redirects=True)
+            # intenta sacar de la url final
+            url_final = r.url
+            teams["url_final"] = url_final
+            # url tipo.../dep-santo-domingo-xGtj9hGd/ldu-portoviejo-WURvqcDP/
+            mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url_final)
+            if mm:
+                local_slug, visit_slug = mm[0]
+                # limpia el hash final -xGtj9hGd
+                local = re.sub(r'-[A-Za-z0-9]{8}$', '', local_slug).replace('-',' ').title()
+                visit = re.sub(r'-[A-Za-z0-9]{8}$', '', visit_slug).replace('-',' ').title()
+                teams["local"] = local
+                teams["visitante"] = visit
+
+            # fallback: busca en el html AA~ y AB~
             txt = r.text
+            aa = re.search(r'AA~([^~]+)~', txt)
+            ab = re.search(r'AB~([^~]+)~', txt)
+            if aa:
+                teams["local"] = aa.group(1)
+            if ab:
+                teams["visitante"] = ab.group(1)
+
         except Exception as e:
-            txt = str(e)
-        
-        if txt.strip() == "0" or len(txt) < 20:
-            st.warning(f"Feed da 0 para {mid} - Liga sin feed (como OlJVD9i3). Mete a mano abajo.")
-        else:
-            st.code(txt[:5000])
-            # intenta sacar numeros
-            def ex(pat):
-                mm = re.search(pat, txt)
-                return mm.groups() if mm else None
-            data_final = {"mid": mid, "raw": txt[:1000]}
+            teams["error"] = str(e)
 
-    if use_manual:
-        st.markdown(f"**Manual para {mid}** - copia lo de tu captura:")
-        col1, col2 = st.columns(2)
-        with col1:
-            pos_h = st.number_input("Posesión local %", 0, 100, 48, key=f"pos_h_{mid}")
-            rem_h = st.number_input("Remates local", 0, 50, 0, key=f"rem_h_{mid}")
-            puerta_h = st.number_input("A puerta local", 0, 50, 0, key=f"pue_h_{mid}")
-            corn_h = st.number_input("Corners local", 0, 30, 2, key=f"cor_h_{mid}")
-            amar_h = st.number_input("Amarillas local", 0, 10, 1, key=f"ama_h_{mid}")
-        with col2:
-            pos_a = st.number_input("Posesión visitante %", 0, 100, 52, key=f"pos_a_{mid}")
-            rem_a = st.number_input("Remates visitante", 0, 50, 4, key=f"rem_a_{mid}")
-            puerta_a = st.number_input("A puerta visitante", 0, 50, 1, key=f"pue_a_{mid}")
-            corn_a = st.number_input("Corners visitante", 0, 30, 2, key=f"cor_a_{mid}")
-            amar_a = st.number_input("Amarillas visitante", 0, 10, 0, key=f"ama_a_{mid}")
+        st.json(teams)
 
+        # ahora junta con tus stats manuales
         data_final = {
             "mid": mid,
-            "source": "MANUAL",
-            "posesion": [pos_h, pos_a],
-            "remates_totales": [rem_h, rem_a],
-            "remates_puerta": [puerta_h, puerta_a],
-            "corners": [corn_h, corn_a],
-            "amarillas": [amar_h, amar_a],
+            "local": teams.get("local"),
+            "visitante": teams.get("visitante"),
+            "posesion": [48,52], # cambia aqui si quieres
+            "remates_totales": [0,4],
+            "remates_puerta": [0,1],
+            "corners": [2,2],
         }
-
-    if data_final:
-        st.json(data_final)
         j_str = json.dumps(data_final, ensure_ascii=False)
         esc = html.escape(j_str)
         components.html(f"""
-        <textarea id="dyn" style="position:absolute;left:-9999px">{esc}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('dyn').value).then(()=>{{document.getElementById('msgdyn').innerText='✓ COPIADO'}})"
-        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR STATS {mid} PARA IA</button>
-        <div id="msgdyn" style="text-align:center;color:#0f8105;font-weight:900"></div>
+        <textarea id="teamd" style="position:absolute;left:-9999px">{esc}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('teamd').value).then(()=>{{document.getElementById('msgteam').innerText='✓ COPIADO CON NOMBRES'}})"
+        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900">📋 COPIAR CON NOMBRES</button>
+        <div id="msgteam" style="text-align:center;color:#0f8105;font-weight:900"></div>
         """, height=60)
