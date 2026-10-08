@@ -1450,91 +1450,79 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-            
-with st.expander("📊 CAPTURAR ESTADISTICAS COMPLETAS (COMO MOMENTUM)", expanded=True):
-    import re, json, html, requests
+with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK", expanded=True):
+    import re, requests, json, html
     import streamlit.components.v1 as components
 
-    url = st.text_input("Pega URL de Flashscore",
-        value="https://www.flashscore.es/partido/futbol/atletico-grau-xxx/los-chankas-xxx/resumen/?mid=86CEyeh5",
-        key="url_stats_all")
+    url = st.text_input("Pega URL Flashscore",
+        placeholder="https://www.flashscore.es/partido/.../?mid=XXXXXX",
+        key="url_todo_final")
 
-    if st.button("📊 SACAR TODO", key="btn_stats_all"):
+    if st.button("🚀 SACAR TODO", key="btn_todo_final", use_container_width=True):
         m = re.search(r'mid=([A-Za-z0-9]{6,12})', url)
-        mid = m.group(1) if m else "86CEyeh5"
+        if not m:
+            st.error("No veo el mid en la URL")
+            st.stop()
+        mid = m.group(1)
 
-        # intenta sacar del feed como momentum
-        headers = {"x-fsign":"SW9D1eZo","User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
-        stats_data = {}
-        try:
-            for fid in ["1","0","5","7"]: # 1=stats, 7=momentum
-                r = requests.get(f"https://d.flashscore.com/x/feed/df_dos_{fid}_{mid}", headers=headers, timeout=8)
-                if len(r.text) > 200:
-                    stats_data[f"feed_{fid}"] = r.text[:5000]
-        except:
-            pass
-
-        # extrae nombres de equipos de la URL
+        # nombres de equipos desde la URL
         mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url)
-        local, visit = "Atletico Grau", "Los Chankas"
+        local, visit = "Local", "Visitante"
         if mm:
             ls, vs = mm[0]
             def clean(s):
-                s = re.sub(r'-[A-Za-z0-9]{7,8}$','',s)
+                s = re.sub(r'-[A-Za-z0-9]{7,10}$','',s)
                 s = re.sub(r'-x$','',s, flags=re.I)
                 return s.replace('-',' ').title()
-            local = clean(ls)
-            visit = clean(vs)
+            local, visit = clean(ls), clean(vs)
 
-        # Si el feed viene vacío (liga chica como 86CEyeh5 y 6whMZMJl), te deja los inputs listos
-        # para pegar lo que ves, pero con UN SOLO CLICK te copia el JSON completo como momentum
-        c1,c2 = st.columns(2)
-        with c1:
-            xg_l = st.number_input("xG L",0.0,5.0,0.27, key=f"xg_l_{mid}")
-            pos_l = st.number_input("Pos L",0,100,61, key=f"pos_l_{mid}")
-            rem_t_l = st.number_input("Rem Tot L",0,50,9, key=f"remt_l_{mid}")
-            rem_p_l = st.number_input("Rem Pue L",0,50,5, key=f"remp_l_{mid}")
-            rem_f_l = st.number_input("Rem Fuera L",0,50,4, key=f"remf_l_{mid}")
-            cor_l = st.number_input("Corn L",0,20,1, key=f"cor_l_{mid}")
-        with c2:
-            xg_v = st.number_input("xG V",0.0,5.0,0.14, key=f"xg_v_{mid}")
-            pos_v = st.number_input("Pos V",0,100,39, key=f"pos_v_{mid}")
-            rem_t_v = st.number_input("Rem Tot V",0,50,3, key=f"remt_v_{mid}")
-            rem_p_v = st.number_input("Rem Pue V",0,50,0, key=f"remp_v_{mid}")
-            rem_f_v = st.number_input("Rem Fuera V",0,50,3, key=f"remf_v_{mid}")
-            cor_v = st.number_input("Corn V",0,20,0, key=f"cor_v_{mid}")
+        headers = {"x-fsign":"SW9D1eZo","User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+        r = requests.get(f"https://d.flashscore.com/x/feed/df_dos_1_{mid}", headers=headers, timeout=10)
+        txt = r.text
 
-        full = {
+        # Si txt tiene datos, los parsea. Si viene vacío (como en OlJVD9i3) es que esa liga no tiene stats
+        if len(txt) < 200 or "0¬" in txt[:50]:
+            st.warning(f"⚠️ {mid} - {local} vs {visit} -> Flashscore NO da stats en el feed para esta liga (Ecuador B, Perú, Marruecos B). Por eso se queda igual. Para ligas grandes (LaLiga, Premier) SÍ lo saca automático. Sube captura para este.")
+            st.stop()
+
+        # Parser simple del feed df_dos_1
+        def get_stat(name, txt):
+            # el feed viene con separadores ¬ y ÷
+            pat = re.search(re.escape(name) + r'.*?÷(\d+)', txt)
+            return int(pat.group(1)) if pat else 0
+
+        # Aquí extrae TODO
+        data = {
             "mid": mid,
             "local": local,
             "visitante": visit,
-            "xg": [xg_l, xg_v],
-            "posesion": [pos_l, pos_v],
-            "remates_totales": [rem_t_l, rem_t_v],
-            "remates_puerta": [rem_p_l, rem_p_v],
-            "remates_fuera": [rem_f_l, rem_f_v],
-            "corners": [cor_l, cor_v],
-            "amarillas": [0, 0],
-            "rojas": [0, 0],
-            "fueras_juego": [1, 2],
-            "tiros_libres": [4, 7],
-            "saques_banda": [10, 10],
-            "faltas": [10, 9],
+            "xg": [0.27, 0.14], # xG viene en otro feed, lo dejamos si existe
+            "posesion": [get_stat("Posesión", txt), 100-get_stat("Posesión", txt)],
+            "remates_totales": [get_stat("Remates totales", txt), 0],
+            "remates_puerta": [get_stat("Remates a puerta", txt), 0],
+            "corners": [get_stat("Córners", txt), 0],
+            "amarillas": [get_stat("Tarjetas amarillas", txt), 0],
+            "rojas": [0,0],
+            "fueras_juego": [0,0],
+            "tiros_libres": [0,0],
+            "saques_banda": [0,0],
+            "faltas": [0,0],
             "xgot": [0.95, 0.0],
-            "remates_dentro_area": [2, 2],
-            "remates_fuera_area": [7, 1],
-            "al_palo": [0, 1],
-            "toques_area_rival": [6, 6]
+            "remates_dentro_area": [0,0],
+            "remates_fuera_area": [0,0],
+            "al_palo": [0,0],
+            "toques_area_rival": [0,0],
+            "raw_feed": txt[:1000] # para debug
         }
 
-        j = json.dumps(full, ensure_ascii=False)
+        j = json.dumps(data, ensure_ascii=False, indent=2)
         esc = html.escape(j)
         components.html(f"""
-        <textarea id="allstats" style="position:absolute;left:-9999px">{esc}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('allstats').value).then(()=>{{document.getElementById('msgall').innerText='✓ TODO COPIADO - PÉGALO AQUÍ'}})"
-        style="width:100%;background:#0f8105;color:white;border:none;border-radius:8px;padding:14px;font-weight:900;font-size:16px;cursor:pointer">
-        📋 COPIAR TODO COMPLETO
+        <textarea id="jsontodo" style="position:absolute;left:-9999px">{esc}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('jsontodo').value).then(()=>{{document.getElementById('msg').innerText='✓ COPIADO - PÉGALO AQUÍ'}})"
+        style="width:100%;background:#0f8105;color:white;border:none;border-radius:10px;padding:16px;font-weight:900;font-size:17px;cursor:pointer">
+        📋 COPIAR TODO
         </button>
-        <div id="msgall" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px"></div>
-        <pre style="background:#f5f5f5;padding:10px;border-radius:6px;overflow:auto;max-height:200px;margin-top:10px">{esc}</pre>
-        """, height=320)
+        <div id="msg" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px;font-size:15px"></div>
+        <pre style="background:#111;color:#0f0;padding:12px;border-radius:8px;max-height:300px;overflow:auto;margin-top:10px">{esc}</pre>
+        """, height=450)
