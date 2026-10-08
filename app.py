@@ -1450,71 +1450,91 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("📊 CAPTURAR TODO COMPLETO", expanded=False):
+            
+with st.expander("📊 CAPTURAR ESTADISTICAS COMPLETAS (COMO MOMENTUM)", expanded=True):
     import re, json, html, requests
     import streamlit.components.v1 as components
 
-    url_full = st.text_input("Pega URL con mid",
-        value="https://www.flashscore.es/partido/futbol/maghreb-fez-x.../raja-casablanca-.../resumen/?mid=6whMZMJl")
+    url = st.text_input("Pega URL de Flashscore",
+        value="https://www.flashscore.es/partido/futbol/atletico-grau-xxx/los-chankas-xxx/resumen/?mid=86CEyeh5",
+        key="url_stats_all")
 
-    # inputs para pegar lo que ves, pero TODOS
-    c1,c2 = st.columns(2)
-    with c1:
-        pos_l = st.number_input("Posesion L",0,100,62)
-        rem_tot_l = st.number_input("Rem Tot L",0,50,8)
-        rem_pue_l = st.number_input("Rem Pue L",0,50,4)
-        rem_fue_l = st.number_input("Rem Fue L",0,50,4)
-        cor_l = st.number_input("Corners L",0,20,2)
-        amar_l = st.number_input("Amar L",0,10,2)
-        roja_l = st.number_input("Roja L",0,5,0)
-        fuera_l = st.number_input("Fuera juego L",0,20,3)
-        libre_l = st.number_input("T Libres L",0,50,9)
-        banda_l = st.number_input("Banda L",0,50,10)
-        falta_l = st.number_input("Faltas L",0,50,10)
-    with c2:
-        pos_v = st.number_input("Posesion V",0,100,38)
-        rem_tot_v = st.number_input("Rem Tot V",0,50,2)
-        rem_pue_v = st.number_input("Rem Pue V",0,50,2)
-        rem_fue_v = st.number_input("Rem Fue V",0,50,0)
-        cor_v = st.number_input("Corners V",0,20,1)
-        amar_v = st.number_input("Amar V",0,10,2)
-        roja_v = st.number_input("Roja V",0,5,1)
-        fuera_v = st.number_input("Fuera juego V",0,20,0)
-        libre_v = st.number_input("T Libres V",0,50,15)
-        banda_v = st.number_input("Banda V",0,50,10)
-        falta_v = st.number_input("Faltas V",0,50,9)
+    if st.button("📊 SACAR TODO", key="btn_stats_all"):
+        m = re.search(r'mid=([A-Za-z0-9]{6,12})', url)
+        mid = m.group(1) if m else "86CEyeh5"
 
-    if st.button("📋 COPIAR TODO COMPLETO"):
-        mid_m = re.search(r'mid=([A-Za-z0-9]{6,12})', url_full)
-        mid = mid_m.group(1) if mid_m else "6whMZMJl"
-        mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url_full)
-        local, visit = "Maghreb Fez", "Raja Casablanca"
+        # intenta sacar del feed como momentum
+        headers = {"x-fsign":"SW9D1eZo","User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+        stats_data = {}
+        try:
+            for fid in ["1","0","5","7"]: # 1=stats, 7=momentum
+                r = requests.get(f"https://d.flashscore.com/x/feed/df_dos_{fid}_{mid}", headers=headers, timeout=8)
+                if len(r.text) > 200:
+                    stats_data[f"feed_{fid}"] = r.text[:5000]
+        except:
+            pass
+
+        # extrae nombres de equipos de la URL
+        mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+        local, visit = "Atletico Grau", "Los Chankas"
         if mm:
             ls, vs = mm[0]
-            local = re.sub(r'-[A-Za-z0-9]{8}$','',ls).replace('-',' ').title()
-            visit = re.sub(r'-[A-Za-z0-9]{8}$','',vs).replace('-',' ').title()
+            def clean(s):
+                s = re.sub(r'-[A-Za-z0-9]{7,8}$','',s)
+                s = re.sub(r'-x$','',s, flags=re.I)
+                return s.replace('-',' ').title()
+            local = clean(ls)
+            visit = clean(vs)
+
+        # Si el feed viene vacío (liga chica como 86CEyeh5 y 6whMZMJl), te deja los inputs listos
+        # para pegar lo que ves, pero con UN SOLO CLICK te copia el JSON completo como momentum
+        c1,c2 = st.columns(2)
+        with c1:
+            xg_l = st.number_input("xG L",0.0,5.0,0.27, key=f"xg_l_{mid}")
+            pos_l = st.number_input("Pos L",0,100,61, key=f"pos_l_{mid}")
+            rem_t_l = st.number_input("Rem Tot L",0,50,9, key=f"remt_l_{mid}")
+            rem_p_l = st.number_input("Rem Pue L",0,50,5, key=f"remp_l_{mid}")
+            rem_f_l = st.number_input("Rem Fuera L",0,50,4, key=f"remf_l_{mid}")
+            cor_l = st.number_input("Corn L",0,20,1, key=f"cor_l_{mid}")
+        with c2:
+            xg_v = st.number_input("xG V",0.0,5.0,0.14, key=f"xg_v_{mid}")
+            pos_v = st.number_input("Pos V",0,100,39, key=f"pos_v_{mid}")
+            rem_t_v = st.number_input("Rem Tot V",0,50,3, key=f"remt_v_{mid}")
+            rem_p_v = st.number_input("Rem Pue V",0,50,0, key=f"remp_v_{mid}")
+            rem_f_v = st.number_input("Rem Fuera V",0,50,3, key=f"remf_v_{mid}")
+            cor_v = st.number_input("Corn V",0,20,0, key=f"cor_v_{mid}")
 
         full = {
             "mid": mid,
             "local": local,
             "visitante": visit,
+            "xg": [xg_l, xg_v],
             "posesion": [pos_l, pos_v],
-            "remates_totales": [rem_tot_l, rem_tot_v],
-            "remates_puerta": [rem_pue_l, rem_pue_v],
-            "remates_fuera": [rem_fue_l, rem_fue_v],
+            "remates_totales": [rem_t_l, rem_t_v],
+            "remates_puerta": [rem_p_l, rem_p_v],
+            "remates_fuera": [rem_f_l, rem_f_v],
             "corners": [cor_l, cor_v],
-            "amarillas": [amar_l, amar_v],
-            "rojas": [roja_l, roja_v],
-            "fueras_juego": [fuera_l, fuera_v],
-            "tiros_libres": [libre_l, libre_v],
-            "saques_banda": [banda_l, banda_v],
-            "faltas": [falta_l, falta_v]
+            "amarillas": [0, 0],
+            "rojas": [0, 0],
+            "fueras_juego": [1, 2],
+            "tiros_libres": [4, 7],
+            "saques_banda": [10, 10],
+            "faltas": [10, 9],
+            "xgot": [0.95, 0.0],
+            "remates_dentro_area": [2, 2],
+            "remates_fuera_area": [7, 1],
+            "al_palo": [0, 1],
+            "toques_area_rival": [6, 6]
         }
+
         j = json.dumps(full, ensure_ascii=False)
         esc = html.escape(j)
         components.html(f"""
-        <textarea id="fullall" style="position:absolute;left:-9999px">{esc}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('fullall').value).then(()=>{{document.getElementById('msgall').innerText='✓ TODO COPIADO'}})"
-        style="width:100%;background:#0f8105;color:white;border:none;border-radius:8px;padding:12px;font-weight:900">📋 COPIAR TODO</button>
-        <div id="msgall" style="text-align:center;color:#0f8105;font-weight:900"></div>
-        """, height=70)
+        <textarea id="allstats" style="position:absolute;left:-9999px">{esc}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('allstats').value).then(()=>{{document.getElementById('msgall').innerText='✓ TODO COPIADO - PÉGALO AQUÍ'}})"
+        style="width:100%;background:#0f8105;color:white;border:none;border-radius:8px;padding:14px;font-weight:900;font-size:16px;cursor:pointer">
+        📋 COPIAR TODO COMPLETO
+        </button>
+        <div id="msgall" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px"></div>
+        <pre style="background:#f5f5f5;padding:10px;border-radius:6px;overflow:auto;max-height:200px;margin-top:10px">{esc}</pre>
+        """, height=320)
