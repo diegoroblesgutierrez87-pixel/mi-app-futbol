@@ -1451,50 +1451,37 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             """
             components.html(mega_html, height=160)
             
-            ####################
-with st.expander("🔴 LIVE STATS REAL", expanded=False):
+with st.expander("🔴 LIVE MOMENTUM + STATS - CLOUD OK", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def get_live_real(url_or_mid):
-        m = re.search(r'mid=([A-Za-z0-9]{6,12})', url_or_mid)
-        mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', url_or_mid).group(1) if re.search(r'([A-Za-z0-9]{6,12})', url_or_mid) else None
-        if not mid:
-            return None, "Pega mid"
-        headers = {
-            "User-Agent":"Mozilla/5.0",
-            "Referer":"https://www.flashscore.es/",
-            "X-Fsign":"SW9D1eZo",
-        }
-        feeds = [
-            f"https://d.flashscore.com/x/feed/df_dos_1_{mid}",
-            f"https://d.flashscore.com/x/feed/df_st_1_{mid}",
-            f"https://d.flashscore.com/x/feed/df_st_0_{mid}",
-            f"https://14.ds.lsapp.eu/pq_graphql?_hash=sm1&eventId={mid}",
-            f"https://14.ds.lsapp.eu/pq_graphql?_hash=st1&eventId={mid}",
-            f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7",
-        ]
-        out_all = {}
-        for f in feeds:
-            try:
-                r = requests.get(f, headers=headers, timeout=8)
-                out_all[f] = r.text[:3000]
-            except Exception as e:
-                out_all[f] = str(e)
-        return {"id": mid, "feeds": out_all}, None
+    def get_live_all(mid):
+        headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+        try:
+            # momentum si funciona siempre
+            r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
+            mom = r.json() if r.status_code==200 else {}
+            # stats live - solo funciona cuando esta live
+            r2 = requests.get(f"https://d.flashscore.com/x/feed/df_st_1_{mid}", headers=headers, timeout=8)
+            stats_txt = r2.text if r2.status_code==200 else "0"
+            return {"mid": mid, "momentum": mom, "stats_feed": stats_txt[:5000]}, None
+        except Exception as e:
+            return None, str(e)
 
-    mid_in = st.text_input("MID LIVE REAL", value="OlJVD9i3", key="live_real")
-    if st.button("⚡ PROBAR TODOS LOS FEEDS", key="btn_live_real"):
-        data, err = get_live_real(mid_in)
+    mid_in = st.text_input("MID LIVE ACTUAL", placeholder="Pega mid de un partido EN JUEGO ahora", key="live_final")
+    if st.button("⚡ LIVE AHORA", key="btn_live_final"):
+        m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
+        mid = m.group(1) if m else mid_in.strip()
+        data, err = get_live_all(mid)
         if err:
             st.error(err)
         else:
-            st.json(data)
             j_str = json.dumps(data, ensure_ascii=False)
+            st.code(j_str[:6000])
             esc = html.escape(j_str)
             components.html(f"""
-            <textarea id="liver" style="position:absolute;left:-9999px">{esc}</textarea>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('liver').value).then(()=>{{document.getElementById('msgr').innerText='✓ COPIADO'}})"
-            style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-            <div id="msgr" style="text-align:center;color:red;font-weight:900"></div>
+            <textarea id="lf" style="position:absolute;left:-9999px">{esc}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('lf').value).then(()=>{{document.getElementById('msglf').innerText='✓ COPIADO PARA IA'}})"
+            style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR LIVE PARA IA</button>
+            <div id="msglf" style="text-align:center;color:red;font-weight:900"></div>
             """, height=60)
