@@ -1450,38 +1450,18 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-            
-with st.expander("🔴 LIVE MOMENTUM + STATS - CLOUD OK", expanded=False):
-    import requests, re, json, html
-    import streamlit.components.v1 as components
-
-    def get_live_all(mid):
+with st.expander("🔴 LIVE AUTO-REFRESH", expanded=False):
+    import requests, re, json, time
+    mid = st.text_input("MID", value="OlJVD9i3", key="auto_mid")
+    auto = st.checkbox("Auto-refresh cada 30s", value=False, key="auto_chk")
+    if st.button("⚡ PROBAR AHORA", key="btn_auto") or auto:
         headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
-        try:
-            # momentum si funciona siempre
-            r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
-            mom = r.json() if r.status_code==200 else {}
-            # stats live - solo funciona cuando esta live
-            r2 = requests.get(f"https://d.flashscore.com/x/feed/df_st_1_{mid}", headers=headers, timeout=8)
-            stats_txt = r2.text if r2.status_code==200 else "0"
-            return {"mid": mid, "momentum": mom, "stats_feed": stats_txt[:5000]}, None
-        except Exception as e:
-            return None, str(e)
-
-    mid_in = st.text_input("MID LIVE ACTUAL", placeholder="Pega mid de un partido EN JUEGO ahora", key="live_final")
-    if st.button("⚡ LIVE AHORA", key="btn_live_final"):
-        m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
-        mid = m.group(1) if m else mid_in.strip()
-        data, err = get_live_all(mid)
-        if err:
-            st.error(err)
-        else:
-            j_str = json.dumps(data, ensure_ascii=False)
-            st.code(j_str[:6000])
-            esc = html.escape(j_str)
-            components.html(f"""
-            <textarea id="lf" style="position:absolute;left:-9999px">{esc}</textarea>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('lf').value).then(()=>{{document.getElementById('msglf').innerText='✓ COPIADO PARA IA'}})"
-            style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR LIVE PARA IA</button>
-            <div id="msglf" style="text-align:center;color:red;font-weight:900"></div>
-            """, height=60)
+        r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
+        j = r.json()
+        stage = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("eventCurrentStage",{}).get("eventStage")
+        entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
+        st.write(f"Stage: {stage} - Entries: {len(entries)}")
+        st.json(j)
+        if auto:
+            time.sleep(30)
+            st.rerun()
