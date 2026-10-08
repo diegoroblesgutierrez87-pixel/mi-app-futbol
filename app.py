@@ -1451,63 +1451,92 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             """
             components.html(mega_html, height=160)
             
-with st.expander("📊 STATS LIVE FOTMOB - FUNCIONA EN CLOUD", expanded=False):
+            ####################
+            
+with st.expander("📊 STATS LIVE FLASHSCORE - FUNCIONA EN CLOUD", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def get_fotmob_live(url_or_id):
-        # acepta id directo o url fotmob o incluso url sofascore
-        m = re.search(r'(\d{7,8})', url_or_id)
-        if not m:
-            return None, "Pega ID o URL con numeros: 15237996 o https://www.fotmob.com/.../3ovbh2#15237996"
-        eid = m.group(1)
-        headers = {"User-Agent":"Mozilla/5.0"}
-        try:
-            # API publica de FotMob - no bloquea
-            api = f"https://www.fotmob.com/api/matchDetails?matchId={eid}"
-            r = requests.get(api, headers=headers, timeout=12)
-            if r.status_code!= 200:
-                return None, f"Error FotMob {r.status_code} - prueba otro ID"
-            j = r.json()
-            header = j.get('header',{}).get('teams',[])
-            home = header[0]['name'] if len(header)>0 else "Local"
-            away = header[1]['name'] if len(header)>1 else "Visitante"
-            status = j.get('header',{}).get('status',{}).get('liveTime',{}).get('short','')
-            score_h = j.get('header',{}).get('teams',[{},{}])[0].get('score',0)
-            score_a = j.get('header',{}).get('teams',[{},{}])[1].get('score',0)
+    def get_flash_stats(url):
+        if "flashscore.es" not in url.lower():
+            return None, "Pega URL de FLASHSCORE. Ej: https://www.flashscore.es/partido/futbol/borussia-dortmund-vs-vfb-stuttgart/3bs0n0/"
 
-            stats = []
-            for s in j.get('content',{}).get('stats',{}).get('stats',[]):
-                title = s.get('title','')
-                for stt in s.get('stats',[]):
-                    stats.append(f"{stt['title']}: {stt['stats'][0]} - {stt['stats'][1]}")
+        headers = {
+            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+            "Referer":"https://www.flashscore.es/",
+        }
+        try:
+            m = re.search(r'/([A-Za-z0-9]{6,12})/?(?:#.*)?$', url.strip().split('?')[0].rstrip('/').split('/')[-1])
+            # saca id del final tipo 3bs0n0 o hOsqO
+            eid_slug = url.strip().split('/')[-2] if url.strip().endswith('/') else url.strip().split('/')[-1].split('#')[0].split('?')[0]
+            if len(eid_slug) < 4:
+                eid_slug = "hOsqO"
+
+            r = requests.get(url, headers=headers, timeout=12)
+            htxt = r.text
+
+            # equipos del html
+            home = away = "?"
+            mh = re.search(r'duelParticipant__home.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
+            ma = re.search(r'duelParticipant__away.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
+            if mh: home = re.sub(r'<.*?>','', mh.group(1)).strip()
+            if ma: away = re.sub(r'<.*?>','', ma.group(1)).strip()
+            if home == "?" :
+                mt = re.search(r'<title>(.*?) - (.*?) \|', htxt)
+                if mt:
+                    home = mt.group(1).strip()
+                    away = mt.group(2).strip()
+
+            stats_dict = {}
+            pat = re.compile(r'statistic__category[^>]*>\s*([^<]+).*?statistic__homeValue[^>]*>\s*([^<]+)\s*<.*?statistic__awayValue[^>]*>\s*([^<]+)\s*<', re.S|re.I)
+            for cat, hv, av in pat.findall(htxt):
+                stats_dict[cat.strip()] = {"home": hv.strip(), "away": av.strip()}
+
+            if not stats_dict:
+                # fallback API graphql de flashscore - hash sm1 = stats
+                try:
+                    mid_match = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url)
+                    mid = mid_match.group(1) if mid_match else eid_slug
+                    for h in ["sm1","st1","ds1"]:
+                        api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}"
+                        r2 = requests.get(api, headers=headers, timeout=8)
+                        if r2.status_code == 200 and "stat" in r2.text.lower():
+                            j2 = r2.json()
+                            txt = json.dumps(j2)
+                            # si tiene algo, lo dejamos como raw para IA
+                            stats_dict = {"raw_api": txt[:4000]}
+                            break
+                except:
+                    pass
+
+            if not stats_dict:
+                return None, f"No veo stats en HTML - abre la URL y copia la URL de la pestaña 'Estadisticas': {url}#resumen-del-partido/estadisticas-del-partido/0"
 
             out = {
-                "id": eid,
+                "id": eid_slug,
                 "match": f"{home} vs {away}",
-                "score": f"{score_h}-{score_a}",
-                "minute": status,
-                "stats": stats,
-                "source": "fotmob"
+                "stats": stats_dict,
+                "count": len(stats_dict),
+                "source": "flashscore"
             }
             return out, None
         except Exception as e:
             return None, str(e)
 
-    id_input = st.text_input("ID o URL FotMob / SofaScore", placeholder="15237996 o https://www.fotmob.com/es/matches/.../3ovbh2#15237996", key="fotmob_input")
-    if st.button("⚡ SACAR STATS PARA IA", key="btn_fotmob"):
-        if id_input:
-            data, err = get_fotmob_live(id_input)
+    url_flash = st.text_input("URL Flashscore", placeholder="https://www.flashscore.es/partido/futbol/borussia-dortmund-vs-vfb-stuttgart/3bs0n0/", key="flash_stats_input_v2")
+    if st.button("⚡ SACAR STATS PARA IA", key="btn_flash_stats_v2"):
+        if url_flash:
+            data, err = get_flash_stats(url_flash)
             if err:
                 st.error(err)
             else:
                 j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
-                st.success(f"{data['match']} {data['score']} {data['minute']}")
+                st.success(f"{data['match']} - {data['count']} stats")
                 st.code(j_str, language="json")
                 esc = html.escape(j_str)
                 components.html(f"""
-                <textarea id="fot_txt" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('fot_txt').value).then(()=>{{document.getElementById('msg_fot').innerText='✓ COPIADO PARA IA'}})"
+                <textarea id="fs_txt" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('fs_txt').value).then(()=>{{document.getElementById('msg_fs').innerText='✓ COPIADO PARA IA'}})"
                 style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msg_fot" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                <div id="msg_fs" style="text-align:center;color:#0f8105;font-weight:900"></div>
                 """, height=60)
