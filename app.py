@@ -1450,79 +1450,79 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK", expanded=True):
-    import re, requests, json, html
+            
+            
+with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - PURO STREAMLIT", expanded=True):
+    import re, json, html
     import streamlit.components.v1 as components
+    from playwright.sync_api import sync_playwright
 
-    url = st.text_input("Pega URL Flashscore",
-        placeholder="https://www.flashscore.es/partido/.../?mid=XXXXXX",
-        key="url_todo_final")
+    url_todo = st.text_input("Pega URL Flashscore",
+        placeholder="https://www.flashscore.es/partido/.../?mid=jm14ULS8",
+        key="url_todo_final_v3")
 
-    if st.button("🚀 SACAR TODO", key="btn_todo_final", use_container_width=True):
-        m = re.search(r'mid=([A-Za-z0-9]{6,12})', url)
+    if st.button("🚀 SACAR TODO", key="btn_todo_final_v3", use_container_width=True):
+        m = re.search(r'mid=([A-Za-z0-9]{6,12})', url_todo)
         if not m:
             st.error("No veo el mid en la URL")
             st.stop()
         mid = m.group(1)
 
-        # nombres de equipos desde la URL
-        mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+        mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url_todo)
         local, visit = "Local", "Visitante"
         if mm:
-            ls, vs = mm[0]
             def clean(s):
                 s = re.sub(r'-[A-Za-z0-9]{7,10}$','',s)
-                s = re.sub(r'-x$','',s, flags=re.I)
                 return s.replace('-',' ').title()
-            local, visit = clean(ls), clean(vs)
+            local, visit = clean(mm[0][0]), clean(mm[0][1])
 
-        headers = {"x-fsign":"SW9D1eZo","User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
-        r = requests.get(f"https://d.flashscore.com/x/feed/df_dos_1_{mid}", headers=headers, timeout=10)
-        txt = r.text
+        st.write(f"⏳ Leyendo {mid} - {local} vs {visit}... 5 seg")
 
-        # Si txt tiene datos, los parsea. Si viene vacío (como en OlJVD9i3) es que esa liga no tiene stats
-        if len(txt) < 200 or "0¬" in txt[:50]:
-            st.warning(f"⚠️ {mid} - {local} vs {visit} -> Flashscore NO da stats en el feed para esta liga (Ecuador B, Perú, Marruecos B). Por eso se queda igual. Para ligas grandes (LaLiga, Premier) SÍ lo saca automático. Sube captura para este.")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+            page.goto(url_todo, timeout=60000)
+            page.wait_for_timeout(5000)
+            content = page.content()
+            browser.close()
+
+        def busca(nombre):
+            pat = re.search(re.escape(nombre) + r'.*?(\d+)\D+(\d+)', content, re.I | re.S)
+            if pat:
+                return [int(pat.group(1)), int(pat.group(2))]
+            return [0,0]
+
+        posesion = busca("Posesión del balón")
+        rem_tot = busca("Remates")
+        puerta = busca("a puerta")
+        corners = busca("Córners")
+        amarillas = busca("Tarjetas amarillas")
+
+        if sum(posesion)==0 and sum(rem_tot)==0 and sum(corners)==0:
+            st.warning(f"⚠️ {mid} - {local} vs {visit} -> Flashscore NO da stats en la web para esta liga (Ecuador B, Perú, Marruecos B). Sube captura de la pestaña ESTADISTICAS.")
             st.stop()
 
-        # Parser simple del feed df_dos_1
-        def get_stat(name, txt):
-            # el feed viene con separadores ¬ y ÷
-            pat = re.search(re.escape(name) + r'.*?÷(\d+)', txt)
-            return int(pat.group(1)) if pat else 0
-
-        # Aquí extrae TODO
         data = {
             "mid": mid,
             "local": local,
             "visitante": visit,
-            "xg": [0.27, 0.14], # xG viene en otro feed, lo dejamos si existe
-            "posesion": [get_stat("Posesión", txt), 100-get_stat("Posesión", txt)],
-            "remates_totales": [get_stat("Remates totales", txt), 0],
-            "remates_puerta": [get_stat("Remates a puerta", txt), 0],
-            "corners": [get_stat("Córners", txt), 0],
-            "amarillas": [get_stat("Tarjetas amarillas", txt), 0],
-            "rojas": [0,0],
-            "fueras_juego": [0,0],
-            "tiros_libres": [0,0],
-            "saques_banda": [0,0],
-            "faltas": [0,0],
-            "xgot": [0.95, 0.0],
-            "remates_dentro_area": [0,0],
-            "remates_fuera_area": [0,0],
-            "al_palo": [0,0],
-            "toques_area_rival": [0,0],
-            "raw_feed": txt[:1000] # para debug
+            "posesion": posesion,
+            "remates_totales": rem_tot,
+            "remates_puerta": puerta,
+            "corners": corners,
+            "amarillas": amarillas,
+            "raw_len": len(content)
         }
 
         j = json.dumps(data, ensure_ascii=False, indent=2)
         esc = html.escape(j)
         components.html(f"""
         <textarea id="jsontodo" style="position:absolute;left:-9999px">{esc}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('jsontodo').value).then(()=>{{document.getElementById('msg').innerText='✓ COPIADO - PÉGALO AQUÍ'}})"
+        <button onclick="navigator.clipboard.writeText(document.getElementById('jsontodo').value).then(()=>{{document.getElementById('msg').innerText='✓ COPIADO'}})"
         style="width:100%;background:#0f8105;color:white;border:none;border-radius:10px;padding:16px;font-weight:900;font-size:17px;cursor:pointer">
-        📋 COPIAR TODO
+        📋 COPIAR TODO - {mid}
         </button>
-        <div id="msg" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px;font-size:15px"></div>
+        <div id="msg" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px"></div>
         <pre style="background:#111;color:#0f0;padding:12px;border-radius:8px;max-height:300px;overflow:auto;margin-top:10px">{esc}</pre>
         """, height=450)
+        st.success(f"✅ {mid} sacado solo con Streamlit")
