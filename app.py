@@ -1455,43 +1455,46 @@ with st.expander("STATS LIVE SOFASCORE - COPIAR PARA IA", expanded=False):
     import streamlit.components.v1 as components
 
     def get_sofa_live(url):
-        m = re.search(r'/event/(\d+)', url) or re.search(r'/(\d{6,8})', url)
+        m = re.search(r'/event/(\d+)', url) or re.search(r'#id:(\d+)', url) or re.search(r'id:(\d+)', url)
         if not m:
-            # url tipo https://www.sofascore.com/team/football/xxx/xxx#id:12345678
-            m2 = re.search(r'id:(\d+)', url)
-            if not m2:
-                return None, "Pega URL de partido SofaScore: sofascore.com/event/12345678"
-            eid = m2.group(1)
-        else:
-            eid = m.group(1)
-        
+            return None, "Pega URL SofaScore con id: https://...#id:15237996"
+        eid = m.group(1)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+            "Referer": "https://www.sofascore.com/",
+            "Origin": "https://www.sofascore.com",
+            "Cache-Control": "no-cache",
+        }
         try:
-            # 1. Marcador y tiempo
-            r1 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}", headers={"User-Agent":"Mozilla/5.0"}, timeout=10)
-            # 2. Estadísticas en directo
-            r2 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}/statistics", headers={"User-Agent":"Mozilla/5.0"}, timeout=10)
+            # API oficial - este dominio no da 403
+            r1 = requests.get(f"https://api.sofascore.com/api/v1/event/{eid}", headers=headers, timeout=12)
             if r1.status_code != 200:
-                return None, f"Error SofaScore {r1.status_code} - prueba en local"
+                r1 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}", headers=headers, timeout=12)
+            if r1.status_code != 200:
+                return None, f"Error {r1.status_code} - abre la app en LOCAL con: streamlit run app.py - ahi si deja"
             
             j1 = r1.json()
-            j2 = r2.json() if r2.status_code==200 else {}
-            
-            home = j1['event']['homeTeam']['name']
-            away = j1['event']['awayTeam']['name']
-            minute = j1['event'].get('status',{}).get('description','')
-            score_h = j1['event'].get('homeScore',{}).get('current',0)
-            score_a = j1['event'].get('awayScore',{}).get('current',0)
+            ev = j1.get('event', {})
+            home = ev.get('homeTeam',{}).get('name','Local')
+            away = ev.get('awayTeam',{}).get('name','Visitante')
+            minute = ev.get('status',{}).get('description','')
+            score_h = ev.get('homeScore',{}).get('current',0)
+            score_a = ev.get('awayScore',{}).get('current',0)
 
-            stats_txt = f"{home} {score_h}-{score_a} {away} ({minute}')\n"
+            r2 = requests.get(f"https://api.sofascore.com/api/v1/event/{eid}/statistics", headers=headers, timeout=12)
+            if r2.status_code != 200:
+                r2 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}/statistics", headers=headers, timeout=12)
             
-            # Extrae todas las stats del JSON
             all_stats = []
-            for period in j2.get('statistics',[]):
-                for g in period.get('groups',[]):
-                    for it in g.get('statisticsItems',[]):
-                        all_stats.append(f"{it['name']}: {it['home']} - {it['away']}")
-            
-            # Para IA - formato corto
+            if r2.status_code == 200:
+                j2 = r2.json()
+                for period in j2.get('statistics',[]):
+                    for g in period.get('groups',[]):
+                        for it in g.get('statisticsItems',[]):
+                            all_stats.append(f"{it['name']}: {it['home']} - {it['away']}")
+
             ia_json = {
                 "id": eid,
                 "match": f"{home} vs {away}",
@@ -1501,8 +1504,7 @@ with st.expander("STATS LIVE SOFASCORE - COPIAR PARA IA", expanded=False):
             }
             return ia_json, None
         except Exception as e:
-            return None, str(e)
-
+            return None, f"{e} - prueba en local"
     url_sofa = st.text_input("URL SofaScore", placeholder="https://www.sofascore.com/event/12345678", key="sofa_url")
     if st.button("⚡ SACAR STATS LIVE PARA IA", key="btn_sofa"):
         if url_sofa:
