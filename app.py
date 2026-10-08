@@ -1452,53 +1452,65 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             components.html(mega_html, height=160)
             
             ####################
-with st.expander("📊 STATS LIVE FLASHSCORE - FUNCIONA EN CLOUD", expanded=False):
+with st.expander("📊 STATS LIVE FLASHSCORE - TERMINADOS Y LIVE", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
-
-    def get_flash_stats(url):
+    def get_flash_stats_v4(url):
         m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url)
         if not m_mid:
-            return None, "Copia la URL con ?mid= : https://www.flashscore.es/partido/.../?mid=f75igXFG"
+            return None, "Necesito ?mid= en la URL"
         mid = m_mid.group(1)
 
         headers = {
-            "User-Agent": UA,
-            "Referer": "https://www.flashscore.es/",
-            "Origin": "https://www.flashscore.es",
+            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+            "Referer":"https://www.flashscore.es/",
+            "X-Fsign":"SW9D1eZo",
+            "X-Requested-With":"XMLHttpRequest"
         }
         try:
-            # intenta varios hash de stats - uno de estos devuelve
-            hashes = ["sm1","st1","ds1","stt","st","sds","sdp"]
-            data_stats = None
-            for h in hashes:
+            # 1 - intenta feeds de terminado - este SI funciona para terminados
+            feeds = [
+                f"https://d.flashscore.com/x/feed/df_st_1_{mid}",
+                f"https://d.flashscore.com/x/feed/df_st_0_{mid}",
+                f"https://14.ds.lsapp.eu/x/feed/df_st_1_{mid}",
+            ]
+            stats_raw = None
+            for feed in feeds:
                 try:
-                    api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}&providerId=7"
-                    r = requests.get(api, headers=headers, timeout=8)
-                    if r.status_code == 200 and len(r.text) > 100:
-                        j = r.json()
-                        if "stat" in json.dumps(j).lower() or "Statistic" in json.dumps(j):
-                            data_stats = j
-                            break
+                    r = requests.get(feed, headers=headers, timeout=10)
+                    if r.status_code == 200 and len(r.text) > 50:
+                        stats_raw = r.text
+                        break
                 except:
                     continue
 
-            # fallback: prueba endpoint de detalle partido
-            if not data_stats:
-                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mt1&eventId={mid}"
-                r = requests.get(api, headers=headers, timeout=8)
-                if r.status_code == 200:
-                    data_stats = r.json()
+            # 2 - si no, intenta graphql con todos los hash conocidos de stats terminados
+            if not stats_raw:
+                hashes = ["sm1","st1","st2","sdp","sds","mt1","ds1","ml1","po1","4g1","2b2","7d5"]
+                for h in hashes:
+                    try:
+                        api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}"
+                        r = requests.get(api, headers=headers, timeout=8)
+                        if r.status_code == 200 and "stat" in r.text.lower():
+                            stats_raw = r.text
+                            # parse json
+                            try:
+                                j = r.json()
+                                stats_raw = json.dumps(j, ensure_ascii=False)
+                                break
+                            except:
+                                break
+                    except:
+                        continue
 
-            if not data_stats:
-                return None, f"Flashscore no devuelve stats para mid={mid} aun - partido no empezo"
+            if not stats_raw:
+                return None, f"No hay feed para {mid} - prueba con esta URL directa en el navegador y dime que ves: https://d.flashscore.com/x/feed/df_st_1_{mid}"
 
-            # saca home/away del html para titulo
+            # saca titulo
             home = away = mid
             try:
-                rh = requests.get(url, headers=headers, timeout=8)
+                rh = requests.get(url, headers={"User-Agent":headers["User-Agent"]}, timeout=8)
                 mh = re.search(r'duelParticipant__home.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
                 ma = re.search(r'duelParticipant__away.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
                 if mh: home = re.sub(r'<.*?>','', mh.group(1)).strip()
@@ -1506,46 +1518,30 @@ with st.expander("📊 STATS LIVE FLASHSCORE - FUNCIONA EN CLOUD", expanded=Fals
             except:
                 pass
 
-            # limpia para IA - mandamos JSON crudo pero corto
-            txt = json.dumps(data_stats, ensure_ascii=False)
-            # si es muy grande, extrae solo stats items
-            stats_simple = {}
-            try:
-                # busca estructura comun
-                for key in ["statistics","stats","detail"]:
-                    if key in txt.lower():
-                        break
-                # intenta extraer lista
-                import re as re2
-                # busca patrones "name": "Posesión" etc
-                stats_simple = {"raw": str(data_stats)[:6000]}
-            except:
-                stats_simple = {"raw": txt[:6000]}
-
             out = {
                 "id": mid,
                 "match": f"{home} vs {away}",
-                "stats_api": data_stats,
-                "source": "flashscore_api"
+                "stats_raw": stats_raw[:8000],
+                "source": "flashscore_feed"
             }
             return out, None
         except Exception as e:
             return None, str(e)
 
-    url_flash = st.text_input("URL Flashscore con ?mid=", value="https://www.flashscore.es/partido/futbol/bragantino-jwKvKhGa/mirassol-pQ8ryEe7/resumen/estadisticas/general/?mid=f75igXFG", key="flash_stats_v3")
-    if st.button("⚡ SACAR STATS PARA IA", key="btn_flash_v3"):
+    url_flash = st.text_input("URL Flashscore con ?mid=", value="https://www.flashscore.es/partido/futbol/bragantino-jwKvKhGa/mirassol-pQ8ryEe7/resumen/estadisticas/general/?mid=f75igXFG", key="flash_v4")
+    if st.button("⚡ SACAR STATS TERMINADO PARA IA", key="btn_flash_v4"):
         if url_flash:
-            data, err = get_flash_stats(url_flash)
+            data, err = get_flash_stats_v4(url_flash)
             if err:
                 st.error(err)
             else:
                 j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
                 st.success(f"{data['match']} OK")
-                st.code(j_str[:4000], language="json")
+                st.code(j_str[:5000], language="json")
                 esc = html.escape(j_str)
                 components.html(f"""
-                <textarea id="fs3" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('fs3').value).then(()=>{{document.getElementById('msg3').innerText='✓ COPIADO PARA IA'}})"
+                <textarea id="fs4" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('fs4').value).then(()=>{{document.getElementById('msg4').innerText='✓ COPIADO PARA IA'}})"
                 style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msg3" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                <div id="msg4" style="text-align:center;color:#0f8105;font-weight:900"></div>
                 """, height=60)
