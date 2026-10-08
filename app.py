@@ -1452,91 +1452,100 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             components.html(mega_html, height=160)
             
             ####################
-            
 with st.expander("📊 STATS LIVE FLASHSCORE - FUNCIONA EN CLOUD", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
+    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36"
+
     def get_flash_stats(url):
-        if "flashscore.es" not in url.lower():
-            return None, "Pega URL de FLASHSCORE. Ej: https://www.flashscore.es/partido/futbol/borussia-dortmund-vs-vfb-stuttgart/3bs0n0/"
+        m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url)
+        if not m_mid:
+            return None, "Copia la URL con ?mid= : https://www.flashscore.es/partido/.../?mid=f75igXFG"
+        mid = m_mid.group(1)
 
         headers = {
-            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
-            "Referer":"https://www.flashscore.es/",
+            "User-Agent": UA,
+            "Referer": "https://www.flashscore.es/",
+            "Origin": "https://www.flashscore.es",
         }
         try:
-            m = re.search(r'/([A-Za-z0-9]{6,12})/?(?:#.*)?$', url.strip().split('?')[0].rstrip('/').split('/')[-1])
-            # saca id del final tipo 3bs0n0 o hOsqO
-            eid_slug = url.strip().split('/')[-2] if url.strip().endswith('/') else url.strip().split('/')[-1].split('#')[0].split('?')[0]
-            if len(eid_slug) < 4:
-                eid_slug = "hOsqO"
-
-            r = requests.get(url, headers=headers, timeout=12)
-            htxt = r.text
-
-            # equipos del html
-            home = away = "?"
-            mh = re.search(r'duelParticipant__home.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
-            ma = re.search(r'duelParticipant__away.*?duelParticipant__name[^>]*>([^<]+)</', htxt, re.S)
-            if mh: home = re.sub(r'<.*?>','', mh.group(1)).strip()
-            if ma: away = re.sub(r'<.*?>','', ma.group(1)).strip()
-            if home == "?" :
-                mt = re.search(r'<title>(.*?) - (.*?) \|', htxt)
-                if mt:
-                    home = mt.group(1).strip()
-                    away = mt.group(2).strip()
-
-            stats_dict = {}
-            pat = re.compile(r'statistic__category[^>]*>\s*([^<]+).*?statistic__homeValue[^>]*>\s*([^<]+)\s*<.*?statistic__awayValue[^>]*>\s*([^<]+)\s*<', re.S|re.I)
-            for cat, hv, av in pat.findall(htxt):
-                stats_dict[cat.strip()] = {"home": hv.strip(), "away": av.strip()}
-
-            if not stats_dict:
-                # fallback API graphql de flashscore - hash sm1 = stats
+            # intenta varios hash de stats - uno de estos devuelve
+            hashes = ["sm1","st1","ds1","stt","st","sds","sdp"]
+            data_stats = None
+            for h in hashes:
                 try:
-                    mid_match = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url)
-                    mid = mid_match.group(1) if mid_match else eid_slug
-                    for h in ["sm1","st1","ds1"]:
-                        api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}"
-                        r2 = requests.get(api, headers=headers, timeout=8)
-                        if r2.status_code == 200 and "stat" in r2.text.lower():
-                            j2 = r2.json()
-                            txt = json.dumps(j2)
-                            # si tiene algo, lo dejamos como raw para IA
-                            stats_dict = {"raw_api": txt[:4000]}
+                    api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}&providerId=7"
+                    r = requests.get(api, headers=headers, timeout=8)
+                    if r.status_code == 200 and len(r.text) > 100:
+                        j = r.json()
+                        if "stat" in json.dumps(j).lower() or "Statistic" in json.dumps(j):
+                            data_stats = j
                             break
                 except:
-                    pass
+                    continue
 
-            if not stats_dict:
-                return None, f"No veo stats en HTML - abre la URL y copia la URL de la pestaña 'Estadisticas': {url}#resumen-del-partido/estadisticas-del-partido/0"
+            # fallback: prueba endpoint de detalle partido
+            if not data_stats:
+                api = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mt1&eventId={mid}"
+                r = requests.get(api, headers=headers, timeout=8)
+                if r.status_code == 200:
+                    data_stats = r.json()
+
+            if not data_stats:
+                return None, f"Flashscore no devuelve stats para mid={mid} aun - partido no empezo"
+
+            # saca home/away del html para titulo
+            home = away = mid
+            try:
+                rh = requests.get(url, headers=headers, timeout=8)
+                mh = re.search(r'duelParticipant__home.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
+                ma = re.search(r'duelParticipant__away.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
+                if mh: home = re.sub(r'<.*?>','', mh.group(1)).strip()
+                if ma: away = re.sub(r'<.*?>','', ma.group(1)).strip()
+            except:
+                pass
+
+            # limpia para IA - mandamos JSON crudo pero corto
+            txt = json.dumps(data_stats, ensure_ascii=False)
+            # si es muy grande, extrae solo stats items
+            stats_simple = {}
+            try:
+                # busca estructura comun
+                for key in ["statistics","stats","detail"]:
+                    if key in txt.lower():
+                        break
+                # intenta extraer lista
+                import re as re2
+                # busca patrones "name": "Posesión" etc
+                stats_simple = {"raw": str(data_stats)[:6000]}
+            except:
+                stats_simple = {"raw": txt[:6000]}
 
             out = {
-                "id": eid_slug,
+                "id": mid,
                 "match": f"{home} vs {away}",
-                "stats": stats_dict,
-                "count": len(stats_dict),
-                "source": "flashscore"
+                "stats_api": data_stats,
+                "source": "flashscore_api"
             }
             return out, None
         except Exception as e:
             return None, str(e)
 
-    url_flash = st.text_input("URL Flashscore", placeholder="https://www.flashscore.es/partido/futbol/borussia-dortmund-vs-vfb-stuttgart/3bs0n0/", key="flash_stats_input_v2")
-    if st.button("⚡ SACAR STATS PARA IA", key="btn_flash_stats_v2"):
+    url_flash = st.text_input("URL Flashscore con ?mid=", value="https://www.flashscore.es/partido/futbol/bragantino-jwKvKhGa/mirassol-pQ8ryEe7/resumen/estadisticas/general/?mid=f75igXFG", key="flash_stats_v3")
+    if st.button("⚡ SACAR STATS PARA IA", key="btn_flash_v3"):
         if url_flash:
             data, err = get_flash_stats(url_flash)
             if err:
                 st.error(err)
             else:
                 j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
-                st.success(f"{data['match']} - {data['count']} stats")
-                st.code(j_str, language="json")
+                st.success(f"{data['match']} OK")
+                st.code(j_str[:4000], language="json")
                 esc = html.escape(j_str)
                 components.html(f"""
-                <textarea id="fs_txt" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('fs_txt').value).then(()=>{{document.getElementById('msg_fs').innerText='✓ COPIADO PARA IA'}})"
+                <textarea id="fs3" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('fs3').value).then(()=>{{document.getElementById('msg3').innerText='✓ COPIADO PARA IA'}})"
                 style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msg_fs" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                <div id="msg3" style="text-align:center;color:#0f8105;font-weight:900"></div>
                 """, height=60)
