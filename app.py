@@ -1452,16 +1452,11 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             components.html(mega_html, height=160)
             
             ####################
-with st.expander("📊 STATS LIVE FLASHSCORE - TERMINADOS Y LIVE", expanded=False):
+with st.expander("🔴 STATS LIVE - FUNCIONA EN CLOUD LIVE", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def get_flash_stats_v4(url):
-        m_mid = re.search(r'[?&]mid=([A-Za-z0-9]{6,12})', url)
-        if not m_mid:
-            return None, "Necesito ?mid= en la URL"
-        mid = m_mid.group(1)
-
+    def get_live(mid):
         headers = {
             "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
             "Referer":"https://www.flashscore.es/",
@@ -1469,79 +1464,43 @@ with st.expander("📊 STATS LIVE FLASHSCORE - TERMINADOS Y LIVE", expanded=Fals
             "X-Requested-With":"XMLHttpRequest"
         }
         try:
-            # 1 - intenta feeds de terminado - este SI funciona para terminados
-            feeds = [
-                f"https://d.flashscore.com/x/feed/df_st_1_{mid}",
-                f"https://d.flashscore.com/x/feed/df_st_0_{mid}",
-                f"https://14.ds.lsapp.eu/x/feed/df_st_1_{mid}",
-            ]
-            stats_raw = None
-            for feed in feeds:
-                try:
-                    r = requests.get(feed, headers=headers, timeout=10)
-                    if r.status_code == 200 and len(r.text) > 50:
-                        stats_raw = r.text
-                        break
-                except:
-                    continue
+            # stats live feed - este si está activo en LIVE
+            r = requests.get(f"https://d.flashscore.com/x/feed/df_st_1_{mid}", headers=headers, timeout=8)
+            if r.status_code!= 200:
+                r = requests.get(f"https://14.ds.lsapp.eu/pq_graphql?_hash=sm1&eventId={mid}", headers=headers, timeout=8)
 
-            # 2 - si no, intenta graphql con todos los hash conocidos de stats terminados
-            if not stats_raw:
-                hashes = ["sm1","st1","st2","sdp","sds","mt1","ds1","ml1","po1","4g1","2b2","7d5"]
-                for h in hashes:
-                    try:
-                        api = f"https://14.ds.lsapp.eu/pq_graphql?_hash={h}&eventId={mid}"
-                        r = requests.get(api, headers=headers, timeout=8)
-                        if r.status_code == 200 and "stat" in r.text.lower():
-                            stats_raw = r.text
-                            # parse json
-                            try:
-                                j = r.json()
-                                stats_raw = json.dumps(j, ensure_ascii=False)
-                                break
-                            except:
-                                break
-                    except:
-                        continue
-
-            if not stats_raw:
-                return None, f"No hay feed para {mid} - prueba con esta URL directa en el navegador y dime que ves: https://d.flashscore.com/x/feed/df_st_1_{mid}"
-
-            # saca titulo
-            home = away = mid
-            try:
-                rh = requests.get(url, headers={"User-Agent":headers["User-Agent"]}, timeout=8)
-                mh = re.search(r'duelParticipant__home.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
-                ma = re.search(r'duelParticipant__away.*?duelParticipant__name[^>]*>([^<]+)</', rh.text, re.S)
-                if mh: home = re.sub(r'<.*?>','', mh.group(1)).strip()
-                if ma: away = re.sub(r'<.*?>','', ma.group(1)).strip()
-            except:
-                pass
+            txt = r.text[:8000]
+            # intenta parsear estadisticas del feed
+            stats = {}
+            # feed viene tipo: ¬~AA÷...
+            # sacamos con regex simple
+            for cat in re.findall(r'¬~AA÷([^¬]+)¬', txt):
+                stats[cat] = cat
 
             out = {
                 "id": mid,
-                "match": f"{home} vs {away}",
-                "stats_raw": stats_raw[:8000],
-                "source": "flashscore_feed"
+                "feed_raw": txt,
+                "parsed_preview": stats
             }
             return out, None
         except Exception as e:
             return None, str(e)
 
-    url_flash = st.text_input("URL Flashscore con ?mid=", value="https://www.flashscore.es/partido/futbol/bragantino-jwKvKhGa/mirassol-pQ8ryEe7/resumen/estadisticas/general/?mid=f75igXFG", key="flash_v4")
-    if st.button("⚡ SACAR STATS TERMINADO PARA IA", key="btn_flash_v4"):
-        if url_flash:
-            data, err = get_flash_stats_v4(url_flash)
+    mid_in = st.text_input("MID LIVE", placeholder="f75igXFG o pega URL con?mid=", key="live_mid")
+    if st.button("⚡ LIVE STATS", key="btn_live"):
+        if mid_in:
+            m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
+            mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', mid_in).group(1)
+            data, err = get_live(mid)
             if err:
                 st.error(err)
             else:
                 j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
-                st.success(f"{data['match']} OK")
-                st.code(j_str[:5000], language="json")
+                st.code(j_str[:6000])
                 esc = html.escape(j_str)
                 components.html(f"""
-                <textarea id="fs4" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('fs4').value).then(()=>{{document.getElementById('msg4').innerText='✓ COPIADO PARA IA'}})"
-                style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msg4" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                <textarea id="live" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('live').value).then(()=>{{document.getElementById('msglive').innerText='✓ COPIADO'}})"
+                style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR LIVE PARA IA</button>
+                <div id="msglive" style="text-align:center;color:red;font-weight:900"></div>
                 """, height=60)
