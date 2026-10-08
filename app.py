@@ -1450,75 +1450,64 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("STATS LIVE SOFASCORE - COPIAR PARA IA", expanded=False):
+            
+with st.expander("📊 STATS LIVE FOTMOB - FUNCIONA EN CLOUD", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def get_sofa_live(url):
-        m = re.search(r'/event/(\d+)', url) or re.search(r'#id:(\d+)', url) or re.search(r'id:(\d+)', url)
+    def get_fotmob_live(url_or_id):
+        # acepta id directo o url fotmob o incluso url sofascore
+        m = re.search(r'(\d{7,8})', url_or_id)
         if not m:
-            return None, "Pega URL SofaScore con id: https://...#id:15237996"
+            return None, "Pega ID o URL con numeros: 15237996 o https://www.fotmob.com/.../3ovbh2#15237996"
         eid = m.group(1)
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-            "Referer": "https://www.sofascore.com/",
-            "Origin": "https://www.sofascore.com",
-            "Cache-Control": "no-cache",
-        }
+        headers = {"User-Agent":"Mozilla/5.0"}
         try:
-            # API oficial - este dominio no da 403
-            r1 = requests.get(f"https://api.sofascore.com/api/v1/event/{eid}", headers=headers, timeout=12)
-            if r1.status_code != 200:
-                r1 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}", headers=headers, timeout=12)
-            if r1.status_code != 200:
-                return None, f"Error {r1.status_code} - abre la app en LOCAL con: streamlit run app.py - ahi si deja"
-            
-            j1 = r1.json()
-            ev = j1.get('event', {})
-            home = ev.get('homeTeam',{}).get('name','Local')
-            away = ev.get('awayTeam',{}).get('name','Visitante')
-            minute = ev.get('status',{}).get('description','')
-            score_h = ev.get('homeScore',{}).get('current',0)
-            score_a = ev.get('awayScore',{}).get('current',0)
+            # API publica de FotMob - no bloquea
+            api = f"https://www.fotmob.com/api/matchDetails?matchId={eid}"
+            r = requests.get(api, headers=headers, timeout=12)
+            if r.status_code!= 200:
+                return None, f"Error FotMob {r.status_code} - prueba otro ID"
+            j = r.json()
+            header = j.get('header',{}).get('teams',[])
+            home = header[0]['name'] if len(header)>0 else "Local"
+            away = header[1]['name'] if len(header)>1 else "Visitante"
+            status = j.get('header',{}).get('status',{}).get('liveTime',{}).get('short','')
+            score_h = j.get('header',{}).get('teams',[{},{}])[0].get('score',0)
+            score_a = j.get('header',{}).get('teams',[{},{}])[1].get('score',0)
 
-            r2 = requests.get(f"https://api.sofascore.com/api/v1/event/{eid}/statistics", headers=headers, timeout=12)
-            if r2.status_code != 200:
-                r2 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}/statistics", headers=headers, timeout=12)
-            
-            all_stats = []
-            if r2.status_code == 200:
-                j2 = r2.json()
-                for period in j2.get('statistics',[]):
-                    for g in period.get('groups',[]):
-                        for it in g.get('statisticsItems',[]):
-                            all_stats.append(f"{it['name']}: {it['home']} - {it['away']}")
+            stats = []
+            for s in j.get('content',{}).get('stats',{}).get('stats',[]):
+                title = s.get('title','')
+                for stt in s.get('stats',[]):
+                    stats.append(f"{stt['title']}: {stt['stats'][0]} - {stt['stats'][1]}")
 
-            ia_json = {
+            out = {
                 "id": eid,
                 "match": f"{home} vs {away}",
                 "score": f"{score_h}-{score_a}",
-                "minute": minute,
-                "stats": all_stats
+                "minute": status,
+                "stats": stats,
+                "source": "fotmob"
             }
-            return ia_json, None
+            return out, None
         except Exception as e:
-            return None, f"{e} - prueba en local"
-    url_sofa = st.text_input("URL SofaScore", placeholder="https://www.sofascore.com/event/12345678", key="sofa_url")
-    if st.button("⚡ SACAR STATS LIVE PARA IA", key="btn_sofa"):
-        if url_sofa:
-            data, err = get_sofa_live(url_sofa)
+            return None, str(e)
+
+    id_input = st.text_input("ID o URL FotMob / SofaScore", placeholder="15237996 o https://www.fotmob.com/es/matches/.../3ovbh2#15237996", key="fotmob_input")
+    if st.button("⚡ SACAR STATS PARA IA", key="btn_fotmob"):
+        if id_input:
+            data, err = get_fotmob_live(id_input)
             if err:
                 st.error(err)
             else:
                 j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
+                st.success(f"{data['match']} {data['score']} {data['minute']}")
                 st.code(j_str, language="json")
-                # boton copiar real
                 esc = html.escape(j_str)
                 components.html(f"""
-                <textarea id="sofa_txt" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('sofa_txt').value).then(()=>{{document.getElementById('msg_sofa').innerText='✓ COPIADO PARA IA'}})"
+                <textarea id="fot_txt" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('fot_txt').value).then(()=>{{document.getElementById('msg_fot').innerText='✓ COPIADO PARA IA'}})"
                 style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msg_sofa" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                <div id="msg_fot" style="text-align:center;color:#0f8105;font-weight:900"></div>
                 """, height=60)
