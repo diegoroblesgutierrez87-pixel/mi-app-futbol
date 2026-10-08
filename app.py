@@ -1450,18 +1450,27 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("🔴 LIVE AUTO-REFRESH", expanded=False):
+with st.expander("🔴 LIVE AUTO-REFRESH FIX", expanded=False):
     import requests, re, json, time
-    mid = st.text_input("MID", value="OlJVD9i3", key="auto_mid")
-    auto = st.checkbox("Auto-refresh cada 30s", value=False, key="auto_chk")
-    if st.button("⚡ PROBAR AHORA", key="btn_auto") or auto:
+    mid = st.text_input("MID FIX", value="OlJVD9i3", key="auto_mid_fix")
+    auto = st.checkbox("Auto-refresh cada 30s", value=False, key="auto_chk_fix")
+    if st.button("⚡ PROBAR AHORA FIX", key="btn_auto_fix") or auto:
         headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
-        r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
-        j = r.json()
-        stage = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("eventCurrentStage",{}).get("eventStage")
-        entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
-        st.write(f"Stage: {stage} - Entries: {len(entries)}")
-        st.json(j)
+        try:
+            r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
+            txt = r.text
+            if txt.strip() == "0" or "Query not stored" in txt:
+                st.warning(f"Feed aun en 0 para {mid} - Stage 12, no empezo")
+                j = {"raw": txt[:500]}
+            else:
+                j = r.json()
+            stage = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("eventCurrentStage",{}).get("eventStage") if isinstance(j, dict) else "?"
+            entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[]) if isinstance(j, dict) else []
+            st.write(f"Stage: {stage} - Entries: {len(entries)}")
+            st.code(txt[:2000])
+        except Exception as e:
+            st.error(str(e))
+
         if auto:
             time.sleep(30)
             st.rerun()
