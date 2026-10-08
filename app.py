@@ -1452,55 +1452,49 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             components.html(mega_html, height=160)
             
             ####################
-with st.expander("🔴 STATS LIVE - FUNCIONA EN CLOUD LIVE", expanded=False):
+with st.expander("🔴 LIVE STATS REAL", expanded=False):
     import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def get_live(mid):
+    def get_live_real(url_or_mid):
+        m = re.search(r'mid=([A-Za-z0-9]{6,12})', url_or_mid)
+        mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', url_or_mid).group(1) if re.search(r'([A-Za-z0-9]{6,12})', url_or_mid) else None
+        if not mid:
+            return None, "Pega mid"
         headers = {
-            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+            "User-Agent":"Mozilla/5.0",
             "Referer":"https://www.flashscore.es/",
             "X-Fsign":"SW9D1eZo",
-            "X-Requested-With":"XMLHttpRequest"
         }
-        try:
-            # stats live feed - este si está activo en LIVE
-            r = requests.get(f"https://d.flashscore.com/x/feed/df_st_1_{mid}", headers=headers, timeout=8)
-            if r.status_code!= 200:
-                r = requests.get(f"https://14.ds.lsapp.eu/pq_graphql?_hash=sm1&eventId={mid}", headers=headers, timeout=8)
+        feeds = [
+            f"https://d.flashscore.com/x/feed/df_dos_1_{mid}",
+            f"https://d.flashscore.com/x/feed/df_st_1_{mid}",
+            f"https://d.flashscore.com/x/feed/df_st_0_{mid}",
+            f"https://14.ds.lsapp.eu/pq_graphql?_hash=sm1&eventId={mid}",
+            f"https://14.ds.lsapp.eu/pq_graphql?_hash=st1&eventId={mid}",
+            f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7",
+        ]
+        out_all = {}
+        for f in feeds:
+            try:
+                r = requests.get(f, headers=headers, timeout=8)
+                out_all[f] = r.text[:3000]
+            except Exception as e:
+                out_all[f] = str(e)
+        return {"id": mid, "feeds": out_all}, None
 
-            txt = r.text[:8000]
-            # intenta parsear estadisticas del feed
-            stats = {}
-            # feed viene tipo: ¬~AA÷...
-            # sacamos con regex simple
-            for cat in re.findall(r'¬~AA÷([^¬]+)¬', txt):
-                stats[cat] = cat
-
-            out = {
-                "id": mid,
-                "feed_raw": txt,
-                "parsed_preview": stats
-            }
-            return out, None
-        except Exception as e:
-            return None, str(e)
-
-    mid_in = st.text_input("MID LIVE", placeholder="f75igXFG o pega URL con?mid=", key="live_mid")
-    if st.button("⚡ LIVE STATS", key="btn_live"):
-        if mid_in:
-            m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
-            mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', mid_in).group(1)
-            data, err = get_live(mid)
-            if err:
-                st.error(err)
-            else:
-                j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
-                st.code(j_str[:6000])
-                esc = html.escape(j_str)
-                components.html(f"""
-                <textarea id="live" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('live').value).then(()=>{{document.getElementById('msglive').innerText='✓ COPIADO'}})"
-                style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR LIVE PARA IA</button>
-                <div id="msglive" style="text-align:center;color:red;font-weight:900"></div>
-                """, height=60)
+    mid_in = st.text_input("MID LIVE REAL", value="OlJVD9i3", key="live_real")
+    if st.button("⚡ PROBAR TODOS LOS FEEDS", key="btn_live_real"):
+        data, err = get_live_real(mid_in)
+        if err:
+            st.error(err)
+        else:
+            st.json(data)
+            j_str = json.dumps(data, ensure_ascii=False)
+            esc = html.escape(j_str)
+            components.html(f"""
+            <textarea id="liver" style="position:absolute;left:-9999px">{esc}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('liver').value).then(()=>{{document.getElementById('msgr').innerText='✓ COPIADO'}})"
+            style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
+            <div id="msgr" style="text-align:center;color:red;font-weight:900"></div>
+            """, height=60)
