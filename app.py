@@ -1451,20 +1451,19 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             """
             components.html(mega_html, height=160)
             
-            
-with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - PURO STREAMLIT", expanded=True):
+with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=True):
     import re, json, html
     import streamlit.components.v1 as components
-    from playwright.sync_api import sync_playwright
+    import requests
 
     url_todo = st.text_input("Pega URL Flashscore",
         placeholder="https://www.flashscore.es/partido/.../?mid=jm14ULS8",
-        key="url_todo_final_v3")
+        key="url_todo_final_v4")
 
-    if st.button("🚀 SACAR TODO", key="btn_todo_final_v3", use_container_width=True):
+    if st.button("🚀 SACAR TODO", key="btn_todo_final_v4", use_container_width=True):
         m = re.search(r'mid=([A-Za-z0-9]{6,12})', url_todo)
         if not m:
-            st.error("No veo el mid en la URL")
+            st.error("No veo el mid")
             st.stop()
         mid = m.group(1)
 
@@ -1476,30 +1475,38 @@ with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - PURO STREAMLIT", 
                 return s.replace('-',' ').title()
             local, visit = clean(mm[0][0]), clean(mm[0][1])
 
-        st.write(f"⏳ Leyendo {mid} - {local} vs {visit}... 5 seg")
+        # PRUEBA 1: feed df_dos_1 para ligas grandes
+        headers = {"x-fsign":"SW9D1eZo","User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+        try:
+            r = requests.get(f"https://d.flashscore.com/x/feed/df_dos_1_{mid}", headers=headers, timeout=10)
+            txt = r.text
+        except:
+            txt = ""
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-            page.goto(url_todo, timeout=60000)
-            page.wait_for_timeout(5000)
-            content = page.content()
-            browser.close()
-
-        def busca(nombre):
-            pat = re.search(re.escape(nombre) + r'.*?(\d+)\D+(\d+)', content, re.I | re.S)
-            if pat:
-                return [int(pat.group(1)), int(pat.group(2))]
+        def parse_feed(name, txt):
+            # busca "Posesión del balón¬...÷61÷39"
+            m = re.search(re.escape(name) + r'.*?÷(\d+).*?÷(\d+)', txt, re.S)
+            if m:
+                return [int(m.group(1)), int(m.group(2))]
+            # fallback 1 valor
+            m2 = re.search(re.escape(name) + r'.*?÷(\d+)', txt, re.S)
+            if m2:
+                v = int(m2.group(1))
+                return [v, 100-v] if "Poses" in name else [v,0]
             return [0,0]
 
-        posesion = busca("Posesión del balón")
-        rem_tot = busca("Remates")
-        puerta = busca("a puerta")
-        corners = busca("Córners")
-        amarillas = busca("Tarjetas amarillas")
+        if len(txt) > 200:
+            posesion = parse_feed("Posesión", txt)
+            rem_tot = parse_feed("Remates totales", txt)
+            puerta = parse_feed("a puerta", txt)
+            corners = parse_feed("Córners", txt)
+            amarillas = parse_feed("amarillas", txt)
+        else:
+            posesion = rem_tot = puerta = corners = amarillas = [0,0]
 
-        if sum(posesion)==0 and sum(rem_tot)==0 and sum(corners)==0:
-            st.warning(f"⚠️ {mid} - {local} vs {visit} -> Flashscore NO da stats en la web para esta liga (Ecuador B, Perú, Marruecos B). Sube captura de la pestaña ESTADISTICAS.")
+        if sum(posesion)==0 and sum(rem_tot)==0:
+            st.warning(f"⚠️ {mid} - {local} vs {visit} -> NO hay feed (Ecuador B, Perú, Marruecos, o Pokal sin stats). Para Bayern jm14ULS8 SÍ debe tener. Si te sale vacío, prueba en local, Cloud lo bloquea.")
+            st.code(txt[:500])
             st.stop()
 
         data = {
@@ -1510,8 +1517,7 @@ with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - PURO STREAMLIT", 
             "remates_totales": rem_tot,
             "remates_puerta": puerta,
             "corners": corners,
-            "amarillas": amarillas,
-            "raw_len": len(content)
+            "amarillas": amarillas
         }
 
         j = json.dumps(data, ensure_ascii=False, indent=2)
@@ -1525,4 +1531,4 @@ with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - PURO STREAMLIT", 
         <div id="msg" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px"></div>
         <pre style="background:#111;color:#0f0;padding:12px;border-radius:8px;max-height:300px;overflow:auto;margin-top:10px">{esc}</pre>
         """, height=450)
-        st.success(f"✅ {mid} sacado solo con Streamlit")
+        st.success(f"✅ {mid} sacado")
