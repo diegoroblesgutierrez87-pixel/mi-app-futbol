@@ -1450,4 +1450,73 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
- 
+with st.expander("STATS LIVE SOFASCORE - COPIAR PARA IA", expanded=False):
+    import requests, re, json, html
+    import streamlit.components.v1 as components
+
+    def get_sofa_live(url):
+        m = re.search(r'/event/(\d+)', url) or re.search(r'/(\d{6,8})', url)
+        if not m:
+            # url tipo https://www.sofascore.com/team/football/xxx/xxx#id:12345678
+            m2 = re.search(r'id:(\d+)', url)
+            if not m2:
+                return None, "Pega URL de partido SofaScore: sofascore.com/event/12345678"
+            eid = m2.group(1)
+        else:
+            eid = m.group(1)
+        
+        try:
+            # 1. Marcador y tiempo
+            r1 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}", headers={"User-Agent":"Mozilla/5.0"}, timeout=10)
+            # 2. Estadísticas en directo
+            r2 = requests.get(f"https://www.sofascore.com/api/v1/event/{eid}/statistics", headers={"User-Agent":"Mozilla/5.0"}, timeout=10)
+            if r1.status_code != 200:
+                return None, f"Error SofaScore {r1.status_code} - prueba en local"
+            
+            j1 = r1.json()
+            j2 = r2.json() if r2.status_code==200 else {}
+            
+            home = j1['event']['homeTeam']['name']
+            away = j1['event']['awayTeam']['name']
+            minute = j1['event'].get('status',{}).get('description','')
+            score_h = j1['event'].get('homeScore',{}).get('current',0)
+            score_a = j1['event'].get('awayScore',{}).get('current',0)
+
+            stats_txt = f"{home} {score_h}-{score_a} {away} ({minute}')\n"
+            
+            # Extrae todas las stats del JSON
+            all_stats = []
+            for period in j2.get('statistics',[]):
+                for g in period.get('groups',[]):
+                    for it in g.get('statisticsItems',[]):
+                        all_stats.append(f"{it['name']}: {it['home']} - {it['away']}")
+            
+            # Para IA - formato corto
+            ia_json = {
+                "id": eid,
+                "match": f"{home} vs {away}",
+                "score": f"{score_h}-{score_a}",
+                "minute": minute,
+                "stats": all_stats
+            }
+            return ia_json, None
+        except Exception as e:
+            return None, str(e)
+
+    url_sofa = st.text_input("URL SofaScore", placeholder="https://www.sofascore.com/event/12345678", key="sofa_url")
+    if st.button("⚡ SACAR STATS LIVE PARA IA", key="btn_sofa"):
+        if url_sofa:
+            data, err = get_sofa_live(url_sofa)
+            if err:
+                st.error(err)
+            else:
+                j_str = json.dumps(data, ensure_ascii=False, separators=(',',':'))
+                st.code(j_str, language="json")
+                # boton copiar real
+                esc = html.escape(j_str)
+                components.html(f"""
+                <textarea id="sofa_txt" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('sofa_txt').value).then(()=>{{document.getElementById('msg_sofa').innerText='✓ COPIADO PARA IA'}})"
+                style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
+                <div id="msg_sofa" style="text-align:center;color:#0f8105;font-weight:900"></div>
+                """, height=60)
