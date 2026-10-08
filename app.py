@@ -1450,63 +1450,48 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("🏷️ SACAR EQUIPOS + STATS DE CUALQUIER MID", expanded=False):
-    import requests, re, json, html
+            
+with st.expander("🏷️ NOMBRES 100% CLOUD - PEGA URL COMPLETA", expanded=False):
+    import re, json, html
     import streamlit.components.v1 as components
 
-    mid_in = st.text_input("MID", value="6whMZMJl", key="name_mid")
-    m = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
-    mid = m.group(1) if m else re.search(r'([A-Za-z0-9]{6,12})', mid_in).group(1) if re.search(r'([A-Za-z0-9]{6,12})', mid_in) else ""
+    url_in = st.text_input("Pega URL completa de flashscore",
+        value="https://www.flashscore.es/partido/futbol/dep-santo-domingo-xGtj9hGd/ldu-portoviejo-WURvqcDP/resumen/estadisticas/general/?mid=OlJVD9i3",
+        key="url_full")
 
-    if st.button("🏷️ SACAR NOMBRES", key="btn_names"):
-        headers = {"User-Agent":"Mozilla/5.0"}
-        teams = {"local": "?", "visitante": "?", "url_final": ""}
-        try:
-            # esta url redirige a la url con nombres: /partido/futbol/dep-santo-domingo-.../ldu-portoviejo-...
-            r = requests.get(f"https://www.flashscore.es/match/{mid}/#/resumen-del-partido",
-                             headers=headers, timeout=10, allow_redirects=True)
-            # intenta sacar de la url final
-            url_final = r.url
-            teams["url_final"] = url_final
-            # url tipo.../dep-santo-domingo-xGtj9hGd/ldu-portoviejo-WURvqcDP/
-            mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url_final)
-            if mm:
-                local_slug, visit_slug = mm[0]
-                # limpia el hash final -xGtj9hGd
-                local = re.sub(r'-[A-Za-z0-9]{8}$', '', local_slug).replace('-',' ').title()
-                visit = re.sub(r'-[A-Za-z0-9]{8}$', '', visit_slug).replace('-',' ').title()
-                teams["local"] = local
-                teams["visitante"] = visit
+    def parse_url(url):
+        mid_m = re.search(r'mid=([A-Za-z0-9]{6,12})', url)
+        mid = mid_m.group(1) if mid_m else "?"
+        # /futbol/equipo-local-XXXX/equipo-visitante-YYYY/
+        mm = re.findall(r'/partido/futbol/([^/]+)/([^/]+)/', url)
+        if not mm:
+            mm = re.findall(r'/match/[^/]+/([^/]+)/([^/]+)/', url)
+        local, visit = "?", "?"
+        if mm:
+            ls, vs = mm[0]
+            local = re.sub(r'-[A-Za-z0-9]{8}$', '', ls).replace('-',' ').title()
+            visit = re.sub(r'-[A-Za-z0-9]{8}$', '', vs).replace('-',' ').title()
+        return {"mid": mid, "local": local, "visitante": visit, "url": url}
 
-            # fallback: busca en el html AA~ y AB~
-            txt = r.text
-            aa = re.search(r'AA~([^~]+)~', txt)
-            ab = re.search(r'AB~([^~]+)~', txt)
-            if aa:
-                teams["local"] = aa.group(1)
-            if ab:
-                teams["visitante"] = ab.group(1)
+    if url_in:
+        data = parse_url(url_in)
+        st.json(data)
 
-        except Exception as e:
-            teams["error"] = str(e)
-
-        st.json(teams)
-
-        # ahora junta con tus stats manuales
-        data_final = {
-            "mid": mid,
-            "local": teams.get("local"),
-            "visitante": teams.get("visitante"),
-            "posesion": [48,52], # cambia aqui si quieres
+        # junta con stats manuales
+        final = {
+            "mid": data["mid"],
+            "local": data["local"],
+            "visitante": data["visitante"],
+            "posesion": [48,52],
             "remates_totales": [0,4],
             "remates_puerta": [0,1],
             "corners": [2,2],
+            "amarillas": [1,0]
         }
-        j_str = json.dumps(data_final, ensure_ascii=False)
-        esc = html.escape(j_str)
+        j = json.dumps(final, ensure_ascii=False)
+        esc = html.escape(j)
         components.html(f"""
-        <textarea id="teamd" style="position:absolute;left:-9999px">{esc}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('teamd').value).then(()=>{{document.getElementById('msgteam').innerText='✓ COPIADO CON NOMBRES'}})"
-        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900">📋 COPIAR CON NOMBRES</button>
-        <div id="msgteam" style="text-align:center;color:#0f8105;font-weight:900"></div>
-        """, height=60)
+        <textarea id="fullu" style="position:absolute;left:-9999px">{esc}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('fullu').value)"
+        style="width:100%;background:#0f8105;color:white;border:none;border-radius:8px;padding:12px;font-weight:900">📋 COPIAR CON NOMBRES</button>
+        """, height=50)
