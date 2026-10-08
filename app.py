@@ -1450,27 +1450,44 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-with st.expander("🔴 LIVE AUTO-REFRESH FIX", expanded=False):
-    import requests, re, json, time
-    mid = st.text_input("MID FIX", value="OlJVD9i3", key="auto_mid_fix")
-    auto = st.checkbox("Auto-refresh cada 30s", value=False, key="auto_chk_fix")
-    if st.button("⚡ PROBAR AHORA FIX", key="btn_auto_fix") or auto:
-        headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+            
+            
+with st.expander("🔴 LIVE MOMENTUM CLOUD FIX DEFINITIVO", expanded=False):
+    import requests, re, json, html, time
+    import streamlit.components.v1 as components
+
+    def safe_json(r):
+        txt = r.text.strip() if hasattr(r, 'text') else ""
+        if not txt or txt == "0" or "Query not stored" in txt or not txt.startswith("{"):
+            return None, txt[:2000]
         try:
-            r = requests.get(f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7", headers=headers, timeout=8)
-            txt = r.text
-            if txt.strip() == "0" or "Query not stored" in txt:
-                st.warning(f"Feed aun en 0 para {mid} - Stage 12, no empezo")
-                j = {"raw": txt[:500]}
+            return r.json(), None
+        except Exception as e:
+            return None, txt[:2000]
+
+    mid_in = st.text_input("MID", value="OlJVD9i3", key="mid_def")
+    if st.button("⚡ LIVE FIX", key="btn_def"):
+        mid = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
+        mid = mid.group(1) if mid else mid_in.strip()
+        headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
+        url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7"
+        try:
+            r = requests.get(url, headers=headers, timeout=10)
+            j, raw = safe_json(r)
+            if j is None:
+                st.warning(f"Feed aun no activo para {mid} - devuelve: {raw}")
+                st.code(raw)
             else:
-                j = r.json()
-            stage = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("eventCurrentStage",{}).get("eventStage") if isinstance(j, dict) else "?"
-            entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[]) if isinstance(j, dict) else []
-            st.write(f"Stage: {stage} - Entries: {len(entries)}")
-            st.code(txt[:2000])
+                entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
+                st.success(f"Stage LIVE - {len(entries)} momentum points")
+                j_str = json.dumps(j, ensure_ascii=False)
+                st.code(j_str[:6000])
+                esc = html.escape(j_str)
+                components.html(f"""
+                <textarea id="def" style="position:absolute;left:-9999px">{esc}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('def').value).then(()=>{{document.getElementById('msgdef').innerText='✓ COPIADO'}})"
+                style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
+                <div id="msgdef" style="text-align:center;color:red;font-weight:900"></div>
+                """, height=60)
         except Exception as e:
             st.error(str(e))
-
-        if auto:
-            time.sleep(30)
-            st.rerun()
