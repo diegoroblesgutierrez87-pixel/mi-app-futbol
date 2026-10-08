@@ -679,7 +679,17 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         btts_txt = "G/G" if btts else "NG/NG"
 
     col_j = "#0A2342"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h} vs {a}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+    # --- SUBRAYA Y COLOREA EQUIPO DEL FILTRO EN CABECERA ---
+    h_norm_chk = normaliza(h)
+    a_norm_chk = normaliza(a)
+    h_html = h
+    a_html = a
+    if current_eq_norm:
+        if h_norm_chk == current_eq_norm:
+            h_html = f"<span style='color:{col};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
+        elif a_norm_chk == current_eq_norm:
+            a_html = f"<span style='color:{col};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto'><div style='text-align:left;color:{col_j};font-weight:900'>|Jornada {j}| {h_html} vs {a_html}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
