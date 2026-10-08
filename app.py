@@ -1224,16 +1224,19 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                     elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                     else: col_main = "#000"
                     mins_1t = []; mins_2t = []
+                    filtro_fix_activo = (MIN_DESDE_FIX is not None or MIN_HASTA_FIX is not None)
                     for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
-                        if MIN_DESDE_FIX is not None and ev.get('m',-1) < MIN_DESDE_FIX: continue
-                        if MIN_HASTA_FIX is not None and ev.get('m',-1) > MIN_HASTA_FIX: continue
                         if 'Missed' in ev.get('tipo',''): continue
-                        m = ev['m']; team_ev = ev['team']; tipo = ev.get('tipo','')
+                        m = ev.get('m',-1); team_ev = ev['team']; tipo = ev.get('tipo','')
                         benef = an if 'Own Goal' in tipo and team_ev == hn else hn if 'Own Goal' in tipo else team_ev
                         es_mio = norm_eq in benef
                         col_min = col_main if es_mio else "#000"
                         peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                        span = f"<span style='color:{col_min};{peso}'> {m}'</span>"
+                        en_rango_fix = (MIN_DESDE_FIX is None or m >= MIN_DESDE_FIX) and (MIN_HASTA_FIX is None or m <= MIN_HASTA_FIX)
+                        if filtro_fix_activo and en_rango_fix:
+                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
+                        else:
+                            span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
                         if m <= 45: mins_1t.append(span)
                         else: mins_2t.append(span)
                     if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
