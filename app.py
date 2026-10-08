@@ -1450,44 +1450,60 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-            
-            
-with st.expander("🔴 LIVE MOMENTUM CLOUD FIX DEFINITIVO", expanded=False):
-    import requests, re, json, html, time
+with st.expander("📊 STATS HTML SIN BS4 - CLOUD 100%", expanded=False):
+    import requests, re, json, html
     import streamlit.components.v1 as components
 
-    def safe_json(r):
-        txt = r.text.strip() if hasattr(r, 'text') else ""
-        if not txt or txt == "0" or "Query not stored" in txt or not txt.startswith("{"):
-            return None, txt[:2000]
-        try:
-            return r.json(), None
-        except Exception as e:
-            return None, txt[:2000]
-
-    mid_in = st.text_input("MID", value="OlJVD9i3", key="mid_def")
-    if st.button("⚡ LIVE FIX", key="btn_def"):
-        mid = re.search(r'mid=([A-Za-z0-9]{6,12})', mid_in)
-        mid = mid.group(1) if mid else mid_in.strip()
+    def get_stats_html_nobs4(mid):
+        # prueba 3 urls diferentes de flashscore
+        urls = [
+            f"https://www.flashscore.es/partido/{mid}/#/estadisticas-del-partido/0",
+            f"https://www.flashscore.com/match/{mid}/#/match-summary/match-statistics/0",
+            f"https://d.flashscore.com/x/feed/df_dos_1_{mid}"
+        ]
         headers = {"User-Agent":"Mozilla/5.0","Referer":"https://www.flashscore.es/"}
-        url = f"https://13.ds.lsapp.eu/pq_graphql?_hash=mmts&eventId={mid}&providerId=7"
-        try:
-            r = requests.get(url, headers=headers, timeout=10)
-            j, raw = safe_json(r)
-            if j is None:
-                st.warning(f"Feed aun no activo para {mid} - devuelve: {raw}")
-                st.code(raw)
-            else:
-                entries = j.get("data",{}).get("findMatchMomentumStatsByMatchId",{}).get("momentum",{}).get("entries",[])
-                st.success(f"Stage LIVE - {len(entries)} momentum points")
-                j_str = json.dumps(j, ensure_ascii=False)
-                st.code(j_str[:6000])
-                esc = html.escape(j_str)
-                components.html(f"""
-                <textarea id="def" style="position:absolute;left:-9999px">{esc}</textarea>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('def').value).then(()=>{{document.getElementById('msgdef').innerText='✓ COPIADO'}})"
-                style="width:100%;background:red;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
-                <div id="msgdef" style="text-align:center;color:red;font-weight:900"></div>
-                """, height=60)
-        except Exception as e:
-            st.error(str(e))
+        all_text = ""
+        for u in urls:
+            try:
+                r = requests.get(u, headers=headers, timeout=10)
+                all_text += r.text[:8000] + "\n"
+            except:
+                pass
+        
+        def extract(pattern):
+            m = re.search(pattern, all_text, re.I | re.S)
+            if m:
+                return m.groups()
+            return None
+
+        # regex para los datos de tu captura
+        posesion = re.findall(r'Posesi[óo]n.*?(\d+).*?(\d+)', all_text)
+        remates = re.findall(r'Remates totales.*?(\d+).*?(\d+)', all_text)
+        puerta = re.findall(r'Remates a puerta.*?(\d+).*?(\d+)', all_text)
+        corners = re.findall(r'C[óo]rneres.*?(\d+).*?(\d+)', all_text)
+        amarillas = re.findall(r'Tarjetas amarillas.*?(\d+).*?(\d+)', all_text)
+
+        out = {
+            "mid": mid,
+            "posesion": posesion[-1] if posesion else None, # 48, 52
+            "remates_totales": remates[-1] if remates else None, # 0, 4
+            "remates_puerta": puerta[-1] if puerta else None, # 0, 1
+            "corners": corners[-1] if corners else None, # 2, 2
+            "amarillas": amarillas[-1] if amarillas else None, # 1, 0
+            "debug_len": len(all_text)
+        }
+        return out, all_text[:6000]
+
+    mid_in = st.text_input("MID SIN BS4", value="OlJVD9i3", key="nobs4")
+    if st.button("⚡ SACAR STATS SIN BS4", key="btn_nobs4"):
+        data, debug = get_stats_html_nobs4(mid_in.strip())
+        st.json(data)
+        st.code(debug[:4000])
+        j_str = json.dumps(data, ensure_ascii=False)
+        esc = html.escape(j_str)
+        components.html(f"""
+        <textarea id="nobs" style="position:absolute;left:-9999px">{esc}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('nobs').value).then(()=>{{document.getElementById('msgnobs').innerText='✓ COPIADO'}})"
+        style="width:100%;background:#0f8105;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer">📋 COPIAR PARA IA</button>
+        <div id="msgnobs" style="text-align:center;color:#0f8105;font-weight:900"></div>
+        """, height=60)
