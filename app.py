@@ -1551,7 +1551,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         if not p.exists():
             return pd.DataFrame()
         df_fut = pd.read_csv(p, on_bad_lines='skip')
-        df_fut['Date'] = pd.to_datetime(df_fut['Date'], dayfirst=True, errors='coerce')
+        df_fut['Date'] = pd.to_datetime(df_fut['Date'], errors='coerce')
         return df_fut
 
     df_futuro = cargar_futuro()
@@ -1615,7 +1615,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             df_base_pred = df_base_pred[df_base_pred['Date'].dt.date >= f_date]
         except: pass
 
-    df_base_pred = df_base_pred.sort_values('Date').head(300)
+    df_base_pred = df_base_pred.sort_values('Date').head(1000)
 
     # --- SELECTOR AUTOMATICO PARTIDO FUTURO -> EQUIPO1 VS EQUIPO2 ---
     # formato: "10/10 | 2. Bundesliga | Magdeburg vs Hannover"
