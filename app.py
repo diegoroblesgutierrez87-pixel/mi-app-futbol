@@ -1578,7 +1578,9 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
 
     # --- FILTROS ARRIBA ---
     ligas_fut = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
-    c_lp1, c_lp2, c_lp3 = st.columns([2,1,1])
+    c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
+    with c_lp4:
+        cond_loc_pred = st.selectbox("Solo como", ["Todos","Local","Visitante"], key="cond_loc_pred")
     with c_lp1:
         ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
         st.query_params["ligas_pred"] = ligas_pred_sel
@@ -1658,6 +1660,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             norm_eq = normaliza(nombre_eq)
             # usa tu df historico (df) ya cargado en tu app
             df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            # --- FILTRO LOCAL / VISITANTE FIX ---
+            if cond_loc_pred == "Local":
+                df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            elif cond_loc_pred == "Visitante":
+                df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
             if df_team.empty:
                 st.caption(f"{nombre_eq} - sin historial en base actual")
                 continue
