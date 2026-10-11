@@ -1451,7 +1451,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             """
             components.html(mega_html, height=160)
             
-with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=True):
+with st.expander(" SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=True):
     import re, json, html
     import streamlit.components.v1 as components
     import requests
@@ -1526,9 +1526,237 @@ with st.expander("📊 SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=
         <textarea id="jsontodo" style="position:absolute;left:-9999px">{esc}</textarea>
         <button onclick="navigator.clipboard.writeText(document.getElementById('jsontodo').value).then(()=>{{document.getElementById('msg').innerText='✓ COPIADO'}})"
         style="width:100%;background:#0f8105;color:white;border:none;border-radius:10px;padding:16px;font-weight:900;font-size:17px;cursor:pointer">
-        📋 COPIAR TODO - {mid}
+         COPIAR TODO - {mid}
         </button>
         <div id="msg" style="text-align:center;color:#0f8105;font-weight:900;margin-top:8px"></div>
         <pre style="background:#111;color:#0f0;padding:12px;border-radius:8px;max-height:300px;overflow:auto;margin-top:10px">{esc}</pre>
         """, height=450)
         st.success(f"✅ {mid} sacado")
+        
+        # ==========================================================
+#  BLOQUE PREDICCION - FUTUROS + HISTORIAL ESTILO FIX
+# ==========================================================
+with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=False):
+    import pathlib
+
+    @st.cache_data(show_spinner=False)
+    def cargar_futuro():
+        p = pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv")
+        if not p.exists():
+            # busca en la carpeta del repo
+            for q in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
+                if (q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv").exists():
+                    p = q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"
+                    break
+        if not p.exists():
+            return pd.DataFrame()
+        df_fut = pd.read_csv(p, on_bad_lines='skip')
+        df_fut['Date'] = pd.to_datetime(df_fut['Date'], dayfirst=True, errors='coerce')
+        return df_fut
+
+    df_futuro = cargar_futuro()
+    if df_futuro.empty:
+        st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
+        st.stop()
+
+    # --- PERSISTENCIA URL IGUAL QUE FIX ---
+    if "ligas_pred" not in st.session_state:
+        st.session_state.ligas_pred = st.query_params.get_all("ligas_pred")
+    if "fecha_pred" not in st.session_state:
+        st.session_state.fecha_pred = st.query_params.get("fecha_pred", "Todas")
+    if "min_desde_pred" not in st.session_state:
+        st.session_state.min_desde_pred = st.query_params.get("min_desde_pred", "")
+    if "min_hasta_pred" not in st.session_state:
+        st.session_state.min_hasta_pred = st.query_params.get("min_hasta_pred", "")
+
+    if st.button("🧹 Limpiar PREDICCION", key="btn_limpiar_pred", use_container_width=True):
+        for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel"]:
+            if k in st.session_state: del st.session_state[k]
+        for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred"]:
+            if k in st.query_params: del st.query_params[k]
+        st.rerun()
+
+    # --- FILTROS ARRIBA ---
+    ligas_fut = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
+    c_lp1, c_lp2, c_lp3 = st.columns([2,1,1])
+    with c_lp1:
+        ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
+        st.query_params["ligas_pred"] = ligas_pred_sel
+    with c_lp2:
+        # fechas reales que hay en el futuro
+        df_base_pred = df_futuro if not ligas_pred_sel else df_futuro[df_futuro['League_CSV'].isin(ligas_pred_sel)]
+        fechas_pred = sorted(df_base_pred['Date'].dropna().dt.date.unique())
+        fechas_pred_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred]
+        fecha_pred_sel = st.selectbox("Fecha desde", fechas_pred_str, index=fechas_pred_str.index(st.session_state.fecha_pred) if st.session_state.fecha_pred in fechas_pred_str else 0, key="fecha_pred")
+        st.query_params["fecha_pred"] = fecha_pred_sel
+    with c_lp3:
+        c_m1, c_m2 = st.columns(2)
+        with c_m1:
+            min_desde_pred_raw = st.text_input("MIN DESDE", key="min_desde_pred", placeholder="-")
+        with c_m2:
+            min_hasta_pred_raw = st.text_input("MIN HASTA", key="min_hasta_pred", placeholder="-")
+
+    def _parse_min_pred(v):
+        try:
+            if v is None or str(v).strip() in ["", "-", "–", "—"]: return None
+            return int(str(v).strip().replace("'", ""))
+        except: return None
+    MIN_DESDE_PRED = _parse_min_pred(min_desde_pred_raw)
+    MIN_HASTA_PRED = _parse_min_pred(min_hasta_pred_raw)
+    st.query_params["min_desde_pred"] = min_desde_pred_raw
+    st.query_params["min_hasta_pred"] = min_hasta_pred_raw
+
+    # filtra base por fecha
+    if fecha_pred_sel!= "Todas":
+        try:
+            f_date = pd.to_datetime(fecha_pred_sel, dayfirst=True).date()
+            df_base_pred = df_base_pred[df_base_pred['Date'].dt.date >= f_date]
+        except: pass
+
+    df_base_pred = df_base_pred.sort_values('Date').head(300)
+
+    # --- SELECTOR AUTOMATICO PARTIDO FUTURO -> EQUIPO1 VS EQUIPO2 ---
+    # formato: "10/10 | 2. Bundesliga | Magdeburg vs Hannover"
+    opciones_partidos = []
+    for _, r in df_base_pred.iterrows():
+        try:
+            fecha_s = r['Date'].strftime("%d/%m")
+            liga_s = str(r['League_CSV'])[:15]
+            h = str(r['HomeTeam']).strip()
+            a = str(r['AwayTeam']).strip()
+            fid = str(r.get('fixture_id',''))
+            opciones_partidos.append(f"{fecha_s} | {liga_s} | {h} vs {a} | {fid}")
+        except: continue
+
+    if not opciones_partidos:
+        st.info("No hay partidos futuros con ese filtro")
+        st.stop()
+
+    partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
+
+    if not partidos_sel:
+        st.info("👆 Elige 1 o varios partidos futuros arriba y te muestro el historial de los 2 equipos al instante estilo FIX")
+        st.stop()
+
+    # --- PARA CADA PARTIDO FUTURO ELEGIDO, PINTA HISTORIAL DE LOS 2 EQUIPOS ---
+    partidos_pred_copy = [] # para boton copiar
+
+    for partido_str in partidos_sel:
+        try:
+            # saca home y away del string
+            partes = partido_str.split("|")
+            teams_part = partes[2].strip() if len(partes)>=3 else ""
+            if " vs " in teams_part:
+                h_fut, a_fut = [x.strip() for x in teams_part.split(" vs ")]
+            else:
+                continue
+        except: continue
+
+        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO: {h_fut} vs {a_fut} | {partes[0].strip()}</div>", unsafe_allow_html=True)
+
+        for nombre_eq in [h_fut, a_fut]:
+            norm_eq = normaliza(nombre_eq)
+            # usa tu df historico (df) ya cargado en tu app
+            df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            if df_team.empty:
+                st.caption(f"{nombre_eq} - sin historial en base actual")
+                continue
+
+            # jornadas recientes igual que FIX
+            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)[:15]
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+
+            for j in jornadas:
+                st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
+                html_lineas = ""
+                for _, r in d_j.iterrows():
+                    fid = str(r.get('fixture_id','')).split('.')[0]
+
+                    # FILTRO MINUTO PREDICCION
+                    if MIN_DESDE_PRED is not None or MIN_HASTA_PRED is not None:
+                        _tiene = False
+                        for _ev in eventos.get(fid, []):
+                            if 'Missed' in _ev.get('tipo',''): continue
+                            _mm = _ev.get('m', -1)
+                            if MIN_DESDE_PRED is not None and _mm < MIN_DESDE_PRED: continue
+                            if MIN_HASTA_PRED is not None and _mm > MIN_HASTA_PRED: continue
+                            _tiene = True
+                            break
+                        if not _tiene:
+                            continue
+
+                    h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
+                    try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
+                    except: hg=0; ag=0
+                    hn = normaliza(h); an = normaliza(a)
+                    if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
+                    elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
+                    else: col_main = "#000"
+
+                    mins_1t = []; mins_2t = []
+                    filtro_act = (MIN_DESDE_PRED is not None or MIN_HASTA_PRED is not None)
+                    for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if 'Missed' in ev.get('tipo',''): continue
+                        m = ev.get('m',-1); team_ev = ev['team']
+                        benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') else team_ev
+                        es_mio = norm_eq in benef
+                        col_min = col_main if es_mio else "#000"
+                        peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                        en_rango = (MIN_DESDE_PRED is None or m >= MIN_DESDE_PRED) and (MIN_HASTA_PRED is None or m <= MIN_HASTA_PRED)
+                        if filtro_act and en_rango:
+                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
+                        else:
+                            span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
+                        if m <= 45: mins_1t.append(span)
+                        else: mins_2t.append(span)
+
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    else: mins_html = "".join(mins_1t + mins_2t)
+
+                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+                    except: hthg=0; htag=0
+                    def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
+                    if norm_eq == hn: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
+                    elif norm_eq == an: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
+                    else: r1="E"; rF="E"
+                    estado = f"{r1}/{rF}"
+
+                    if norm_eq == hn:
+                        h_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"; a_txt = a
+                    elif norm_eq == an:
+                        h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
+                    else:
+                        h_txt = h; a_txt = a
+
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+
+                    # para copiar
+                    m1 = []; m2 = []
+                    for evc in sorted(eventos.get(fid, []), key=lambda x: x['m']):
+                        if MIN_DESDE_PRED is not None and evc.get('m',-1) < MIN_DESDE_PRED: continue
+                        if MIN_HASTA_PRED is not None and evc.get('m',-1) > MIN_HASTA_PRED: continue
+                        if 'Missed' in evc.get('tipo',''): continue
+                        mm = evc.get('m',0)
+                        if mm <= 45: m1.append(f"{mm}'")
+                        else: m2.append(f"{mm}'")
+                    if m1 and m2: mins_txt = " ".join(m1) + "| " + " ".join(m2)
+                    else: mins_txt = " ".join(m1 + m2)
+                    partidos_pred_copy.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
+
+                st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
+
+    # --- BOTON COPIAR PREDICCION ---
+    if partidos_pred_copy:
+        import html as _html
+        texto_final = "\n".join(partidos_pred_copy[:200])
+        safe_txt = _html.escape(texto_final)
+        import streamlit.components.v1 as components
+        components.html(f"""
+        <textarea id="txt_pred" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pred').value).then(()=>{{let b=document.getElementById('btn_pred_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR PREDICCION'; b.style.background='#0A2342'}},1200)}})"
+        id="btn_pred_copy"
+        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
+         COPIAR PREDICCION ({len(partidos_sel)} partidos futuros)
+        </button>
+        """, height=55, scrolling=False)
