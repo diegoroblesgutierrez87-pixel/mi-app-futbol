@@ -1580,7 +1580,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     ligas_fut = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
     c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
     with c_lp4:
-        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante"], key="cond_loc_pred")
+        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], key="cond_loc_pred")
     with c_lp1:
         ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
         st.query_params["ligas_pred"] = ligas_pred_sel
@@ -1660,11 +1660,16 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             norm_eq = normaliza(nombre_eq)
             # usa tu df historico (df) ya cargado en tu app
             df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
-            # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO ---
+            # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO + COMBINADO ---
             if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
                 df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
             elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
                 df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            elif cond_loc_pred == "Local en casa / Visitante fuera":
+                if nombre_eq == h_fut:
+                    df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                elif nombre_eq == a_fut:
+                    df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
             if df_team.empty:
                 st.caption(f"{nombre_eq} - sin historial en base actual")
                 continue
