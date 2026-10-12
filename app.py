@@ -1499,7 +1499,24 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
-        overs_sel = st.pills("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], selection_mode="multi", key="overs_unders_pred")
+        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=st.session_state.get("overs_unders_pred", []), key="overs_unders_pred", placeholder="Ej: 1P >0.5")
+        import streamlit.components.v1 as _comp_no_sel_all
+        _comp_no_sel_all.html("""
+        <script>
+        function killSelectAll(){
+          const doc = window.parent.document;
+          doc.querySelectorAll('li').forEach(li=>{
+            if(li.innerText && li.innerText.trim().toLowerCase() === 'select all'){
+              // solo si en la pagina existe el label Overs
+              const hasOvers = Array.from(doc.querySelectorAll('label')).some(l=>l.innerText.includes('Overs / Unders'));
+              if(hasOvers) li.style.display='none';
+            }
+          });
+        }
+        setInterval(killSelectAll, 250);
+        new MutationObserver(killSelectAll).observe(window.parent.document.body, {childList:true, subtree:true});
+        </script>
+        """, height=0)
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
