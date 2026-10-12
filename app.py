@@ -1515,6 +1515,22 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     with c_man2:
         equipos_manuales_2 = st.multiselect("Equipos manuales 2", lista_hist_equipos, default=[], key="eq_manual_2", placeholder="Ej: Antequera, Marbella...")
         cond_manual_2 = st.selectbox("Cond manual 2", ["TODOS","solo local","solo visitante"], key="cond_manual_2")
+    import streamlit.components.v1 as _comp_morado
+    _comp_morado.html("""
+    <script>
+    const MOR = ["Equipos manuales 1","Equipos manuales 2"];
+    function paintMor(){
+      parent.document.querySelectorAll('label').forEach(l=>{
+        if(MOR.some(t=>l.innerText.includes(t))){
+          l.style.setProperty('color','#7B2CBF','important');
+          l.style.setProperty('font-weight','900','important');
+        }
+      });
+    }
+    paintMor();
+    setInterval(paintMor, 500);
+    </script>
+    """, height=0)
 
     with c_lp1:
         ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
