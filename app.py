@@ -369,11 +369,11 @@ with c6:
 with c7:
     filtro_pct = st.number_input("% mínimo", min_value=0, max_value=100, value=60, step=5, key="filtro_pct")
 with c8:
-    modo_stats = st.selectbox("Detalle stats", ["OFF","ON"], key="modo_stats")
+    modo_stats = st.selectbox("Detalle stats", ["ON","OFF"], key="modo_stats")
 
 c9,c_min1,c_min2 = filtros.columns([1,1,1])
 with c9:
-    modo_jugadores = st.selectbox("JUGADORES", ["OFF","ON"], key="jugadores")
+    modo_jugadores = st.selectbox("JUGADORES", ["ON","OFF"], key="jugadores")
 with c_min1:
     min_desde_raw = st.text_input("MIN DESDE", key="min_desde", placeholder="-")
 with c_min2:
