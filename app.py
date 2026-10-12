@@ -1499,6 +1499,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
+        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
@@ -1726,6 +1727,27 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         if set_2p and (hg_, ag_) in set_2p: return True
                         return False
                     df_team = df_team[df_team.apply(_cumple_res_pred, axis=1)]
+
+            # --- FILTRO OVERS / UNDERS POR PARTE ---
+            if 'overs_sel' in locals() and overs_sel:
+                def _cumple_overs_pred(rr):
+                    try:
+                        hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                        hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                    except:
+                        return False
+                    g1 = hthg_ + htag_
+                    g2 = (hg_ + ag_) - g1
+                    if g2 < 0: g2 = 0
+                    for o in overs_sel:
+                        if o == "1P >0.5" and not (g1 > 0.5): return False
+                        if o == "1P >1.5" and not (g1 > 1.5): return False
+                        if o == "1P >2.5" and not (g1 > 2.5): return False
+                        if o == "2P >0.5" and not (g2 > 0.5): return False
+                        if o == "2P >1.5" and not (g2 > 1.5): return False
+                        if o == "2P >2.5" and not (g2 > 2.5): return False
+                    return True
+                df_team = df_team[df_team.apply(_cumple_overs_pred, axis=1)]
 
             # --- FILTRO 1ªP TIPO EMPATE / GANA / PIERDE ---
             if 'res_1p_tipo' in locals() and res_1p_tipo != "TODOS":
