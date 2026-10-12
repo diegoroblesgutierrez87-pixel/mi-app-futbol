@@ -610,23 +610,23 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             hp = _iv(r.get('HomePasses')); ap = _iv(r.get('AwayPasses'))
             hpos = _iv(r.get('HomePos')); apos = _iv(r.get('AwayPos'))
 
-            if hy is not None or ay is not None:
+            if (hy is not None or ay is not None) and ((hy or 0) + (ay or 0) > 0):
                 extra += f" <span style='color:#b8860b'>Amarillas Local {hy if hy is not None else '-'} - Visitante {ay if ay is not None else '-'}</span><br>"
-            if hr is not None or ar is not None:
+            if (hr is not None or ar is not None) and ((hr or 0) + (ar or 0) > 0):
                 extra += f" <span style='color:#FF0000'>Rojas Local {hr if hr is not None else '-'} - Visitante {ar if ar is not None else '-'}</span><br>"
-            if hc is not None or ac is not None:
+            if (hc is not None or ac is not None) and ((hc or 0) + (ac or 0) > 0):
                 extra += f" <span style='color:#1E90FF'>Corners Local {hc if hc is not None else '-'} - Visitante {ac if ac is not None else '-'}</span><br>"
-            if hst is not None or ast is not None:
+            if (hst is not None or ast is not None) and ((hst or 0) + (ast or 0) > 0):
                 extra += f" <span style='color:#0066cc'>Tiros Puerta Local {hst if hst is not None else '-'} - Visitante {ast if ast is not None else '-'}</span><br>"
-            if hs is not None or _as is not None:
+            if (hs is not None or _as is not None) and ((hs or 0) + (_as or 0) > 0):
                 extra += f" <span style='color:#004080'>Tiros Totales Local {hs if hs is not None else '-'} - Visitante {_as if _as is not None else '-'}</span><br>"
-            if hf is not None or af is not None:
+            if (hf is not None or af is not None) and ((hf or 0) + (af or 0) > 0):
                 extra += f" <span style='color:#666'>Faltas Local {hf if hf is not None else '-'} - Visitante {af if af is not None else '-'}</span><br>"
-            if hsv is not None or asv is not None:
+            if (hsv is not None or asv is not None) and ((hsv or 0) + (asv or 0) > 0):
                 extra += f" <span style='color:#008080'>Paradas Local {hsv if hsv is not None else '-'} - Visitante {asv if asv is not None else '-'}</span><br>"
-            if hp is not None or ap is not None:
+            if (hp is not None or ap is not None) and ((hp or 0) + (ap or 0) > 0):
                 extra += f" <span style='color:#2E8B57'>Pases Local {hp if hp is not None else '-'} - Visitante {ap if ap is not None else '-'}</span><br>"
-            if hpos is not None or apos is not None:
+            if (hpos is not None or apos is not None) and ((hpos or 0) + (apos or 0) > 0):
                 extra += f" <span style='color:#8B4513'>Posesion Local {hpos if hpos is not None else '-'}% - Visitante {apos if apos is not None else '-'}%</span><br>"
         else:
             # OFF - comportamiento original tuyo
