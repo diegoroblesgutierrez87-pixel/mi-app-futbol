@@ -1539,7 +1539,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         function paintBlue(){
           parent.document.querySelectorAll('label').forEach(l=>{
             if(BLUES.some(t=>l.innerText.includes(t))){
-              l.style.setProperty('color','#0A2342','important');
+              l.style.setProperty('color','#001F5B','important');
               l.style.setProperty('font-weight','900','important');
             }
           });
