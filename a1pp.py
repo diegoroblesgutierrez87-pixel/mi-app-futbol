@@ -1644,6 +1644,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
                 elif cond_manual_2 == "solo visitante":
                     df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
+            # jornadas recientes - con huecos - FAST: base para J15,J14,J13 ANTES de filtrar por 0-0 / Overs
+            df_team_base_pred = df_team.copy()
             if 'resultados_pred_sel' in locals() and resultados_pred_sel or 'filtro_ht_ft_unico_2026_v9' in st.session_state and st.session_state.get('filtro_ht_ft_unico_2026_v9'):
                 sel = st.session_state.get('filtro_ht_ft_unico_2026_v9', resultados_pred_sel if 'resultados_pred_sel' in locals() else [])
                 set_1p = set(); set_2p = set()
@@ -1711,9 +1713,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             if df_team.empty:
                 st.caption(f"{nombre_eq} - sin historial en base actual")
                 continue
-
-            # jornadas recientes - con huecos - FAST reutiliza df_team
-            df_team_base_pred = df_team.copy()
 
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
             jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
