@@ -1541,13 +1541,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     MIN_HASTA_PRED = _parse_min_pred(min_hasta_pred_raw)
     st.query_params["min_desde_pred"] = min_desde_pred_raw
     st.query_params["min_hasta_pred"] = min_hasta_pred_raw
-    st.query_params["partidos_pred_sel"] = partidos_sel
-    st.query_params["eq_manual_1"] = equipos_manuales_1
-    st.query_params["eq_manual_2"] = equipos_manuales_2
-    st.query_params["cond_manual_1"] = cond_manual_1
-    st.query_params["cond_manual_2"] = cond_manual_2
-    st.query_params["cond_loc_pred"] = cond_loc_pred
-    st.query_params["filtro_ht_ft_unico_2026_v9"] = resultados_pred_sel
 
     # filtra base por fecha
     if fecha_pred_sel!= "Todas":
@@ -1576,6 +1569,19 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.stop()
 
     partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
+    # --- GUARDA TODO EN URL PARA 24H ---
+    try:
+        st.query_params["partidos_pred_sel"] = partidos_sel
+        st.query_params["eq_manual_1"] = equipos_manuales_1
+        st.query_params["eq_manual_2"] = equipos_manuales_2
+        st.query_params["cond_manual_1"] = cond_manual_1
+        st.query_params["cond_manual_2"] = cond_manual_2
+        st.query_params["cond_loc_pred"] = cond_loc_pred
+        st.query_params["filtro_ht_ft_unico_2026_v9"] = resultados_pred_sel
+        st.query_params["ligas_pred"] = ligas_pred_sel
+        st.query_params["fecha_pred"] = fecha_pred_sel
+    except:
+        pass
 
     tiene_manuales = (len(equipos_manuales_1) > 0 or len(equipos_manuales_2) > 0)
 
