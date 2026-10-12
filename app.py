@@ -1637,7 +1637,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
 
     if not partidos_sel:
-        st.info("👆 Elige 1 o varios partidos futuros arriba y te muestro el historial de los 2 equipos al instante estilo FIX")
+        st.info(" Elige 1 o varios partidos futuros arriba y te muestro el historial de los 2 equipos al instante estilo FIX")
         st.stop()
 
     # --- PARA CADA PARTIDO FUTURO ELEGIDO, PINTA HISTORIAL DE LOS 2 EQUIPOS ---
@@ -1717,13 +1717,13 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         peso = "font-weight:900;" if es_mio else "font-weight:700;"
                         en_rango = (MIN_DESDE_PRED is None or m >= MIN_DESDE_PRED) and (MIN_HASTA_PRED is None or m <= MIN_HASTA_PRED)
                         if filtro_act and en_rango:
-                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
+                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:2px 5px;margin:2px;display:inline-block'> {m}'</span>"
                         else:
-                            span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
+                            span = f"<span style='color:{col_min};{peso};margin:2px;display:inline-block'> {m}'</span>"
                         if m <= 45: mins_1t.append(span)
                         else: mins_2t.append(span)
 
-                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 6px;display:inline-block'>|</span>" + "".join(mins_2t)
                     else: mins_html = "".join(mins_1t + mins_2t)
 
                     try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
@@ -1741,7 +1741,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else:
                         h_txt = h; a_txt = a
 
-                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                    html_lineas += f"<div style='color:{col_main};font-family:monospace;font-size:12px;font-weight:700;line-height:1.4;margin-bottom:6px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-bottom:1px dotted #ddd;padding-bottom:3px'><span>{h_txt} {hg}-{ag} {a_txt}</span><span style='display:flex;flex-wrap:wrap;gap:2px;flex:1'>{mins_html}</span><span style='color:#fff;background:{col_main};padding:1px 6px;border-radius:3px;font-size:11px'>{estado}</span></div>"
 
                     # para copiar
                     m1 = []; m2 = []
@@ -1756,7 +1756,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else: mins_txt = " ".join(m1 + m2)
                     partidos_pred_copy.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
 
-                st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='line-height:1.4;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0;width:100%'>{html_lineas}</div>", unsafe_allow_html=True)
 
     # --- BOTON COPIAR PREDICCION ---
     if partidos_pred_copy:
