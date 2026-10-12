@@ -1748,10 +1748,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
                     try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                     except: hg=0; ag=0
-                    hn = normaliza(h); an = normaliza(a)
-                    if norm_eq == hn: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
-                    elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
+                    h_up = h.upper().strip(); a_up = a.upper().strip()
+                    if eq_up == h_up: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
+                    elif eq_up == a_up: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                     else: col_main = "#000"
+                    hn = norm_eq; an = norm_eq # compat para el resto del codigo
 
                     try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                     except: hthg=0; htag=0
