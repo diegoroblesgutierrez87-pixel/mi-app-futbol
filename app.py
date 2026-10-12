@@ -1532,6 +1532,22 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             min_desde_pred_raw = st.text_input("MIN DESDE", key="min_desde_pred", placeholder="-")
         with c_m2:
             min_hasta_pred_raw = st.text_input("MIN HASTA", key="min_hasta_pred", placeholder="-")
+        import streamlit.components.v1 as _comp_blue
+        _comp_blue.html("""
+        <script>
+        const BLUES = ["MIN DESDE","MIN HASTA"];
+        function paintBlue(){
+          parent.document.querySelectorAll('label').forEach(l=>{
+            if(BLUES.some(t=>l.innerText.includes(t))){
+              l.style.setProperty('color','#0A2342','important');
+              l.style.setProperty('font-weight','900','important');
+            }
+          });
+        }
+        paintBlue();
+        setInterval(paintBlue, 500);
+        </script>
+        """, height=0)
 
     def _parse_min_pred(v):
         try:
