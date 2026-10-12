@@ -1617,8 +1617,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
         for nombre_eq in equipos_a_mostrar:
             norm_eq = normaliza(nombre_eq)
-            # usa tu df historico (df) ya cargado en tu app
-            df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
+            df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == nombre_eq.upper().strip()) | (df['AwayTeam'].astype(str).str.upper().str.strip() == nombre_eq.upper().strip())]
+            # fallback si viene con acento en futuro (Beşiktaş vs BESIKTAS)
+            if df_team.empty:
+                df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
             # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO + COMBINADO ---
             if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
                 df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
