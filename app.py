@@ -1232,8 +1232,21 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
             if df_team.empty:
                 continue
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
-            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)[:15]
+            # guarda base sin filtro de resultado para ver huecos
+            df_team_base_jorn = df_team if 'sel_fix' not in locals() or not sel_fix else df_base_fix[(df_base_fix['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df_base_fix['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            jornadas = sorted(df_team_base_jorn['Jornada'].dropna().unique(), reverse=True)[:15]
+            filtro_activo_txt = ", ".join(sel_fix) if 'sel_fix' in locals() and sel_fix else ""
             for j in jornadas:
+                # partidos de esa jornada que cumplen filtro
+                d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty else pd.DataFrame()
+                d_j_all = df_team_base_jorn[df_team_base_jorn['Jornada']==j].sort_values('Date', ascending=False)
+                es_hueco = d_j_ok.empty
+                if es_hueco and filtro_activo_txt:
+                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)} <span style='background:#FFD700;color:#000;padding:0 4px;border-radius:2px'>SIN {filtro_activo_txt}</span></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
+                # si es hueco, muestra todos en gris para ver que pasó
+                d_j = d_j_ok if not es_hueco else d_j_all
                 st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
                 d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
                 html_lineas = ""
