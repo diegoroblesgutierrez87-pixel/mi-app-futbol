@@ -1570,6 +1570,40 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.stop()
 
     partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
+    # --- PINTA EN ROJO LOS 4 LABELS ---
+    import streamlit.components.v1 as _comp_red
+    _comp_red.html("""
+    <script>
+    const REDS = ["Resultado 1ªP","Resultado 1ªP / 2ªP","Filtro","Elige partido futuro"];
+    function paint(){
+      parent.document.querySelectorAll('label').forEach(l=>{
+        if(REDS.some(t=>l.innerText.includes(t))){
+          l.style.setProperty('color','red','important');
+          l.style.setProperty('font-weight','900','important');
+        }
+      });
+    }
+    paint();
+    setInterval(paint, 500);
+    </script>
+    """, height=0)
+    # --- PINTA EN ROJO LOS 4 LABELS ---
+    import streamlit.components.v1 as _comp_red
+    _comp_red.html("""
+    <script>
+    const REDS = ["Resultado 1ªP","Resultado 1ªP / 2ªP","Filtro","Elige partido futuro"];
+    function paint(){
+      parent.document.querySelectorAll('label').forEach(l=>{
+        if(REDS.some(t=>l.innerText.includes(t))){
+          l.style.setProperty('color','red','important');
+          l.style.setProperty('font-weight','900','important');
+        }
+      });
+    }
+    paint();
+    setInterval(paint, 500);
+    </script>
+    """, height=0)
     # --- GUARDA TODO EN URL PARA 24H ---
     try:
         st.query_params["partidos_pred_sel"] = partidos_sel
