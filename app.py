@@ -1748,13 +1748,15 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
             for j in jornadas:
                 d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty else pd.DataFrame()
-                d_j_all = df_team_base_pred[df_team_base_pred['Jornada']==j].sort_values('Date', ascending=False)
                 es_hueco = d_j_ok.empty
-                if es_hueco and sel_txt:
-                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)} <span style='background:#FFD700;color:#000;padding:0 4px;border-radius:2px'>SIN {sel_txt}</span></div>", unsafe_allow_html=True)
+                if es_hueco:
+                    # HUECO VACIO - sin ningun texto del otro partido
+                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
+                    continue
                 else:
                     st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
-                d_j = d_j_ok if not es_hueco else d_j_all
+                d_j = d_j_ok
                 html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
