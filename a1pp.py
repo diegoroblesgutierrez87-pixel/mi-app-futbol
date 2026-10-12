@@ -1461,42 +1461,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
         overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
-        import streamlit.components.v1 as _comp_no_sel_all
-        _comp_no_sel_all.html("""
-        <script>
-        (function(){
-          function kill(){
-            try{
-              var doc = window.parent.document;
-              doc.querySelectorAll('li, div[role="option"]').forEach(function(li){
-                var t = (li.innerText||'').trim().toLowerCase();
-                if(t==='select all'){
-                  li.style.display='none';
-                }
-              });
-            }catch(e){}
-          }
-          setInterval(kill, 200);
-        })();
-        </script>
-        """, height=0)
-        import streamlit.components.v1 as _comp_no_sel_all
-        _comp_no_sel_all.html("""
-        <script>
-        function killSelectAll(){
-          const doc = window.parent.document;
-          doc.querySelectorAll('li').forEach(li=>{
-            if(li.innerText && li.innerText.trim().toLowerCase() === 'select all'){
-              // solo si en la pagina existe el label Overs
-              const hasOvers = Array.from(doc.querySelectorAll('label')).some(l=>l.innerText.includes('Overs / Unders'));
-              if(hasOvers) li.style.display='none';
-            }
-          });
-        }
-        setInterval(killSelectAll, 250);
-        new MutationObserver(killSelectAll).observe(window.parent.document.body, {childList:true, subtree:true});
-        </script>
-        """, height=0)
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
@@ -1532,14 +1496,12 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
 
     with c_lp1:
         ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
-        st.query_params["ligas_pred"] = ligas_pred_sel
     with c_lp2:
         # fechas reales que hay en el futuro
         df_base_pred = df_futuro if not ligas_pred_sel else df_futuro[df_futuro['League_CSV'].isin(ligas_pred_sel)]
         fechas_pred = sorted(df_base_pred['Date'].dropna().dt.date.unique())
         fechas_pred_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred]
         fecha_pred_sel = st.selectbox("Fecha desde", fechas_pred_str, index=fechas_pred_str.index(st.session_state.fecha_pred) if st.session_state.fecha_pred in fechas_pred_str else 0, key="fecha_pred")
-        st.query_params["fecha_pred"] = fecha_pred_sel
     with c_lp3:
         c_m1, c_m2 = st.columns(2)
         with c_m1:
@@ -1570,8 +1532,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         except: return None
     MIN_DESDE_PRED = _parse_min_pred(min_desde_pred_raw)
     MIN_HASTA_PRED = _parse_min_pred(min_hasta_pred_raw)
-    st.query_params["min_desde_pred"] = min_desde_pred_raw
-    st.query_params["min_hasta_pred"] = min_hasta_pred_raw
 
     # filtra base por fecha
     if fecha_pred_sel!= "Todas":
