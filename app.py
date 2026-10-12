@@ -1248,7 +1248,6 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
                 # si es hueco, muestra todos en gris para ver que pasó
                 d_j = d_j_ok if not es_hueco else d_j_all
                 st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px;line-height:1.1'>J{int(j)}</div>", unsafe_allow_html=True)
-                d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
                 html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
@@ -1738,7 +1737,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
 
             for j in jornadas:
                 st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
-                d_j = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False)
                 html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
