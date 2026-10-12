@@ -1705,6 +1705,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     elif norm_eq == an: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                     else: col_main = "#000"
 
+                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+                    except: hthg=0; htag=0
+                    ht_str = f"[{hthg}-{htag}]"
+                    ht_html = f"<span style='color:#0A2342;font-weight:900;background:#E8E8E8;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+
                     mins_1t = []; mins_2t = []
                     filtro_act = (MIN_DESDE_PRED is not None or MIN_HASTA_PRED is not None)
                     for ev in sorted(eventos.get(fid, []), key=lambda x: x['m']):
@@ -1722,11 +1727,10 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         if m <= 45: mins_1t.append(span)
                         else: mins_2t.append(span)
 
-                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                    else: mins_html = "".join(mins_1t + mins_2t)
-
-                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
-                    except: hthg=0; htag=0
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    elif mins_1t: mins_html = "".join(mins_1t) + ht_html
+                    elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    else: mins_html = ht_html
                     def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                     if norm_eq == hn: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
                     elif norm_eq == an: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
@@ -1751,8 +1755,10 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         mm = evc.get('m',0)
                         if mm <= 45: m1.append(f"{mm}'")
                         else: m2.append(f"{mm}'")
-                    if m1 and m2: mins_txt = " ".join(m1) + "| " + " ".join(m2)
-                    else: mins_txt = " ".join(m1 + m2)
+                    if m1 and m2: mins_txt = " ".join(m1) + f"{ht_str} " + " ".join(m2)
+                    elif m1: mins_txt = " ".join(m1) + f"{ht_str}"
+                    elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
+                    else: mins_txt = f"{ht_str}"
                     partidos_pred_copy.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
 
                 st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
