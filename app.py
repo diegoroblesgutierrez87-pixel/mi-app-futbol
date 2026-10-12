@@ -1731,12 +1731,30 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 st.caption(f"{nombre_eq} - sin historial en base actual")
                 continue
 
-            # jornadas recientes igual que FIX
-            jornadas = sorted(df_team['Jornada'].dropna().unique(), reverse=True)[:15]
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+            # jornadas recientes - con huecos
+            df_team_base_pred = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
+                df_team_base_pred = df_team_base_pred[df_team_base_pred['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
+                df_team_base_pred = df_team_base_pred[df_team_base_pred['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            elif cond_loc_pred == "Local en casa / Visitante fuera":
+                if nombre_eq == h_fut:
+                    df_team_base_pred = df_team_base_pred[df_team_base_pred['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                elif nombre_eq == a_fut:
+                    df_team_base_pred = df_team_base_pred[df_team_base_pred['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
 
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+            jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
+            sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
             for j in jornadas:
-                st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty else pd.DataFrame()
+                d_j_all = df_team_base_pred[df_team_base_pred['Jornada']==j].sort_values('Date', ascending=False)
+                es_hueco = d_j_ok.empty
+                if es_hueco and sel_txt:
+                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)} <span style='background:#FFD700;color:#000;padding:0 4px;border-radius:2px'>SIN {sel_txt}</span></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                d_j = d_j_ok if not es_hueco else d_j_all
                 html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
