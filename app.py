@@ -1843,7 +1843,9 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else:
                         h_txt = h; a_txt = a
 
-                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                    # NUEVO FORMATO: PSV 2-0[1-0] HEERENVEEN 29'|68' 2-0
+                    final_txt = f"<span style='color:{col_main};font-weight:900;margin-left:6px'>{hg}-{ag}</span>"
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag}{ht_html} {a_txt}{mins_html}{final_txt}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
 
                     # para copiar
                     m1 = []; m2 = []
