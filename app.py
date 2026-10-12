@@ -1617,6 +1617,16 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], key="cond_loc_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
+    # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
+    lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
+    c_man1, c_man2 = st.columns(2)
+    with c_man1:
+        equipo_manual_1 = st.selectbox("Equipo manual 1", [""] + lista_hist_equipos, key="eq_manual_1", placeholder="Ej: Cartagena")
+        cond_manual_1 = st.selectbox("Cond manual 1", ["TODOS","solo local","solo visitante"], key="cond_manual_1")
+    with c_man2:
+        equipo_manual_2 = st.selectbox("Equipo manual 2", [""] + lista_hist_equipos, key="eq_manual_2", placeholder="Ej: Antequera")
+        cond_manual_2 = st.selectbox("Cond manual 2", ["TODOS","solo local","solo visitante"], key="cond_manual_2")
+
     with c_lp1:
         ligas_pred_sel = st.multiselect("Ligas futuras", ligas_fut, default=st.session_state.ligas_pred, key="ligas_pred", placeholder="Todas las ligas")
         st.query_params["ligas_pred"] = ligas_pred_sel
@@ -1692,7 +1702,10 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
 
         st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO: {h_fut} vs {a_fut} | {partes[0].strip()}</div>", unsafe_allow_html=True)
 
-        for nombre_eq in [h_fut, a_fut]:
+        equipos_a_mostrar = [h_fut, a_fut]
+        if 'equipo_manual_1' in locals() and equipo_manual_1: equipos_a_mostrar.append(equipo_manual_1)
+        if 'equipo_manual_2' in locals() and equipo_manual_2: equipos_a_mostrar.append(equipo_manual_2)
+        for nombre_eq in equipos_a_mostrar:
             norm_eq = normaliza(nombre_eq)
             # usa tu df historico (df) ya cargado en tu app
             df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
@@ -1705,6 +1718,17 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 if nombre_eq == h_fut:
                     df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
                 elif nombre_eq == a_fut:
+                    df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA ---
+            if 'equipo_manual_1' in locals() and nombre_eq == equipo_manual_1:
+                if cond_manual_1 == "solo local":
+                    df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                elif cond_manual_1 == "solo visitante":
+                    df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            if 'equipo_manual_2' in locals() and nombre_eq == equipo_manual_2:
+                if cond_manual_2 == "solo local":
+                    df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                elif cond_manual_2 == "solo visitante":
                     df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
             if 'resultados_pred_sel' in locals() and resultados_pred_sel or 'filtro_ht_ft_unico_2026_v9' in st.session_state and st.session_state.get('filtro_ht_ft_unico_2026_v9'):
                 sel = st.session_state.get('filtro_ht_ft_unico_2026_v9', resultados_pred_sel if 'resultados_pred_sel' in locals() else [])
