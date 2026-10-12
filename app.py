@@ -66,15 +66,60 @@ window.addEventListener('scroll', function() {
 </script>
 """, unsafe_allow_html=True)
 # --- UTILS ---
+MAPA_NORMALIZACION = {
+    "Pusamania Borneo": "PUSAMANIA BORNEO",
+    "Dewa United": "DEWA UNITED",
+    "Persebaya Surabaya": "PERSEBAYA SURABAYA",
+    "Persita": "PERSITA",
+    "PSS Sleman": "PSS SLEMAN",
+    "Bali United": "BALI UNITED",
+    "Persija": "PERSIJA",
+    "PSIM Yogyakarta": "PSIM YOGYAKARTA",
+    "PSM Makassar": "PSM MAKASSAR",
+    "Garudayaksa": "GARUDAYAKSA",
+    "Persepam Madura Utd": "PERSEPAM MADURA UTD",
+    "Arema FC": "AREMA FC",
+    "Persijap": "PERSIJAP",
+    "Bhayangkara FC": "BHAYANGKARA FC",
+    "Persik Kediri": "PERSIK KEDIRI",
+    "Persib Bandung": "PERSIB BANDUNG",
+    "KUCHING FA": "Kuching FA",
+    "JOHOR DARUL TAKZIM FC": "Johor Darul Takzim FC",
+    "KELANTAN RED WARRIOR FC": "Kelantan Red Warrior FC",
+    "KUALA LUMPUR FA": "Kuala Lumpur FA",
+    "IMIGRESEN": "Imigresen",
+    "PENANG": "Penang",
+    "SELANGOR": "Selangor",
+    "SABAH FA": "Sabah FA",
+    "TERENGGANU": "Terengganu",
+    "MELAKA": "Melaka",
+    "DPMM FC BRUNEI": "DPMM FC Brunei",
+    "NEGERI SEMBILAN": "Negeri Sembilan",
+    "CASTELLON": "CASTELLÓN",
+    "SPVGG GREUTHER FURTH": "SPVGG GREUTHER FÜRTH",
+    "1. FC NURNBERG": "1. FC NÜRNBERG",
+    "BAYERN MUNCHEN": "BAYERN MÜNCHEN",
+    "RAAL LA LOUVIERE": "RAAL LA LOUVIÈRE",
+    "VFL OSNABRUCK": "VFL OSNABRÜCK",
+    "MUGLASPOR": "MUĞLASPOR",
+    "Real Madrid II": "REAL MADRID II",
+    "Teruel": "TERUEL",
+}
+_MAPA_UPPER = {k.upper(): v for k, v in MAPA_NORMALIZACION.items()}
+
 def normaliza(s):
     if pd.isna(s): return ""
-    n = unicodedata.normalize('NFKD', str(s)).encode('ASCII','ignore').decode('ASCII')
-    return n.upper().strip()
+    raw = str(s).strip()
+    if raw in MAPA_NORMALIZACION:
+        return MAPA_NORMALIZACION[raw]
+    up = raw.upper()
+    if up in _MAPA_UPPER:
+        return _MAPA_UPPER[up]
+    return up
 
 def normaliza_fuzzy(s):
     n = normaliza(s)
     n = re.sub(r'\(.*?\)', '', n)
-    n = re.sub(r'\bII\b|\bAM\b|\bRESERVAS\b|\bB\b', '', n)
     n = re.sub(r'^\d+\.?\s*', '', n)
     for pref in ['FC ','CF ','SC ','SV ','REAL ','CLUB ','DEPORTIVO ','CLUB ATLETICO ','AL-','AL ']:
         if n.startswith(pref):
