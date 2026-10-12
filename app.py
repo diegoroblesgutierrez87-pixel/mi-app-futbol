@@ -1499,13 +1499,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
-        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5", label_visibility="visible")
-        st.markdown("""
-        <style>
-        div[data-testid="stMultiSelect"]:has(label:contains("Overs / Unders")) [data-testid="stSelectAllCheckbox"]{display:none!important;}
-        div[data-testid="stMultiSelect"]:has(label:contains("Overs / Unders")) button[kind="secondary"]{display:none!important;}
-        </style>
-        """, unsafe_allow_html=True)
+        overs_sel = st.pills("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], selection_mode="multi", key="overs_unders_pred")
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
@@ -1631,23 +1625,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     setInterval(paint, 500);
     </script>
     """, height=0)
-    # --- PINTA EN ROJO LOS 4 LABELS ---
-    import streamlit.components.v1 as _comp_red
-    _comp_red.html("""
-    <script>
-    const REDS = ["Resultado 1ªP","Resultado 1ªP / 2ªP","Filtro","Elige partido futuro"];
-    function paint(){
-      parent.document.querySelectorAll('label').forEach(l=>{
-        if(REDS.some(t=>l.innerText.includes(t))){
-          l.style.setProperty('color','red','important');
-          l.style.setProperty('font-weight','900','important');
-        }
-      });
-    }
-    paint();
-    setInterval(paint, 500);
-    </script>
-    """, height=0)
+############
     # --- GUARDA TODO EN URL PARA 24H ---
     try:
         st.query_params["partidos_pred_sel"] = partidos_sel
