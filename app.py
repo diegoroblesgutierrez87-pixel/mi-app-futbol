@@ -1664,10 +1664,10 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
     c_man1, c_man2 = st.columns(2)
     with c_man1:
-        equipo_manual_1 = st.selectbox("Equipo manual 1", [""] + lista_hist_equipos, key="eq_manual_1", placeholder="Ej: Cartagena")
+        equipos_manuales_1 = st.multiselect("Equipos manuales 1", lista_hist_equipos, default=[], key="eq_manual_1", placeholder="Ej: Cartagena, Burgos...")
         cond_manual_1 = st.selectbox("Cond manual 1", ["TODOS","solo local","solo visitante"], key="cond_manual_1")
     with c_man2:
-        equipo_manual_2 = st.selectbox("Equipo manual 2", [""] + lista_hist_equipos, key="eq_manual_2", placeholder="Ej: Antequera")
+        equipos_manuales_2 = st.multiselect("Equipos manuales 2", lista_hist_equipos, default=[], key="eq_manual_2", placeholder="Ej: Antequera, Marbella...")
         cond_manual_2 = st.selectbox("Cond manual 2", ["TODOS","solo local","solo visitante"], key="cond_manual_2")
 
     with c_lp1:
@@ -1746,8 +1746,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO: {h_fut} vs {a_fut} | {partes[0].strip()}</div>", unsafe_allow_html=True)
 
         equipos_a_mostrar = [h_fut, a_fut]
-        if 'equipo_manual_1' in locals() and equipo_manual_1: equipos_a_mostrar.append(equipo_manual_1)
-        if 'equipo_manual_2' in locals() and equipo_manual_2: equipos_a_mostrar.append(equipo_manual_2)
+        if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
+        if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
         for nombre_eq in equipos_a_mostrar:
             norm_eq = normaliza(nombre_eq)
             # usa tu df historico (df) ya cargado en tu app
@@ -1763,12 +1763,12 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 elif nombre_eq == a_fut:
                     df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
             # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA ---
-            if 'equipo_manual_1' in locals() and nombre_eq == equipo_manual_1:
+            if 'equipos_manuales_1' in locals() and nombre_eq in equipos_manuales_1:
                 if cond_manual_1 == "solo local":
                     df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
                 elif cond_manual_1 == "solo visitante":
                     df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
-            if 'equipo_manual_2' in locals() and nombre_eq == equipo_manual_2:
+            if 'equipos_manuales_2' in locals() and nombre_eq in equipos_manuales_2:
                 if cond_manual_2 == "solo local":
                     df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
                 elif cond_manual_2 == "solo visitante":
