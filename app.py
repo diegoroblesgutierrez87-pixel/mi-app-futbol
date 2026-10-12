@@ -1723,8 +1723,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         if m <= 45: mins_1t.append(span)
                         else: mins_2t.append(span)
 
-                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 6px;display:inline-block'>|</span>" + "".join(mins_2t)
-                    else: mins_html = "".join(mins_1t + mins_2t)
+                    if mins_1t and mins_2t: mins_html = "<span style='display:inline;white-space:normal'>" + "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 6px'>|</span>" + "".join(mins_2t) + "</span>"
+                    else: mins_html = "<span style='display:inline;white-space:normal'>" + "".join(mins_1t + mins_2t) + "</span>"
 
                     try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                     except: hthg=0; htag=0
@@ -1741,7 +1741,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else:
                         h_txt = h; a_txt = a
 
-                    html_lineas += f"<div style='color:{col_main};font-family:monospace;font-size:12px;font-weight:700;line-height:1.4;margin-bottom:6px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;border-bottom:1px dotted #ddd;padding-bottom:3px'><span>{h_txt} {hg}-{ag} {a_txt}</span><span style='display:flex;flex-wrap:wrap;gap:2px;flex:1'>{mins_html}</span><span style='color:#fff;background:{col_main};padding:1px 6px;border-radius:3px;font-size:11px'>{estado}</span></div>"
+                    html_lineas += f"<div style='color:{col_main};font-family:monospace;font-size:13px;font-weight:700;line-height:1.6;white-space:normal;word-break:break-word;margin-bottom:6px;border-bottom:1px dotted #ddd;padding-bottom:4px'>{h_txt} {hg}-{ag} {a_txt} {mins_html} <span style='color:#fff;background:{col_main};padding:1px 6px;border-radius:3px;font-size:11px;white-space:nowrap;display:inline-block;margin-left:6px'>{estado}</span></div>"
 
                     # para copiar
                     m1 = []; m2 = []
