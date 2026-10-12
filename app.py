@@ -1429,11 +1429,13 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     if "min_hasta_pred" not in st.session_state:
         st.session_state.min_hasta_pred = st.query_params.get("min_hasta_pred", "")
 
-    if st.button("🧹 Limpiar PREDICCION", key="btn_limpiar_pred", use_container_width=True):
-        for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel"]:
-            if k in st.session_state: del st.session_state[k]
+    if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION", key="btn_limpiar_pred", use_container_width=True):
+        for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","filtro_ht_ft_unico_2026_v9","cond_loc_pred"]:
+            if k in st.session_state:
+                del st.session_state[k]
         for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred"]:
-            if k in st.query_params: del st.query_params[k]
+            if k in st.query_params:
+                del st.query_params[k]
         st.rerun()
 
     # --- FILTROS ARRIBA ---
@@ -1445,6 +1447,13 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
+
+    if st.button("🧹 Limpiar solo manuales", key="btn_limpiar_solo_manuales", use_container_width=True):
+        for k in ["eq_manual_1","eq_manual_2"]:
+            if k in st.session_state:
+                del st.session_state[k]
+        st.rerun()
+
     c_man1, c_man2 = st.columns(2)
     with c_man1:
         equipos_manuales_1 = st.multiselect("Equipos manuales 1", lista_hist_equipos, default=[], key="eq_manual_1", placeholder="Ej: Cartagena, Burgos...")
