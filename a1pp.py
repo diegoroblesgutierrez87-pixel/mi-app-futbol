@@ -1633,17 +1633,17 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
                 elif nombre_eq == a_fut:
                     df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-            # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA ---
+            # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA - FAST ---
             if 'equipos_manuales_1' in locals() and nombre_eq in equipos_manuales_1:
                 if cond_manual_1 == "solo local":
-                    df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                    df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
                 elif cond_manual_1 == "solo visitante":
-                    df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                    df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
             if 'equipos_manuales_2' in locals() and nombre_eq in equipos_manuales_2:
                 if cond_manual_2 == "solo local":
-                    df_team = df_team[df_team['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                    df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
                 elif cond_manual_2 == "solo visitante":
-                    df_team = df_team[df_team['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+                    df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
             if 'resultados_pred_sel' in locals() and resultados_pred_sel or 'filtro_ht_ft_unico_2026_v9' in st.session_state and st.session_state.get('filtro_ht_ft_unico_2026_v9'):
                 sel = st.session_state.get('filtro_ht_ft_unico_2026_v9', resultados_pred_sel if 'resultados_pred_sel' in locals() else [])
                 set_1p = set(); set_2p = set()
@@ -1712,17 +1712,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 st.caption(f"{nombre_eq} - sin historial en base actual")
                 continue
 
-            # jornadas recientes - con huecos
-            df_team_base_pred = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
-            if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
-                df_team_base_pred = df_team_base_pred[df_team_base_pred['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
-            elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
-                df_team_base_pred = df_team_base_pred[df_team_base_pred['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
-            elif cond_loc_pred == "Local en casa / Visitante fuera":
-                if nombre_eq == h_fut:
-                    df_team_base_pred = df_team_base_pred[df_team_base_pred['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)]
-                elif nombre_eq == a_fut:
-                    df_team_base_pred = df_team_base_pred[df_team_base_pred['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq)]
+            # jornadas recientes - con huecos - FAST reutiliza df_team
+            df_team_base_pred = df_team.copy()
 
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
             jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
