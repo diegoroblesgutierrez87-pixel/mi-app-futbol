@@ -612,14 +612,8 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     # --- MOMENTUM DESACTIVADO TOTAL - CERO GRAFICAS ---
     mom_html = ""
 
-    # Si hay filtro MIN y no hay goles en ese rango, no renderizar
-    try:
-        md_f = globals().get('MIN_DESDE', None)
-        mh_f = globals().get('MIN_HASTA', None)
-        if (md_f is not None or mh_f is not None) and txt_mins == "-":
-            return ""
-    except:
-        pass
+    # Si hay filtro MIN y no hay goles en ese rango, no renderizar - DESACTIVADO para no limitar
+    pass
 
     # FIX L/V - ahora sí usa el equipo del bloque
     loc_tag = ""
@@ -952,7 +946,7 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        df_mostrar = df_filtrada_min.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_filtrada_min.empty else df_filtrada_min
+        df_mostrar = df_filtrada_min.sort_values(['Date','Jornada'], ascending=[False, False]) if not df_filtrada_min.empty else df_filtrada_min
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
@@ -980,9 +974,13 @@ elif st.session_state.show_partidos:
 
     if (modo_doble and (not df_eq1.empty or not df_eq2.empty)) or (not modo_doble and not df_mostrar.empty):
         import streamlit.components.v1 as components
+        import html as _html
+        safe_html = _html.escape(html)
+        # altura dinamica = 60k partidos = iframe gigante, no 900
+        h_dinamica = min(30000, max(900, len(html)//3))
         bloque_copy = f"""
         <div>
-            <button onclick="copyPartidos()" id="btnCopyPartidos" style="position:sticky;top:0;z-index:99999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS</button>
+            <button onclick="copyPartidos()" id="btnCopyPartidos" style="position:sticky;top:0;z-index:99999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS ({len(df_mostrar)} partidos)</button>
             <div id="targetPartidos">{html}</div>
         </div>
         <script>
@@ -992,12 +990,12 @@ elif st.session_state.show_partidos:
                 var b = document.getElementById('btnCopyPartidos');
                 b.innerText = '✓ COPIADO';
                 b.style.background = '#0f8105';
-                setTimeout(()=>{{ b.innerText='📋 COPIAR PARTIDOS'; b.style.background='#0A2342'; }},1200);
+                setTimeout(()=>{{ b.innerText='📋 COPIAR PARTIDOS ({len(df_mostrar)} partidos)'; b.style.background='#0A2342'; }},1500);
             }});
         }}
         </script>
         """
-        components.html(bloque_copy, height=900, scrolling=True)
+        components.html(bloque_copy, height=h_dinamica, scrolling=True)
     else:
         st.info("Selecciona equipo")
 
