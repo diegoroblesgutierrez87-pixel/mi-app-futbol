@@ -1534,7 +1534,6 @@ with st.expander(" SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=True
         st.success(f"✅ {mid} sacado")
         
         # ==========================================================
-#  BLOQUE PREDICCION - FUTUROS + HISTORIAL ESTILO FIX
 # ==========================================================
 with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=False):
     import pathlib
@@ -1717,14 +1716,14 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         peso = "font-weight:900;" if es_mio else "font-weight:700;"
                         en_rango = (MIN_DESDE_PRED is None or m >= MIN_DESDE_PRED) and (MIN_HASTA_PRED is None or m <= MIN_HASTA_PRED)
                         if filtro_act and en_rango:
-                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:2px 5px;margin:2px;display:inline-block'> {m}'</span>"
+                            span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
                         else:
-                            span = f"<span style='color:{col_min};{peso};margin:2px;display:inline-block'> {m}'</span>"
+                            span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
                         if m <= 45: mins_1t.append(span)
                         else: mins_2t.append(span)
 
-                    if mins_1t and mins_2t: mins_html = "<span style='display:inline;white-space:normal'>" + "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 6px'>|</span>" + "".join(mins_2t) + "</span>"
-                    else: mins_html = "<span style='display:inline;white-space:normal'>" + "".join(mins_1t + mins_2t) + "</span>"
+                    if mins_1t and mins_2t: mins_html = "".join(mins_1t) + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                    else: mins_html = "".join(mins_1t + mins_2t)
 
                     try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                     except: hthg=0; htag=0
@@ -1741,7 +1740,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else:
                         h_txt = h; a_txt = a
 
-                    html_lineas += f"<div style='color:{col_main};font-family:monospace;font-size:13px;font-weight:700;line-height:1.6;white-space:normal;word-break:break-word;margin-bottom:6px;border-bottom:1px dotted #ddd;padding-bottom:4px'>{h_txt} {hg}-{ag} {a_txt} {mins_html} <span style='color:#fff;background:{col_main};padding:1px 6px;border-radius:3px;font-size:11px;white-space:nowrap;display:inline-block;margin-left:6px'>{estado}</span></div>"
+                    html_lineas += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
 
                     # para copiar
                     m1 = []; m2 = []
@@ -1756,7 +1755,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     else: mins_txt = " ".join(m1 + m2)
                     partidos_pred_copy.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
 
-                st.markdown(f"<div style='line-height:1.4;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0;width:100%'>{html_lineas}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas}</div>", unsafe_allow_html=True)
 
     # --- BOTON COPIAR PREDICCION ---
     if partidos_pred_copy:
