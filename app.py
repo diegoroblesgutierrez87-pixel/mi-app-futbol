@@ -1496,6 +1496,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
     with c_lp4:
         cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
+        res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
@@ -1659,6 +1660,28 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         if set_2p and (hg_, ag_) in set_2p: return True
                         return False
                     df_team = df_team[df_team.apply(_cumple_res_pred, axis=1)]
+
+            # --- FILTRO 1ªP TIPO EMPATE / GANA / PIERDE ---
+            if 'res_1p_tipo' in locals() and res_1p_tipo != "TODOS":
+                def _cumple_1p_tipo(rr):
+                    try:
+                        hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                    except: return False
+                    hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                    if norm_eq == hn_:
+                        r_ = "GANA" if hthg_ > htag_ else "EMPATE" if hthg_ == htag_ else "PIERDE"
+                    elif norm_eq == an_:
+                        r_ = "GANA" if htag_ > hthg_ else "EMPATE" if htag_ == hthg_ else "PIERDE"
+                    else:
+                        return False
+                    if res_1p_tipo == "EMPATE": return r_ == "EMPATE"
+                    if res_1p_tipo == "GANA": return r_ == "GANA"
+                    if res_1p_tipo == "PIERDE": return r_ == "PIERDE"
+                    if res_1p_tipo == "EMPATEGANA": return r_ in ("EMPATE","GANA")
+                    if res_1p_tipo == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
+                    if res_1p_tipo == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                    return True
+                df_team = df_team[df_team.apply(_cumple_1p_tipo, axis=1)]
 
             if df_team.empty:
                 st.caption(f"{nombre_eq} - sin historial en base actual")
