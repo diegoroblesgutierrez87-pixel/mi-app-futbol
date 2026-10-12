@@ -1181,6 +1181,8 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
         st.query_params["equipos_fix"] = equipos_fix_sel
         st.query_params["min_desde_fix"] = st.session_state.min_desde_fix
         st.query_params["min_hasta_fix"] = st.session_state.min_hasta_fix
+        opciones_res_fix = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
+        resultados_fix_sel = st.multiselect("Resultado 1ªP / 2ªP FIX", opciones_res_fix, default=[], key="filtro_ht_ft_fix_unico_v10", placeholder="Ej: 0-0_1ªP")
 
     c_min_fix1, c_min_fix2 = st.columns(2)
     with c_min_fix1:
@@ -1206,6 +1208,27 @@ with st.expander("JORNADAS FIX - vista rapida", expanded=False):
         for nombre_eq in equipos_fix_sel:
             norm_eq = normaliza(nombre_eq)
             df_team = df_base_fix[(df_base_fix['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df_base_fix['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            # FILTRO RESULTADO FIX
+            if 'resultados_fix_sel' in locals() and resultados_fix_sel or st.session_state.get('filtro_ht_ft_fix_unico_v10'):
+                sel_fix = st.session_state.get('filtro_ht_ft_fix_unico_v10', resultados_fix_sel if 'resultados_fix_sel' in locals() else [])
+                set_1p_fix = set(); set_2p_fix = set()
+                for s in sel_fix:
+                    if "_1ªP" in s:
+                        try: a,b = s.replace("_1ªP","").split("-"); set_1p_fix.add((int(a),int(b)))
+                        except: pass
+                    if "_2ªP" in s:
+                        try: a,b = s.replace("_2ªP","").split("-"); set_2p_fix.add((int(a),int(b)))
+                        except: pass
+                if set_1p_fix or set_2p_fix:
+                    def _cumple_fix(rr):
+                        try:
+                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                        except: return False
+                        if set_1p_fix and (hthg_, htag_) in set_1p_fix: return True
+                        if set_2p_fix and (hg_, ag_) in set_2p_fix: return True
+                        return False
+                    df_team = df_team[df_team.apply(_cumple_fix, axis=1)]
             if df_team.empty:
                 continue
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;line-height:1.1'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
