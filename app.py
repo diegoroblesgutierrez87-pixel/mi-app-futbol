@@ -1461,11 +1461,25 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
         overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
-        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
-        res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
-        opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
-        resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
-        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=st.session_state.get("overs_unders_pred", []), key="overs_unders_pred", placeholder="Ej: 1P >0.5")
+        import streamlit.components.v1 as _comp_no_sel_all
+        _comp_no_sel_all.html("""
+        <script>
+        (function(){
+          function kill(){
+            try{
+              var doc = window.parent.document;
+              doc.querySelectorAll('li, div[role="option"]').forEach(function(li){
+                var t = (li.innerText||'').trim().toLowerCase();
+                if(t==='select all'){
+                  li.style.display='none';
+                }
+              });
+            }catch(e){}
+          }
+          setInterval(kill, 200);
+        })();
+        </script>
+        """, height=0)
         import streamlit.components.v1 as _comp_no_sel_all
         _comp_no_sel_all.html("""
         <script>
