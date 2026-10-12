@@ -1443,45 +1443,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     if "filtro_ht_ft_unico_2026_v9" not in st.session_state:
         st.session_state.filtro_ht_ft_unico_2026_v9 = st.query_params.get_all("filtro_ht_ft_unico_2026_v9")
 
-    import streamlit.components.v1 as _comp_ls
-    _comp_ls.html("""
-    <script>
-    (function(){
-      const KEYS=["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","cond_loc_pred","filtro_ht_ft_unico_2026_v9"];
-      try{
-        let url=new URL(window.location.href);
-        let need=false;
-        KEYS.forEach(k=>{
-          if(!url.searchParams.get(k)){
-            let v=localStorage.getItem("PRED_"+k);
-            if(v){
-              let arr=JSON.parse(v);
-              if(Array.isArray(arr)){arr.forEach(val=>url.searchParams.append(k,val));}
-              else{url.searchParams.set(k,arr);}
-              need=true;
-            }
-          }
-        });
-        if(need &&!sessionStorage.getItem("pred_restored")){
-          sessionStorage.setItem("pred_restored","1");
-          window.history.replaceState({},"",url.toString());
-          window.location.reload();
-        }else{sessionStorage.removeItem("pred_restored");}
-        setInterval(()=>{
-          let u=new URL(window.location.href);
-          KEYS.forEach(k=>{
-            let all=u.searchParams.getAll(k);
-            if(all.length>0){
-              localStorage.setItem("PRED_"+k, JSON.stringify(all.length==1?all[0]:all));
-              localStorage.setItem("PRED_"+k+"_ts",Date.now().toString());
-            }
-          });
-        },1000);
-      }catch(e){}
-    })();
-    </script>
-    """, height=0)
-
     if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION", key="btn_limpiar_pred", use_container_width=True):
         for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","filtro_ht_ft_unico_2026_v9","cond_loc_pred"]:
             if k in st.session_state:
@@ -1495,6 +1456,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     ligas_fut = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
     c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
     with c_lp4:
+        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
+        res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
+        opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
+        resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
+        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
         cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
         res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
