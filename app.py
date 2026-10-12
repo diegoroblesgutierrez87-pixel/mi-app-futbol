@@ -1419,7 +1419,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
         st.stop()
 
-    # --- PERSISTENCIA URL IGUAL QUE FIX ---
+    # --- PERSISTENCIA 24H URL + LOCALSTORAGE ---
     if "ligas_pred" not in st.session_state:
         st.session_state.ligas_pred = st.query_params.get_all("ligas_pred")
     if "fecha_pred" not in st.session_state:
@@ -1428,6 +1428,59 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.session_state.min_desde_pred = st.query_params.get("min_desde_pred", "")
     if "min_hasta_pred" not in st.session_state:
         st.session_state.min_hasta_pred = st.query_params.get("min_hasta_pred", "")
+    if "partidos_pred_sel" not in st.session_state:
+        st.session_state.partidos_pred_sel = st.query_params.get_all("partidos_pred_sel")
+    if "eq_manual_1" not in st.session_state:
+        st.session_state.eq_manual_1 = st.query_params.get_all("eq_manual_1")
+    if "eq_manual_2" not in st.session_state:
+        st.session_state.eq_manual_2 = st.query_params.get_all("eq_manual_2")
+    if "cond_manual_1" not in st.session_state:
+        st.session_state.cond_manual_1 = st.query_params.get("cond_manual_1", "TODOS")
+    if "cond_manual_2" not in st.session_state:
+        st.session_state.cond_manual_2 = st.query_params.get("cond_manual_2", "TODOS")
+    if "cond_loc_pred" not in st.session_state:
+        st.session_state.cond_loc_pred = st.query_params.get("cond_loc_pred", "Local en casa / Visitante fuera")
+    if "filtro_ht_ft_unico_2026_v9" not in st.session_state:
+        st.session_state.filtro_ht_ft_unico_2026_v9 = st.query_params.get_all("filtro_ht_ft_unico_2026_v9")
+
+    import streamlit.components.v1 as _comp_ls
+    _comp_ls.html("""
+    <script>
+    (function(){
+      const KEYS=["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","cond_loc_pred","filtro_ht_ft_unico_2026_v9"];
+      try{
+        let url=new URL(window.location.href);
+        let need=false;
+        KEYS.forEach(k=>{
+          if(!url.searchParams.get(k)){
+            let v=localStorage.getItem("PRED_"+k);
+            if(v){
+              let arr=JSON.parse(v);
+              if(Array.isArray(arr)){arr.forEach(val=>url.searchParams.append(k,val));}
+              else{url.searchParams.set(k,arr);}
+              need=true;
+            }
+          }
+        });
+        if(need &&!sessionStorage.getItem("pred_restored")){
+          sessionStorage.setItem("pred_restored","1");
+          window.history.replaceState({},"",url.toString());
+          window.location.reload();
+        }else{sessionStorage.removeItem("pred_restored");}
+        setInterval(()=>{
+          let u=new URL(window.location.href);
+          KEYS.forEach(k=>{
+            let all=u.searchParams.getAll(k);
+            if(all.length>0){
+              localStorage.setItem("PRED_"+k, JSON.stringify(all.length==1?all[0]:all));
+              localStorage.setItem("PRED_"+k+"_ts",Date.now().toString());
+            }
+          });
+        },1000);
+      }catch(e){}
+    })();
+    </script>
+    """, height=0)
 
     if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION", key="btn_limpiar_pred", use_container_width=True):
         for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","filtro_ht_ft_unico_2026_v9","cond_loc_pred"]:
@@ -1488,6 +1541,13 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     MIN_HASTA_PRED = _parse_min_pred(min_hasta_pred_raw)
     st.query_params["min_desde_pred"] = min_desde_pred_raw
     st.query_params["min_hasta_pred"] = min_hasta_pred_raw
+    st.query_params["partidos_pred_sel"] = partidos_sel
+    st.query_params["eq_manual_1"] = equipos_manuales_1
+    st.query_params["eq_manual_2"] = equipos_manuales_2
+    st.query_params["cond_manual_1"] = cond_manual_1
+    st.query_params["cond_manual_2"] = cond_manual_2
+    st.query_params["cond_loc_pred"] = cond_loc_pred
+    st.query_params["filtro_ht_ft_unico_2026_v9"] = resultados_pred_sel
 
     # filtra base por fecha
     if fecha_pred_sel!= "Todas":
@@ -1520,7 +1580,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     tiene_manuales = (len(equipos_manuales_1) > 0 or len(equipos_manuales_2) > 0)
 
     if not partidos_sel and not tiene_manuales:
-        st.info(" Elige 1 o varios partidos futuros arriba y te muestro el historial de los 2 equipos al instante estilo FIX")
         st.stop()
 
     # --- PARA CADA PARTIDO FUTURO ELEGIDO, PINTA HISTORIAL DE LOS 2 EQUIPOS ---
@@ -1716,7 +1775,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         import streamlit.components.v1 as components
         components.html(f"""
         <textarea id="txt_pred" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pred').value).then(()=>{{let b=document.getElementById('btn_pred_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR PREDICCION'; b.style.background='#0A2342'}},1200)}})"
+        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pred').value).then(()=>{{let b=document.getElementById('btn_pred_copy'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText=' COPIAR PREDICCION'; b.style.background='#0A2342'}},1200)}})"
         id="btn_pred_copy"
         style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
          COPIAR PREDICCION ({len(partidos_sel)} partidos futuros)
