@@ -1921,14 +1921,24 @@ with st.expander(" PREDICCION RESTO - ASIA + SUDAMERICA + MLS", expanded=False):
                 overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
             # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA - EUROPA ONLY 2.529 vs 5.264 ---
          
+            # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA - RESTO ONLY 2.735 vs 5.264 ---
             @st.cache_data(show_spinner=False)
             def cargar_base_resto():
-                p_par = pathlib.Path("base_partidos_resto.parquet")
-                if not p_par.exists():
-                    p_par = pathlib.Path(__file__).parent.resolve() / "base_partidos_resto.parquet"
-                g_par = pathlib.Path("base_goles_resto.parquet")
-                if not g_par.exists():
-                    g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_resto.parquet"
+                import os
+                posibles = [
+                    pathlib.Path("base_partidos_resto.parquet"),
+                    pathlib.Path(__file__).parent.resolve() / "base_partidos_resto.parquet",
+                    pathlib.Path("/mnt/data/base_partidos_resto.parquet"),
+                    pathlib.Path("/mount/src/mi-app-futbol/base_partidos_resto.parquet"),
+                ]
+                posibles_g = [
+                    pathlib.Path("base_goles_resto.parquet"),
+                    pathlib.Path(__file__).parent.resolve() / "base_goles_resto.parquet",
+                    pathlib.Path("/mnt/data/base_goles_resto.parquet"),
+                    pathlib.Path("/mount/src/mi-app-futbol/base_goles_resto.parquet"),
+                ]
+                p_par = next((p for p in posibles if p.exists()), posibles[0])
+                g_par = next((p for p in posibles_g if p.exists()), posibles_g[0])
                 df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
                 df_g = pd.read_parquet(g_par) if g_par.exists() else pd.DataFrame()
                 ev = {}
@@ -1942,6 +1952,8 @@ with st.expander(" PREDICCION RESTO - ASIA + SUDAMERICA + MLS", expanded=False):
             df_resto, eventos_resto = cargar_base_resto()
             df = df_resto
             eventos = eventos_resto
+            if df.empty:
+                st.warning(f"⚠ base_partidos_resto.parquet no encontrado. Busqué en: {', '.join([str(p) for p in [pathlib.Path('base_partidos_resto.parquet'), pathlib.Path(__file__).parent.resolve() / 'base_partidos_resto.parquet']])} - Sube el parquet al repo")
         
             lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
         
