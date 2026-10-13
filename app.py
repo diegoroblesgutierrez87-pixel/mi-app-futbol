@@ -23,14 +23,17 @@ html, body {
     overscroll-behavior: none!important;
 }
 div[data-testid="stExpanderDetails"] {
-    max-height: 85vh!important;
-    overflow-y: auto!important;
-    -webkit-overflow-scrolling: touch!important;
-    touch-action: pan-y!important;
-    overscroll-behavior: contain!important;
+    max-height: none!important;
+    overflow-y: visible!important;
+    overflow: visible!important;
+    -webkit-overflow-scrolling: auto!important;
+    touch-action: auto!important;
+    overscroll-behavior: auto!important;
+    overscroll-behavior-y: auto!important;
 }
 iframe {
-    touch-action: pan-y!important;
+    touch-action: auto!important;
+    overscroll-behavior: auto!important;
 }
 #btn-top-float {
     position: fixed!important;
