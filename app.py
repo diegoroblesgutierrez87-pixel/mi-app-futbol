@@ -989,8 +989,8 @@ elif st.session_state.show_partidos:
         import streamlit.components.v1 as components
         import html as _html
         safe_html = _html.escape(html)
-        # altura dinamica = 60k partidos = iframe gigante, no 900
-        h_dinamica = min(30000, max(900, len(html)//3))
+        # FIX HUECO GIGANTE BLANCO - FILTROS
+        h_dinamica = min(5000, max(600, len(html)//10))
         total_partidos_btn = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
         bloque_copy = f"""
         <div>
