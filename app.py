@@ -1823,9 +1823,16 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     continue
             except: continue
 
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} vs {a_fut_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
+            if "MANUAL_ONLY" in partido_str_r:
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 MANUAL RESTO: {', '.join(manuales_extra_r)}</div>", unsafe_allow_html=True)
+                equipos_a_mostrar_r = manuales_extra_r
+            else:
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} vs {a_fut_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
+                equipos_a_mostrar_r = [h_fut_r, a_fut_r]
+                if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r: equipos_a_mostrar_r.extend(equipos_manuales_1_r)
+                if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r: equipos_a_mostrar_r.extend(equipos_manuales_2_r)
 
-            for nombre_eq_r in [h_fut_r, a_fut_r]:
+            for nombre_eq_r in equipos_a_mostrar_r:
                 norm_eq_r = normaliza(nombre_eq_r)
                 eq_up_r = nombre_eq_r.upper().strip()
                 df_team_r = df_r[(df_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r) | (df_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r)]
@@ -1912,6 +1919,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     df_team_base_pred_r['Jornada'] = 1
                 if 'Jornada' not in df_team_r.columns:
                     df_team_r['Jornada'] = 1
+                df_team_base_pred_r = df_team_base_pred_r.sort_values(['Jornada','Date'], ascending=[False, False])
+                df_team_r = df_team_r.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team_r.empty else df_team_r
                 jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j in jornadas_r:
                     d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
