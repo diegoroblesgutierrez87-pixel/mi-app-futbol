@@ -1161,29 +1161,64 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
         st.stop()
 
-    # --- PERSISTENCIA 24H URL + LOCALSTORAGE ---
+    # --- PERSISTENCIA 48H DISCO - FIX BORRADO REFRESCO ---
+    import json, time
+    FILE_PERSIST_PRED = pathlib.Path(__file__).parent.resolve() / ".persist_pred_48h.json"
+    TTL_48H = 48 * 3600
+    def _load_persist_48h():
+        if not FILE_PERSIST_PRED.exists():
+            return {}
+        try:
+            if time.time() - FILE_PERSIST_PRED.stat().st_mtime > TTL_48H:
+                FILE_PERSIST_PRED.unlink(missing_ok=True)
+                return {}
+            with open(FILE_PERSIST_PRED, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
+    def _save_persist_48h():
+        try:
+            data = {
+                "ligas_pred": st.session_state.get("ligas_pred", []),
+                "fecha_pred": st.session_state.get("fecha_pred", "Todas"),
+                "min_desde_pred": st.session_state.get("min_desde_pred", ""),
+                "min_hasta_pred": st.session_state.get("min_hasta_pred", ""),
+                "partidos_pred_sel": st.session_state.get("partidos_pred_sel", []),
+                "eq_manual_1": st.session_state.get("eq_manual_1", []),
+                "eq_manual_2": st.session_state.get("eq_manual_2", []),
+                "cond_manual_1": st.session_state.get("cond_manual_1", "TODOS"),
+                "cond_manual_2": st.session_state.get("cond_manual_2", "TODOS"),
+                "cond_loc_pred": st.session_state.get("cond_loc_pred", "Local en casa / Visitante fuera"),
+                "filtro_ht_ft_unico_2026_v9": st.session_state.get("filtro_ht_ft_unico_2026_v9", []),
+            }
+            with open(FILE_PERSIST_PRED, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except:
+            pass
+
+    _persist = _load_persist_48h()
     if "ligas_pred" not in st.session_state:
-        st.session_state.ligas_pred = st.query_params.get_all("ligas_pred")
+        st.session_state.ligas_pred = _persist.get("ligas_pred") or st.query_params.get_all("ligas_pred")
     if "fecha_pred" not in st.session_state:
-        st.session_state.fecha_pred = st.query_params.get("fecha_pred", "Todas")
+        st.session_state.fecha_pred = _persist.get("fecha_pred") or st.query_params.get("fecha_pred", "Todas")
     if "min_desde_pred" not in st.session_state:
-        st.session_state.min_desde_pred = st.query_params.get("min_desde_pred", "")
+        st.session_state.min_desde_pred = _persist.get("min_desde_pred") or st.query_params.get("min_desde_pred", "")
     if "min_hasta_pred" not in st.session_state:
-        st.session_state.min_hasta_pred = st.query_params.get("min_hasta_pred", "")
+        st.session_state.min_hasta_pred = _persist.get("min_hasta_pred") or st.query_params.get("min_hasta_pred", "")
     if "partidos_pred_sel" not in st.session_state:
-        st.session_state.partidos_pred_sel = st.query_params.get_all("partidos_pred_sel")
+        st.session_state.partidos_pred_sel = _persist.get("partidos_pred_sel") or st.query_params.get_all("partidos_pred_sel")
     if "eq_manual_1" not in st.session_state:
-        st.session_state.eq_manual_1 = st.query_params.get_all("eq_manual_1")
+        st.session_state.eq_manual_1 = _persist.get("eq_manual_1") or st.query_params.get_all("eq_manual_1")
     if "eq_manual_2" not in st.session_state:
-        st.session_state.eq_manual_2 = st.query_params.get_all("eq_manual_2")
+        st.session_state.eq_manual_2 = _persist.get("eq_manual_2") or st.query_params.get_all("eq_manual_2")
     if "cond_manual_1" not in st.session_state:
-        st.session_state.cond_manual_1 = st.query_params.get("cond_manual_1", "TODOS")
+        st.session_state.cond_manual_1 = _persist.get("cond_manual_1") or st.query_params.get("cond_manual_1", "TODOS")
     if "cond_manual_2" not in st.session_state:
-        st.session_state.cond_manual_2 = st.query_params.get("cond_manual_2", "TODOS")
+        st.session_state.cond_manual_2 = _persist.get("cond_manual_2") or st.query_params.get("cond_manual_2", "TODOS")
     if "cond_loc_pred" not in st.session_state:
-        st.session_state.cond_loc_pred = st.query_params.get("cond_loc_pred", "Local en casa / Visitante fuera")
+        st.session_state.cond_loc_pred = _persist.get("cond_loc_pred") or st.query_params.get("cond_loc_pred", "Local en casa / Visitante fuera")
     if "filtro_ht_ft_unico_2026_v9" not in st.session_state:
-        st.session_state.filtro_ht_ft_unico_2026_v9 = st.query_params.get_all("filtro_ht_ft_unico_2026_v9")
+        st.session_state.filtro_ht_ft_unico_2026_v9 = _persist.get("filtro_ht_ft_unico_2026_v9") or st.query_params.get_all("filtro_ht_ft_unico_2026_v9")
 
     if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION", key="btn_limpiar_pred", use_container_width=True):
         for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred","partidos_pred_sel","eq_manual_1","eq_manual_2","cond_manual_1","cond_manual_2","filtro_ht_ft_unico_2026_v9","cond_loc_pred"]:
@@ -1192,7 +1227,14 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         for k in ["ligas_pred","fecha_pred","min_desde_pred","min_hasta_pred"]:
             if k in st.query_params:
                 del st.query_params[k]
+        try:
+            FILE_PERSIST_PRED.unlink(missing_ok=True)
+        except:
+            pass
         st.rerun()
+
+    # --- GUARDA AUTOMATICO 48H ---
+    _save_persist_48h()
 
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA - EUROPA ONLY 2.529 vs 5.264 ---
     @st.cache_data(show_spinner=False)
