@@ -1606,6 +1606,7 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     """, height=0)
 ##########
 
+    partidos_pred_copy = []
     tiene_manuales = (len(equipos_manuales_1) > 0 or len(equipos_manuales_2) > 0)
 
     if not partidos_sel and not tiene_manuales:
