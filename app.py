@@ -1395,7 +1395,7 @@ with st.expander(" SACAR TODO DE CUALQUIER URL - 1 CLICK - CLOUD", expanded=True
         st.success(f"✅ {mid} sacado")
         
         # ==========================================================
-# ==========================================================
+# ========================================================== EXPANDERPREDICCION
 with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=False):
     import pathlib
 
@@ -1461,7 +1461,29 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
         overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
-    # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA ---
+    # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA - EUROPA ONLY 2.529 vs 5.264 ---
+    @st.cache_data(show_spinner=False)
+    def cargar_base_europa():
+        p_par = pathlib.Path("base_partidos_europa.parquet")
+        if not p_par.exists():
+            p_par = pathlib.Path(__file__).parent.resolve() / "base_partidos_europa.parquet"
+        g_par = pathlib.Path("base_goles_europa.parquet")
+        if not g_par.exists():
+            g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_europa.parquet"
+        df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
+        df_g = pd.read_parquet(g_par) if g_par.exists() else pd.DataFrame()
+        ev = {}
+        if not df_g.empty:
+            df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
+            df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
+            for fid, sub in df_g.groupby('fid_str'):
+                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
+        return df_e, ev
+
+    df_europa, eventos_europa = cargar_base_europa()
+    df = df_europa # <--- a partir de aqui todo tu bloque usa solo Europa
+    eventos = eventos_europa
+
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
     if st.button("🧹 Limpiar solo manuales", key="btn_limpiar_solo_manuales", use_container_width=True):
@@ -1555,11 +1577,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             opciones_partidos.append(f"{fecha_s} | {liga_s} | {h} vs {a} | {fid}")
         except: continue
 
+    partidos_sel = []
     if not opciones_partidos:
         st.info("No hay partidos futuros con ese filtro")
-        st.stop()
-
-    partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
+    else:
+        partidos_sel = st.multiselect("Elige partido futuro (auto-carga equipos)", opciones_partidos, key="partidos_pred_sel", placeholder="Ej: Magdeburg vs Hannover - se cargan los 2 equipos solos")
     # --- PINTA EN ROJO LOS 4 LABELS + MARRON OVERS ---
     import streamlit.components.v1 as _comp_red
     _comp_red.html("""
@@ -1587,12 +1609,11 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
     tiene_manuales = (len(equipos_manuales_1) > 0 or len(equipos_manuales_2) > 0)
 
     if not partidos_sel and not tiene_manuales:
-        st.stop()
-
-    # --- PARA CADA PARTIDO FUTURO ELEGIDO, PINTA HISTORIAL DE LOS 2 EQUIPOS ---
-    partidos_pred_copy = [] # para boton copiar
-
-    partidos_a_iterar = partidos_sel if partidos_sel else ["MANUAL | Manual | Manual vs Manual | 0"]
+        st.caption("Selecciona partido futuro o equipo manual")
+    else:
+        # --- PARA CADA PARTIDO FUTURO ELEGIDO, PINTA HISTORIAL DE LOS 2 EQUIPOS ---
+        partidos_pred_copy = [] # para boton copiar
+        partidos_a_iterar = partidos_sel if partidos_sel else ["MANUAL | Manual | Manual vs Manual | 0"]
 
     for partido_str in partidos_a_iterar:
         try:
