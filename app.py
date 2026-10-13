@@ -737,8 +737,7 @@ eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
 
 html = ""
 
-if not st.session_state.show_partidos:
-    st.info("👁 Partidos ocultos - dale a Mostrar partidos. Usa el botón ↑ flotante abajo a la derecha para subir.")
+# mensaje ocultos borrado
 
 # MODO FILTRO POR % - PRIORITARIO
 if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
@@ -999,7 +998,7 @@ elif st.session_state.show_partidos:
     else:
         st.info("Selecciona equipo")
 
-st.caption(f"Base: {BASE} | Registros: {len(df)} | Goles: {len(eventos)} | Momentum: {len(momentum_by_id)} partidos | Filtro: {filtro_tipo} {filtro_pct}%")
+# caption base borrado
 
 if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
     st.session_state.show_partidos = not st.session_state.show_partidos
