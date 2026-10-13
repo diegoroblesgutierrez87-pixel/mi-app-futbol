@@ -1839,15 +1839,31 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 if df_team_r.empty:
                     df_team_r = df_r[(df_r['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq_r)) | (df_r['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq_r))]
 
-                if cond_loc_pred_r == "equipo local solamente partidos de local" and nombre_eq_r == h_fut_r:
-                    df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                elif cond_loc_pred_r == "equipo visitante solamente sus partidos de visitante" and nombre_eq_r == a_fut_r:
-                    df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                elif cond_loc_pred_r == "Local en casa / Visitante fuera":
-                    if nombre_eq_r == h_fut_r:
+                # --- FIX FILTRO LOCAL/VISITANTE RESPETA COND MANUAL 1/2 ---
+                es_manual_1 = 'equipos_manuales_1_r' in locals() and nombre_eq_r in equipos_manuales_1_r
+                es_manual_2 = 'equipos_manuales_2_r' in locals() and nombre_eq_r in equipos_manuales_2_r
+
+                if es_manual_1:
+                    if cond_manual_1_r == "solo local":
                         df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                    elif nombre_eq_r == a_fut_r:
+                    elif cond_manual_1_r == "solo visitante":
                         df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                elif es_manual_2:
+                    if cond_manual_2_r == "solo local":
+                        df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                    elif cond_manual_2_r == "solo visitante":
+                        df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                else:
+                    # equipos de futuro - respeta Filtro R
+                    if cond_loc_pred_r == "equipo local solamente partidos de local":
+                        df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                    elif cond_loc_pred_r == "equipo visitante solamente sus partidos de visitante":
+                        df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                    elif cond_loc_pred_r == "Local en casa / Visitante fuera":
+                        if nombre_eq_r == h_fut_r:
+                            df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
+                        elif nombre_eq_r == a_fut_r:
+                            df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
 
                 df_team_base_pred_r = df_team_r.copy()
                 if resultados_pred_sel_r:
