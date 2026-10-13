@@ -1802,11 +1802,16 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         partidos_sel_r = st.multiselect("Elige partido futuro RESTO", opciones_partidos_r, key="partidos_pred_sel_resto", placeholder="Ej: Kashima vs Urawa - J1")
 
     partidos_pred_copy_r = []
-    if not partidos_sel_r:
+    # FIX MANUALES AUNQUE NO HAYA FUTURO SELECCIONADO
+    manuales_extra_r = []
+    if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r: manuales_extra_r.extend(equipos_manuales_1_r)
+    if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r: manuales_extra_r.extend(equipos_manuales_2_r)
+
+    if not partidos_sel_r and not manuales_extra_r:
         st.caption("Selecciona partido futuro RESTO")
     else:
         partidos_pred_copy_r = []
-        partidos_a_iterar_r = partidos_sel_r
+        partidos_a_iterar_r = partidos_sel_r if partidos_sel_r else ["MANUAL_ONLY| | " + " vs ".join(manuales_extra_r[:2]) + " | 0"]
 
         for partido_str_r in partidos_a_iterar_r:
             try:
