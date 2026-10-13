@@ -1247,10 +1247,12 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         if not g_par.exists():
             g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_europa.parquet"
         df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
-        if not df_e.empty and 'Jornada' not in df_e.columns:
-            df_e = df_e.sort_values(['League','Date']).copy()
+        if not df_e.empty:
+            df_e['Date'] = pd.to_datetime(df_e['Date'], errors='coerce')
+            df_e = df_e.sort_values(['League','Season','Date']).copy()
+            # FIX JORNADA POR LIGA + TEMPORADA - NO SOLO LIGA
             df_e['Jornada'] = 0
-            for l_name, g_s in df_e.groupby('League', sort=False):
+            for (l_name, s_name), g_s in df_e.groupby(['League','Season'], sort=False):
                 g_s = g_s.sort_values('Date')
                 idxs = g_s.index.to_numpy()
                 n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
