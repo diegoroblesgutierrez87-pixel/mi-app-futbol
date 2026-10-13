@@ -977,9 +977,10 @@ elif st.session_state.show_partidos:
         safe_html = _html.escape(html)
         # altura dinamica = 60k partidos = iframe gigante, no 900
         h_dinamica = min(30000, max(900, len(html)//3))
+        total_partidos_btn = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
         bloque_copy = f"""
         <div>
-            <button onclick="copyPartidos()" id="btnCopyPartidos" style="position:sticky;top:0;z-index:99999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS ({len(df_mostrar)} partidos)</button>
+            <button onclick="copyPartidos()" id="btnCopyPartidos" style="position:sticky;top:0;z-index:99999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px;">📋 COPIAR PARTIDOS ({total_partidos_btn} partidos)</button>
             <div id="targetPartidos">{html}</div>
         </div>
         <script>
@@ -989,7 +990,7 @@ elif st.session_state.show_partidos:
                 var b = document.getElementById('btnCopyPartidos');
                 b.innerText = '✓ COPIADO';
                 b.style.background = '#0f8105';
-                setTimeout(()=>{{ b.innerText='📋 COPIAR PARTIDOS ({len(df_mostrar)} partidos)'; b.style.background='#0A2342'; }},1500);
+                setTimeout(()=>{{ b.innerText='📋 COPIAR PARTIDOS ({total_partidos_btn} partidos)'; b.style.background='#0A2342'; }},1500);
             }});
         }}
         </script>
