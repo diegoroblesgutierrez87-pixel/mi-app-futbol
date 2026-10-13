@@ -1479,6 +1479,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 continue
 
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+            if 'Jornada' not in df_team_base_pred.columns:
+                df_team_base_pred['Jornada'] = 1
             jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
             sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
             for j in jornadas:
