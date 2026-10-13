@@ -8,21 +8,29 @@ import matplotlib.pyplot as plt
 import io, base64
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
-# --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA ---
+# --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA + FIX SCROLL EXPANDER PREDICCION ---
 st.markdown("""
 <style>
 html, body {
     overscroll-behavior-y: contain!important;
-    overscroll-behavior: none!important;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
 }
 [data-testid="stAppViewContainer"] {
     overscroll-behavior-y: contain!important;
-    overscroll-behavior: none!important;
 }
 [data-testid="stHeader"] {
     overscroll-behavior: none!important;
+}
+div[data-testid="stExpanderDetails"] {
+    max-height: 85vh!important;
+    overflow-y: auto!important;
+    -webkit-overflow-scrolling: touch!important;
+    touch-action: pan-y!important;
+    overscroll-behavior: contain!important;
+}
+iframe {
+    touch-action: pan-y!important;
 }
 #btn-top-float {
     position: fixed!important;
@@ -47,15 +55,18 @@ html, body {
 <div id="top-ancla"></div>
 <button id="btn-top-float" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 <script>
-// bloquea pull-to-refresh en movil
+// bloquea pull-to-refresh solo en el body, no dentro de expanders/iframes
 let startY = 0;
+let isInsideExpander = false;
 document.addEventListener('touchstart', e => {
     startY = e.touches[0].clientY;
-}, {passive: false});
+    isInsideExpander =!!e.target.closest('[data-testid="stExpanderDetails"], iframe');
+}, {passive: true});
 document.addEventListener('touchmove', e => {
+    if (isInsideExpander) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
-    if (window.scrollY <= 0 && diff > 0) {
+    if (window.scrollY <= 0 && diff > 50) {
         e.preventDefault();
     }
 }, {passive: false});
