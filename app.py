@@ -1615,16 +1615,16 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         partidos_pred_copy = [] # para boton copiar
         partidos_a_iterar = partidos_sel if partidos_sel else ["MANUAL | Manual | Manual vs Manual | 0"]
 
-    for partido_str in partidos_a_iterar:
-        try:
-            # saca home y away del string
-            partes = partido_str.split("|")
-            teams_part = partes[2].strip() if len(partes)>=3 else ""
-            if " vs " in teams_part:
-                h_fut, a_fut = [x.strip() for x in teams_part.split(" vs ")]
-            else:
-                continue
-        except: continue
+        for partido_str in partidos_a_iterar:
+            try:
+                # saca home y away del string
+                partes = partido_str.split("|")
+                teams_part = partes[2].strip() if len(partes)>=3 else ""
+                if " vs " in teams_part:
+                    h_fut, a_fut = [x.strip() for x in teams_part.split(" vs ")]
+                else:
+                    continue
+            except: continue
 
         st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO: {h_fut} vs {a_fut} | {partes[0].strip()}</div>", unsafe_allow_html=True)
 
