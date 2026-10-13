@@ -1194,15 +1194,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 del st.query_params[k]
         st.rerun()
 
-    # --- FILTROS ARRIBA ---
-    ligas_fut = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
-    c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
-    with c_lp4:
-        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
-        res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
-        opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
-        resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
-        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
     # --- 2 EQUIPOS MANUALES PARA CARTAGENA / ANTEQUERA - EUROPA ONLY 2.529 vs 5.264 ---
     @st.cache_data(show_spinner=False)
     def cargar_base_europa():
@@ -1213,6 +1204,15 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         if not g_par.exists():
             g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_europa.parquet"
         df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
+        if not df_e.empty and 'Jornada' not in df_e.columns:
+            df_e = df_e.sort_values(['League','Date']).copy()
+            df_e['Jornada'] = 0
+            for l_name, g_s in df_e.groupby('League', sort=False):
+                g_s = g_s.sort_values('Date')
+                idxs = g_s.index.to_numpy()
+                n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
+                ppj = max(n_teams // 2, 1)
+                df_e.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
         df_g = pd.read_parquet(g_par) if g_par.exists() else pd.DataFrame()
         ev = {}
         if not df_g.empty:
@@ -1223,8 +1223,29 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         return df_e, ev
 
     df_europa, eventos_europa = cargar_base_europa()
-    df = df_europa # <--- a partir de aqui todo tu bloque usa solo Europa
+    df = df_europa
     eventos = eventos_europa
+
+    # --- FILTROS ARRIBA - SOLO EUROPA ---
+    ligas_fut_all = sorted(df_futuro['League_CSV'].dropna().unique().tolist())
+    # filtra solo ligas que tienen historial en base_europa
+    if not df_europa.empty and 'League' in df_europa.columns:
+        ligas_europa_set = set(df_europa['League'].dropna().astype(str).tolist())
+        ligas_fut = [l for l in ligas_fut_all if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set)]
+        # si por nombre no matchea, deja solo palabras clave europeas
+        if not ligas_fut:
+            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga"]
+            ligas_fut = [l for l in ligas_fut_all if any(k.lower() in l.lower() for k in keywords_eu)]
+    else:
+        ligas_fut = ligas_fut_all
+
+    c_lp1, c_lp2, c_lp3, c_lp4 = st.columns([2,1,1,1])
+    with c_lp4:
+        cond_loc_pred = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred")
+        res_1p_tipo = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred")
+        opciones_res = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
+        resultados_pred_sel = st.multiselect("Resultado 1ªP / 2ªP", opciones_res, default=[], key="filtro_ht_ft_unico_2026_v9", placeholder="Ej: 0-0_1ªP")
+        overs_sel = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred", placeholder="Ej: 1P >0.5")
 
     lista_hist_equipos = sorted(pd.concat([df['HomeTeam'], df['AwayTeam']]).dropna().astype(str).unique().tolist())
 
@@ -1596,6 +1617,10 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
         </button>
         """, height=55, scrolling=False)
         
+
+
+
+
 with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
     @st.cache_data(show_spinner=False)
     def cargar_base_resto():
