@@ -2265,13 +2265,16 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
                     html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} | {ht_html} {mins_txt}</span><span style='color:#000'> | {date}</span></div>"
 
-        # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
-        html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
-        for liga_name in sorted(resumen_ligas_g.keys()):
-            html_listado_g += f"<div style='font-weight:900;margin-top:12px;color:#fff;background:#000;padding:4px 6px;border-radius:3px'>{liga_name.upper()}</div>"
-            for team_r, cnt_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
-                html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen})</div>"
-        html_listado_g += "</div>"
+        # --- LISTADO RESUMEN ORDENADO POR LIGAS + OCULTAR/MOSTRAR ---
+        mostrar_resumen_g = st.checkbox(f"👁️ Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
+        html_listado_g = ""
+        if mostrar_resumen_g:
+            html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
+            for liga_name in sorted(resumen_ligas_g.keys()):
+                html_listado_g += f"<div style='font-weight:900;margin-top:12px;color:#fff;background:#000;padding:4px 6px;border-radius:3px'>{liga_name.upper()}</div>"
+                for team_r, cnt_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
+                    html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen})</div>"
+            html_listado_g += "</div>"
 
         if calificados_g == 0:
             st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75})")
