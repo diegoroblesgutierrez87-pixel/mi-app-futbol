@@ -2260,7 +2260,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
                 if all_goals:
                     parts = []
-                    for m_str, is_filt_team in all_goals:
+                    for m_str, is_filt_team, *_ in all_goals:
                         en_filtro = minuto_en_filtro(m_str, filtro_key)
                         bg = "background:#D3D3D3;border-radius:3px;" if en_filtro else ""
                         col = f"color:{row_color};font-weight:900;" if is_filt_team and 'row_color' in locals() else "color:#000;"
