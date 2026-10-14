@@ -2164,7 +2164,6 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             </style>
             <div style="touch-action: pan-y; -webkit-overflow-scrolling: touch;">
                 <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
-                {html_listado_g}
                 <div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
                 <div id='targetG' style="touch-action: pan-y;">{html_listado_g}{html_g}</div>
                 <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
