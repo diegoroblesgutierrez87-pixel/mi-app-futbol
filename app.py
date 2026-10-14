@@ -2140,9 +2140,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             import streamlit.components.v1 as components
             bloque = f"""
             <div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='position:sticky;top:0;z-index:999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
                 <div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
                 <div id='targetG'>{html_g}</div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; setTimeout(()=>b.innerText='COPIAR GOLES HT 75-90',1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:8px'>COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
             </div>
             """
             # altura dinamica sin hueco gigante
