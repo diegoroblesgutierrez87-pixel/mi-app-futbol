@@ -2103,10 +2103,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             n_need = 2
 
         df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
-        if cond_g_sel == "TODOS":
-            df_f = df_f[df_f['cumple_TODOS_7_5']==True]
-        else:
-            df_f = df_f[df_f['cumple_4_2']==True]
+        # SIN FILTRO 5/7 ni 2 seguidos - muestra todos
 
         if equipos_sel_g:
             df_f = df_f[df_f['Team'].isin(equipos_sel_g)]
@@ -2140,7 +2137,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 fid_to_jornada = {}
 
-            for p in detalle[:n_margen]:
+            for p in [x for x in detalle[:n_margen] if x.get('ok', False)]:
                 ok = p.get('ok', False)
                 label = "OK" if ok else "NO"
                 h = p.get('home',''); a = p.get('away','')
