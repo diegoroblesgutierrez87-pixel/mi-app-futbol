@@ -2131,6 +2131,15 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 detalle = []
 
+            # Precalcular jornadas reales de ese equipo para no recalcular en cada fila
+            try:
+                # todos los partidos de ese equipo en la base de goles (orden cronológico)
+                df_team_all = df_pre_goles[(df_pre_goles['HomeTeam'].apply(lambda x: normaliza(x)==normaliza(team_g))) | (df_pre_goles['AwayTeam'].apply(lambda x: normaliza(x)==normaliza(team_g)))].sort_values('Date')
+                fid_list = df_team_all['fixture_id'].astype(str).tolist()
+                fid_to_jornada = {fid: i+1 for i, fid in enumerate(fid_list)}
+            except:
+                fid_to_jornada = {}
+
             for p in detalle[:n_margen]:
                 ok = p.get('ok', False)
                 col = "#0f8105" if ok else "#f31818"
@@ -2140,6 +2149,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 ht = p.get('ht','[0-0]')
                 mins = p.get('mins','-')
                 date = p.get('date','')
+                jornada = fid_to_jornada.get(str(p.get('fid','')), '-')
 
                 if normaliza(h) == normaliza(team_g):
                     h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
@@ -2156,7 +2166,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     mins_txt = "-"
 
-                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
+                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] J{jornada} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
