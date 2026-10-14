@@ -2035,7 +2035,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     st.caption("Filtra equipos que en sus últimos 5 partidos, 3 cumplen y mínimo 2 seguidos")
 
     ligas_g = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
-    c_liga_g, c_eq_g, c_ht, c_7590 = st.columns([2,2,1,1])
+    c_liga_g, c_eq_g, c_cond_g, c_ht, c_7590 = st.columns([2,2,1,1,1])
     with c_liga_g:
         ligas_sel_g = st.multiselect("Ligas", ligas_g, default=[], key="ligas_g_ht", placeholder="Todas")
     df_base_g = df if not ligas_sel_g else df[df['League'].isin(ligas_sel_g)]
@@ -2053,6 +2053,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
     with c_eq_g:
         equipos_sel_g = st.multiselect("Equipos", equipos_g, default=[], key="eq_g_ht", placeholder="Todos")
+    with c_cond_g:
+        cond_g_sel = st.selectbox("Condición", ["TODOS","LOCAL","VISITANTE"], index=0, key="cond_g_ht")
     with c_ht:
         goles_ht_sel = st.selectbox("GOLES HT 25-45", ["NO","SI"], index=0, key="goles_ht_25_45")
     with c_7590:
