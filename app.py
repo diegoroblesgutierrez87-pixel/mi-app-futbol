@@ -2180,12 +2180,13 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     mins_txt = "-"
 
+                raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
+                
                 if not ok:
-                    jornada_txt = ""
-                    row_color = "#000000"
+                    # No cumple -> solo J6 / J3 vacio, en negro
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>J{raw_j}</div>"
                 else:
-                    raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
-                    jornada_txt = f"{raw_j}"
+                    jornada_txt = f"J{raw_j}"
                     if estado == "GANANDO":
                         row_color = "#0f8105"
                     elif estado == "EMPATE":
@@ -2195,7 +2196,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     else:
                         row_color = "#000000"
 
-                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} | {ht_html} {mins_txt}</span><span style='color:#000'> | {date}</span></div>"
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} | {ht_html} {mins_txt}</span><span style='color:#000'> | {date}</span></div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
