@@ -2152,23 +2152,18 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
                 if not ok:
                     jornada_txt = ""
-                    row_bg = "#ffffff"
-                    row_border = "#ddd"
+                    row_color = "#000000"
                 else:
                     raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
                     jornada_txt = f"J{raw_j}"
                     if estado == "GANANDO":
-                        row_bg = "#d4edda"
-                        row_border = "#0f8105"
+                        row_color = "#0f8105"
                     elif estado == "EMPATE":
-                        row_bg = "#e5d5b5"
-                        row_border = "#8B4513"
+                        row_color = "#8B4513"
                     elif estado == "PERDIENDO":
-                        row_bg = "#f8d7da"
-                        row_border = "#CC0000"
+                        row_color = "#CC0000"
                     else:
-                        row_bg = "#ffffff"
-                        row_border = "#ddd"
+                        row_color = "#000000"
 
                 if normaliza(h) == normaliza(team_g):
                     h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
@@ -2185,7 +2180,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     mins_txt = "-"
 
-                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid {row_border};background:{row_bg};color:#000'>{'✔' if ok else '✘'} [{label}] {jornada_txt} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
+                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{row_color}'>{'✔' if ok else '✘'} [{label}] {jornada_txt} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
