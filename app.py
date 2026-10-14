@@ -2115,8 +2115,15 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 df_t = df_t[df_t['AwayTeam'].apply(lambda x: normaliza(x)==n_team)]
             if df_t.empty:
                 continue
-            df_t = df_t.sort_values('Date', ascending=False).head(5)
-            if len(df_t) < 5:
+            # MARGEN DINAMICO: TODOS=8 partidos / LOCAL-VISITANTE=5
+            if cond_g_sel == "TODOS":
+                n_margen = 8
+                n_min_cumple = 6
+            else:
+                n_margen = 5
+                n_min_cumple = 3
+            df_t = df_t.sort_values('Date', ascending=False).head(n_margen)
+            if len(df_t) < n_margen:
                 continue
             checks = []
             for _, r in df_t.iterrows():
@@ -2128,7 +2135,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 checks.append(cumple_fixture(fid, check_ht, check_75, _hthg, _htag, _hg, _ag))
             cnt = sum(checks)
             tiene_2_seg = any(checks[i] and checks[i+1] for i in range(len(checks)-1))
-            if cnt >= 3 and tiene_2_seg:
+            if cnt >= n_min_cumple and tiene_2_seg:
                 calificados_g += 1
                 try:
                     liga_team_g = df_t['League'].mode().iloc[0] if 'League' in df_t.columns else "Liga"
@@ -2137,7 +2144,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 if liga_team_g not in resumen_ligas_g:
                     resumen_ligas_g[liga_team_g] = []
                 resumen_ligas_g[liga_team_g].append((team_g, cnt))
-                html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/5 cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+                html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
                 for idx, (_, r) in enumerate(df_t.iterrows()):
                     fid = str(r.get('fixture_id','')).split('.')[0]
                     ok = checks[idx]
