@@ -2064,12 +2064,15 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     if not check_ht and not check_75:
         st.info("Activa SI en GOLES HT o en GOLES 75-90")
     else:
-        def cumple_fixture(fid_str, need_ht, need_75):
-            evs = eventos.get(str(fid_str).split('.')[0], [])
-            if not evs:
-                return False
+        def cumple_fixture(fid_str, need_ht, need_75, hthg=None, htag=None, hg=None, ag=None):
             has_ht = False
             has_75 = False
+            # FALLBACK HT: si hay gol en 1ª parte [1-1] cuenta aunque no tenga minuto 25-45
+            if need_ht and hthg is not None and htag is not None:
+                if (hthg + htag) > 0:
+                    has_ht = True
+            # FALLBACK 75-90: si hay eventos los chequea, si no, mira si hubo gol en 2ª parte
+            evs = eventos.get(str(fid_str).split('.')[0], [])
             for ev in evs:
                 if 'Missed' in ev.get('tipo',''): continue
                 m = ev.get('m', -1)
@@ -2078,10 +2081,17 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 if 75 <= m <= 90:
                     has_75 = True
             if need_ht and need_75:
+                # si no hay minuto 75-90 pero hay gol en 2ª parte y no hay eventos, lo aceptamos
+                if not has_75 and not evs and hg is not None and hthg is not None:
+                    if ((hg + ag) - (hthg + htag)) > 0:
+                        has_75 = True
                 return has_ht and has_75
             if need_ht:
                 return has_ht
             if need_75:
+                if not has_75 and not evs and hg is not None and hthg is not None:
+                    if ((hg + ag) - (hthg + htag)) > 0:
+                        has_75 = True
                 return has_75
             return False
 
@@ -2105,7 +2115,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             checks = []
             for _, r in df_t.iterrows():
                 fid = str(r.get('fixture_id','')).split('.')[0]
-                checks.append(cumple_fixture(fid, check_ht, check_75))
+                try: _hthg = int(float(r.get('HTHG',0) or 0)); _htag = int(float(r.get('HTAG',0) or 0))
+                except: _hthg=0; _htag=0
+                try: _hg = int(float(r.get('FTHG',0) or 0)); _ag = int(float(r.get('FTAG',0) or 0))
+                except: _hg=0; _ag=0
+                checks.append(cumple_fixture(fid, check_ht, check_75, _hthg, _htag, _hg, _ag))
             cnt = sum(checks)
             tiene_2_seg = any(checks[i] and checks[i+1] for i in range(len(checks)-1))
             if cnt >= 3 and tiene_2_seg:
