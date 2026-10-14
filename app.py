@@ -2044,12 +2044,28 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         if not p2.exists():
             p2 = pathlib.Path(__file__).parent.resolve() / "basegolesprecalculado.parquet"
         if not p1.exists() or not p2.exists():
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame(), {}, {}
         df_pp = pd.read_parquet(p1)
         df_gp = pd.read_parquet(p2)
         if 'last_date' in df_pp.columns:
             df_pp['last_date'] = pd.to_datetime(df_pp['last_date'], errors='coerce')
-        return df_pp, df_gp
+        # lookup rápido fid -> fila goles
+        goles_by_fid = {str(r['fixture_id']): r for _, r in df_gp.iterrows()}
+        # jornada por equipo una sola vez
+        team_jornada = {}
+        for team, g in df_gp.groupby(df_gp['HomeTeam'].astype(str).str.upper().str.strip()):
+            # lo haremos luego por team normalizado, pero precalculamos lista ordenada por fecha
+            pass
+        # precalc simple para no recalcular en bucle
+        df_gp['fid_str'] = df_gp['fixture_id'].astype(str)
+        team_fids = {}
+        for _, r in df_gp.sort_values('Date').iterrows():
+            for t in [str(r['HomeTeam']).upper().strip(), str(r['AwayTeam']).upper().strip()]:
+                team_fids.setdefault(t, []).append(str(r['fixture_id']))
+        team_fid_to_j = {t: {fid:i+1 for i,fid in enumerate(fids)} for t,fids in team_fids.items()}
+        return df_pp, df_gp, goles_by_fid, team_fid_to_j
+
+    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
 
     df_pre_partidos, df_pre_goles = cargar_precalc_goles()
     if df_pre_partidos.empty:
@@ -2128,14 +2144,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 detalle = []
 
-            # Precalcular jornadas reales de ese equipo para no recalcular en cada fila
-            try:
-                # todos los partidos de ese equipo en la base de goles (orden cronológico)
-                df_team_all = df_pre_goles[(df_pre_goles['HomeTeam'].apply(lambda x: normaliza(x)==normaliza(team_g))) | (df_pre_goles['AwayTeam'].apply(lambda x: normaliza(x)==normaliza(team_g)))].sort_values('Date')
-                fid_list = df_team_all['fixture_id'].astype(str).tolist()
-                fid_to_jornada = {fid: i+1 for i, fid in enumerate(fid_list)}
-            except:
-                fid_to_jornada = {}
+            # jornada precalculada - 0 coste
+            fid_to_jornada = team_fid_to_j.get(team_g.upper().strip(), {})
+            if not fid_to_jornada:
+                # fallback normalizado
+                fid_to_jornada = team_fid_to_j.get(normaliza(team_g), {})
 
             for p in [x for x in detalle[:n_margen] if x.get('ok', False)]:
                 ok = p.get('ok', False)
@@ -2196,9 +2209,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 # --- TODOS los goles del partido ---
                 all_goals = []
                 try:
-                    row_m = df_pre_goles[df_pre_goles['fixture_id'].astype(str) == str(p.get('fid',''))]
-                    if not row_m.empty:
-                        r = row_m.iloc[0]
+                    r = goles_by_fid.get(str(p.get('fid','')))
+                    if r is not None:
                         # intenta sacar listas de minutos
                         # FIX: usa detalle real con equipo
                         det_raw = p.get('minutos_todos_det')
