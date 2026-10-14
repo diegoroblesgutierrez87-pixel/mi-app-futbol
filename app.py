@@ -2150,20 +2150,25 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 date = p.get('date','')
                 estado = p.get('estado_75','')
 
-                # Jornada solo si filtra, si no vacía
                 if not ok:
                     jornada_txt = ""
+                    row_bg = "#ffffff"
+                    row_border = "#ddd"
                 else:
                     raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
+                    jornada_txt = f"J{raw_j}"
                     if estado == "GANANDO":
-                        col_estado = "#0f8105" # verde
+                        row_bg = "#d4edda"
+                        row_border = "#0f8105"
                     elif estado == "EMPATE":
-                        col_estado = "#8B4513" # marron
+                        row_bg = "#e5d5b5"
+                        row_border = "#8B4513"
                     elif estado == "PERDIENDO":
-                        col_estado = "#CC0000" # rojo
+                        row_bg = "#f8d7da"
+                        row_border = "#CC0000"
                     else:
-                        col_estado = "#000"
-                    jornada_txt = f"<span style='background:{col_estado};color:white;font-weight:900;border-radius:3px;padding:1px 5px;margin-right:4px'>J{raw_j} {estado[0] if estado else ''}</span>"
+                        row_bg = "#ffffff"
+                        row_border = "#ddd"
 
                 if normaliza(h) == normaliza(team_g):
                     h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
@@ -2180,7 +2185,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     mins_txt = "-"
 
-                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>{'✔' if ok else '✘'} [{label}] {jornada_txt} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
+                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid {row_border};background:{row_bg};color:#000'>{'✔' if ok else '✘'} [{label}] {jornada_txt} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
