@@ -2126,15 +2126,27 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
                     try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                     except: hg=0; ag=0
+                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
+                    except: hthg=0; htag=0
+                    ht_txt = f"[{hthg}-{htag}]"
+                    ht_html = f"<span style='background:#E8E8E8;color:#0A2342;font-weight:900;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_txt}</span>"
+                    # subraya equipo seleccionado
+                    if normaliza(h) == normaliza(team_g):
+                        h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
+                        a_show = a
+                    elif normaliza(a) == normaliza(team_g):
+                        h_show = h
+                        a_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
+                    else:
+                        h_show = h; a_show = a
                     mins_rel = []
                     for ev in eventos.get(fid, []):
                         m = ev.get('m',-1)
-                        if check_ht and 25 <= m <= 45:
-                            mins_rel.append(f"{m}'")
-                        if check_75 and 75 <= m <= 90:
-                            mins_rel.append(f"{m}'")
-                    mins_txt = " ".join(mins_rel) if mins_rel else "-"
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h} {hg}-{ag} {a} | Goles filtro: {mins_txt} | {pd.to_datetime(r.get('Date')).strftime('%d/%m/%Y') if pd.notna(r.get('Date')) else ''}</div>"
+                        if 'Missed' in ev.get('tipo',''): continue
+                        if (check_ht and 25 <= m <= 45) or (check_75 and 75 <= m <= 90):
+                            mins_rel.append(f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m}'</span>")
+                    mins_txt = "".join(mins_rel) if mins_rel else "-"
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h_show} {hg}-{ag} {a_show} | {ht_html} Goles filtro: {mins_txt} | {pd.to_datetime(r.get('Date')).strftime('%d/%m/%Y') if pd.notna(r.get('Date')) else ''}</div>"
 
         # --- LISTADO RESUMEN POR LIGA ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
