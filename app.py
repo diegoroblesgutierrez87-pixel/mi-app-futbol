@@ -2153,12 +2153,19 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
                     jornada_txt = f"J{raw_j}"
-                    if estado == "GANANDO":
-                        row_color = "#0f8105"
-                    elif estado == "EMPATE":
-                        row_color = "#8B4513"
-                    elif estado == "PERDIENDO":
-                        row_color = "#CC0000"
+                    try:
+                        fh, fa = ft.split("-")
+                        fh = int(fh.strip()); fa = int(fa.strip())
+                    except:
+                        fh = fa = 0
+                    if normaliza(h) == normaliza(team_g):
+                        if fh > fa: row_color = "#0f8105"
+                        elif fh == fa: row_color = "#8B4513"
+                        else: row_color = "#CC0000"
+                    elif normaliza(a) == normaliza(team_g):
+                        if fa > fh: row_color = "#0f8105"
+                        elif fa == fh: row_color = "#8B4513"
+                        else: row_color = "#CC0000"
                     else:
                         row_color = "#000000"
 
