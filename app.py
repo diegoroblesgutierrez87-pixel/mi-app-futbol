@@ -2189,16 +2189,69 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         return (25 <= num <= 45) or (75 <= num <= 90)
                     return False
 
-                if mins and mins!= "-":
-                    parts = []
-                    for m in mins.split(","):
-                        m = m.strip()
-                        if not m:
-                            continue
-                        if minuto_en_filtro(m, filtro_key):
-                            parts.append(f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m}</span>")
+                # --- TODOS los goles del partido ---
+                all_goals = []
+                try:
+                    row_m = df_pre_goles[df_pre_goles['fixture_id'].astype(str) == str(p.get('fid',''))]
+                    if not row_m.empty:
+                        r = row_m.iloc[0]
+                        # intenta sacar listas de minutos
+                        hg = r.get('HomeGoals', '') or r.get('home_goals', '') or r.get('GoalsHome', '')
+                        ag = r.get('AwayGoals', '') or r.get('away_goals', '') or r.get('GoalsAway', '')
+                        # pueden venir como string "40,81,90" o lista
+                        def parse_mins(v):
+                            if isinstance(v, list):
+                                return [str(x).strip() for x in v]
+                            if isinstance(v, str):
+                                return [x.strip() for x in v.replace("'", "").split(",") if x.strip()]
+                            return []
+                        # si el parquet tiene columna 'all_goals' con dict, usala
+                        if 'all_goals' in r and isinstance(r['all_goals'], list):
+                            for g in r['all_goals']:
+                                all_goals.append((g.get('min',''), g.get('team','home')))
                         else:
-                            parts.append(f"<span style='padding:1px 4px;margin-right:2px'>{m}</span>")
+                            is_home_filtered = normaliza(h) == normaliza(team_g)
+                            for mm in parse_mins(hg):
+                                m_str = mm if "'" in mm else f"{mm}'"
+                                all_goals.append((m_str, 'home' if is_home_filtered else 'away_filtered' if False else 'home'))
+                            for mm in parse_mins(ag):
+                                m_str = mm if "'" in mm else f"{mm}'"
+                                all_goals.append((m_str, 'away'))
+                            # reconstruir si es filtrado
+                            # si team_g es local, sus goles son home
+                            # si es visitante, sus goles son away
+                            tmp = []
+                            for m_str, side in all_goals:
+                                if (normaliza(h) == normaliza(team_g) and side == 'home') or (normaliza(a) == normaliza(team_g) and side == 'away'):
+                                    tmp.append((m_str, True))
+                                else:
+                                    # corregir cuando usamos parse simple
+                                    if side == 'home':
+                                        is_filt = normaliza(h) == normaliza(team_g)
+                                    else:
+                                        is_filt = normaliza(a) == normaliza(team_g)
+                                    tmp.append((m_str, is_filt))
+                            all_goals = tmp
+                            all_goals.sort(key=lambda x: int(''.join(filter(str.isdigit, x[0])) or 0))
+                except:
+                    all_goals = []
+
+                # fallback si no hay datos completos -> usa mins del filtro
+                if not all_goals and mins and mins!= "-":
+                    for m in mins.split(","):
+                        m=m.strip()
+                        if m:
+                            all_goals.append((m, True))
+
+                if all_goals:
+                    parts = []
+                    for m_str, is_filt_team in all_goals:
+                        en_filtro = minuto_en_filtro(m_str, filtro_key)
+                        bg = "background:#D3D3D3;border-radius:3px;" if en_filtro else ""
+                        col = f"color:{row_color};font-weight:900;" if is_filt_team and 'row_color' in locals() else "color:#000;"
+                        if not ok:
+                            col = "color:#000;"
+                        parts.append(f"<span style='{bg}{col}padding:1px 4px;margin-right:2px'>{m_str}</span>")
                     mins_txt = "".join(parts)
                 else:
                     mins_txt = "-"
