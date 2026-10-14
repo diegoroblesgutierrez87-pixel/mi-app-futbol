@@ -2210,43 +2210,19 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                                 is_f = eq == normaliza(team_g) or normaliza(team_g) in eq or eq in normaliza(team_g)
                                 all_goals.append((ms, is_f, gd.get('min_num',0)))
                         else:
-                            hg = r.get('minutos_todos','') or ""
-                            ag = ""
-                        # pueden venir como string "40,81,90" o lista
-                        def parse_mins(v):
-                            if isinstance(v, list):
-                                return [str(x).strip() for x in v]
-                            if isinstance(v, str):
-                                return [x.strip() for x in v.replace("'", "").split(",") if x.strip()]
-                            return []
-                        # si el parquet tiene columna 'all_goals' con dict, usala
-                        if 'all_goals' in r and isinstance(r['all_goals'], list):
-                            for g in r['all_goals']:
-                                all_goals.append((g.get('min',''), g.get('team','home')))
-                        else:
-                            is_home_filtered = normaliza(h) == normaliza(team_g)
+                            # sin detalle con equipo -> fallback con minutos_todos
+                            hg = r.get('minutos_todos','') or p.get('minutos_todos','') or ""
+                            def parse_mins(v):
+                                if isinstance(v, list):
+                                    return [str(x).strip() for x in v]
+                                if isinstance(v, str):
+                                    return [x.strip() for x in v.replace("'", "").split(",") if x.strip()]
+                                return []
                             for mm in parse_mins(hg):
                                 m_str = mm if "'" in mm else f"{mm}'"
-                                all_goals.append((m_str, 'home' if is_home_filtered else 'away_filtered' if False else 'home'))
-                            for mm in parse_mins(ag):
-                                m_str = mm if "'" in mm else f"{mm}'"
-                                all_goals.append((m_str, 'away'))
-                            # reconstruir si es filtrado
-                            # si team_g es local, sus goles son home
-                            # si es visitante, sus goles son away
-                            tmp = []
-                            for m_str, side in all_goals:
-                                if (normaliza(h) == normaliza(team_g) and side == 'home') or (normaliza(a) == normaliza(team_g) and side == 'away'):
-                                    tmp.append((m_str, True))
-                                else:
-                                    # corregir cuando usamos parse simple
-                                    if side == 'home':
-                                        is_filt = normaliza(h) == normaliza(team_g)
-                                    else:
-                                        is_filt = normaliza(a) == normaliza(team_g)
-                                    tmp.append((m_str, is_filt))
-                            all_goals = tmp
-                            all_goals.sort(key=lambda x: int(''.join(filter(str.isdigit, x[0])) or 0))
+                                # sin equipo no podemos diferenciar, se deja como True para no romper
+                                all_goals.append((m_str, True, 0))
+                            all_goals.sort(key=lambda x: x[2] or int(''.join(filter(str.isdigit, x[0])) or 0))
                 except:
                     all_goals = []
 
