@@ -2072,16 +2072,23 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     with c_ht:
         goles_ht_sel = st.selectbox("GOLES HT 25-45", ["NO","SI"], index=0, key="goles_ht_25_45")
     with c_7590:
-        goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI"], index=0, key="goles_75_90")
+        goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_75_90")
 
     check_ht = (goles_ht_sel == "SI")
-    check_75 = (goles_7590_sel == "SI")
+    check_75_raw = goles_7590_sel
+    check_75 = (check_75_raw != "NO")
 
     if not check_ht and not check_75:
         st.info("Activa SI en GOLES HT o en GOLES 75-90")
     else:
         import json
-        if check_ht and check_75:
+        if check_75_raw == "Si va ganando":
+            filtro_key = "75_GANANDO"
+        elif check_75_raw == "Si va empate":
+            filtro_key = "75_EMPATE"
+        elif check_75_raw == "Si va perdiendo":
+            filtro_key = "75_PERDIENDO"
+        elif check_ht and check_75_raw == "SI":
             filtro_key = "AMBOS"
         elif check_ht:
             filtro_key = "HT"
@@ -2108,7 +2115,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         calificados_g = len(df_f)
         resumen_ligas_g = {}
 
-        for _, row in df_f.sort_values(['League','cnt_8'], ascending=[True, False]).iterrows():
+        for _, row in df_f.sort_values(['League','cnt_7'], ascending=[True, False]).iterrows():
             team_g = row['Team']
             cnt = row['cnt_7'] if cond_g_sel=="TODOS" else row['cnt_4']
             liga_team_g = row['League']
