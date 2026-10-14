@@ -2267,7 +2267,22 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     else:
                         row_color = "#000000"
 
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} | {ht_html} {mins_txt}</span><span style='color:#000'> | {date}</span></div>"
+                    try:
+                        fh, fa = ft.split("-")
+                        fh = int(fh.strip()); fa = int(fa.strip())
+                    except:
+                        fh = fa = 0
+                    if normaliza(h) == normaliza(team_g):
+                        if fh > fa: row_color = "#0f8105"
+                        elif fh == fa: row_color = "#8B4513"
+                        else: row_color = "#CC0000"
+                    elif normaliza(a) == normaliza(team_g):
+                        if fa > fh: row_color = "#0f8105"
+                        elif fa == fh: row_color = "#8B4513"
+                        else: row_color = "#CC0000"
+                    else:
+                        row_color = "#000000"
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} |</span> {ht_html} {mins_txt}<span style='color:#000'> | {date}</span></div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS + OCULTAR/MOSTRAR ---
         mostrar_resumen_g = st.checkbox(f"👁️ Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
