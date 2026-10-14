@@ -2030,3 +2030,121 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
          COPIAR PREDICCION RESTO ({len(partidos_sel_r)} partidos)
         </button>
         """, height=55, scrolling=False)
+
+with st.expander("GOLES HT / GOLES 75-90", expanded=False):
+    st.caption("Filtra equipos que en sus últimos 5 partidos, 3 cumplen y mínimo 2 seguidos")
+
+    ligas_g = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
+    c_liga_g, c_eq_g, c_ht, c_7590 = st.columns([2,2,1,1])
+    with c_liga_g:
+        ligas_sel_g = st.multiselect("Ligas", ligas_g, default=[], key="ligas_g_ht", placeholder="Todas")
+    df_base_g = df if not ligas_sel_g else df[df['League'].isin(ligas_sel_g)]
+
+    # equipos de esas ligas
+    if not df_base_g.empty:
+        seen_g = {}
+        for t in pd.concat([df_base_g['HomeTeam'], df_base_g['AwayTeam']]).dropna().astype(str):
+            n = normaliza(t)
+            if n not in seen_g:
+                seen_g[n] = t.upper()
+        equipos_g = sorted(seen_g.values())
+    else:
+        equipos_g = []
+
+    with c_eq_g:
+        equipos_sel_g = st.multiselect("Equipos", equipos_g, default=[], key="eq_g_ht", placeholder="Todos")
+    with c_ht:
+        goles_ht_sel = st.selectbox("GOLES HT 25-45", ["NO","SI"], index=0, key="goles_ht_25_45")
+    with c_7590:
+        goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI"], index=0, key="goles_75_90")
+
+    check_ht = (goles_ht_sel == "SI")
+    check_75 = (goles_7590_sel == "SI")
+
+    if not check_ht and not check_75:
+        st.info("Activa SI en GOLES HT o en GOLES 75-90")
+    else:
+        def cumple_fixture(fid_str, need_ht, need_75):
+            evs = eventos.get(str(fid_str).split('.')[0], [])
+            if not evs:
+                return False
+            has_ht = False
+            has_75 = False
+            for ev in evs:
+                if 'Missed' in ev.get('tipo',''): continue
+                m = ev.get('m', -1)
+                if 25 <= m <= 45:
+                    has_ht = True
+                if 75 <= m <= 90:
+                    has_75 = True
+            if need_ht and need_75:
+                return has_ht and has_75
+            if need_ht:
+                return has_ht
+            if need_75:
+                return has_75
+            return False
+
+        # equipos a chequear
+        if equipos_sel_g:
+            equipos_a_check = equipos_sel_g
+        else:
+            equipos_a_check = equipos_g
+
+        html_g = ""
+        calificados_g = 0
+        for team_g in equipos_a_check:
+            n_team = normaliza(team_g)
+            df_t = df_base_g[(df_base_g['HomeTeam'].apply(lambda x: normaliza(x)==n_team)) | (df_base_g['AwayTeam'].apply(lambda x: normaliza(x)==n_team))]
+            if df_t.empty:
+                continue
+            df_t = df_t.sort_values('Date', ascending=False).head(5)
+            if len(df_t) < 5:
+                continue
+            # lista ordenada mas reciente primero
+            checks = []
+            for _, r in df_t.iterrows():
+                fid = str(r.get('fixture_id','')).split('.')[0]
+                checks.append(cumple_fixture(fid, check_ht, check_75))
+
+            cnt = sum(checks)
+            # 2 seguidos minimo
+            tiene_2_seg = any(checks[i] and checks[i+1] for i in range(len(checks)-1))
+
+            if cnt >= 3 and tiene_2_seg:
+                calificados_g += 1
+                # header equipo
+                html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/5 cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+                for idx, (_, r) in enumerate(df_t.iterrows()):
+                    fid = str(r.get('fixture_id','')).split('.')[0]
+                    ok = checks[idx]
+                    col = "#0f8105" if ok else "#f31818"
+                    label = "OK" if ok else "NO"
+                    h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
+                    try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
+                    except: hg=0; ag=0
+                    # minutos que cumplen
+                    mins_rel = []
+                    for ev in eventos.get(fid, []):
+                        m = ev.get('m',-1)
+                        if check_ht and 25 <= m <= 45:
+                            mins_rel.append(f"{m}'")
+                        if check_75 and 75 <= m <= 90:
+                            mins_rel.append(f"{m}'")
+                    mins_txt = " ".join(mins_rel) if mins_rel else "-"
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h} {hg}-{ag} {a} | Goles filtro: {mins_txt} | {pd.to_datetime(r.get('Date')).strftime('%d/%m/%Y') if pd.notna(r.get('Date')) else ''}</div>"
+
+        if calificados_g == 0:
+            st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75})")
+        else:
+            import streamlit.components.v1 as components
+            bloque = f"""
+            <div>
+                <div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
+                <div id='targetG'>{html_g}</div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; setTimeout(()=>b.innerText='COPIAR GOLES HT 75-90',1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:8px'>COPIAR GOLES HT 75-90 ({calificados_g})</button>
+            </div>
+            """
+            # altura dinamica sin hueco gigante
+            h_g = min(5000, max(600, len(html_g)//8))
+            components.html(bloque, height=h_g, scrolling=True)
