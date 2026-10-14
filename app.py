@@ -2034,11 +2034,19 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
 with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     st.caption("Filtra equipos que en sus últimos 5 partidos, 3 cumplen y mínimo 2 seguidos")
 
-    ligas_g = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
+    # --- EXCLUIR SELECCIONES ---
+    ligas_excluir_kw = ["WORLD CUP","EURO","NATIONS LEAGUE","FRIENDLY","INTERNATIONAL","COPA AMERICA","AFRICA","ASIAN CUP","QUALIFIER","QUALIFYING","AMISTOSO","SELECCION","NATIONAL","UEFA U","WORLD CUP U","EURO U","U21","U20","U19","U23","OLYMPIC"]
+    def es_liga_seleccion(liga_name):
+        ln = str(liga_name).upper()
+        return any(k in ln for k in ligas_excluir_kw)
+    ligas_g_all = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
+    ligas_g = [l for l in ligas_g_all if not es_liga_seleccion(l)]
     c_liga_g, c_eq_g, c_cond_g, c_ht, c_7590 = st.columns([2,2,1,1,1])
     with c_liga_g:
         ligas_sel_g = st.multiselect("Ligas", ligas_g, default=[], key="ligas_g_ht", placeholder="Todas")
-    df_base_g = df if not ligas_sel_g else df[df['League'].isin(ligas_sel_g)]
+    # base siempre sin selecciones
+    df_sin_sel = df[~df['League'].apply(lambda x: es_liga_seleccion(x))] if 'League' in df.columns and not df.empty else df
+    df_base_g = df_sin_sel if not ligas_sel_g else df_sin_sel[df_sin_sel['League'].isin(ligas_sel_g)]
 
     # equipos de esas ligas
     if not df_base_g.empty:
