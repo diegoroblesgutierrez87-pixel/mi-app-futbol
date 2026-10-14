@@ -2175,8 +2175,31 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     h_show = h; a_show = a
 
                 ht_html = f"<span style='background:#E8E8E8;color:#0A2342;font-weight:900;border-radius:3px;padding:0 4px;margin:0 3px'>{ht}</span>"
+
+                def minuto_en_filtro(m_str, fk):
+                    try:
+                        num = int(''.join(filter(str.isdigit, m_str.split("'")[0])))
+                    except:
+                        return False
+                    if fk == "HT":
+                        return 25 <= num <= 45
+                    elif fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"]:
+                        return 75 <= num <= 90
+                    elif fk == "AMBOS":
+                        return (25 <= num <= 45) or (75 <= num <= 90)
+                    return False
+
                 if mins and mins!= "-":
-                    mins_txt = "".join([f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m.strip()}</span>" for m in mins.split(",") if m.strip()])
+                    parts = []
+                    for m in mins.split(","):
+                        m = m.strip()
+                        if not m:
+                            continue
+                        if minuto_en_filtro(m, filtro_key):
+                            parts.append(f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m}</span>")
+                        else:
+                            parts.append(f"<span style='padding:1px 4px;margin-right:2px'>{m}</span>")
+                    mins_txt = "".join(parts)
                 else:
                     mins_txt = "-"
 
