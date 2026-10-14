@@ -2093,6 +2093,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
         html_g = ""
         calificados_g = 0
+        resumen_ligas_g = {}
         for team_g in equipos_a_check:
             n_team = normaliza(team_g)
             df_t = df_base_g[(df_base_g['HomeTeam'].apply(lambda x: normaliza(x)==n_team)) | (df_base_g['AwayTeam'].apply(lambda x: normaliza(x)==n_team))]
@@ -2101,19 +2102,21 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             df_t = df_t.sort_values('Date', ascending=False).head(5)
             if len(df_t) < 5:
                 continue
-            # lista ordenada mas reciente primero
             checks = []
             for _, r in df_t.iterrows():
                 fid = str(r.get('fixture_id','')).split('.')[0]
                 checks.append(cumple_fixture(fid, check_ht, check_75))
-
             cnt = sum(checks)
-            # 2 seguidos minimo
             tiene_2_seg = any(checks[i] and checks[i+1] for i in range(len(checks)-1))
-
             if cnt >= 3 and tiene_2_seg:
                 calificados_g += 1
-                # header equipo
+                try:
+                    liga_team_g = df_t['League'].mode().iloc[0] if 'League' in df_t.columns else "Liga"
+                except:
+                    liga_team_g = "Liga"
+                if liga_team_g not in resumen_ligas_g:
+                    resumen_ligas_g[liga_team_g] = []
+                resumen_ligas_g[liga_team_g].append((team_g, cnt))
                 html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/5 cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
                 for idx, (_, r) in enumerate(df_t.iterrows()):
                     fid = str(r.get('fixture_id','')).split('.')[0]
@@ -2123,7 +2126,6 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
                     try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                     except: hg=0; ag=0
-                    # minutos que cumplen
                     mins_rel = []
                     for ev in eventos.get(fid, []):
                         m = ev.get('m',-1)
@@ -2134,6 +2136,16 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     mins_txt = " ".join(mins_rel) if mins_rel else "-"
                     html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h} {hg}-{ag} {a} | Goles filtro: {mins_txt} | {pd.to_datetime(r.get('Date')).strftime('%d/%m/%Y') if pd.notna(r.get('Date')) else ''}</div>"
 
+        # --- LISTADO RESUMEN POR LIGA ---
+        html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
+        for liga_name in sorted(resumen_ligas_g.keys()):
+            html_listado_g += f"<div style='font-weight:900;margin-top:6px;color:#000;text-decoration:underline'>{liga_name}:</div>"
+            lineas = []
+            for team_r, cnt_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
+                lineas.append(f"{team_r} ({cnt_r} veces)")
+            html_listado_g += f"<div style='margin-left:10px;color:#000'>{' - '.join(lineas)}</div>"
+        html_listado_g += "</div>"
+
         if calificados_g == 0:
             st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75})")
         else:
@@ -2141,11 +2153,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             bloque = f"""
             <div>
                 <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='position:sticky;top:0;z-index:999;width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                {html_listado_g}
                 <div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
-                <div id='targetG'>{html_g}</div>
+                <div id='targetG'>{html_listado_g}{html_g}</div>
                 <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;margin-top:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
             </div>
             """
-            # altura dinamica sin hueco gigante
-            h_g = min(5000, max(600, len(html_g)//8))
+            h_g = min(5000, max(800, (len(html_g)+len(html_listado_g))//8))
             components.html(bloque, height=h_g, scrolling=True)
