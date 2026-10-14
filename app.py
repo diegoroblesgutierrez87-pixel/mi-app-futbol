@@ -2089,15 +2089,17 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             filtro_key = "75"
 
         if cond_g_sel == "TODOS":
-            n_margen = 8
+            n_margen = 7
+            n_need = 5
         else:
-            n_margen = 5
+            n_margen = 4
+            n_need = 2
 
         df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
         if cond_g_sel == "TODOS":
-            df_f = df_f[df_f['cumple_TODOS_8_6']==True]
+            df_f = df_f[df_f['cumple_TODOS_7_5']==True]
         else:
-            df_f = df_f[df_f['cumple_5_3']==True]
+            df_f = df_f[df_f['cumple_4_2']==True]
 
         if equipos_sel_g:
             df_f = df_f[df_f['Team'].isin(equipos_sel_g)]
@@ -2108,7 +2110,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
         for _, row in df_f.sort_values(['League','cnt_8'], ascending=[True, False]).iterrows():
             team_g = row['Team']
-            cnt = row['cnt_8'] if cond_g_sel=="TODOS" else row['cnt_5']
+            cnt = row['cnt_7'] if cond_g_sel=="TODOS" else row['cnt_4']
             liga_team_g = row['League']
 
             if liga_team_g not in resumen_ligas_g:
