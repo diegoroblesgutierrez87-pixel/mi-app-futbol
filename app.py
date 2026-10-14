@@ -2196,8 +2196,22 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     if not row_m.empty:
                         r = row_m.iloc[0]
                         # intenta sacar listas de minutos
-                        hg = r.get('HomeGoals', '') or r.get('home_goals', '') or r.get('GoalsHome', '')
-                        ag = r.get('AwayGoals', '') or r.get('away_goals', '') or r.get('GoalsAway', '')
+                        # FIX: usa detalle real con equipo
+                        det_raw = p.get('minutos_todos_det')
+                        if det_raw:
+                            import json as _js
+                            det_list = _js.loads(det_raw) if isinstance(det_raw, str) else det_raw
+                            hg = ""
+                            ag = ""
+                            all_goals = []
+                            for gd in det_list:
+                                ms = gd.get('min','')
+                                eq = gd.get('equipo','')
+                                is_f = eq == normaliza(team_g) or normaliza(team_g) in eq or eq in normaliza(team_g)
+                                all_goals.append((ms, is_f, gd.get('min_num',0)))
+                        else:
+                            hg = r.get('minutos_todos','') or ""
+                            ag = ""
                         # pueden venir como string "40,81,90" o lista
                         def parse_mins(v):
                             if isinstance(v, list):
@@ -2236,12 +2250,13 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 except:
                     all_goals = []
 
-                # fallback si no hay datos completos -> usa mins del filtro
-                if not all_goals and mins and mins!= "-":
-                    for m in mins.split(","):
+                # fallback si no hay datos completos -> usa minutos_todos
+                if not all_goals:
+                    src = p.get('minutos_todos') or mins or ""
+                    for m in str(src).split(","):
                         m=m.strip()
-                        if m:
-                            all_goals.append((m, True))
+                        if m and m!= "-" and "HT" not in m and "2T" not in m:
+                            all_goals.append((m, True, 0))
 
                 if all_goals:
                     parts = []
