@@ -2067,7 +2067,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
     df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
 
-    df_pre_partidos, df_pre_goles = cargar_precalc_goles()
+    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
     if df_pre_partidos.empty:
         st.warning("No encuentro basepartidosprecalculado.parquet / basegolesprecalculado.parquet")
         st.stop()
