@@ -2180,7 +2180,16 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 else:
                     mins_txt = "-"
 
-                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{row_color}'>{'✔' if ok else '✘'} [{label}] {jornada_txt} {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
+                # solo color en el resultado FT
+                if not ok:
+                    jornada_txt = ""
+                    ft_colored = ft
+                else:
+                    raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
+                    jornada_txt = f"{raw_j}"
+                    ft_colored = f"<span style='color:{row_color};font-weight:900'>{ft}</span>"
+
+                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>{jornada_txt} {h_show} {ft_colored} {a_show} | {ht_html} {mins_txt} | {date}</div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
