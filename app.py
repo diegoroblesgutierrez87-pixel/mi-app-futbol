@@ -2032,32 +2032,38 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         """, height=55, scrolling=False)
 
 with st.expander("GOLES HT / GOLES 75-90", expanded=False):
-    st.caption("Filtra equipos que en sus últimos 5 partidos, 3 cumplen y mínimo 2 seguidos")
+    st.caption("Precalculado - 8 partidos TODOS 6 cumplen / 5 LOCAL-VISITANTE 3 cumplen + 2 seguidos")
 
-    # --- EXCLUIR SELECCIONES ---
-    ligas_excluir_kw = ["WORLD CUP","EURO","NATIONS LEAGUE","FRIENDLY","INTERNATIONAL","COPA AMERICA","AFRICA","ASIAN CUP","QUALIFIER","QUALIFYING","AMISTOSO","SELECCION","NATIONAL","UEFA U","WORLD CUP U","EURO U","U21","U20","U19","U23","OLYMPIC"]
-    def es_liga_seleccion(liga_name):
-        ln = str(liga_name).upper()
-        return any(k in ln for k in ligas_excluir_kw)
-    ligas_g_all = sorted(df['League'].dropna().unique().tolist()) if 'League' in df.columns else []
-    ligas_g = [l for l in ligas_g_all if not es_liga_seleccion(l)]
+    @st.cache_data(show_spinner=False)
+    def cargar_precalc_goles():
+        import pathlib
+        p1 = pathlib.Path("basepartidosprecalculado.parquet")
+        p2 = pathlib.Path("basegolesprecalculado.parquet")
+        if not p1.exists():
+            p1 = pathlib.Path(__file__).parent.resolve() / "basepartidosprecalculado.parquet"
+        if not p2.exists():
+            p2 = pathlib.Path(__file__).parent.resolve() / "basegolesprecalculado.parquet"
+        if not p1.exists() or not p2.exists():
+            return pd.DataFrame(), pd.DataFrame()
+        df_pp = pd.read_parquet(p1)
+        df_gp = pd.read_parquet(p2)
+        if 'last_date' in df_pp.columns:
+            df_pp['last_date'] = pd.to_datetime(df_pp['last_date'], errors='coerce')
+        return df_pp, df_gp
+
+    df_pre_partidos, df_pre_goles = cargar_precalc_goles()
+    if df_pre_partidos.empty:
+        st.warning("No encuentro basepartidosprecalculado.parquet / basegolesprecalculado.parquet")
+        st.stop()
+
+    ligas_g = sorted(df_pre_partidos['League'].dropna().unique().tolist())
     c_liga_g, c_eq_g, c_cond_g, c_ht, c_7590 = st.columns([2,2,1,1,1])
     with c_liga_g:
         ligas_sel_g = st.multiselect("Ligas", ligas_g, default=[], key="ligas_g_ht", placeholder="Todas")
-    # base siempre sin selecciones
-    df_sin_sel = df[~df['League'].apply(lambda x: es_liga_seleccion(x))] if 'League' in df.columns and not df.empty else df
-    df_base_g = df_sin_sel if not ligas_sel_g else df_sin_sel[df_sin_sel['League'].isin(ligas_sel_g)]
+    df_base_g = df_pre_partidos if not ligas_sel_g else df_pre_partidos[df_pre_partidos['League'].isin(ligas_sel_g)]
 
-    # equipos de esas ligas
-    if not df_base_g.empty:
-        seen_g = {}
-        for t in pd.concat([df_base_g['HomeTeam'], df_base_g['AwayTeam']]).dropna().astype(str):
-            n = normaliza(t)
-            if n not in seen_g:
-                seen_g[n] = t.upper()
-        equipos_g = sorted(seen_g.values())
-    else:
-        equipos_g = []
+    # equipos ya vienen en precalc -> Team
+    equipos_g = sorted(df_base_g['Team'].dropna().unique().tolist()) if not df_base_g.empty else []
 
     with c_eq_g:
         equipos_sel_g = st.multiselect("Equipos", equipos_g, default=[], key="eq_g_ht", placeholder="Todos")
@@ -2074,114 +2080,74 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     if not check_ht and not check_75:
         st.info("Activa SI en GOLES HT o en GOLES 75-90")
     else:
-        def cumple_fixture(fid_str, need_ht, need_75, hthg=None, htag=None, hg=None, ag=None):
-            has_ht = False
-            has_75 = False
-            # FALLBACK HT: si hay gol en 1ª parte [1-1] cuenta aunque no tenga minuto 25-45
-            if need_ht and hthg is not None and htag is not None:
-                if (hthg + htag) > 0:
-                    has_ht = True
-            # FALLBACK 75-90: si hay eventos los chequea, si no, mira si hubo gol en 2ª parte
-            evs = eventos.get(str(fid_str).split('.')[0], [])
-            for ev in evs:
-                if 'Missed' in ev.get('tipo',''): continue
-                m = ev.get('m', -1)
-                if 25 <= m <= 45:
-                    has_ht = True
-                if 75 <= m <= 90:
-                    has_75 = True
-            if need_ht and need_75:
-                # si no hay minuto 75-90 pero hay gol en 2ª parte y no hay eventos, lo aceptamos
-                if not has_75 and not evs and hg is not None and hthg is not None:
-                    if ((hg + ag) - (hthg + htag)) > 0:
-                        has_75 = True
-                return has_ht and has_75
-            if need_ht:
-                return has_ht
-            if need_75:
-                if not has_75 and not evs and hg is not None and hthg is not None:
-                    if ((hg + ag) - (hthg + htag)) > 0:
-                        has_75 = True
-                return has_75
-            return False
-
-        # equipos a chequear
-        if equipos_sel_g:
-            equipos_a_check = equipos_sel_g
+        import json
+        if check_ht and check_75:
+            filtro_key = "AMBOS"
+        elif check_ht:
+            filtro_key = "HT"
         else:
-            equipos_a_check = equipos_g
+            filtro_key = "75"
+
+        if cond_g_sel == "TODOS":
+            n_margen = 8
+        else:
+            n_margen = 5
+
+        df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
+        if cond_g_sel == "TODOS":
+            df_f = df_f[df_f['cumple_TODOS_8_6']==True]
+        else:
+            df_f = df_f[df_f['cumple_5_3']==True]
+
+        if equipos_sel_g:
+            df_f = df_f[df_f['Team'].isin(equipos_sel_g)]
 
         html_g = ""
-        calificados_g = 0
+        calificados_g = len(df_f)
         resumen_ligas_g = {}
-        for team_g in equipos_a_check:
-            n_team = normaliza(team_g)
-            df_t = df_base_g[(df_base_g['HomeTeam'].apply(lambda x: normaliza(x)==n_team)) | (df_base_g['AwayTeam'].apply(lambda x: normaliza(x)==n_team))]
-            if cond_g_sel == "LOCAL":
-                df_t = df_t[df_t['HomeTeam'].apply(lambda x: normaliza(x)==n_team)]
-            elif cond_g_sel == "VISITANTE":
-                df_t = df_t[df_t['AwayTeam'].apply(lambda x: normaliza(x)==n_team)]
-            if df_t.empty:
-                continue
-            # MARGEN DINAMICO: TODOS=8 partidos / LOCAL-VISITANTE=5
-            if cond_g_sel == "TODOS":
-                n_margen = 8
-                n_min_cumple = 6
-            else:
-                n_margen = 5
-                n_min_cumple = 3
-            df_t = df_t.sort_values('Date', ascending=False).head(n_margen)
-            if len(df_t) < n_margen:
-                continue
-            checks = []
-            for _, r in df_t.iterrows():
-                fid = str(r.get('fixture_id','')).split('.')[0]
-                try: _hthg = int(float(r.get('HTHG',0) or 0)); _htag = int(float(r.get('HTAG',0) or 0))
-                except: _hthg=0; _htag=0
-                try: _hg = int(float(r.get('FTHG',0) or 0)); _ag = int(float(r.get('FTAG',0) or 0))
-                except: _hg=0; _ag=0
-                checks.append(cumple_fixture(fid, check_ht, check_75, _hthg, _htag, _hg, _ag))
-            cnt = sum(checks)
-            tiene_2_seg = any(checks[i] and checks[i+1] for i in range(len(checks)-1))
-            if cnt >= n_min_cumple and tiene_2_seg:
-                calificados_g += 1
-                try:
-                    liga_team_g = df_t['League'].mode().iloc[0] if 'League' in df_t.columns else "Liga"
-                except:
-                    liga_team_g = "Liga"
-                if liga_team_g not in resumen_ligas_g:
-                    resumen_ligas_g[liga_team_g] = []
-                resumen_ligas_g[liga_team_g].append((team_g, cnt))
-                html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
-                for idx, (_, r) in enumerate(df_t.iterrows()):
-                    fid = str(r.get('fixture_id','')).split('.')[0]
-                    ok = checks[idx]
-                    col = "#0f8105" if ok else "#f31818"
-                    label = "OK" if ok else "NO"
-                    h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
-                    try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
-                    except: hg=0; ag=0
-                    try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
-                    except: hthg=0; htag=0
-                    ht_txt = f"[{hthg}-{htag}]"
-                    ht_html = f"<span style='background:#E8E8E8;color:#0A2342;font-weight:900;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_txt}</span>"
-                    # subraya equipo seleccionado
-                    if normaliza(h) == normaliza(team_g):
-                        h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
-                        a_show = a
-                    elif normaliza(a) == normaliza(team_g):
-                        h_show = h
-                        a_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
-                    else:
-                        h_show = h; a_show = a
-                    mins_rel = []
-                    for ev in eventos.get(fid, []):
-                        m = ev.get('m',-1)
-                        if 'Missed' in ev.get('tipo',''): continue
-                        if (check_ht and 25 <= m <= 45) or (check_75 and 75 <= m <= 90):
-                            mins_rel.append(f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m}'</span>")
-                    mins_txt = "".join(mins_rel) if mins_rel else "-"
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h_show} {hg}-{ag} {a_show} | {ht_html} Goles filtro: {mins_txt} | {pd.to_datetime(r.get('Date')).strftime('%d/%m/%Y') if pd.notna(r.get('Date')) else ''}</div>"
+
+        for _, row in df_f.sort_values(['League','cnt_8'], ascending=[True, False]).iterrows():
+            team_g = row['Team']
+            cnt = row['cnt_8'] if cond_g_sel=="TODOS" else row['cnt_5']
+            liga_team_g = row['League']
+
+            if liga_team_g not in resumen_ligas_g:
+                resumen_ligas_g[liga_team_g] = []
+            resumen_ligas_g[liga_team_g].append((team_g, cnt))
+
+            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+
+            try:
+                detalle = json.loads(row['partidos_json'])
+            except:
+                detalle = []
+
+            for p in detalle[:n_margen]:
+                ok = p.get('ok', False)
+                col = "#0f8105" if ok else "#f31818"
+                label = "OK" if ok else "NO"
+                h = p.get('home',''); a = p.get('away','')
+                ft = p.get('ft','0-0')
+                ht = p.get('ht','[0-0]')
+                mins = p.get('mins','-')
+                date = p.get('date','')
+
+                if normaliza(h) == normaliza(team_g):
+                    h_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
+                    a_show = a
+                elif normaliza(a) == normaliza(team_g):
+                    h_show = h
+                    a_show = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
+                else:
+                    h_show = h; a_show = a
+
+                ht_html = f"<span style='background:#E8E8E8;color:#0A2342;font-weight:900;border-radius:3px;padding:0 4px;margin:0 3px'>{ht}</span>"
+                if mins and mins!= "-":
+                    mins_txt = "".join([f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px;font-weight:900'>{m.strip()}</span>" for m in mins.split(",") if m.strip()])
+                else:
+                    mins_txt = "-"
+
+                html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:{col}'>{'✔' if ok else '✘'} [{label}] {h_show} {ft} {a_show} | {ht_html} Goles filtro: {mins_txt} | {date}</div>"
 
         # --- LISTADO RESUMEN POR LIGA ---
         html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
