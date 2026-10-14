@@ -2109,6 +2109,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         for team_g in equipos_a_check:
             n_team = normaliza(team_g)
             df_t = df_base_g[(df_base_g['HomeTeam'].apply(lambda x: normaliza(x)==n_team)) | (df_base_g['AwayTeam'].apply(lambda x: normaliza(x)==n_team))]
+            if cond_g_sel == "LOCAL":
+                df_t = df_t[df_t['HomeTeam'].apply(lambda x: normaliza(x)==n_team)]
+            elif cond_g_sel == "VISITANTE":
+                df_t = df_t[df_t['AwayTeam'].apply(lambda x: normaliza(x)==n_team)]
             if df_t.empty:
                 continue
             df_t = df_t.sort_values('Date', ascending=False).head(5)
