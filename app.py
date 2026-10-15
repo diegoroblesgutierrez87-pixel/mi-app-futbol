@@ -1812,26 +1812,30 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         st.caption("Selecciona partido futuro RESTO")
     else:
         partidos_pred_copy_r = []
-        partidos_a_iterar_r = partidos_sel_r if partidos_sel_r else ["MANUAL_ONLY| | " + " vs ".join(manuales_extra_r[:2]) + " | 0"]
+        partidos_a_iterar_r = partidos_sel_r if partidos_sel_r else (["MANUAL_ONLY"] if manuales_extra_r else [])
 
         for partido_str_r in partidos_a_iterar_r:
-            try:
-                partes_r = partido_str_r.split("|")
-                teams_part_r = partes_r[2].strip() if len(partes_r)>=3 else ""
-                if " vs " in teams_part_r:
-                    h_fut_r, a_fut_r = [x.strip() for x in teams_part_r.split(" vs ")]
-                else:
-                    continue
-            except: continue
-
             if "MANUAL_ONLY" in partido_str_r:
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 MANUAL RESTO: {', '.join(manuales_extra_r)}</div>", unsafe_allow_html=True)
                 equipos_a_mostrar_r = manuales_extra_r
+                h_fut_r = ""
+                a_fut_r = ""
             else:
+                try:
+                    partes_r = partido_str_r.split("|")
+                    teams_part_r = partes_r[2].strip() if len(partes_r)>=3 else ""
+                    if " vs " in teams_part_r:
+                        h_fut_r, a_fut_r = [x.strip() for x in teams_part_r.split(" vs ")]
+                    else:
+                        continue
+                except:
+                    continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} vs {a_fut_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
                 equipos_a_mostrar_r = [h_fut_r, a_fut_r]
-                if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r: equipos_a_mostrar_r.extend(equipos_manuales_1_r)
-                if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r: equipos_a_mostrar_r.extend(equipos_manuales_2_r)
+                if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r:
+                    equipos_a_mostrar_r.extend(equipos_manuales_1_r)
+                if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r:
+                    equipos_a_mostrar_r.extend(equipos_manuales_2_r)
 
             for nombre_eq_r in equipos_a_mostrar_r:
                 norm_eq_r = normaliza(nombre_eq_r)
@@ -1861,9 +1865,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     elif cond_loc_pred_r == "equipo visitante solamente sus partidos de visitante":
                         df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
                     elif cond_loc_pred_r == "Local en casa / Visitante fuera":
-                        if nombre_eq_r == h_fut_r:
+                        if 'h_fut_r' in locals() and nombre_eq_r == h_fut_r:
                             df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                        elif nombre_eq_r == a_fut_r:
+                        elif 'a_fut_r' in locals() and nombre_eq_r == a_fut_r:
                             df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
 
                 df_team_base_pred_r = df_team_r.copy()
