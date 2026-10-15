@@ -1460,46 +1460,24 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 equipos_a_mostrar = [h_fut, a_fut]
                 if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
                 if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
-            # --- TOGGLE MOSTRAR/OCULTAR POR EQUIPO FIX ---
-            if "ocultos_pred" not in st.session_state:
-                st.session_state.ocultos_pred = set()
-
             for nombre_eq in equipos_a_mostrar:
-                c_btn, c_lab = st.columns([1,5])
-                with c_btn:
-                    oculto = nombre_eq in st.session_state.ocultos_pred
-                    txt_btn = f"🚫 {nombre_eq[:10]}" if not oculto else f"👁️ {nombre_eq[:10]}"
-                    if st.button(txt_btn, key=f"toggle_pred_{nombre_eq}_{partido_str}", help="Ocultar/Mostrar equipo"):
-                        if oculto:
-                            st.session_state.ocultos_pred.discard(nombre_eq)
-                        else:
-                            st.session_state.ocultos_pred.add(nombre_eq)
-                        st.rerun()
-                with c_lab:
-                    if nombre_eq in st.session_state.ocultos_pred:
-                        st.caption(f"{nombre_eq} - oculto")
-                        continue
                 norm_eq = normaliza(nombre_eq)
-                eq_up = nombre_eq.upper().strip()
-                # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
-                df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
-                norm_eq = normaliza(nombre_eq)
-                eq_up = nombre_eq.upper().strip()
-                # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
-                df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
-                # fallback si viene con acento en futuro (Beşiktaş vs BESIKTAS)
-                if df_team.empty:
-                    df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
-                # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO + COMBINADO - FAST ---
-                if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
+            eq_up = nombre_eq.upper().strip()
+            # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
+            df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
+            # fallback si viene con acento en futuro (Beşiktaş vs BESIKTAS)
+            if df_team.empty:
+                df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
+            # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO + COMBINADO - FAST ---
+            if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
+                df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
+            elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
+                df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
+            elif cond_loc_pred == "Local en casa / Visitante fuera":
+                if nombre_eq == h_fut:
                     df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-                elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
+                elif nombre_eq == a_fut:
                     df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-                elif cond_loc_pred == "Local en casa / Visitante fuera":
-                    if nombre_eq == h_fut:
-                        df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-                    elif nombre_eq == a_fut:
-                        df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
             # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA - FAST ---
             if 'equipos_manuales_1' in locals() and nombre_eq in equipos_manuales_1:
                 if cond_manual_1 == "solo local":
@@ -2144,7 +2122,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         </button>
         """, height=55, scrolling=False)
 
-#########################################################################################################
+##########################
 
 with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
     @st.cache_data(show_spinner=False)
