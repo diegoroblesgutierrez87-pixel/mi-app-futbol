@@ -2274,9 +2274,14 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     mins_txt = "-"
 
                 raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
+                if raw_j == '-':
+                    # fallback si no hay mapeo fid->j, usa el orden del detalle para que no salga J-
+                    try:
+                        raw_j = str(n_margen - detalle[:n_margen].index(p))
+                    except:
+                        raw_j = '-'
                 
                 if not ok:
-                    # No cumple -> solo J6 / J3 vacio, en negro
                     html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>J{raw_j}</div>"
                 else:
                     jornada_txt = f"J{raw_j}"
