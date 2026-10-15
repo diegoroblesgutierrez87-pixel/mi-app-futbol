@@ -2587,8 +2587,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS 2", expanded=False
 
     c_lp1_r, c_lp2_r, c_lp3_r, c_lp4_r = st.columns([2,1,1,1])
     with c_lp4_r:
-        cond_loc_pred_resto = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_resto")
-        res_1p_tipo_resto = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_resto")
+        cond_loc_pred_resto = st.selectbox("Filtro RESTO", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_resto_2")
+        res_1p_tipo_resto = st.selectbox("Resultado 1ªP RESTO", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_resto_2")
         opciones_res_resto = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_resto = st.multiselect("Resultado 1ªP / 2ªP", opciones_res_resto, default=[], key="filtro_ht_ft_resto", placeholder="Ej: 0-0_1ªP")
         overs_sel_resto = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_resto", placeholder="Ej: 1P >0.5")
