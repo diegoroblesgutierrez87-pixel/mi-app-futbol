@@ -1737,7 +1737,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
     with c1r:
         ligas_pred_sel_r = st.multiselect("Ligas futuras RESTO", ligas_fut_r, default=[], key="ligas_pred_resto", placeholder="J1, K1, CSL, MLS, Brasil...")
     with c2r:
-        df_base_pred_r = df_futuro if not ligas_pred_sel_r else df_futuro[df_futuro['League_CSV'].isin(ligas_pred_sel_r)]
+        df_base_pred_r = df_futuro[df_futuro['League_CSV'].isin(ligas_fut_r)] if not ligas_pred_sel_r else df_futuro[df_futuro['League_CSV'].isin(ligas_pred_sel_r)]
         fechas_pred_r = sorted(df_base_pred_r['Date'].dropna().dt.date.unique())
         fechas_pred_str_r = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_r]
         fecha_pred_sel_r = st.selectbox("Fecha desde RESTO", fechas_pred_str_r, key="fecha_pred_resto")
@@ -2031,6 +2031,11 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
          COPIAR PREDICCION RESTO ({len(partidos_sel_r)} partidos)
         </button>
         """, height=55, scrolling=False)
+
+
+
+
+###############
 
 with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     st.caption("Precalculado - 8 partidos TODOS 6 cumplen / 5 LOCAL-VISITANTE 3 cumplen + 2 seguidos")
