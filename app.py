@@ -1151,7 +1151,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
             <div id="mega_msg" style="font-weight:900;color:#0f8105;text-align:center"></div>
             """
             components.html(mega_html, height=160)
-            
+       ###################################principio    hasta 1688 
 
 with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=False):
     import pathlib
@@ -1447,20 +1447,21 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     h_fut, a_fut = [x.strip() for x in teams_part.split(" vs ")]
                 else:
                     continue
-            except: continue
+            except:
+                continue
 
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO: {h_fut} vs {a_fut} | {partes[0].strip()}</div>", unsafe_allow_html=True)
 
-        if "MANUAL" in partido_str:
-            equipos_a_mostrar = []
-            if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
-            if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
-        else:
-            equipos_a_mostrar = [h_fut, a_fut]
-            if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
-            if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
-        for nombre_eq in equipos_a_mostrar:
-            norm_eq = normaliza(nombre_eq)
+            if "MANUAL" in partido_str:
+                equipos_a_mostrar = []
+                if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
+                if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
+            else:
+                equipos_a_mostrar = [h_fut, a_fut]
+                if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
+                if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
+            for nombre_eq in equipos_a_mostrar:
+                norm_eq = normaliza(nombre_eq)
             eq_up = nombre_eq.upper().strip()
             # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
             df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
