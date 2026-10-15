@@ -1460,9 +1460,27 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 equipos_a_mostrar = [h_fut, a_fut]
                 if 'equipos_manuales_1' in locals() and equipos_manuales_1: equipos_a_mostrar.extend(equipos_manuales_1)
                 if 'equipos_manuales_2' in locals() and equipos_manuales_2: equipos_a_mostrar.extend(equipos_manuales_2)
+            # --- TOGGLE MOSTRAR/OCULTAR POR EQUIPO FIX ---
+            if "ocultos_pred" not in st.session_state:
+                st.session_state.ocultos_pred = set()
+
             for nombre_eq in equipos_a_mostrar:
+                c_btn, c_lab = st.columns([1,5])
+                with c_btn:
+                    oculto = nombre_eq in st.session_state.ocultos_pred
+                    txt_btn = f"🚫 {nombre_eq[:10]}" if not oculto else f"👁️ {nombre_eq[:10]}"
+                    if st.button(txt_btn, key=f"toggle_pred_{nombre_eq}_{partido_str}", help="Ocultar/Mostrar equipo"):
+                        if oculto:
+                            st.session_state.ocultos_pred.discard(nombre_eq)
+                        else:
+                            st.session_state.ocultos_pred.add(nombre_eq)
+                        st.rerun()
+                with c_lab:
+                    if nombre_eq in st.session_state.ocultos_pred:
+                        st.caption(f"{nombre_eq} - oculto")
+                        continue
                 norm_eq = normaliza(nombre_eq)
-            eq_up = nombre_eq.upper().strip()
+                eq_up = nombre_eq.upper().strip()
             # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
             df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
             # fallback si viene con acento en futuro (Beşiktaş vs BESIKTAS)
