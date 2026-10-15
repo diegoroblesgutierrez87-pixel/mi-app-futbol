@@ -2160,7 +2160,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 # fallback normalizado
                 fid_to_jornada = team_fid_to_j.get(normaliza(team_g), {})
 
-            for p in [x for x in detalle[:n_margen] if x.get('ok', False)]:
+            for p in detalle[:n_margen]:
                 ok = p.get('ok', False)
                 label = "OK" if ok else "NO"
                 h = p.get('home',''); a = p.get('away','')
