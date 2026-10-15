@@ -1481,8 +1481,8 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         continue
                 norm_eq = normaliza(nombre_eq)
                 eq_up = nombre_eq.upper().strip()
-            # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
-            df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
+                # tu base ya es todo MAYUSCULAS y sin variantes internas, no hace falta apply
+                df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
             # fallback si viene con acento en futuro (Beşiktaş vs BESIKTAS)
             if df_team.empty:
                 df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
