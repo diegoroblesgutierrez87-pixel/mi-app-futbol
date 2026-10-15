@@ -2096,7 +2096,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     with c_cond_g:
         cond_g_sel = st.selectbox("Condición", ["TODOS","LOCAL","VISITANTE"], index=0, key="cond_g_ht")
     with c_ht:
-        goles_ht_sel = st.selectbox("GOLES HT 25-45", ["NO","SI"], index=0, key="goles_ht_25_45")
+        goles_ht_sel = st.selectbox("GOLES HT 25-45", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_ht_25_45")
     with c_7590:
         goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_75_90")
 
