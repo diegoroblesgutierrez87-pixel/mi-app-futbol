@@ -2360,7 +2360,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
                         else:
                             h_txt = h; a_txt = a
-                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt}{mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
@@ -2373,7 +2373,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif m1: mins_txt = " ".join(m1) + f"{ht_str}"
                         elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
                         else: mins_txt = f"{ht_str}"
-                        partidos_pred_copy_r.append(f"J{int(j)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
+                        partidos_pred_copy_r.append(f"J{int(j)}|{h} {hg}-{ag} {a} | {mins_txt}{estado}")
                     st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_r}</div>", unsafe_allow_html=True)
 
     if partidos_pred_copy_r:
