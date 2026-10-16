@@ -1491,26 +1491,26 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
                 # jornadas recientes - con huecos - FAST: base para J15,J14,J13 ANTES de filtrar por 0-0 / Overs
                 df_team_base_pred = df_team.copy()
-            if 'resultados_pred_sel' in locals() and resultados_pred_sel or 'filtro_ht_ft_unico_2026_v9' in st.session_state and st.session_state.get('filtro_ht_ft_unico_2026_v9'):
-                sel = st.session_state.get('filtro_ht_ft_unico_2026_v9', resultados_pred_sel if 'resultados_pred_sel' in locals() else [])
-                set_1p = set(); set_2p = set()
-                for s in sel:
-                    if "_1ªP" in s:
-                        try: a,b = s.replace("_1ªP","").split("-"); set_1p.add((int(a),int(b)))
-                        except: pass
-                    if "_2ªP" in s:
-                        try: a,b = s.replace("_2ªP","").split("-"); set_2p.add((int(a),int(b)))
-                        except: pass
-                if set_1p or set_2p:
-                    def _cumple_res_pred(rr):
-                        try:
-                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                        except: return False
-                        if set_1p and (hthg_, htag_) in set_1p: return True
-                        if set_2p and (hg_, ag_) in set_2p: return True
-                        return False
-                    df_team = df_team[df_team.apply(_cumple_res_pred, axis=1)]
+                if 'resultados_pred_sel' in locals() and resultados_pred_sel or 'filtro_ht_ft_unico_2026_v9' in st.session_state and st.session_state.get('filtro_ht_ft_unico_2026_v9'):
+                    sel = st.session_state.get('filtro_ht_ft_unico_2026_v9', resultados_pred_sel if 'resultados_pred_sel' in locals() else [])
+                    set_1p = set(); set_2p = set()
+                    for s in sel:
+                        if "_1ªP" in s:
+                            try: a,b = s.replace("_1ªP","").split("-"); set_1p.add((int(a),int(b)))
+                            except: pass
+                        if "_2ªP" in s:
+                            try: a,b = s.replace("_2ªP","").split("-"); set_2p.add((int(a),int(b)))
+                            except: pass
+                    if set_1p or set_2p:
+                        def _cumple_res_pred(rr):
+                            try:
+                                hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                                hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                            except: return False
+                            if set_1p and (hthg_, htag_) in set_1p: return True
+                            if set_2p and (hg_, ag_) in set_2p: return True
+                            return False
+                        df_team = df_team[df_team.apply(_cumple_res_pred, axis=1)]
 
             # --- FILTRO OVERS / UNDERS POR PARTE ---
             if 'overs_sel' in locals() and overs_sel:
