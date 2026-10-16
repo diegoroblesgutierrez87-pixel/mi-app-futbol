@@ -1569,14 +1569,14 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
-            if 'Jornada' not in df_team_base_pred.columns:
-                df_team_base_pred['Jornada'] = 1
-            if 'Jornada' not in df_team.columns:
-                df_team['Jornada'] = df_team_base_pred['Jornada'] if 'Jornada' in df_team_base_pred.columns else 1
-            # FIX ORDEN JORNADAS J9->J1 REAL
-            df_team_base_pred = df_team_base_pred.sort_values(['Jornada','Date'], ascending=[False, False])
-            df_team = df_team.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team.empty else df_team
-            jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
+                if 'Jornada' not in df_team_base_pred.columns:
+                    df_team_base_pred['Jornada'] = 1
+                if 'Jornada' not in df_team.columns:
+                    df_team['Jornada'] = df_team_base_pred['Jornada'] if 'Jornada' in df_team_base_pred.columns else 1
+                # FIX ORDEN JORNADAS J9->J1 REAL
+                df_team_base_pred = df_team_base_pred.sort_values(['Jornada','Date'], ascending=[False, False])
+                df_team = df_team.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team.empty else df_team
+                jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
             sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
             for j in jornadas:
                 d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty and 'Jornada' in df_team.columns else pd.DataFrame()
