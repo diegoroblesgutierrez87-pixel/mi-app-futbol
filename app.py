@@ -8,32 +8,27 @@ import matplotlib.pyplot as plt
 import io, base64
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
-# --- FIX SCROLL MOVIL - QUITA REINICIO AL TOCAR BORDE ARRIBA + FIX SCROLL EXPANDER PREDICCION ---
+# --- FIX SCROLL MOVIL - FIX REAL SIN BLOQUEO ---
 st.markdown("""
 <style>
 html, body {
-    overscroll-behavior-y: contain!important;
-    touch-action: pan-y;
+    overscroll-behavior-y: auto!important;
     -webkit-overflow-scrolling: touch;
+    touch-action: auto!important;
+    overflow-y: auto!important;
+    height: auto!important;
 }
-[data-testid="stAppViewContainer"] {
-    overscroll-behavior-y: contain!important;
-}
-[data-testid="stHeader"] {
-    overscroll-behavior: none!important;
+[data-testid="stAppViewContainer"], [data-testid="stAppViewContainer"] > section {
+    overflow-y: auto!important;
+    overscroll-behavior-y: auto!important;
 }
 div[data-testid="stExpanderDetails"] {
     max-height: none!important;
-    overflow-y: visible!important;
     overflow: visible!important;
-    -webkit-overflow-scrolling: auto!important;
-    touch-action: auto!important;
-    overscroll-behavior: auto!important;
-    overscroll-behavior-y: auto!important;
 }
 iframe {
-    touch-action: auto!important;
     overscroll-behavior: auto!important;
+    touch-action: auto!important;
 }
 #btn-top-float {
     position: fixed!important;
@@ -58,24 +53,9 @@ iframe {
 <div id="top-ancla"></div>
 <button id="btn-top-float" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 <script>
-// bloquea pull-to-refresh solo en el body, no dentro de expanders/iframes
-let startY = 0;
-let isInsideExpander = false;
-document.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY;
-    isInsideExpander =!!e.target.closest('[data-testid="stExpanderDetails"], iframe');
-}, {passive: true});
-document.addEventListener('touchmove', e => {
-    if (isInsideExpander) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
-    if (window.scrollY <= 0 && diff > 50) {
-        e.preventDefault();
-    }
-}, {passive: false});
 window.addEventListener('scroll', function() {
     const btn = document.getElementById('btn-top-float');
-    if (btn) btn.style.display = window.scrollY > 400? 'block' : 'none';
+    if (btn) btn.style.display = window.scrollY > 400 ? 'block' : 'none';
 });
 </script>
 """, unsafe_allow_html=True)
