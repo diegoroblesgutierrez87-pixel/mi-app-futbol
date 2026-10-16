@@ -1588,16 +1588,16 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     # si sigue vacio y solo habia J31, muestra los ultimos 15 partidos ahi mismo
                     if d_j_ok.empty and len(jornadas) == 1:
                         d_j_ok = df_team.sort_values('Date', ascending=False).head(15)
-                es_hueco = d_j_ok.empty
-                if es_hueco:
-                    # HUECO VACIO - sin ningun texto del otro partido
-                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
-                    continue
-                else:
-                    st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
-                d_j = d_j_ok
-                html_lineas = ""
+                    es_hueco = d_j_ok.empty
+                    if es_hueco:
+                        # HUECO VACIO - sin ningun texto del otro partido
+                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
+                        continue
+                    else:
+                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
+                    d_j = d_j_ok
+                    html_lineas = ""
                 for _, r in d_j.iterrows():
                     fid = str(r.get('fixture_id','')).split('.')[0]
 
