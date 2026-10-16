@@ -13,7 +13,7 @@ st.markdown("""
 <style>
 html, body {
     overscroll-behavior: none!important;
-    overscroll-behavior-y: contain!important;
+    overscroll-behavior-y: none!important;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y!important;
     overflow-y: auto!important;
@@ -82,56 +82,7 @@ window.addEventListener('scroll', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-st.markdown("""
-<style>
-html, body {
-    overscroll-behavior-y: auto!important;
-    -webkit-overflow-scrolling: touch;
-    touch-action: auto!important;
-    overflow-y: auto!important;
-    height: auto!important;
-}
-[data-testid="stAppViewContainer"], [data-testid="stAppViewContainer"] > section {
-    overflow-y: auto!important;
-    overscroll-behavior-y: auto!important;
-}
-div[data-testid="stExpanderDetails"] {
-    max-height: none!important;
-    overflow: visible!important;
-}
-iframe {
-    overscroll-behavior: auto!important;
-    touch-action: auto!important;
-}
-#btn-top-float {
-    position: fixed!important;
-    bottom: 20px!important;
-    right: 20px!important;
-    z-index: 999999!important;
-    background: #0A2342!important;
-    color: white!important;
-    border: none!important;
-    border-radius: 50%!important;
-    width: 56px!important;
-    height: 56px!important;
-    font-size: 26px!important;
-    font-weight: 900!important;
-    cursor: pointer!important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4)!important;
-    display: none;
-}
-#btn-top-float:hover { background: #0f8105!important; }
-#top-ancla { position: absolute; top: 0; }
-</style>
-<div id="top-ancla"></div>
-<button id="btn-top-float" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
-<script>
-window.addEventListener('scroll', function() {
-    const btn = document.getElementById('btn-top-float');
-    if (btn) btn.style.display = window.scrollY > 400 ? 'block' : 'none';
-});
-</script>
-""", unsafe_allow_html=True)
+########
 # --- UTILS ---
 MAPA_NORMALIZACION = {
     "Pusamania Borneo": "PUSAMANIA BORNEO",
