@@ -2626,17 +2626,28 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                             all_goals.append((m, True, 0))
 
                 if all_goals:
-                    parts = []
+                    mins_1p_parts = []
+                    mins_2p_parts = []
                     for m_str, is_filt_team, *_ in all_goals:
                         en_filtro = minuto_en_filtro(m_str, filtro_key)
                         bg = "background:#D3D3D3;border-radius:3px;" if en_filtro else ""
                         col = f"color:{row_color};font-weight:900;" if is_filt_team and 'row_color' in locals() else "color:#000;"
                         if not ok:
                             col = "color:#000;"
-                        parts.append(f"<span style='{bg}{col}padding:1px 4px;margin-right:2px'>{m_str}</span>")
-                    mins_txt = "".join(parts)
+                        span = f"<span style='{bg}{col}padding:1px 4px;margin-right:2px'>{m_str}</span>"
+                        try:
+                            num_m = int(''.join(filter(str.isdigit, m_str.split("'")[0])) or 0)
+                        except:
+                            num_m = 0
+                        if num_m <= 45:
+                            mins_1p_parts.append(span)
+                        else:
+                            mins_2p_parts.append(span)
+                    mins_1p_txt = "".join(mins_1p_parts)
+                    mins_2p_txt = "".join(mins_2p_parts)
                 else:
-                    mins_txt = "-"
+                    mins_1p_txt = "-"
+                    mins_2p_txt = "-"
 
                 raw_j = fid_to_jornada.get(str(p.get('fid','')), '-')
                 if raw_j == '-':
@@ -2674,7 +2685,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         else: row_color = "#CC0000"
                     else:
                         row_color = "#000000"
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} |</span> {ht_html} {mins_txt}<span style='color:#000'> | {date}</span></div>"
+                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} |</span> {ht_html} {mins_1p_txt} | {mins_2p_txt}<span style='color:#000'> | {date}</span></div>"
 
         # --- LISTADO RESUMEN ORDENADO POR LIGAS + OCULTAR/MOSTRAR ---
         mostrar_resumen_g = st.checkbox(f"👁️ Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
