@@ -1578,7 +1578,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         elif m1: mins_txt = " ".join(m1) + f" {ht_str}"
                         elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
                         else: mins_txt = f"{ht_str}"
-                        partidos_pred_copy_fix3.append(f"J{int(j_fix3)}|{h} {hg}-{ag} | {a} {mins_txt} | {estado}")
+                        partidos_pred_copy_fix3.append(f"J{int(j_fix3)}|{h} {hg}-{ag} | {a} {mins_txt}{estado}")
                     st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix3}</div>", unsafe_allow_html=True)
 
     if partidos_pred_copy_fix3:
