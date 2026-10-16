@@ -8,7 +8,80 @@ import matplotlib.pyplot as plt
 import io, base64
 
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
-# --- FIX SCROLL MOVIL - FIX REAL SIN BLOQUEO ---
+# --- FIX SCROLL MOVIL - ANTI-REFRESH ARRIBA SIN BLOQUEAR SCROLL ---
+st.markdown("""
+<style>
+html, body {
+    overscroll-behavior: none!important;
+    overscroll-behavior-y: contain!important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y!important;
+    overflow-y: auto!important;
+    height: auto!important;
+}
+[data-testid="stAppViewContainer"] {
+    overscroll-behavior: contain!important;
+    overscroll-behavior-y: contain!important;
+    overflow-y: auto!important;
+}
+[data-testid="stHeader"] {
+    overscroll-behavior: none!important;
+}
+div[data-testid="stExpanderDetails"] {
+    max-height: none!important;
+    overflow: visible!important;
+    -webkit-overflow-scrolling: auto!important;
+    touch-action: auto!important;
+    overscroll-behavior: auto!important;
+}
+iframe {
+    touch-action: auto!important;
+    overscroll-behavior: auto!important;
+}
+#btn-top-float {
+    position: fixed!important;
+    bottom: 20px!important;
+    right: 20px!important;
+    z-index: 999999!important;
+    background: #0A2342!important;
+    color: white!important;
+    border: none!important;
+    border-radius: 50%!important;
+    width: 56px!important;
+    height: 56px!important;
+    font-size: 26px!important;
+    font-weight: 900!important;
+    cursor: pointer!important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4)!important;
+    display: none;
+}
+#btn-top-float:hover { background: #0f8105!important; }
+#top-ancla { position: absolute; top: 0; }
+</style>
+<div id="top-ancla"></div>
+<button id="btn-top-float" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+<script>
+// ANTI REFRESH - SOLO SI ESTAS ARRIBA DEL TODO Y NO ESTAS DENTRO DE EXPANDER
+let startY = 0;
+document.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+    const inside = e.target.closest('[data-testid="stExpanderDetails"], [data-testid="stExpander"], iframe');
+    if (inside) return;
+    const curY = e.touches[0].clientY;
+    const diff = curY - startY;
+    // solo bloquea si estas en top 0 y tiras hacia abajo > 20px
+    if (window.scrollY <= 5 && diff > 20) {
+        e.preventDefault();
+    }
+}, {passive: false});
+window.addEventListener('scroll', function() {
+    const btn = document.getElementById('btn-top-float');
+    if (btn) btn.style.display = window.scrollY > 400 ? 'block' : 'none';
+});
+</script>
+""", unsafe_allow_html=True)
 st.markdown("""
 <style>
 html, body {
