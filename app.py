@@ -1303,11 +1303,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
 
     lista_hist_equipos_fix3 = sorted(pd.concat([df_fix3['HomeTeam'], df_fix3['AwayTeam']]).dropna().astype(str).unique().tolist())
 
-    if st.button("🧹 Limpiar solo manuales FIX3", key="btn_limpiar_solo_manuales_fix3", use_container_width=True):
-        for k in ["eq_manual_1_fix3","eq_manual_2_fix3"]:
-            if k in st.session_state:
-                del st.session_state[k]
-        st.rerun()
+    pass
 
     c_man1_fix3, c_man2_fix3 = st.columns(2)
     with c_man1_fix3:
