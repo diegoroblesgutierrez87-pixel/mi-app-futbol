@@ -1478,27 +1478,6 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                         df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
                     elif nombre_eq == a_fut:
                         df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-                # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA - FAST ---
-                if 'equipos_manuales_1' in locals() and nombre_eq in equipos_manuales_1:
-                    if cond_manual_1 == "solo local":
-                        df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-                    elif cond_manual_1 == "solo visitante":
-                        df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-                if 'equipos_manuales_2' in locals() and nombre_eq in equipos_manuales_2:
-                    if cond_manual_2 == "solo local":
-                        df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-                    elif cond_manual_2 == "solo visitante":
-                        df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-                # jornadas recientes - con huecos - FAST: base para J15,J14,J13 ANTES de filtrar por 0-0 / Overs
-                df_team_base_pred = df_team.copy()
-                df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-            elif cond_loc_pred == "equipo visitante solamente sus partidos de visitante" and nombre_eq == a_fut:
-                df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
-            elif cond_loc_pred == "Local en casa / Visitante fuera":
-                if nombre_eq == h_fut:
-                    df_team = df_team[df_team['HomeTeam'].astype(str).str.upper().str.strip() == eq_up]
-                elif nombre_eq == a_fut:
-                    df_team = df_team[df_team['AwayTeam'].astype(str).str.upper().str.strip() == eq_up]
             # --- FILTRO PARA MANUALES CARTAGENA / ANTEQUERA - FAST ---
             if 'equipos_manuales_1' in locals() and nombre_eq in equipos_manuales_1:
                 if cond_manual_1 == "solo local":
