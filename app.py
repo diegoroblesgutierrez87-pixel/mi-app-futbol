@@ -1512,54 +1512,54 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                             return False
                         df_team = df_team[df_team.apply(_cumple_res_pred, axis=1)]
 
-            # --- FILTRO OVERS / UNDERS POR PARTE ---
-            if 'overs_sel' in locals() and overs_sel:
-                def _cumple_overs_pred(rr):
-                    try:
-                        hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                        hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                    except:
-                        return False
-                    g1 = hthg_ + htag_
-                    g2 = (hg_ + ag_) - g1
-                    if g2 < 0: g2 = 0
-                    for o in overs_sel:
-                        if o == "1P >0.5" and not (g1 > 0.5): return False
-                        if o == "1P >1.5" and not (g1 > 1.5): return False
-                        if o == "1P >2.5" and not (g1 > 2.5): return False
-                        if o == "2P >0.5" and not (g2 > 0.5): return False
-                        if o == "2P >1.5" and not (g2 > 1.5): return False
-                        if o == "2P >2.5" and not (g2 > 2.5): return False
-                    return True
-                df_team = df_team[df_team.apply(_cumple_overs_pred, axis=1)]
+                # --- FILTRO OVERS / UNDERS POR PARTE - FIX DENTRO DEL FOR ---
+                if 'overs_sel' in locals() and overs_sel:
+                    def _cumple_overs_pred(rr):
+                        try:
+                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            return False
+                        g1 = hthg_ + htag_
+                        g2 = (hg_ + ag_) - g1
+                        if g2 < 0: g2 = 0
+                        for o in overs_sel:
+                            if o == "1P >0.5" and not (g1 > 0.5): return False
+                            if o == "1P >1.5" and not (g1 > 1.5): return False
+                            if o == "1P >2.5" and not (g1 > 2.5): return False
+                            if o == "2P >0.5" and not (g2 > 0.5): return False
+                            if o == "2P >1.5" and not (g2 > 1.5): return False
+                            if o == "2P >2.5" and not (g2 > 2.5): return False
+                        return True
+                    df_team = df_team[df_team.apply(_cumple_overs_pred, axis=1)]
 
-            # --- FILTRO 1ªP TIPO EMPATE / GANA / PIERDE ---
-            if 'res_1p_tipo' in locals() and res_1p_tipo != "TODOS":
-                def _cumple_1p_tipo(rr):
-                    try:
-                        hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                    except: return False
-                    hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
-                    if norm_eq == hn_:
-                        r_ = "GANA" if hthg_ > htag_ else "EMPATE" if hthg_ == htag_ else "PIERDE"
-                    elif norm_eq == an_:
-                        r_ = "GANA" if htag_ > hthg_ else "EMPATE" if htag_ == hthg_ else "PIERDE"
-                    else:
-                        return False
-                    if res_1p_tipo == "EMPATE": return r_ == "EMPATE"
-                    if res_1p_tipo == "GANA": return r_ == "GANA"
-                    if res_1p_tipo == "PIERDE": return r_ == "PIERDE"
-                    if res_1p_tipo == "EMPATEGANA": return r_ in ("EMPATE","GANA")
-                    if res_1p_tipo == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
-                    if res_1p_tipo == "GANAPIERDE": return r_ in ("GANA","PIERDE")
-                    return True
-                df_team = df_team[df_team.apply(_cumple_1p_tipo, axis=1)]
+                # --- FILTRO 1ªP TIPO EMPATE / GANA / PIERDE - FIX DENTRO DEL FOR ---
+                if 'res_1p_tipo' in locals() and res_1p_tipo != "TODOS":
+                    def _cumple_1p_tipo(rr):
+                        try:
+                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                        except: return False
+                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                        if norm_eq == hn_:
+                            r_ = "GANA" if hthg_ > htag_ else "EMPATE" if hthg_ == htag_ else "PIERDE"
+                        elif norm_eq == an_:
+                            r_ = "GANA" if htag_ > hthg_ else "EMPATE" if htag_ == hthg_ else "PIERDE"
+                        else:
+                            return False
+                        if res_1p_tipo == "EMPATE": return r_ == "EMPATE"
+                        if res_1p_tipo == "GANA": return r_ == "GANA"
+                        if res_1p_tipo == "PIERDE": return r_ == "PIERDE"
+                        if res_1p_tipo == "EMPATEGANA": return r_ in ("EMPATE","GANA")
+                        if res_1p_tipo == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
+                        if res_1p_tipo == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                        return True
+                    df_team = df_team[df_team.apply(_cumple_1p_tipo, axis=1)]
 
-            if df_team.empty:
-                st.caption(f"{nombre_eq} - sin historial en base actual")
-                continue
+                if df_team.empty:
+                    st.caption(f"{nombre_eq} - sin historial en base actual")
+                    continue
 
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq.upper()}</div>", unsafe_allow_html=True)
             if 'Jornada' not in df_team_base_pred.columns:
                 df_team_base_pred['Jornada'] = 1
             if 'Jornada' not in df_team.columns:
