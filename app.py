@@ -356,7 +356,7 @@ if df.empty:
 if 'show_partidos' not in st.session_state:
     st.session_state.show_partidos = False
 
-filtros = st.expander("FILTROS", expanded=True)
+filtros = st.expander("FILTROS", expanded=False)
 with filtros:
     if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
         st.session_state.show_partidos = not st.session_state.show_partidos
