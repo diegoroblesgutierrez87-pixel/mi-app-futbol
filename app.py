@@ -1573,13 +1573,21 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                     df_team_base_pred['Jornada'] = 1
                 if 'Jornada' not in df_team.columns:
                     df_team['Jornada'] = df_team_base_pred['Jornada'] if 'Jornada' in df_team_base_pred.columns else 1
-                # FIX ORDEN JORNADAS J9->J1 REAL
+                # FIX ORDEN JORNADAS J9->J1 REAL + FALLBACK SI SOLO HAY 1
                 df_team_base_pred = df_team_base_pred.sort_values(['Jornada','Date'], ascending=[False, False])
                 df_team = df_team.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team.empty else df_team
                 jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
+                # si solo hay 1 jornada (tu caso J31), coge las ultimas 15 jornadas por fecha
+                if len(jornadas) <= 1:
+                    jornadas = df_team_base_pred.sort_values('Date', ascending=False)['Jornada'].dropna().unique()[:15].tolist()
+                    if not jornadas:
+                        jornadas = df_team_base_pred.sort_values('Date', ascending=False).head(15)['Jornada'].fillna(1).unique()[:15].tolist() or [1]
                 sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
                 for j in jornadas:
                     d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty and 'Jornada' in df_team.columns else pd.DataFrame()
+                    # si sigue vacio y solo habia J31, muestra los ultimos 15 partidos ahi mismo
+                    if d_j_ok.empty and len(jornadas) == 1:
+                        d_j_ok = df_team.sort_values('Date', ascending=False).head(15)
                 es_hueco = d_j_ok.empty
                 if es_hueco:
                     # HUECO VACIO - sin ningun texto del otro partido
