@@ -1463,10 +1463,19 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
             for nombre_eq in equipos_a_mostrar:
                 norm_eq = normaliza(nombre_eq)
                 eq_up = nombre_eq.upper().strip()
-                # FIX KÖLN/Ö - usa normaliza siempre, no upper() directo
-                df_team = df[(df['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq)) | (df['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq))]
-                # fallback upper por si acaso
+                # FIX KÖLN Ö -> sin acentos para que KÖLN == KOLN == KOELN
+                def _strip_acc(s):
+                    try:
+                        return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
+                    except:
+                        return str(s)
+                norm_eq_clean = _strip_acc(norm_eq)
+                def _is_match(team_raw):
+                    t = _strip_acc(normaliza(team_raw))
+                    return t == norm_eq_clean or norm_eq_clean in t or t in norm_eq_clean
+                df_team = df[(df['HomeTeam'].apply(_is_match)) | (df['AwayTeam'].apply(_is_match))]
                 if df_team.empty:
+                    # ultimo fallback por upper
                     df_team = df[(df['HomeTeam'].astype(str).str.upper().str.strip() == eq_up) | (df['AwayTeam'].astype(str).str.upper().str.strip() == eq_up)]
                 # --- FILTRO LOCAL / VISITANTE FIX - CORREGIDO + COMBINADO - FAST ---
                 if cond_loc_pred == "equipo local solamente partidos de local" and nombre_eq == h_fut:
