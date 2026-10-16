@@ -2115,11 +2115,6 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
 
     # --- EQUIPOS MANUALES RESTO - AÑADIDO (igual que EUROPA) ---
     lista_hist_equipos_resto = sorted(pd.concat([df_r['HomeTeam'], df_r['AwayTeam']]).dropna().astype(str).unique().tolist())
-    if st.button("🧹 Limpiar solo manuales", key="btn_limpiar_solo_manuales_resto", use_container_width=True):
-        for k in ["eq_manual_1_resto","eq_manual_2_resto"]:
-            if k in st.session_state:
-                del st.session_state[k]
-        st.rerun()
     c_man1_r, c_man2_r = st.columns(2)
     with c_man1_r:
         equipos_manuales_1_r = st.multiselect("Equipos manuales 1", lista_hist_equipos_resto, default=[], key="eq_manual_1_resto", placeholder="Ej: Bahia, Flamengo...")
