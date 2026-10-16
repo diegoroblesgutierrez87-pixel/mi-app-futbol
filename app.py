@@ -1577,9 +1577,9 @@ with st.expander(" PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX", expanded=Fals
                 df_team_base_pred = df_team_base_pred.sort_values(['Jornada','Date'], ascending=[False, False])
                 df_team = df_team.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team.empty else df_team
                 jornadas = sorted(df_team_base_pred['Jornada'].dropna().unique(), reverse=True)[:15]
-            sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
-            for j in jornadas:
-                d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty and 'Jornada' in df_team.columns else pd.DataFrame()
+                sel_txt = ", ".join(sel) if 'sel' in locals() and sel else ""
+                for j in jornadas:
+                    d_j_ok = df_team[df_team['Jornada']==j].sort_values('Date', ascending=False) if not df_team.empty and 'Jornada' in df_team.columns else pd.DataFrame()
                 es_hueco = d_j_ok.empty
                 if es_hueco:
                     # HUECO VACIO - sin ningun texto del otro partido
