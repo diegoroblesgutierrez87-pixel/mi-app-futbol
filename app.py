@@ -1740,12 +1740,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
-    if st.button("🧹 Limpiar solo manuales FIX2", key="btn_limpiar_solo_manuales_fix2", use_container_width=True):
-        for k in ["eq_manual_1_fix2","eq_manual_2_fix2"]:
-            if k in st.session_state:
-                del st.session_state[k]
-        st.rerun()
-
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
         equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
