@@ -1529,7 +1529,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        ht_html = f"<span style='color:#0A2342;font-weight:900;background:#E8E8E8;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO ---
+                        if norm_eq_fix3 == hn:
+                            if hthg > htag: col_ht = "#0f8105"
+                            elif hthg < htag: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        elif norm_eq_fix3 == an:
+                            if htag > hthg: col_ht = "#0f8105"
+                            elif htag < hthg: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        else:
+                            col_ht = "#0A2342"
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         mins_1t = []; mins_2t = []
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
                         for ev in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
@@ -2056,7 +2067,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        ht_html = f"<span style='color:#0A2342;font-weight:900;background:#E8E8E8;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO ---
+                        if norm_eq_fix3 == hn:
+                            if hthg > htag: col_ht = "#0f8105"
+                            elif hthg < htag: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        elif norm_eq_fix3 == an:
+                            if htag > hthg: col_ht = "#0f8105"
+                            elif htag < hthg: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        else:
+                            col_ht = "#0A2342"
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         mins_1t = []; mins_2t = []
                         filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         for ev in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
@@ -2431,7 +2453,18 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        ht_html = f"<span style='color:#0A2342;font-weight:900;background:#E8E8E8;border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO ---
+                        if norm_eq_fix3 == hn:
+                            if hthg > htag: col_ht = "#0f8105"
+                            elif hthg < htag: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        elif norm_eq_fix3 == an:
+                            if htag > hthg: col_ht = "#0f8105"
+                            elif htag < hthg: col_ht = "#f31818"
+                            else: col_ht = "#8B4513"
+                        else:
+                            col_ht = "#0A2342"
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         mins_1t = []; mins_2t = []
                         filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         for ev in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
