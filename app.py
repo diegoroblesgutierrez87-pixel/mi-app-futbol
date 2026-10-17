@@ -2067,12 +2067,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        if norm_eq_fix3 == hn:
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 ---
+                        if norm_eq_fix2 == hn:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
-                        elif norm_eq_fix3 == an:
+                        elif norm_eq_fix2 == an:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
@@ -2453,12 +2453,12 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        if norm_eq_fix3 == hn:
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 ---
+                        if norm_eq_fix2 == hn:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
-                        elif norm_eq_fix3 == an:
+                        elif norm_eq_fix2 == an:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
