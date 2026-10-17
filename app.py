@@ -1593,6 +1593,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
 
 ###################
 ################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
 with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=False):
     import pathlib
 
@@ -1922,7 +1929,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                 # --- EDGE LIVE: RESULTADO EN MINUTO X - FIX POGON 2-2 ---
                 if res_live_tipo_fix2!= "TODOS" and MIN_LIVE_FIX2 is not None:
-                    def _strip_acc_live(s):
+                    def _strip_acc_l(s):
                         try:
                             return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
                         except:
@@ -1930,44 +1937,41 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     def _cumple_live_fix2(rr):
                         fid = str(rr.get('fixture_id','')).split('.')[0]
                         hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
-                        hn_c = _strip_acc_live(hn_); an_c = _strip_acc_live(an_)
+                        hn_c = _strip_acc_l(hn_); an_c = _strip_acc_l(an_)
+                        norm_eq_c = _strip_acc_l(norm_eq_fix2)
                         try:
                             hg_ft = int(float(rr.get('FTHG',0) or 0)); ag_ft = int(float(rr.get('FTAG',0) or 0))
                             hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
                         except:
                             hg_ft=0; ag_ft=0; hthg=0; htag=0
-                        evs = eventos_fix2.get(fid, [])
                         hg_live = 0; ag_live = 0
-                        evs_ok = 0
+                        evs = eventos_fix2.get(fid, [])
+                        cnt_ev = 0
                         for ev in evs:
                             if ev.get('m',0) > MIN_LIVE_FIX2: continue
                             if 'Missed' in ev.get('tipo',''): continue
-                            team_ev = _strip_acc_live(ev.get('team',''))
+                            team_ev = _strip_acc_l(ev.get('team',''))
                             tipo = ev.get('tipo','')
                             if 'Own Goal' in tipo:
-                                if team_ev == hn_c: ag_live += 1; evs_ok+=1
-                                elif team_ev == an_c: hg_live += 1; evs_ok+=1
+                                if team_ev == hn_c: ag_live += 1; cnt_ev+=1
+                                elif team_ev == an_c: hg_live += 1; cnt_ev+=1
                             else:
-                                if team_ev == hn_c: hg_live += 1; evs_ok+=1
-                                elif team_ev == an_c: ag_live += 1; evs_ok+=1
-                        total_goles = hg_ft + ag_ft
-                        # FALLBACK si eventos incompletos
-                        if evs_ok == 0 or (len(evs) < total_goles and total_goles>0):
+                                if team_ev == hn_c: hg_live += 1; cnt_ev+=1
+                                elif team_ev == an_c: ag_live += 1; cnt_ev+=1
+                        total = hg_ft + ag_ft
+                        # FALLBACK: si eventos incompletos, usa HT/FT
+                        if cnt_ev==0 or (len(evs) < total and total>0):
                             if MIN_LIVE_FIX2 <= 45:
-                                hg_live = hthg if hthg+htag>0 else hg_live
-                                ag_live = htag if hthg+htag>0 else ag_live
-                                # si HT es 2-2 y no hay eventos, asumimos EMPATE
-                                if hthg+htag>0 and evs_ok==0:
+                                if hthg+htag>0:
                                     hg_live = hthg; ag_live = htag
                             else:
-                                # >45 y FT==HT => no hubo goles 2ª parte
                                 if hg_ft == hthg and ag_ft == htag:
                                     hg_live = hg_ft; ag_live = ag_ft
-                                elif evs_ok==0:
+                                elif cnt_ev==0 and total>0:
                                     hg_live = hg_ft; ag_live = ag_ft
-                        if norm_eq_fix2 == hn_ or _strip_acc_live(norm_eq_fix2) == hn_c:
+                        if norm_eq_c == hn_c:
                             r_ = "GANA" if hg_live > ag_live else "EMPATE" if hg_live == ag_live else "PIERDE"
-                        elif norm_eq_fix2 == an_ or _strip_acc_live(norm_eq_fix2) == an_c:
+                        elif norm_eq_c == an_c:
                             r_ = "GANA" if ag_live > hg_live else "EMPATE" if ag_live == hg_live else "PIERDE"
                         else:
                             return False
@@ -2090,7 +2094,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         </button>
         """, height=55, scrolling=False)
 
-##########################
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+
 
 with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
     @st.cache_data(show_spinner=False)
