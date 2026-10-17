@@ -1737,6 +1737,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_fix2 = st.multiselect("Resultado 1ªP / 2ªP", opciones_res_fix2, default=[], key="filtro_ht_ft_unico_2026_v9_fix2", placeholder="Ej: 0-0_1ªP")
         overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
+        res_live_tipo_fix2 = st.selectbox("Resultado LIVE", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_fix2")
+        min_live_raw_fix2 = st.text_input("MIN LIVE", key="min_live_fix2", placeholder="Ej: 76")
 
     lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
@@ -1769,6 +1771,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         except: return None
     MIN_DESDE_PRED_FIX2 = _parse_min_pred_fix2(min_desde_pred_raw_fix2)
     MIN_HASTA_PRED_FIX2 = _parse_min_pred_fix2(min_hasta_pred_raw_fix2)
+    MIN_LIVE_FIX2 = _parse_min_pred_fix2(min_live_raw_fix2)
 
     if fecha_pred_sel_fix2!= "Todas":
         try:
@@ -1916,6 +1919,38 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if res_1p_tipo_fix2 == "GANAPIERDE": return r_ in ("GANA","PIERDE")
                         return True
                     df_team_fix2 = df_team_fix2[df_team_fix2.apply(_cumple_1p_tipo_fix2, axis=1)]
+
+                # --- EDGE LIVE: RESULTADO EN MINUTO X ---
+                if res_live_tipo_fix2!= "TODOS" and MIN_LIVE_FIX2 is not None:
+                    def _cumple_live_fix2(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                        hg_live = 0; ag_live = 0
+                        for ev in eventos_fix2.get(fid, []):
+                            if ev.get('m',0) > MIN_LIVE_FIX2: continue
+                            if 'Missed' in ev.get('tipo',''): continue
+                            team_ev = ev.get('team','')
+                            tipo = ev.get('tipo','')
+                            if 'Own Goal' in tipo:
+                                if team_ev == hn_: ag_live += 1
+                                elif team_ev == an_: hg_live += 1
+                            else:
+                                if team_ev == hn_: hg_live += 1
+                                elif team_ev == an_: ag_live += 1
+                        if norm_eq_fix2 == hn_:
+                            r_ = "GANA" if hg_live > ag_live else "EMPATE" if hg_live == ag_live else "PIERDE"
+                        elif norm_eq_fix2 == an_:
+                            r_ = "GANA" if ag_live > hg_live else "EMPATE" if ag_live == hg_live else "PIERDE"
+                        else:
+                            return False
+                        if res_live_tipo_fix2 == "EMPATE": return r_ == "EMPATE"
+                        if res_live_tipo_fix2 == "GANA": return r_ == "GANA"
+                        if res_live_tipo_fix2 == "PIERDE": return r_ == "PIERDE"
+                        if res_live_tipo_fix2 == "EMPATEGANA": return r_ in ("EMPATE","GANA")
+                        if res_live_tipo_fix2 == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
+                        if res_live_tipo_fix2 == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                        return True
+                    df_team_fix2 = df_team_fix2[df_team_fix2.apply(_cumple_live_fix2, axis=1)]
 
                 if df_team_fix2.empty:
                     st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
