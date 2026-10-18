@@ -1529,7 +1529,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO - [TAG-FIX3-HT-UNICO-NO-TOCAR-FIX2] ---
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO + SUBRAYADO GOLES FIX3 - [TAG-FIX3-HT-SUBRAYADO-FINAL-NO-TOCAR-FIX2] ---
                         try:
                             _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3) # 
                             _h_clean_fix3 = _strip_acc_fix3(h_norm_r) # 
@@ -1537,8 +1537,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
                             _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == hn)
-                            _is_away_fix3 = (norm_eq_fix3 == an)
+                            _is_home_fix3 = (norm_eq_fix3 == hn) # 
+                            _is_away_fix3 = (norm_eq_fix3 == an) # 
                         if _is_home_fix3:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
@@ -1549,6 +1549,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             else: col_ht = "#8B4513"
                         else:
                             col_ht = "#0A2342"
+                        #  SUBRAYADO HT DENTRO DEL CUADRO DE COLOR
+                        u_ht = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px;" # 
+                        if norm_eq_fix3 == hn: #  equipo es local -> subraya hthg
+                            ht_inner = f"<span style='{u_ht}'>{hthg}</span>-{htag}"
+                        elif norm_eq_fix3 == an: #  equipo es visitante -> subraya htag
+                            ht_inner = f"{hthg}-<span style='{u_ht}'>{htag}</span>"
+                        else:
+                            ht_inner = f"{hthg}-{htag}"
+                        ht_str = f"[{ht_inner}]"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         mins_1t = []; mins_2t = []
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
