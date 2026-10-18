@@ -1488,10 +1488,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
                     continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                # FIX3 ORDEN JORNADAS - CADIZ 18/10 debe ser J1 - FIX DEFINITIVO NaT
+                # FIX3 ORDEN JORNADAS - J10 = ultimo partido GRANADA vs CADIZ 18/10
                 def _parse_fecha_fix3_robusto(s):
                     try:
-                        # s puede ser ya datetime/NaT
                         if pd.isna(s):
                             return pd.NaT
                         d = pd.to_datetime(s, dayfirst=True, errors='coerce')
@@ -1501,13 +1500,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     except:
                         return pd.NaT
                 df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
-                # Si sigue NaT (viene del parquet), usa fixture_id como fecha (1569976 CADIZ es el mas alto = mas reciente)
                 df_team_base_pred_fix3['fid_num'] = pd.to_numeric(df_team_base_pred_fix3['fixture_id'], errors='coerce')
-                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[False, False])
+                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
                 df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
                 df_team_fix3['fid_num'] = pd.to_numeric(df_team_fix3['fixture_id'], errors='coerce') if not df_team_fix3.empty else 0
-                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[False, False]) if not df_team_fix3.empty else df_team_fix3
-                # Recalcula Jornada: J1 = mas reciente
+                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix3.empty else df_team_fix3
+                # Recalcula Jornada: J1 = mas antiguo (OVIEDO), J10 = mas reciente (CADIZ)
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
