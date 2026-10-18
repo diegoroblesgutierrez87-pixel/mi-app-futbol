@@ -3001,7 +3001,6 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
 
     @st.cache_data(show_spinner=False)
     def PRE_cargar_base():
-        # FIX: usa la misma lógica que tu get_base() - busca parquet, pkl y csv en repo y /mnt/data
         posibles_bases = [BASE, pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve(), pathlib.Path("/mnt/data")]
         df_p = None
         for p in posibles_bases:
@@ -3018,13 +3017,13 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
                 if (p / "base_partidos_europa.parquet").exists():
                     df_p = pd.read_parquet(p / "base_partidos_europa.parquet")
                     break
+                if (p / "base_partidos_europa.csv").exists():
+                    df_p = pd.read_csv(p / "base_partidos_europa.csv", on_bad_lines='skip')
+                    break
             except:
                 continue
-        
         if df_p is None or df_p.empty:
-            # último fallback: usa tu df global ya cargado
             df_p = df.copy()
-
         df_p['Date'] = pd.to_datetime(df_p['Date'], dayfirst=True, errors='coerce')
         df_p['HomeNorm'] = df_p['HomeTeam'].apply(PRE_norm)
         df_p['AwayNorm'] = df_p['AwayTeam'].apply(PRE_norm)
@@ -3143,10 +3142,10 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
 
     st.markdown("""
     <style>
-    .PRE-card{background:#111;border:2px solid #FFD700;border-radius:12px;padding:14px;margin:12px 0;color:#fff;font-family:monospace}
-    .PRE-title{background:#FFD700;color:#111;font-weight:900;padding:7px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
-    .PRE-row{padding:4px 0;border-bottom:1px dotted #333;font-size:11px;line-height:1.3}
-    .PRE-pct{color:#FFD700;font-weight:900}
+    .PRE-card{background:#FFFFFF;border:1px solid #D0D7DE;border-radius:10px;padding:14px;margin:12px 0;color:#1F2328;font-family:monospace;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+    .PRE-title{background:#0A2342;color:#FFFFFF;font-weight:900;padding:8px 12px;border-radius:8px;margin-bottom:10px;font-size:12px}
+    .PRE-row{padding:5px 0;border-bottom:1px solid #EEF1F4;font-size:11px;line-height:1.4;color:#24292F}
+    .PRE-pct{font-weight:900;color:#0A2342;background:#E8EEF7;padding:1px 6px;border-radius:4px}
     </style>
     """, unsafe_allow_html=True)
 
