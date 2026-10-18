@@ -2606,12 +2606,14 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
-                        if norm_eq_r == h_norm_r:
-                            h_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"; a_txt = a
-                        elif norm_eq_r == a_norm_r:
-                            h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
-                        else:
-                            h_txt = h; a_txt = a
+                        if norm_eq_r == h_norm_r: # [RESTO]
+                            h_txt = f"<span style='border-bottom:3.5px solid #000;padding-bottom:0px;'>{h}</span>" # [RESTO] negro
+                            a_txt = a # [RESTO]
+                        elif norm_eq_r == a_norm_r: # [RESTO]
+                            h_txt = h # [RESTO]
+                            a_txt = f"<span style='border-bottom:3.5px solid #000;padding-bottom:0px;'>{a}</span>" # [RESTO] negro
+                        else: # [RESTO]
+                            h_txt = h; a_txt = a # [RESTO]
                         # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 RESTO - [TAG-RESTO-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX2-FIX3] ---
                         u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
                         u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
