@@ -3039,8 +3039,8 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
             df['AwayNorm'] = df['AwayTeam'].apply(PRE_norm)
             df['HomeStrip'] = df['HomeTeam'].apply(PRE_strip)
             df['AwayStrip'] = df['AwayTeam'].apply(PRE_strip)
-            df['xG_H'] = df.get('HS', pd.Series([0]*len(df))).fillna(0)*0.1 + df.get('HST', pd.Series([0]*len(df))).fillna(0)*0.3
-            df['xG_A'] = df.get('AS', pd.Series([0]*len(df))).fillna(0)*0.1 + df.get('AST', pd.Series([0]*len(df))).fillna(0)*0.3
+            df['xG_H'] = pd.to_numeric(df.get('HS', 0), errors='coerce').fillna(0)*0.1 + pd.to_numeric(df.get('HST', 0), errors='coerce').fillna(0)*0.3
+            df['xG_A'] = pd.to_numeric(df.get('AS', 0), errors='coerce').fillna(0)*0.1 + pd.to_numeric(df.get('AST', 0), errors='coerce').fillna(0)*0.3
             st.caption(f"PRE cargado: {f} -> {len(df)} partidos")
             return df
         except Exception as e:
