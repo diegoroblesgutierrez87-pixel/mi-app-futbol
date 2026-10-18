@@ -1397,8 +1397,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                 norm_eq_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
                 def _is_match_fix3(team_raw):
                     t = _strip_acc_fix3(normaliza(team_raw))
-                    return t == norm_eq_clean_fix3 or norm_eq_clean_fix3 in t or t in norm_eq_clean_fix3
+                    return t == norm_eq_clean_fix3
                 df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].apply(_is_match_fix3)) | (df_fix3['AwayTeam'].apply(_is_match_fix3))]
+                if df_team_fix3.empty:
+                    df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if df_team_fix3.empty:
                     df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if cond_loc_pred_fix3 == "equipo local solamente partidos de local" and nombre_eq_fix3 == h_fut_fix3:
@@ -1529,7 +1531,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO ---
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
                         def _strip_acc_fix3(s):
                             try:
                                 import unicodedata
@@ -1540,8 +1542,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
                             _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
                             _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
+                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
+                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
                         except:
                             _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
                             _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
@@ -2082,7 +2084,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO ---
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
                         def _strip_acc_fix3(s):
                             try:
                                 import unicodedata
@@ -2093,8 +2095,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
                             _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
                             _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
+                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
+                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
                         except:
                             _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
                             _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
