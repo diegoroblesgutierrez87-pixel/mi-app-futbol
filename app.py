@@ -361,7 +361,91 @@ if df.empty:
 # --- UI ---
 if 'show_partidos' not in st.session_state:
     st.session_state.show_partidos = False
+#########################
 
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+##############
 filtros = st.expander("FILTROS", expanded=False)
 with filtros:
     if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
@@ -377,27 +461,18 @@ if not df_f.empty and 'Date' in df_f.columns:
     try:
         mask_new = df_f['League'].astype(str).str.contains('J1 League|J2 League', case=False, na=False)
         if mask_new.any():
-            df_f.loc[mask_new, 'Date'] = pd.to_datetime(df_f.loc[mask_new, 'Date'], dayfirst=True, errors='coerce')
-            df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))]
-            # RECALCULA JORNADA SOLO PARA ESAS LIGAS
-            df_f = df_f.sort_values(['League','Date']).copy()
-            for l_name in df_f[mask_new]['League'].dropna().unique():
-                g_mask = df_f['League'] == l_name
-                g_s = df_f[g_mask].sort_values('Date')
-                idxs = g_s.index.to_numpy()
-                n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
-                ppj = max(n_teams // 2, 1)
-                df_f.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
+            df_f = df_f[~mask_new | (df_f['Date'] >= pd.to_datetime('2026-08-07'))].copy()
     except:
         pass
 
 # --- FILTRO FECHA POR LIGA ---
-# saca las fechas que realmente existen en esa liga
 if not df_f.empty and 'Date' in df_f.columns:
-    # solo fechas validas
-    fechas_dt = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dropna()
-    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True) # mas reciente primero
-    fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
+    try:
+        fechas_unicas = sorted(df_f['Date'].dropna().dt.date.unique(), reverse=True)
+        fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
+    except:
+        fechas_unicas = []
+        fechas_str = ["Todas"]
 else:
     fechas_unicas = []
     fechas_str = ["Todas"]
@@ -405,11 +480,10 @@ else:
 with c4d:
     fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
 
-# filtra df_f desde esa fecha en adelante
 if fecha_sel_str != "Todas" and fechas_unicas:
     try:
         fecha_sel_date = pd.to_datetime(fecha_sel_str, dayfirst=True).date()
-        mask_fecha = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dt.date >= fecha_sel_date
+        mask_fecha = df_f['Date'].dt.date >= fecha_sel_date
         df_f = df_f[mask_fecha]
     except:
         pass
@@ -464,19 +538,15 @@ def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
     n_eq = normaliza(equipo)
-    # usa columna pre-calculada si existe
-    if 'HomeNorm' in dframe.columns:
-        if condicion == "Local":
-            return dframe[dframe['HomeNorm']==n_eq]
-        if condicion == "Visitante":
-            return dframe[dframe['AwayNorm']==n_eq]
-        return dframe[(dframe['HomeNorm']==n_eq) | (dframe['AwayNorm']==n_eq)]
-    # fallback por si es un df sin HomeNorm
+    if 'HomeNorm' not in dframe.columns:
+        dframe = dframe.copy()
+        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).map(normaliza)
+        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).map(normaliza)
     if condicion == "Local":
-        return dframe[dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)]
+        return dframe[dframe['HomeNorm']==n_eq]
     if condicion == "Visitante":
-        return dframe[dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq)]
-    return dframe[(dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
+        return dframe[dframe['AwayNorm']==n_eq]
+    return dframe[(dframe['HomeNorm']==n_eq) | (dframe['AwayNorm']==n_eq)]
 
 if eq1!= "Ninguno" and eq2!= "Ninguno":
     df_eq1 = filtrar_equipo(df_f, eq1, eq1_loc)
@@ -947,10 +1017,10 @@ elif st.session_state.show_partidos:
             except:
                 pass
             # FIX J10 ARRIBA = CADIZ ULTIMO - POR EQUIPO
-            df_eq = df_eq.sort_values('Date', ascending=True) if not df_eq.empty else df_eq
             if not df_eq.empty:
-                df_eq['Jornada'] = range(1, len(df_eq)+1)
-                df_eq = df_eq.sort_values('Date', ascending=False)
+                tmp2 = df_eq.sort_values(['Date','fixture_id'], ascending=[True, True]).copy()
+                tmp2['Jornada'] = range(1, len(tmp2)+1)
+                df_eq = tmp2.sort_values('Jornada', ascending=False)
             df_eq = df_eq.head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
@@ -974,11 +1044,13 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX J10 ARRIBA = CADIZ ULTIMO - GRANADA
-        df_mostrar = df_filtrada_min.sort_values('Date', ascending=True) if not df_filtrada_min.empty else df_filtrada_min
-        if not df_mostrar.empty:
-            df_mostrar['Jornada'] = range(1, len(df_mostrar)+1)
-            df_mostrar = df_mostrar.sort_values('Date', ascending=False)
+        # FIX J10 CADIZ ARRIBA - RECALCULA JORNADA POR FECHA
+        if not df_filtrada_min.empty:
+            tmp = df_filtrada_min.sort_values(['Date','fixture_id'], ascending=[True, True]).copy()
+            tmp['Jornada'] = range(1, len(tmp)+1)
+            df_mostrar = tmp.sort_values('Jornada', ascending=False)
+        else:
+            df_mostrar = df_filtrada_min
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
@@ -1039,7 +1111,43 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
     st.rerun()
 ##########################################
 ##########################################
-
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+##########################
+##############################
+#############################
+########################
 ##########################################
 with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     import requests, re, json, html
