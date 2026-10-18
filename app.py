@@ -1552,6 +1552,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         mins_1t = []; mins_2t = []
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
+                        # --- SUBRAYADO MINUTOS EQUIPO SELECCIONADO FIX3 - [TAG-FIX3-SUBRAYADO-MINUTOS-NO-TOCAR-FIX2] ---
                         for ev in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if 'Missed' in ev.get('tipo',''): continue
                             m = ev.get('m',-1); team_ev = ev['team']
@@ -1559,11 +1560,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             es_mio = norm_eq_fix3 in benef
                             col_min = col_main if es_mio else "#000"
                             peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                            #  subrayado solo mios
+                            sub_min = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:2px;" if es_mio else ""
                             en_rango = (MIN_DESDE_PRED_FIX3 is None or m >= MIN_DESDE_PRED_FIX3) and (MIN_HASTA_PRED_FIX3 is None or m <= MIN_HASTA_PRED_FIX3)
                             if filtro_act and en_rango:
-                                span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
+                                span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
                             else:
-                                span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
+                                span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:2px'> {m}'</span>"
                             if m <= 45: mins_1t.append(span)
                             else: mins_2t.append(span)
                         if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
@@ -1581,7 +1584,34 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
                         else:
                             h_txt = h; a_txt = a
-                        html_lineas_fix3 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt} | {mins_html} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        # --- SUBRAYADO GOLES FT Y HT DEL EQUIPO SELECCIONADO FIX3 - [TAG-FIX3-SUBRAYADO-GOLES-NO-TOCAR-FIX2] ---
+                        u_gol = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px;" # 
+                        if norm_eq_fix3 == hn: #  equipo es local
+                            hg_disp = f"<span style='{u_gol}'>{hg}</span>"
+                            ag_disp = f"{ag}"
+                            hthg_disp = f"<span style='{u_gol}'>{hthg}</span>"
+                            htag_disp = f"{htag}"
+                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            # reescribimos ht_str con subrayado
+                            ht_str = f"[{hthg_disp}-{htag_disp}]"
+                        elif norm_eq_fix3 == an: #  equipo es visitante
+                            hg_disp = f"{hg}"
+                            ag_disp = f"<span style='{u_gol}'>{ag}</span>"
+                            hthg_disp = f"{hthg}"
+                            htag_disp = f"<span style='{u_gol}'>{htag}</span>"
+                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            ht_str = f"[{hthg_disp}-{htag_disp}]"
+                        else:
+                            ft_txt = f"{hg}-{ag}"
+                            ht_str = f"[{hthg}-{htag}]"
+                        # recalcula ht_html con el nuevo ht_str ya subrayado
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                        # rearma mins_html ya con ht nuevo si hace falta
+                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html
+                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
+                        else: mins_html = ht_html
+                        html_lineas_fix3 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
