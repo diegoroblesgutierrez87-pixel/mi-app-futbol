@@ -476,12 +476,13 @@ if not df_f.empty and 'Date' in df_f.columns:
         pass
 
 # --- FILTRO FECHA POR LIGA ---
-# saca las fechas que realmente existen en esa liga
 if not df_f.empty and 'Date' in df_f.columns:
-    # solo fechas validas
-    fechas_dt = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dropna()
-    fechas_unicas = sorted(fechas_dt.dt.date.unique(), reverse=True) # mas reciente primero
-    fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
+    try:
+        fechas_unicas = sorted(df_f['Date'].dropna().dt.date.unique(), reverse=True)
+        fechas_str = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_unicas]
+    except:
+        fechas_unicas = []
+        fechas_str = ["Todas"]
 else:
     fechas_unicas = []
     fechas_str = ["Todas"]
@@ -489,11 +490,10 @@ else:
 with c4d:
     fecha_sel_str = st.selectbox("Desde fecha", fechas_str, key="fecha_desde")
 
-# filtra df_f desde esa fecha en adelante
 if fecha_sel_str != "Todas" and fechas_unicas:
     try:
         fecha_sel_date = pd.to_datetime(fecha_sel_str, dayfirst=True).date()
-        mask_fecha = pd.to_datetime(df_f['Date'], dayfirst=True, errors='coerce').dt.date >= fecha_sel_date
+        mask_fecha = df_f['Date'].dt.date >= fecha_sel_date
         df_f = df_f[mask_fecha]
     except:
         pass
@@ -1057,14 +1057,9 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX J10 CADIZ ARRIBA - ORDENA POR JORNADA NO POR DATE
+        # FIX J10 CADIZ ARRIBA - YA VIENE BIEN DE BASE, SOLO ORDENA
         if not df_filtrada_min.empty:
-            tmp = df_filtrada_min.copy()
-            tmp['Date_parsed'] = pd.to_datetime(tmp['Date'], dayfirst=True, errors='coerce')
-            tmp['fid_num'] = pd.to_numeric(tmp['fixture_id'], errors='coerce')
-            tmp = tmp.sort_values(['Date_parsed','fid_num'], ascending=[True, True], na_position='last')
-            tmp['Jornada'] = range(1, len(tmp)+1)
-            df_mostrar = tmp.sort_values('Jornada', ascending=False)
+            df_mostrar = df_filtrada_min.sort_values('Jornada', ascending=False)
         else:
             df_mostrar = df_filtrada_min
         if eq_refs_orig:
