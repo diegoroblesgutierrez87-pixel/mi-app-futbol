@@ -2580,25 +2580,27 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         else:
                             col_ht = "#0A2342"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        mins_1t = []; mins_2t = []
-                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
-                        for ev in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
-                            if 'Missed' in ev.get('tipo',''): continue
-                            m = ev.get('m',-1); team_ev = ev['team']
-                            es_mio = norm_eq_r in team_ev
-                            col_min = col_main if es_mio else "#000"
-                            peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                            en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
-                            if filtro_act and en_rango:
-                                span = f"<span style='color:{col_min};{peso};background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
-                            else:
-                                span = f"<span style='color:{col_min};{peso};margin-right:2px'> {m}'</span>"
-                            if m <= 45: mins_1t.append(span)
-                            else: mins_2t.append(span)
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        else: mins_html = ht_html
+                        mins_1t = []; mins_2t = [] # [RESTO]
+                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None) # [RESTO]
+                        u_min_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
+                        for ev in sorted(eventos_r.get(fid, []), key=lambda x: x['m']): # [RESTO]
+                            if 'Missed' in ev.get('tipo',''): continue # [RESTO]
+                            m = ev.get('m',-1); team_ev = ev['team'] # [RESTO]
+                            es_mio = norm_eq_r in team_ev # [RESTO]
+                            col_min = col_main if es_mio else "#000" # [RESTO]
+                            peso = "font-weight:900;" if es_mio else "font-weight:700;" # [RESTO]
+                            sub_min_r = u_min_black_r if es_mio else "" # [RESTO] solo mios
+                            en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R) # [RESTO]
+                            if filtro_act and en_rango: # [RESTO]
+                                span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>" # [RESTO]
+                            else: # [RESTO]
+                                span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:2px'> {m}'</span>" # [RESTO]
+                            if m <= 45: mins_1t.append(span) # [RESTO]
+                            else: mins_2t.append(span) # [RESTO]
+                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
+                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
+                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
+                        else: mins_html = ht_html # [RESTO]
                         def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_r == h_norm_r: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
                         elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
@@ -2610,7 +2612,37 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
                         else:
                             h_txt = h; a_txt = a
-                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 RESTO - [TAG-RESTO-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX2-FIX3] ---
+                        u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
+                        u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
+                        if norm_eq_r == h_norm_r: # [RESTO] local
+                            if hg == 0 and ag > 0: hg_disp = f"{hg}" # [RESTO]
+                            else: hg_disp = f"<span style='{u_black_r}'>{hg}</span>" # [RESTO]
+                            ag_disp = f"{ag}" # [RESTO]
+                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" # [RESTO]
+                            else: hthg_disp = f"<span style='{u_black_w_r}'>{hthg}</span>" # [RESTO]
+                            htag_disp = f"{htag}" # [RESTO]
+                            ft_txt = f"{hg_disp}-{ag_disp}" # [RESTO]
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # [RESTO]
+                        elif norm_eq_r == a_norm_r: # [RESTO] visitante
+                            hg_disp = f"{hg}" # [RESTO]
+                            if ag == 0 and hg > 0: ag_disp = f"{ag}" # [RESTO]
+                            else: ag_disp = f"<span style='{u_black_r}'>{ag}</span>" # [RESTO]
+                            hthg_disp = f"{hthg}" # [RESTO]
+                            if htag == 0 and hthg > 0: htag_disp = f"{htag}" # [RESTO]
+                            else: htag_disp = f"<span style='{u_black_w_r}'>{htag}</span>" # [RESTO]
+                            ft_txt = f"{hg_disp}-{ag_disp}" # [RESTO]
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # [RESTO]
+                        else:
+                            ft_txt = f"{hg}-{ag}" # [RESTO]
+                            ht_inner = f"{hthg}-{htag}" # [RESTO]
+                        ht_str = f"[{ht_inner}]" # [RESTO]
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # [RESTO]
+                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
+                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
+                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
+                        else: mins_html = ht_html # [RESTO]
+                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # [RESTO]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
