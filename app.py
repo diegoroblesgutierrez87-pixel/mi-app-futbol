@@ -1483,12 +1483,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
                     continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                # FIX3 ORDEN JORNADAS - ignora Jornada de liga, ordena por fecha real del equipo
-                df_team_base_pred_fix3['Date_parsed'] = pd.to_datetime(df_team_base_pred_fix3['Date'], dayfirst=True, errors='coerce')
+                # FIX3 ORDEN JORNADAS - ignora Jornada de liga, ordena por fecha real - FIX ISO 2026-10-18 para GRANADA vs CADIZ
+                def _parse_fecha_fix3_robusto(s):
+                    try:
+                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                        if pd.isna(d):
+                            d = pd.to_datetime(s, errors='coerce')
+                        return d
+                    except:
+                        return pd.NaT
+                df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
                 df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values('Date_parsed', ascending=False)
-                df_team_fix3['Date_parsed'] = pd.to_datetime(df_team_fix3['Date'], dayfirst=True, errors='coerce') if not df_team_fix3.empty else df_team_fix3.get('Date')
+                df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
                 df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False) if not df_team_fix3.empty else df_team_fix3
-                # Recalcula Jornada por equipo: J1 = mas reciente
+                # Recalcula Jornada: J1 = mas reciente (GRANADA vs CADIZ 18/10 debe ser J1)
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
