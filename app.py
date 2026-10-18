@@ -125,6 +125,8 @@ MAPA_NORMALIZACION = {
 }
 _MAPA_UPPER = {k.upper(): v for k, v in MAPA_NORMALIZACION.items()}
 
+from functools import lru_cache
+@lru_cache(maxsize=20000)
 def normaliza(s):
     if pd.isna(s): return ""
     raw = str(s).strip()
@@ -488,21 +490,16 @@ if fecha_sel_str != "Todas" and fechas_unicas:
     except:
         pass
 
-# Equipo lista más rápida - FIX DEDUP POR NORMALIZA
+# Equipo lista - BASE YA NORMALIZADA V5
 if not df_f.empty:
-    seen = {}
-    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
-        n = normaliza(t)
-        if n not in seen:
-            seen[n] = t.upper() # fuerza UPPER -> AREMA FC = Arema FC
-    equipos = sorted(seen.values())
+    equipos = sorted(pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str).str.upper().unique().tolist())
 else:
     equipos = []
 
 with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
 c4,c5 = filtros.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e.upper() != str(eq1).upper()])
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
@@ -533,14 +530,15 @@ def parse_min(v):
 MIN_DESDE = parse_min(min_desde_raw)
 MIN_HASTA = parse_min(min_hasta_raw)
 
-# --- FILTRO VECTORIZADO - FIX POR NORMALIZA + CACHE BLINDADO ---
+# --- FILTRO VECTORIZADO - BASE YA NORMALIZADA V5 ---
 def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
-    n_eq = normaliza(equipo)
+    n_eq = str(equipo).strip().upper()
     if 'HomeNorm' not in dframe.columns:
-        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).map(normaliza)
-        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).map(normaliza)
+        dframe = dframe.copy()
+        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).str.upper()
+        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).str.upper()
     if condicion == "Local":
         return dframe[dframe['HomeNorm']==n_eq]
     if condicion == "Visitante":
