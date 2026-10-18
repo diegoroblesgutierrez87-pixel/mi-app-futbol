@@ -1397,10 +1397,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                 norm_eq_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
                 def _is_match_fix3(team_raw):
                     t = _strip_acc_fix3(normaliza(team_raw))
-                    return t == norm_eq_clean_fix3
+                    return t == norm_eq_clean_fix3 or norm_eq_clean_fix3 in t or t in norm_eq_clean_fix3
                 df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].apply(_is_match_fix3)) | (df_fix3['AwayTeam'].apply(_is_match_fix3))]
-                if df_team_fix3.empty:
-                    df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if df_team_fix3.empty:
                     df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if cond_loc_pred_fix3 == "equipo local solamente partidos de local" and nombre_eq_fix3 == h_fut_fix3:
@@ -1423,15 +1421,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     elif cond_manual_2_fix3 == "solo visitante":
                         df_team_fix3 = df_team_fix3[df_team_fix3['AwayTeam'].apply(_is_match_fix3)]
                 df_team_base_pred_fix3 = df_team_fix3.copy()
-                if resultados_pred_sel_fix3:
+                if resultados_pred_sel_fix3: # [TAG-FIX3-SET-FINAL-UNICO-NO-TOCAR-FIX2]
                     sel_fix3 = resultados_pred_sel_fix3
                     set_1p_fix3 = set(); set_2p_fix3 = set()
                     for s in sel_fix3:
                         if "_1ªP" in s:
-                            try: a,b = s.replace("_1ªP","").split("-"); set_1p_fix3.add((int(a),int(b)))
+                            try: _x,_y = s.replace("_1ªP","").split("-"); set_1p_fix3.add((int(_x),int(_y))) # 
                             except: pass
                         if "_2ªP" in s:
-                            try: a,b = s.replace("_2ªP","").split("-"); set_2p_fix3.add((int(a),int(b)))
+                            try: _x,_y = s.replace("_2ªP","").split("-"); set_2p_fix3.add((int(_x),int(_y))) # 
                             except: pass
                     if set_1p_fix3 or set_2p_fix3:
                         def _cumple_res_pred_fix3(rr):
@@ -1531,22 +1529,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        def _strip_acc_fix3(s):
-                            try:
-                                import unicodedata
-                                return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-                            except:
-                                return str(s)
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO - [TAG-FIX3-HT-UNICO-NO-TOCAR-FIX2] ---
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                            _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
-                            _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
+                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3) # 
+                            _h_clean_fix3 = _strip_acc_fix3(h_norm_r) # 
+                            _a_clean_fix3 = _strip_acc_fix3(a_norm_r) # 
+                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
+                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
-                            _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
+                            _is_home_fix3 = (norm_eq_fix3 == hn)
+                            _is_away_fix3 = (norm_eq_fix3 == an)
                         if _is_home_fix3:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
@@ -1893,15 +1885,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
 
                 df_team_base_pred_fix2 = df_team_fix2.copy()
-                if resultados_pred_sel_fix2:
+                if resultados_pred_sel_fix2: # [TAG-FIX2-SET-UNICO-NO-TOCAR-FIX3] - [TAG-FIX2-SET-FINAL]
                     sel_fix2 = resultados_pred_sel_fix2
                     set_1p_fix2 = set(); set_2p_fix2 = set()
                     for s in sel_fix2:
                         if "_1ªP" in s:
-                            try: a,b = s.replace("_1ªP","").split("-"); set_1p_fix2.add((int(a),int(b)))
+                            try: _x,_y = s.replace("_1ªP","").split("-"); set_1p_fix2.add((int(_x),int(_y))) # 
                             except: pass
                         if "_2ªP" in s:
-                            try: a,b = s.replace("_2ªP","").split("-"); set_2p_fix2.add((int(a),int(b)))
+                            try: _x,_y = s.replace("_2ªP","").split("-"); set_2p_fix2.add((int(_x),int(_y))) # 
                             except: pass
                     if set_1p_fix2 or set_2p_fix2:
                         def _cumple_res_pred_fix2(rr):
@@ -2084,27 +2076,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        def _strip_acc_fix3(s):
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 CORREGIDO - [TAG-FIX2-HT-UNICO-NO-TOCAR-FIX3] ---
+                        def _strip_acc_fix2(s): # [FIX2-ONLY]
                             try:
-                                import unicodedata
                                 return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
                             except:
                                 return str(s)
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                            _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
-                            _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
+                            _nf_clean_fix2 = _strip_acc_fix2(norm_eq_fix2) # 
+                            _h_clean_fix2 = _strip_acc_fix2(h_norm_r) # 
+                            _a_clean_fix2 = _strip_acc_fix2(a_norm_r) # 
+                            _is_home_fix2 = (_nf_clean_fix2 == _h_clean_fix2) or (_nf_clean_fix2 in _h_clean_fix2) or (_h_clean_fix2 in _nf_clean_fix2)
+                            _is_away_fix2 = (_nf_clean_fix2 == _a_clean_fix2) or (_nf_clean_fix2 in _a_clean_fix2) or (_a_clean_fix2 in _nf_clean_fix2)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
-                            _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
-                        if _is_home_fix3:
+                            _is_home_fix2 = (norm_eq_fix2 == hn) # 
+                            _is_away_fix2 = (norm_eq_fix2 == an) # 
+                        if _is_home_fix2:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
-                        elif _is_away_fix3:
+                        elif _is_away_fix2:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
