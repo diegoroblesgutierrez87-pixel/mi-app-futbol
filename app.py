@@ -2447,27 +2447,12 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                         except: hg=0; ag=0
                         h_norm_r = normaliza(h); a_norm_r = normaliza(a)
-                        try:
-                            _norm_r = norm_eq_r
-                        except NameError:
-                            _norm_r = normaliza(nombre_eq_r)
-                        if _norm_r == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
-                        elif _norm_r == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
+                        if norm_eq_r == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
+                        elif norm_eq_r == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
                         else: col_main = "#000"
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        if _norm_r == h_norm_r:
-                            if hthg > htag: col_ht = "#0f8105"
-                            elif hthg < htag: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
-                        elif _norm_r == a_norm_r:
-                            if htag > hthg: col_ht = "#0f8105"
-                            elif htag < hthg: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
-                        else:
-                            col_ht = col_main
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
                         # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO ---
                         try:
                             _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
