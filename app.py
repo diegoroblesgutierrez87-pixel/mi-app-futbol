@@ -2799,7 +2799,29 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 fid_to_jornada = team_fid_to_j.get(normaliza(team_g), {})
 
             for p in detalle[:n_margen]:
-                ok = p.get('ok', False)
+                # FIX 30-45 REAL: recalcula ok con minutos_todos_det, ignora ok del CSV (que viene en 25-45)
+                _det_raw_fix = p.get('minutos_todos_det','[]')
+                try:
+                    _det_list_fix = json.loads(_det_raw_fix) if isinstance(_det_raw_fix, str) else _det_raw_fix
+                except:
+                    _det_list_fix = []
+                _ok_real = False
+                for _gd in _det_list_fix:
+                    try:
+                        _mn = int(_gd.get('min_num',0))
+                    except:
+                        _mn = 0
+                    if filtro_key == "HT" and 30 <= _mn <= 45:
+                        _ok_real = True
+                        break
+                    if filtro_key in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                        _ok_real = True
+                        break
+                    if filtro_key == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
+                        _ok_real = True
+                        break
+                ok = _ok_real
+
                 label = "OK" if ok else "NO"
                 h = p.get('home',''); a = p.get('away','')
                 ft = p.get('ft','0-0')
