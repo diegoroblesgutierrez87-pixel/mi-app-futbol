@@ -533,11 +533,14 @@ def parse_min(v):
 MIN_DESDE = parse_min(min_desde_raw)
 MIN_HASTA = parse_min(min_hasta_raw)
 
-# --- FILTRO VECTORIZADO - FIX POR NORMALIZA + CACHE ---
+# --- FILTRO VECTORIZADO - FIX POR NORMALIZA + CACHE BLINDADO ---
 def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
     n_eq = normaliza(equipo)
+    if 'HomeNorm' not in dframe.columns:
+        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).map(normaliza)
+        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).map(normaliza)
     if condicion == "Local":
         return dframe[dframe['HomeNorm']==n_eq]
     if condicion == "Visitante":
