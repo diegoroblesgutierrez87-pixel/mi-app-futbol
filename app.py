@@ -2987,11 +2987,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g))//6 + 500))
             components.html(bloque, height=h_g, scrolling=True)
             
-           # ================= BLOQUE PRE - 100% INDEPENDIENTE - 4 CSV - COLORES #111 + #FFD700 - [TAG-PRE-V1-COMPLETO-NO-TOCAR-FIX2-FIX3-RESTO] =================
+ # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
 with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
-    import pathlib, unicodedata, json
+    import pathlib, unicodedata, os
 
-    # --- UTILS PRE PROPIOS - NO USA normaliza() DE OTROS BLOQUES ---
     def PRE_strip(s):
         try: return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c)).upper().strip()
         except: return str(s).upper().strip()
@@ -2999,45 +2998,74 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
         if pd.isna(s): return ""
         return str(s).strip().upper()
 
+    def PRE_find_file(names):
+        # busca en todos los sitios posibles de Streamlit Cloud
+        search_roots = [
+            pathlib.Path("/mnt/data"),
+            pathlib.Path("."),
+            pathlib.Path(__file__).parent.resolve() if '__file__' in globals() else pathlib.Path("."),
+            pathlib.Path.cwd(),
+        ]
+        for root in search_roots:
+            for name in names:
+                p = root / name
+                if p.exists():
+                    return p
+        # lista lo que hay para debug
+        return None
+
     @st.cache_data(show_spinner=False)
     def PRE_cargar_partidos():
-        for p in [pathlib.Path("/mnt/data"), pathlib.Path(__file__).parent.resolve(), pathlib.Path(".")]:
-            f = p / "base_partidos.csv"
-            if f.exists():
-                try:
-                    df = pd.read_csv(f, on_bad_lines='skip')
-                    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-                    df['HomeNorm'] = df['HomeTeam'].apply(PRE_norm)
-                    df['AwayNorm'] = df['AwayTeam'].apply(PRE_norm)
-                    df['HomeStrip'] = df['HomeTeam'].apply(PRE_strip)
-                    df['AwayStrip'] = df['AwayTeam'].apply(PRE_strip)
-                    # xG simplificado
-                    df['xG_H'] = df['HS'].fillna(0)*0.1 + df['HST'].fillna(0)*0.3
-                    df['xG_A'] = df['AS'].fillna(0)*0.1 + df['AST'].fillna(0)*0.3
-                    return df
-                except: pass
-        return pd.DataFrame()
+        candidatos = ["base_partidos.csv","base_partidos_europa.csv","base_partidos_resto.csv","base_partidos.parquet","base_partidos_europa.parquet"]
+        f = PRE_find_file(candidatos)
+        if not f:
+            # debug: que hay en cada carpeta
+            try:
+                txt = []
+                for r in [pathlib.Path("/mnt/data"), pathlib.Path("."), pathlib.Path(__file__).parent.resolve()]:
+                    if r.exists():
+                        txt.append(f"{r}: {os.listdir(r)[:20]}")
+                st.error(f"No encuentro base_partidos. Busqué {candidatos}. Contenido:\n" + "\n".join(txt))
+            except:
+                st.error(f"No encuentro base_partidos. Busqué {candidatos} en /mnt/data, ./ y script dir")
+            return pd.DataFrame()
+        try:
+            if str(f).endswith(".parquet"):
+                df = pd.read_parquet(f)
+            else:
+                df = pd.read_csv(f, on_bad_lines='skip')
+            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+            df['HomeNorm'] = df['HomeTeam'].apply(PRE_norm)
+            df['AwayNorm'] = df['AwayTeam'].apply(PRE_norm)
+            df['HomeStrip'] = df['HomeTeam'].apply(PRE_strip)
+            df['AwayStrip'] = df['AwayTeam'].apply(PRE_strip)
+            df['xG_H'] = df.get('HS', pd.Series([0]*len(df))).fillna(0)*0.1 + df.get('HST', pd.Series([0]*len(df))).fillna(0)*0.3
+            df['xG_A'] = df.get('AS', pd.Series([0]*len(df))).fillna(0)*0.1 + df.get('AST', pd.Series([0]*len(df))).fillna(0)*0.3
+            st.caption(f"PRE cargado: {f} -> {len(df)} partidos")
+            return df
+        except Exception as e:
+            st.error(f"Error cargando {f}: {e}")
+            return pd.DataFrame()
 
     @st.cache_data(show_spinner=False)
     def PRE_cargar_goles():
-        for p in [pathlib.Path("/mnt/data"), pathlib.Path(__file__).parent.resolve(), pathlib.Path(".")]:
-            f = p / "base_goles.csv"
-            if f.exists():
-                try:
-                    dg = pd.read_csv(f, on_bad_lines='skip')
-                    dg['equipo_norm'] = dg['equipo'].apply(PRE_norm)
-                    dg['equipo_strip'] = dg['equipo'].apply(PRE_strip)
-                    return dg
-                except: pass
-        return pd.DataFrame()
+        candidatos = ["base_goles.csv","base_goles_europa.csv","base_goles_resto.csv"]
+        f = PRE_find_file(candidatos)
+        if not f:
+            return pd.DataFrame()
+        try:
+            dg = pd.read_csv(f, on_bad_lines='skip')
+            dg['equipo_norm'] = dg['equipo'].apply(PRE_norm)
+            dg['equipo_strip'] = dg['equipo'].apply(PRE_strip)
+            return dg
+        except:
+            return pd.DataFrame()
 
     PRE_df = PRE_cargar_partidos()
     PRE_goles = PRE_cargar_goles()
     if PRE_df.empty:
-        st.warning("No encuentro /mnt/data/base_partidos.csv")
         st.stop()
 
-    # --- CROQUIS NIVEL POR LIGA ---
     @st.cache_data(show_spinner=False)
     def PRE_nivel_liga(df):
         niv={}
@@ -3064,7 +3092,6 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
                 else: niv[(liga, team)]=4
         return niv
     PRE_niveles = PRE_nivel_liga(PRE_df)
-
     def PRE_get_nivel(liga, team_norm):
         return PRE_niveles.get((liga, team_norm), 2)
 
@@ -3074,44 +3101,34 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
         d=df[mask].copy()
         if liga_filtro: d=d[d['League']==liga_filtro]
         if d.empty: return None
-        # FILTRO LOCAL / VISITANTE
+        if cond=="LOCAL": d=d[(df['HomeNorm']==eq_norm)|(df['HomeStrip']==eq_strip) & (d['League']==liga_filtro if liga_filtro else True)]
+        if cond=="VISITANTE": d=d[(df['AwayNorm']==eq_norm)|(df['AwayStrip']==eq_strip)]
+        # correccion simple local/visit
         if cond=="LOCAL":
-            d=d[(d['HomeNorm']==eq_norm)|(d['HomeStrip']==eq_strip)]
+            d=df[mask].copy()
+            d=d[d['HomeNorm']==eq_norm] if (d['HomeNorm']==eq_norm).any() else d[d['HomeStrip']==eq_strip]
         elif cond=="VISITANTE":
-            d=d[(d['AwayNorm']==eq_norm)|(d['AwayStrip']==eq_strip)]
+            d=df[mask].copy()
+            d=d[d['AwayNorm']==eq_norm] if (d['AwayNorm']==eq_norm).any() else d[d['AwayStrip']==eq_strip]
+        if liga_filtro: d=d[d['League']==liga_filtro]
         if d.empty: return None
         d=d.sort_values('Date')
         ult4=d.tail(4)
-
-        # STATS BASICOS
-        tot=len(d)
-        btts=0; o05ht=o15ht=bttsht=o05=o15=o25=o35=0
-        g=p=e=0; gf1_sum=0; gf2_sum=0
-        # vs NIVEL
-        vs_nivel={1:[],2:[],3:[],4:[]}
-        # ESCENARIOS HT
-        c00=0; gol2_00=0; btts2_00=0
-        cEmp=0; gol2_Emp=0
-        cGan=0; mantGan=0; empGan=0; perGan=0
-        cPer=0; remPer=0; empPer=0; perPer=0
-
+        tot=len(d); btts=o05ht=o15ht=bttsht=o05=o15=o25=o35=g=p=e=0
+        gf1_sum=gf2_sum=0; vs_nivel={1:[],2:[],3:[],4:[]}
+        c00=gol2_00=btts2_00=cEmp=gol2_Emp=cGan=mantGan=empGan=perGan=cPer=remPer=empPer=perPer=0
         for _, r in d.iterrows():
             try:
                 fthg=int(float(r['FTHG'] or 0)); ftag=int(float(r['FTAG'] or 0))
                 hthg=int(float(r['HTHG'] or 0)); htag=int(float(r['HTAG'] or 0))
             except: continue
             es_local = (r['HomeStrip']==eq_strip or r['HomeNorm']==eq_norm)
-            gf = fthg if es_local else ftag
-            gc = ftag if es_local else fthg
-            gf_ht = hthg if es_local else htag
-            gc_ht = htag if es_local else hthg
-            # rival nivel
+            gf = fthg if es_local else ftag; gc = ftag if es_local else fthg
+            gf_ht = hthg if es_local else htag; gc_ht = htag if es_local else hthg
             rival_norm = r['AwayNorm'] if es_local else r['HomeNorm']
             rival_niv = PRE_get_nivel(r['League'], rival_norm)
-            vs_nivel[rival_niv].append({'gf':gf,'gc':gc,'btts':1 if fthg>0 and ftag>0 else 0})
-
-            gf1_sum+=gf_ht
-            gf2_sum+=max(0, gf-gf_ht)
+            vs_nivel[rival_niv].append({'btts':1 if fthg>0 and ftag>0 else 0})
+            gf1_sum+=gf_ht; gf2_sum+=max(0, gf-gf_ht)
             if fthg>0 and ftag>0: btts+=1
             if hthg+htag>0: o05ht+=1
             if hthg+htag>1: o15ht+=1
@@ -3123,7 +3140,6 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
             if gf>gc: g+=1
             elif gf==gc: e+=1
             else: p+=1
-            # ESCENARIOS
             if hthg==0 and htag==0:
                 c00+=1
                 if (fthg+ftag)-(hthg+htag)>0: gol2_00+=1
@@ -3141,8 +3157,6 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
                 if gf>gc: remPer+=1
                 elif gf==gc: empPer+=1
                 else: perPer+=1
-
-        # TREND ULTIMOS 4: pts ult2 - pts prev2
         pts_ult2=pts_prev2=0
         for _, r in ult4.tail(2).iterrows():
             try:
@@ -3160,15 +3174,10 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
                 if gf>gc: pts_prev2+=3
                 elif gf==gc: pts_prev2+=1
             except: pass
-        trend=pts_ult2-pts_prev2
-
-        # vs nivel stats
         vs_btts={}
         for niv in [1,2,3,4]:
             arr=vs_nivel[niv]
-            if arr: vs_btts[niv]=sum(x['btts'] for x in arr)/len(arr)*100
-            else: vs_btts[niv]=None
-
+            vs_btts[niv]=sum(x['btts'] for x in arr)/len(arr)*100 if arr else None
         return {
             'total':tot,'btts':btts/tot*100 if tot else 0,
             'o05ht':o05ht/tot*100 if tot else 0,'o15ht':o15ht/tot*100 if tot else 0,'bttsht':bttsht/tot*100 if tot else 0,
@@ -3179,95 +3188,57 @@ with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
             'cEmp':cEmp,'gol2_Emp':gol2_Emp/cEmp*100 if cEmp else 0,
             'cGan':cGan,'mantGan':mantGan/cGan*100 if cGan else 0,'empGan':empGan/cGan*100 if cGan else 0,'perGan':perGan/cGan*100 if cGan else 0,
             'cPer':cPer,'remPer':remPer/cPer*100 if cPer else 0,'empPer':empPer/cPer*100 if cPer else 0,'perPer':perPer/cPer*100 if cPer else 0,
-            'trend':trend,'vs_btts':vs_btts
+            'trend':pts_ult2-pts_prev2,'vs_btts':vs_btts
         }
 
-    # --- CSS PRE NEGRO AMARILLO ---
     st.markdown("""
     <style>
-    .PRE-card{background:#111111;border:2px solid #FFD700;border-radius:12px;padding:16px;margin:14px 0;color:#FFFFFF;font-family:monospace;box-shadow:0 0 10px rgba(255,215,0,0.2)}
-    .PRE-title{background:#FFD700;color:#111111;font-weight:900;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;text-transform:uppercase}
+    .PRE-card{background:#111111;border:2px solid #FFD700;border-radius:12px;padding:16px;margin:14px 0;color:#FFFFFF;font-family:monospace}
+    .PRE-title{background:#FFD700;color:#111111;font-weight:900;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px}
     .PRE-row{padding:6px 0;border-bottom:1px solid #333333;font-size:11px;line-height:1.5;color:#FFFFFF}
-    .PRE-pct{font-weight:900;color:#111111;background:#FFD700;padding:2px 7px;border-radius:4px;margin:0 2px}
+    .PRE-pct{font-weight:900;color:#111111;background:#FFD700;padding:2px 7px;border-radius:4px}
     .PRE-lab{color:#FFD700;font-weight:700}
     </style>
     """, unsafe_allow_html=True)
 
     ligas_pre = sorted(PRE_df['League'].dropna().unique())
     c1,c2,c3 = st.columns([2,2,2])
-    with c1: liga_pre = st.selectbox("PRE Liga", ligas_pre, key="PRE_liga_sel_v1")
+    with c1: liga_pre = st.selectbox("PRE Liga", ligas_pre, key="PRE_liga_sel_v2")
     df_l = PRE_df[PRE_df['League']==liga_pre]
     eqs_l = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().unique())
-    with c2: home_pre = st.selectbox("PRE Local", eqs_l, key="PRE_home_sel_v1")
-    with c3: away_pre = st.selectbox("PRE Visitante", [x for x in eqs_l if x!=home_pre], key="PRE_away_sel_v1")
+    with c2: home_pre = st.selectbox("PRE Local", eqs_l, key="PRE_home_sel_v2")
+    with c3: away_pre = st.selectbox("PRE Visitante", [x for x in eqs_l if x!=home_pre], key="PRE_away_sel_v2")
 
-    if st.button("PRE CALCULAR 8 ESCENARIOS", key="PRE_btn_calc_v1", use_container_width=True):
+    if st.button("PRE CALCULAR 8 ESCENARIOS", key="PRE_btn_calc_v2", use_container_width=True):
         hn=PRE_norm(home_pre); hs=PRE_strip(home_pre)
         an=PRE_norm(away_pre); ass=PRE_strip(away_pre)
-        n_h=PRE_get_nivel(liga_pre, hn)
-        n_a=PRE_get_nivel(liga_pre, an)
-
+        n_h=PRE_get_nivel(liga_pre, hn); n_a=PRE_get_nivel(liga_pre, an)
         s_h_loc = PRE_stats_equipo(PRE_df, hn, hs, "LOCAL", liga_pre)
-        s_h_all = PRE_stats_equipo(PRE_df, hn, hs, "TODOS", liga_pre)
         s_a_vis = PRE_stats_equipo(PRE_df, an, ass, "VISITANTE", liga_pre)
-        s_a_all = PRE_stats_equipo(PRE_df, an, ass, "TODOS", liga_pre)
-
-        s_h = s_h_loc if s_h_loc and s_h_loc['total']>=3 else s_h_all
-        s_a = s_a_vis if s_a_vis and s_a_vis['total']>=3 else s_a_all
-
+        s_h = s_h_loc if s_h_loc and s_h_loc['total']>=3 else PRE_stats_equipo(PRE_df, hn, hs, "TODOS", liga_pre)
+        s_a = s_a_vis if s_a_vis and s_a_vis['total']>=3 else PRE_stats_equipo(PRE_df, an, ass, "TODOS", liga_pre)
         if not s_h or not s_a:
-            st.error("PRE: sin datos suficientes")
-            st.stop()
-
-        # PESOS: 0.6 local/visit + 0.25 vs nivel rival + 0.15 trend
-        def PRE_vs_btts(team_stats, rival_nivel):
-            v = team_stats['vs_btts'].get(rival_nivel)
-            return v if v is not None else team_stats['btts']
-
-        btts_h_vs = PRE_vs_btts(s_h, n_a)
-        btts_a_vs = PRE_vs_btts(s_a, n_h)
-
-        # trend normalizado a %
-        trend_h_factor = 50 + s_h['trend']*10
-        trend_a_factor = 50 + s_a['trend']*10
-
-        btts_pred = (s_h['btts']*0.6 + btts_h_vs*0.25 + trend_h_factor*0.15)*0.55 + (s_a['btts']*0.6 + btts_a_vs*0.25 + trend_a_factor*0.15)*0.45
-
-        o05ht = (s_h['o05ht']*0.6 + trend_h_factor*0.15 + 50*0.25)*0.5 + (s_a['o05ht']*0.6 + trend_a_factor*0.15 + 50*0.25)*0.5
-        o15ht = (s_h['o15ht'] + s_a['o15ht'])/2
-        bttsht = (s_h['bttsht'] + s_a['bttsht'])/2
-        o25 = (s_h['o25'] + s_a['o25'])/2
-        o35 = (s_h['o35'] + s_a['o35'])/2
-
-        prob_h = (s_h['g'] + (100-s_a['g']))/2
-        prob_a = (s_a['g'] + (100-s_h['g']))/2
-        prob_x = max(0, 100-prob_h-prob_a)
-
+            st.error("PRE: sin datos"); st.stop()
+        def PRE_vs_btts(stt, rn):
+            v=stt['vs_btts'].get(rn); return v if v is not None else stt['btts']
+        btts_h_vs=PRE_vs_btts(s_h, n_a); btts_a_vs=PRE_vs_btts(s_a, n_h)
+        trend_h=50+s_h['trend']*10; trend_a=50+s_a['trend']*10
+        btts_pred = (s_h['btts']*0.6 + btts_h_vs*0.25 + trend_h*0.15)*0.55 + (s_a['btts']*0.6 + btts_a_vs*0.25 + trend_a*0.15)*0.45
+        o05ht = (s_h['o05ht']+s_a['o05ht'])/2; o15ht=(s_h['o15ht']+s_a['o15ht'])/2; bttsht=(s_h['bttsht']+s_a['bttsht'])/2
+        o25=(s_h['o25']+s_a['o25'])/2; o35=(s_h['o35']+s_a['o35'])/2
+        prob_h=(s_h['g']+(100-s_a['g']))/2; prob_a=(s_a['g']+(100-s_h['g']))/2; prob_x=max(0,100-prob_h-prob_a)
         html_pre = f"""
         <div class="PRE-card">
-          <div class="PRE-title">PRE {home_pre} (N{n_h} Loc:{s_h['total']} Trend:{s_h['trend']} GF1:{s_h['gf1_avg']:.1f} GF2:{s_h['gf2_avg']:.1f}) vs {away_pre} (N{n_a} Vis:{s_a['total']} Trend:{s_a['trend']} GF1:{s_a['gf1_avg']:.1f} GF2:{s_a['gf2_avg']:.1f}) | {liga_pre}</div>
-          <div class="PRE-row"><span class="PRE-lab">1. BTTS 90'</span> -> <span class="PRE-pct">{btts_pred:.0f}%</span> | H:{s_h['btts']:.0f}% (vs N{n_a}:{btts_h_vs:.0f}%) / A:{s_a['btts']:.0f}% (vs N{n_h}:{btts_a_vs:.0f}%) | Peso 0.6/0.25/0.15</div>
-          <div class="PRE-row"><span class="PRE-lab">2. GOLES 1P</span> -> Over0.5 <span class="PRE-pct">{o05ht:.0f}%</span> | Over1.5 {o15ht:.0f}% | BTTS HT {bttsht:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">3. FINAL + DOBLE</span> -> 1 <span class="PRE-pct">{prob_h:.0f}%</span> X {prob_x:.0f}% 2 {prob_a:.0f}% | 1X {(prob_h+prob_x):.0f}% X2 {(prob_a+prob_x):.0f}% 12 {(prob_h+prob_a):.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">4. GOLES TOTALES 90'</span> -> O0.5 {(s_h['o05']+s_a['o05'])/2:.0f}% O1.5 {(s_h['o15']+s_a['o15'])/2:.0f}% O2.5 <span class="PRE-pct">{o25:.0f}%</span> O3.5 {o35:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">5. SI 0-0 HT</span> ({s_h['c00']+s_a['c00']} casos) -> Gol 2P <span class="PRE-pct">{(s_h['gol2_00']+s_a['gol2_00'])/2:.0f}%</span> | BTTS 2P {(s_h['btts2_00']+s_a['btts2_00'])/2:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">6. SI EMPATE HT</span> ({s_h['cEmp']+s_a['cEmp']} casos) -> Gol 2P <span class="PRE-pct">{(s_h['gol2_Emp']+s_a['gol2_Emp'])/2:.0f}%</span></div>
-          <div class="PRE-row"><span class="PRE-lab">7. SI GANANDO HT</span> (H:{s_h['cGan']} A:{s_a['cGan']}) -> Mantiene <span class="PRE-pct">{(s_h['mantGan']+s_a['mantGan'])/2:.0f}%</span> Empata {(s_h['empGan']+s_a['empGan'])/2:.0f}% Pierde {(s_h['perGan']+s_a['perGan'])/2:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">8. SI PERDIENDO HT</span> (H:{s_h['cPer']} A:{s_a['cPer']}) -> Remonta <span class="PRE-pct">{(s_h['remPer']+s_a['remPer'])/2:.0f}%</span> Empata {(s_h['empPer']+s_a['empPer'])/2:.0f}% Pierde {(s_h['perPer']+s_a['perPer'])/2:.0f}%</div>
+          <div class="PRE-title">PRE {home_pre} (N{n_h} Loc:{s_h['total']} T:{s_h['trend']}) vs {away_pre} (N{n_a} Vis:{s_a['total']} T:{s_a['trend']}) | {liga_pre}</div>
+          <div class="PRE-row"><span class="PRE-lab">1. BTTS 90'</span> -> <span class="PRE-pct">{btts_pred:.0f}%</span> | H:{s_h['btts']:.0f}% vs N{n_a}:{btts_h_vs:.0f}% / A:{s_a['btts']:.0f}% vs N{n_h}:{btts_a_vs:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">2. 1P</span> -> O0.5 <span class="PRE-pct">{o05ht:.0f}%</span> O1.5 {o15ht:.0f}% BTTS HT {bttsht:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">3. FINAL</span> -> 1 {prob_h:.0f}% X {prob_x:.0f}% 2 {prob_a:.0f}% | 1X {(prob_h+prob_x):.0f}% X2 {(prob_a+prob_x):.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">4. TOTAL</span> -> O2.5 <span class="PRE-pct">{o25:.0f}%</span> O3.5 {o35:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">5. 0-0 HT</span> -> Gol2P {(s_h['gol2_00']+s_a['gol2_00'])/2:.0f}% BTTS2P {(s_h['btts2_00']+s_a['btts2_00'])/2:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">6. EMPATE HT</span> -> Gol2P {(s_h['gol2_Emp']+s_a['gol2_Emp'])/2:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">7. GANANDO HT</span> -> Mantiene {(s_h['mantGan']+s_a['mantGan'])/2:.0f}%</div>
+          <div class="PRE-row"><span class="PRE-lab">8. PERDIENDO HT</span> -> Remonta {(s_h['remPer']+s_a['remPer'])/2:.0f}% Empata {(s_h['empPer']+s_a['empPer'])/2:.0f}%</div>
         </div>
         """
         st.markdown(html_pre, unsafe_allow_html=True)
-        txt_copy = f"PRE {home_pre} vs {away_pre} | BTTS {btts_pred:.0f}% | 1P O0.5 {o05ht:.0f}% O1.5 {o15ht:.0f}% BTTS HT {bttsht:.0f}% | 1 {prob_h:.0f}% X {prob_x:.0f}% 2 {prob_a:.0f}% | Over2.5 {o25:.0f}% | 0-0 HT Gol2P {(s_h['gol2_00']+s_a['gol2_00'])/2:.0f}%"
-        st.code(txt_copy)
-        import html as _html
-        safe_txt = _html.escape(txt_copy)
-        import streamlit.components.v1 as components
-        components.html(f"""
-        <textarea id="txt_pre_v1" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pre_v1').value).then(()=>{{let b=document.getElementById('btn_pre_copy_v1'); b.innerText='✓ COPIADO'; b.style.background='#FFD700'; b.style.color='#111'; setTimeout(()=>{{b.innerText=' COPIAR PRE'; b.style.background='#111'; b.style.color='#FFD700'}},1200)}})"
-        id="btn_pre_copy_v1"
-        style="width:100%;background:#111;color:#FFD700;border:2px solid #FFD700;border-radius:8px;padding:12px;font-weight:900;cursor:pointer;">
-         COPIAR PRE {home_pre} vs {away_pre}
-        </button>
-        """, height=55, scrolling=False)
-# ================= FIN BLOQUE PRE V1 =================
+# ================= FIN BLOQUE PRE V2 =================
