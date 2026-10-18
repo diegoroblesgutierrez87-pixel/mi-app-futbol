@@ -1593,28 +1593,28 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
                         else:
                             h_txt = h; a_txt = a
-                        # --- SUBRAYADO GOLES FT Y HT DEL EQUIPO SELECCIONADO FIX3 - [TAG-FIX3-SUBRAYADO-GOLES-NO-TOCAR-FIX2] ---
-                        u_gol = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px;" # 
+                        # --- SUBRAYADO GOLES FT Y HT DEL EQUIPO SELECCIONADO FIX3 - [TAG-FIX3-FT-HT-SUBRAYADO-FINAL-V2-NO-TOCAR-FIX2] ---
+                        u_gol = "text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px;" # 
+                        u_gol_w = f"color:#fff;{u_gol}" #  para dentro del cuadro HT blanco
                         if norm_eq_fix3 == hn: #  equipo es local
-                            hg_disp = f"<span style='{u_gol}'>{hg}</span>"
-                            ag_disp = f"{ag}"
-                            hthg_disp = f"<span style='{u_gol}'>{hthg}</span>"
-                            htag_disp = f"{htag}"
-                            ft_txt = f"{hg_disp}-{ag_disp}"
-                            # reescribimos ht_str con subrayado
-                            ht_str = f"[{hthg_disp}-{htag_disp}]"
+                            hg_disp = f"<span style='{u_gol}'>{hg}</span>" # 
+                            ag_disp = f"{ag}" # 
+                            hthg_disp = f"<span style='{u_gol_w}'>{hthg}</span>" #  blanco dentro de HT
+                            htag_disp = f"<span style='color:#fff;'>{htag}</span>" # 
+                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
                         elif norm_eq_fix3 == an: #  equipo es visitante
-                            hg_disp = f"{hg}"
-                            ag_disp = f"<span style='{u_gol}'>{ag}</span>"
-                            hthg_disp = f"{hthg}"
-                            htag_disp = f"<span style='{u_gol}'>{htag}</span>"
-                            ft_txt = f"{hg_disp}-{ag_disp}"
-                            ht_str = f"[{hthg_disp}-{htag_disp}]"
+                            hg_disp = f"{hg}" # 
+                            ag_disp = f"<span style='{u_gol}'>{ag}</span>" # 
+                            hthg_disp = f"<span style='color:#fff;'>{hthg}</span>" # 
+                            htag_disp = f"<span style='{u_gol_w}'>{htag}</span>" # 
+                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
                         else:
-                            ft_txt = f"{hg}-{ag}"
-                            ht_str = f"[{hthg}-{htag}]"
-                        # recalcula ht_html con el nuevo ht_str ya subrayado
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                            ft_txt = f"{hg}-{ag}" # 
+                            ht_inner = f"{hthg}-{htag}" # 
+                        ht_str = f"[{ht_inner}]" # 
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>" # 
                         # rearma mins_html ya con ht nuevo si hace falta
                         if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html
