@@ -1483,15 +1483,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
                     continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                if 'Jornada' not in df_team_base_pred_fix3.columns:
-                    df_team_base_pred_fix3['Jornada'] = 1
-                if 'Jornada' not in df_team_fix3.columns:
-                    df_team_fix3['Jornada'] = df_team_base_pred_fix3['Jornada'] if 'Jornada' in df_team_base_pred_fix3.columns else 1
-                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Jornada','Date'], ascending=[False, False])
-                df_team_fix3 = df_team_fix3.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team_fix3.empty else df_team_fix3
-                jornadas_fix3 = sorted(df_team_base_pred_fix3['Jornada'].dropna().unique(), reverse=True)[:15]
-                if len(jornadas_fix3) <= 1:
-                    jornadas_fix3 = df_team_base_pred_fix3.sort_values('Date', ascending=False)['Jornada'].dropna().unique()[:15].tolist() or [1]
+                # FIX3 ORDEN JORNADAS - ignora Jornada de liga, ordena por fecha real del equipo
+                df_team_base_pred_fix3['Date_parsed'] = pd.to_datetime(df_team_base_pred_fix3['Date'], dayfirst=True, errors='coerce')
+                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values('Date_parsed', ascending=False)
+                df_team_fix3['Date_parsed'] = pd.to_datetime(df_team_fix3['Date'], dayfirst=True, errors='coerce') if not df_team_fix3.empty else df_team_fix3.get('Date')
+                df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False) if not df_team_fix3.empty else df_team_fix3
+                # Recalcula Jornada por equipo: J1 = mas reciente
+                df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
+                if not df_team_fix3.empty:
+                    df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
+                jornadas_fix3 = sorted(df_team_base_pred_fix3['Jornada'].dropna().unique())[:15]
                 for j_fix3 in jornadas_fix3:
                     d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
                     if d_j_ok_fix3.empty and len(jornadas_fix3) == 1:
