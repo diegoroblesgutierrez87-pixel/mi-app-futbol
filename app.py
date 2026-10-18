@@ -1008,11 +1008,9 @@ elif st.session_state.show_partidos:
                     df_eq = df_eq[df_eq['fixture_id'].astype(str).str.split('.').str[0].isin(fids_v)]
             except:
                 pass
-            # FIX J10 ARRIBA = CADIZ ULTIMO - POR EQUIPO
+            # FIX J10 ARRIBA = respeta Jornada base
             if not df_eq.empty:
-                tmp2 = df_eq.sort_values(['Date','fixture_id'], ascending=[True, True]).copy()
-                tmp2['Jornada'] = range(1, len(tmp2)+1)
-                df_eq = tmp2.sort_values('Jornada', ascending=False)
+                df_eq = df_eq.sort_values('Jornada', ascending=False)
             df_eq = df_eq.head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
@@ -1036,11 +1034,9 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX J10 CADIZ ARRIBA - RECALCULA JORNADA POR FECHA
+        # FIX J10 CADIZ ARRIBA - respeta Jornada base, no recalcula
         if not df_filtrada_min.empty:
-            tmp = df_filtrada_min.sort_values(['Date','fixture_id'], ascending=[True, True]).copy()
-            tmp['Jornada'] = range(1, len(tmp)+1)
-            df_mostrar = tmp.sort_values('Jornada', ascending=False)
+            df_mostrar = df_filtrada_min.sort_values('Jornada', ascending=False)
         else:
             df_mostrar = df_filtrada_min
         if eq_refs_orig:
