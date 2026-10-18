@@ -2824,7 +2824,20 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
             if liga_team_g not in resumen_ligas_g:
                 resumen_ligas_g[liga_team_g] = []
-            resumen_ligas_g[liga_team_g].append((team_g, cnt))
+            # JORNADAS para resumen: J23,J22,_,...
+            _fid_map = team_fid_to_j.get(team_g.upper().strip(), {}) or team_fid_to_j.get(normaliza(team_g), {})
+            _j_list = []
+            for _idx, _p in enumerate(_detalle_cnt[:n_margen]):
+                _is_ok = _checks_real[_idx] if _idx < len(_checks_real) else False
+                _rj = _fid_map.get(str(_p.get('fid','')), '-')
+                if _rj == '-':
+                    try:
+                        _rj = str(n_margen - _detalle_cnt[:n_margen].index(_p))
+                    except:
+                        _rj = '-'
+                _j_list.append(f"J{_rj}" if _is_ok else "_")
+            _j_str = ", ".join(_j_list) if _j_list else "-"
+            resumen_ligas_g[liga_team_g].append((team_g, cnt, _j_str))
 
             html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
 
@@ -3042,8 +3055,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
             for liga_name in sorted(resumen_ligas_g.keys()):
                 html_listado_g += f"<div style='font-weight:900;margin-top:12px;color:#fff;background:#000;padding:4px 6px;border-radius:3px'>{liga_name.upper()}</div>"
-                for team_r, cnt_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
-                    html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen})</div>"
+                for team_r, cnt_r, j_str_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
+                    html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen}) {j_str_r}</div>"
             html_listado_g += "</div>"
 
         if calificados_g == 0:
