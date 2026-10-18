@@ -2986,3 +2986,283 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             """
             h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g))//6 + 500))
             components.html(bloque, height=h_g, scrolling=True)
+            
+            
+            import streamlit as st
+import pandas as pd
+import pathlib
+import unicodedata
+
+# ================= BLOQUE PRE - TOTALMENTE INDEPENDIENTE =================
+# Prefijo PRE_ en TODO. No usar nada de otros bloques.
+
+def PRE_strip(s):
+    try:
+        return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c)).upper().strip()
+    except:
+        return str(s).upper().strip()
+
+def PRE_normaliza(s):
+    if pd.isna(s): return ""
+    return str(s).strip().upper()
+
+@st.cache_data(show_spinner=False)
+def PRE_cargar():
+    base = pathlib.Path("/mnt/data")
+    # intenta también en carpeta actual
+    for p in [base, pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
+        f = p / "base_partidos.csv"
+        if f.exists():
+            base = p
+            break
+    df_p = pd.read_csv(base / "base_partidos.csv", on_bad_lines='skip')
+    df_g = pd.read_csv(base / "goles_actual.csv", on_bad_lines='skip')
+    df_p['Date'] = pd.to_datetime(df_p['Date'], dayfirst=True, errors='coerce')
+    df_g['minuto'] = pd.to_numeric(df_g['minuto'], errors='coerce').fillna(0).astype(int)
+    df_p['HomeNorm'] = df_p['HomeTeam'].apply(PRE_normaliza)
+    df_p['AwayNorm'] = df_p['AwayTeam'].apply(PRE_normaliza)
+    df_p['HomeStrip'] = df_p['HomeTeam'].apply(PRE_strip)
+    df_p['AwayStrip'] = df_p['AwayTeam'].apply(PRE_strip)
+    df_g['team_norm'] = df_g['equipo'].apply(PRE_normaliza)
+    df_g['team_strip'] = df_g['equipo'].apply(PRE_strip)
+    return df_p, df_g
+
+def PRE_nivel_por_liga(df_p):
+    # Calcula nivel 1-4 por liga según pts (3 pts victoria)
+    niveles = {}
+    for liga, sub in df_p.groupby('League'):
+        tabla = {}
+        for _, r in sub.iterrows():
+            h = r['HomeNorm']; a = r['AwayNorm']
+            for t in [h,a]:
+                if t not in tabla: tabla[t] = {'pts':0,'gf':0,'gc':0,'pj':0}
+            tabla[h]['pj']+=1; tabla[a]['pj']+=1
+            tabla[h]['gf']+= int(r['FTHG'] or 0); tabla[h]['gc']+= int(r['FTAG'] or 0)
+            tabla[a]['gf']+= int(r['FTAG'] or 0); tabla[a]['gc']+= int(r['FTHG'] or 0)
+            if r['FTHG']>r['FTAG']: tabla[h]['pts']+=3
+            elif r['FTHG']<r['FTAG']: tabla[a]['pts']+=3
+            else: tabla[h]['pts']+=1; tabla[a]['pts']+=1
+        # ordena por pts
+        orden = sorted(tabla.items(), key=lambda x: (x[1]['pts'], x[1]['gf']-x[1]['gc']), reverse=True)
+        n = len(orden)
+        for idx,(team,_) in enumerate(orden):
+            if idx < n*0.2: niveles[(liga, team)] = 1
+            elif idx < n*0.5: niveles[(liga, team)] = 2
+            elif idx < n*0.8: niveles[(liga, team)] = 3
+            else: niveles[(liga, team)] = 4
+    return niveles
+
+def PRE_stats_equipo(df_p, equipo_norm, equipo_strip, condicion="TODOS", nivel_rival=None, niveles=None, liga=None):
+    # condicion: TODOS, LOCAL, VISITANTE
+    # filtra por equipo
+    mask = (df_p['HomeStrip']==equipo_strip) | (df_p['AwayStrip']==equipo_strip)
+    if mask.sum()==0:
+        mask = (df_p['HomeNorm']==equipo_norm) | (df_p['AwayNorm']==equipo_norm)
+    d = df_p[mask].copy()
+    if d.empty: return None
+    if condicion=="LOCAL":
+        d = d[d['HomeStrip']==equipo_strip]
+        if d.empty: d = df_p[df_p['HomeNorm']==equipo_norm]
+        d = d[d['HomeNorm']==equipo_norm] if not d.empty else d
+    elif condicion=="VISITANTE":
+        d = d[d['AwayStrip']==equipo_strip]
+        if d.empty: d = df_p[df_p['AwayNorm']==equipo_norm]
+        d = d[d['AwayNorm']==equipo_norm] if not d.empty else d
+
+    # filtro vs nivel rival si se pide
+    if nivel_rival and niveles and liga:
+        def rival_nivel(r):
+            # rival del equipo en ese partido
+            if r['HomeStrip']==equipo_strip or r['HomeNorm']==equipo_norm:
+                rival = r['AwayNorm']
+            else:
+                rival = r['HomeNorm']
+            return niveles.get((liga, rival), 0)
+        d['_nivel_rival'] = d.apply(rival_nivel, axis=1)
+        d = d[d['_nivel_rival']==nivel_rival]
+
+    if d.empty: return None
+    total = len(d)
+    # últimos 4 para racha
+    d_ord = d.sort_values('Date')
+    ult4 = d_ord.tail(4)
+
+    def es_local(r): return r['HomeStrip']==equipo_strip or r['HomeNorm']==equipo_norm
+
+    btts = 0; over05_ht=0; over15_ht=0; btts_ht=0; over05_ft=0; over15_ft=0; over25_ft=0; over35_ft=0
+    g=0; e=0; p=0
+    goles_1p=0; goles_2p=0
+    # escenarios HT
+    casos_00_ht=0; casos_emp_ht=0; casos_gan_ht=0; casos_per_ht=0
+    # resultados después de esos casos
+    goles_2p_si_00=0; btts_2p_si_00=0
+    goles_2p_si_emp=0
+    mantiene_si_gana=0; pierde_si_gana=0
+    remonta_si_pierde=0; empata_si_pierde=0
+
+    for _, r in d.iterrows():
+        fthg=int(r['FTHG'] or 0); ftag=int(r['FTAG'] or 0)
+        hthg=int(r['HTHG'] or 0); htag=int(r['HTAG'] or 0)
+        gf = fthg if es_local(r) else ftag
+        gc = ftag if es_local(r) else fthg
+        gf_ht = hthg if es_local(r) else htag
+        gc_ht = htag if es_local(r) else hthg
+
+        if fthg>0 and ftag>0: btts+=1
+        if hthg+htag>0: over05_ht+=1
+        if hthg+htag>1: over15_ht+=1
+        if hthg>0 and htag>0: btts_ht+=1
+        if fthg+ftag>0: over05_ft+=1
+        if fthg+ftag>1: over15_ft+=1
+        if fthg+ftag>2: over25_ft+=1
+        if fthg+ftag>3: over35_ft+=1
+        if gf>gc: g+=1
+        elif gf==gc: e+=1
+        else: p+=1
+        goles_1p+= (hthg+htag)
+        goles_2p+= (fthg+ftag)-(hthg+htag)
+
+        # escenarios
+        if hthg==0 and htag==0:
+            casos_00_ht+=1
+            if (fthg+ftag)-(hthg+htag)>0: goles_2p_si_00+=1
+            if (fthg-hthg)>0 and (ftag-htag)>0: btts_2p_si_00+=1
+        if hthg==htag:
+            casos_emp_ht+=1
+            if (fthg+ftag)-(hthg+htag)>0: goles_2p_si_emp+=1
+        if gf_ht>gc_ht:
+            casos_gan_ht+=1
+            if gf>=gc: mantiene_si_gana+=1
+            else: pierde_si_gana+=1
+        if gf_ht<gc_ht:
+            casos_per_ht+=1
+            if gf>gc: remonta_si_pierde+=1
+            elif gf==gc: empata_si_pierde+=1
+
+    # racha tendencia
+    pts_ult2=0; pts_prev2=0
+    for i, (_, r) in enumerate(ult4.tail(2).iterrows()):
+        fthg=int(r['FTHG'] or 0); ftag=int(r['FTAG'] or 0)
+        gf = fthg if es_local(r) else ftag
+        gc = ftag if es_local(r) else fthg
+        if gf>gc: pts_ult2+=3
+        elif gf==gc: pts_ult2+=1
+    for _, r in ult4.head(2).iterrows():
+        fthg=int(r['FTHG'] or 0); ftag=int(r['FTAG'] or 0)
+        gf = fthg if es_local(r) else ftag
+        gc = ftag if es_local(r) else fthg
+        if gf>gc: pts_prev2+=3
+        elif gf==gc: pts_prev2+=1
+    trend = pts_ult2 - pts_prev2
+
+    return {
+        'total': total,
+        'btts_pct': btts/total*100 if total else 0,
+        'over05_ht': over05_ht/total*100 if total else 0,
+        'over15_ht': over15_ht/total*100 if total else 0,
+        'btts_ht': btts_ht/total*100 if total else 0,
+        'over05_ft': over05_ft/total*100 if total else 0,
+        'over15_ft': over15_ft/total*100 if total else 0,
+        'over25_ft': over25_ft/total*100 if total else 0,
+        'over35_ft': over35_ft/total*100 if total else 0,
+        'g_pct': g/total*100 if total else 0,
+        'e_pct': e/total*100 if total else 0,
+        'p_pct': p/total*100 if total else 0,
+        'casos_00_ht': casos_00_ht,
+        'goles_2p_si_00_pct': goles_2p_si_00/casos_00_ht*100 if casos_00_ht else 0,
+        'btts_2p_si_00_pct': btts_2p_si_00/casos_00_ht*100 if casos_00_ht else 0,
+        'casos_emp_ht': casos_emp_ht,
+        'goles_2p_si_emp_pct': goles_2p_si_emp/casos_emp_ht*100 if casos_emp_ht else 0,
+        'casos_gan_ht': casos_gan_ht,
+        'mantiene_gana_pct': mantiene_si_gana/casos_gan_ht*100 if casos_gan_ht else 0,
+        'casos_per_ht': casos_per_ht,
+        'remonta_pierde_pct': remonta_si_pierde/casos_per_ht*100 if casos_per_ht else 0,
+        'empata_pierde_pct': empata_si_pierde/casos_per_ht*100 if casos_per_ht else 0,
+        'trend': trend,
+        'gf_avg_1p': goles_1p/total if total else 0,
+    }
+
+# ---------- UI BLOQUE PRE ----------
+def PRE_render():
+    st.markdown("""
+    <style>
+    .PRE-card { background:#111; border:2px solid #FFD700; border-radius:10px; padding:12px; margin:10px 0; font-family:monospace; color:#fff; }
+    .PRE-title { background:#FFD700; color:#111; font-weight:900; padding:6px 10px; border-radius:6px; margin-bottom:8px; font-size:13px; }
+    .PRE-row { padding:3px 0; border-bottom:1px dotted #333; font-size:11px; }
+    .PRE-pct { font-weight:900; color:#FFD700; }
+    .PRE-good { color:#00FF7F; font-weight:900; }
+    .PRE-bad { color:#FF6347; font-weight:900; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    df_p, df_g = PRE_cargar()
+    niveles = PRE_nivel_por_liga(df_p)
+
+    ligas = sorted(df_p['League'].dropna().unique())
+    c1,c2,c3 = st.columns([2,2,2])
+    with c1: liga_sel = st.selectbox("PRE Liga", ligas, key="PRE_liga")
+    df_liga = df_p[df_p['League']==liga_sel]
+    equipos_liga = sorted(pd.concat([df_liga['HomeTeam'], df_liga['AwayTeam']]).dropna().unique())
+    with c2: home_sel = st.selectbox("PRE Local", equipos_liga, key="PRE_home")
+    with c3: away_sel = st.selectbox("PRE Visitante", [e for e in equipos_liga if e!=home_sel], key="PRE_away")
+
+    if st.button("PRE CALCULAR", key="PRE_calc", use_container_width=True):
+        home_norm = PRE_normaliza(home_sel); home_strip = PRE_strip(home_sel)
+        away_norm = PRE_normaliza(away_sel); away_strip = PRE_strip(away_sel)
+
+        # nivel rival
+        nivel_home = niveles.get((liga_sel, home_norm), 2)
+        nivel_away = niveles.get((liga_sel, away_norm), 2)
+
+        # stats LOCAL y VISITANTE puros
+        s_home_local = PRE_stats_equipo(df_p, home_norm, home_strip, "LOCAL", None, niveles, liga_sel)
+        s_home_all = PRE_stats_equipo(df_p, home_norm, home_strip, "TODOS", None, niveles, liga_sel)
+        s_away_visit = PRE_stats_equipo(df_p, away_norm, away_strip, "VISITANTE", None, niveles, liga_sel)
+        s_away_all = PRE_stats_equipo(df_p, away_norm, away_strip, "TODOS", None, niveles, liga_sel)
+
+        # peso 0.6 local/visit + 0.25 vs nivel + 0.15 trend
+        def PRE_peso(s_base, s_all):
+            if not s_base: return s_all
+            return s_base
+
+        s_h = PRE_peso(s_home_local, s_home_all)
+        s_a = PRE_peso(s_away_visit, s_away_all)
+
+        if not s_h or not s_a:
+            st.error("PRE Sin datos suficientes")
+            return
+
+        # CÁLCULOS PREDICCIÓN
+        btts_pred = (s_h['btts_pct']*0.6 + s_a['btts_pct']*0.4)
+        over05_ht_pred = (s_h['over05_ht'] + s_a['over05_ht'])/2
+        over15_ht_pred = (s_h['over15_ht'] + s_a['over15_ht'])/2
+        btts_ht_pred = (s_h['btts_ht'] + s_a['btts_ht'])/2
+        over25_pred = (s_h['over25_ft'] + s_a['over25_ft'])/2
+
+        # Doble oportunidad
+        prob_home = (s_h['g_pct'] + (100 - s_a['g_pct']))/2
+        prob_away = (s_a['g_pct'] + (100 - s_h['g_pct']))/2
+        prob_draw = 100 - prob_home - prob_away
+
+        html = f"""
+        <div class="PRE-card">
+          <div class="PRE-title">PRE: {home_sel} (N{nivel_home}) vs {away_sel} (N{nivel_away}) | {liga_sel} | Trend H:{s_h['trend']} A:{s_a['trend']}</div>
+
+          <div class="PRE-row">1. BTTS 90' : <span class="PRE-pct">{btts_pred:.0f}%</span> | H:{s_h['btts_pct']:.0f}% ({s_h['total']}) - A:{s_a['btts_pct']:.0f}% ({s_a['total']})</div>
+          <div class="PRE-row">2. GOLES 1P : Over 0.5 <span class="PRE-pct">{over05_ht_pred:.0f}%</span> | Over 1.5 {over15_ht_pred:.0f}% | BTTS HT {btts_ht_pred:.0f}%</div>
+          <div class="PRE-row">3. RESULTADO FINAL : 1 {prob_home:.0f}% X {prob_draw:.0f}% 2 {prob_away:.0f}% | 1X {(prob_home+prob_draw):.0f}% X2 {(prob_away+prob_draw):.0f}% 12 {(prob_home+prob_away):.0f}%</div>
+          <div class="PRE-row">4. GOLES TOTALES 90' : Over 0.5 {(s_h['over05_ft']+s_a['over05_ft'])/2:.0f}% | Over1.5 {(s_h['over15_ft']+s_a['over15_ft'])/2:.0f}% | Over2.5 {over25_pred:.0f}% | Over3.5 {(s_h['over35_ft']+s_a['over35_ft'])/2:.0f}%</div>
+          <div class="PRE-row">5. ESCENARIO 0-0 HT ({s_h['casos_00_ht']+s_a['casos_00_ht']} casos): Gol 2P {(s_h['goles_2p_si_00_pct']+s_a['goles_2p_si_00_pct'])/2:.0f}% | BTTS 2P {(s_h['btts_2p_si_00_pct']+s_a['btts_2p_si_00_pct'])/2:.0f}%</div>
+          <div class="PRE-row">6. ESCENARIO EMPATE HT ({s_h['casos_emp_ht']+s_a['casos_emp_ht']} casos): Gol 2P {(s_h['goles_2p_si_emp_pct']+s_a['goles_2p_si_emp_pct'])/2:.0f}%</div>
+          <div class="PRE-row">7. ESCENARIO GANANDO HT : Mantiene ventaja {(s_h['mantiene_gana_pct']+s_a['mantiene_gana_pct'])/2:.0f}% | Casos H:{s_h['casos_gan_ht']} A:{s_a['casos_gan_ht']}</div>
+          <div class="PRE-row">8. ESCENARIO PERDIENDO HT : Remonta {(s_h['remonta_pierde_pct']+s_a['remonta_pierde_pct'])/2:.0f}% | Empata {(s_h['empata_pierde_pct']+s_a['empata_pierde_pct'])/2:.0f}%</div>
+        </div>
+        """
+        st.markdown(html, unsafe_allow_html=True)
+
+        # Texto para copiar
+        txt_copy = f"PRE {home_sel} vs {away_sel} | BTTS 90 {btts_pred:.0f}% | 1P Over0.5 {over05_ht_pred:.0f}% Over1.5 {over15_ht_pred:.0f}% BTTS HT {btts_ht_pred:.0f}% | 1 {prob_home:.0f}% X {prob_draw:.0f}% 2 {prob_away:.0f}% | Over2.5 {over25_pred:.0f}% | 0-0 HT->Gol 2P {(s_h['goles_2p_si_00_pct']+s_a['goles_2p_si_00_pct'])/2:.0f}%"
+        st.code(txt_copy)
+
+if __name__ == "__main__":
+    PRE_render()
