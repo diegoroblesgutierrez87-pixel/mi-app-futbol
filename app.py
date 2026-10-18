@@ -2471,21 +2471,28 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 CORREGIDO ---
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX RESTO ---
+                        def _strip_acc_r(s):
+                            try:
+                                import unicodedata
+                                return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
+                            except:
+                                return str(s)
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                            _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
-                            _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
+                            _nf_clean = _strip_acc_r(norm_eq_r)
+                            _h_clean = _strip_acc_r(h_norm_r)
+                            _a_clean = _strip_acc_r(a_norm_r)
+                            _is_home = (_nf_clean == _h_clean) or (_nf_clean in _h_clean) or (_h_clean in _nf_clean)
+                            _is_away = (_nf_clean == _a_clean) or (_nf_clean in _a_clean) or (_a_clean in _nf_clean)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == hn)
-                            _is_away_fix3 = (norm_eq_fix3 == an)
-                        if _is_home_fix3:
-                            if hthg > htag: col_ht = "#0f8105"
-                            elif hthg < htag: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
-                        elif _is_away_fix3:
+                            _is_home = (norm_eq_r == h_norm_r)
+                            _is_away = (norm_eq_r == a_norm_r)
+
+                        if _is_home:
+                            if hthg > htag: col_ht = "#0f8105"  # GANA -> verde
+                            elif hthg < htag: col_ht = "#f31818" # PIERDE -> rojo
+                            else: col_ht = "#8B4513" # EMPATE -> marron
+                        elif _is_away:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
