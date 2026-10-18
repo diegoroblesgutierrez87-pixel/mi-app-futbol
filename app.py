@@ -2772,20 +2772,61 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         if equipos_sel_g:
             df_f = df_f[df_f['Team'].isin(equipos_sel_g)]
 
+        # HELPERS 30-45 REAL - fuera de bucle
+        def _parse_min_30_45_app(gd):
+            try:
+                mn = gd.get('min_num', None)
+                if mn not in (None, '', 0, '0'):
+                    return int(str(mn).split('+')[0].split('.')[0].strip() or 0)
+                import re
+                mtxt = str(gd.get('min','')).replace("'",'')
+                mm = re.findall(r'\d+', mtxt)
+                return int(mm[0]) if mm else 0
+            except:
+                return 0
+
+        def _ok_filtro_det(det_list, fk):
+            for _gd in det_list:
+                _mn = _parse_min_30_45_app(_gd)
+                if _mn == 0:
+                    continue
+                if fk == "HT" and 30 <= _mn <= 45:
+                    return True
+                if fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                    return True
+                if fk == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
+                    return True
+            return False
+
         html_g = ""
         calificados_g = len(df_f)
         resumen_ligas_g = {}
 
         for _, row in df_f.sort_values(['League','cnt_7'], ascending=[True, False]).iterrows():
             team_g = row['Team']
-            cnt = row['cnt_7'] if cond_g_sel=="TODOS" else row['cnt_4']
             liga_team_g = row['League']
+            # RECALCULO CNT REAL 30-45 - ignora cnt del CSV viejo 25-45
+            try:
+                _detalle_cnt = json.loads(row['partidos_json'])
+            except:
+                _detalle_cnt = []
+            _checks_real = []
+            for _p in _detalle_cnt:
+                _raw = _p.get('minutos_todos_det','[]')
+                try:
+                    _dl = json.loads(_raw) if isinstance(_raw, str) else (_raw or [])
+                except:
+                    _dl = []
+                _checks_real.append(_ok_filtro_det(_dl, filtro_key))
+            cnt_real_7 = sum(_checks_real)
+            cnt_real_4 = sum(_checks_real[:4])
+            cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
 
             if liga_team_g not in resumen_ligas_g:
                 resumen_ligas_g[liga_team_g] = []
             resumen_ligas_g[liga_team_g].append((team_g, cnt))
 
-            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 25-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
 
             try:
                 detalle = json.loads(row['partidos_json'])
