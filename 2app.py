@@ -393,6 +393,50 @@ if 'show_partidos' not in st.session_state:
 
 ######################################
 
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
 ####################
 
 
@@ -1010,11 +1054,16 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX J10 ARRIBA = CADIZ ULTIMO - GRANADA
-        df_mostrar = df_filtrada_min.sort_values('Date', ascending=True) if not df_filtrada_min.empty else df_filtrada_min
-        if not df_mostrar.empty:
-            df_mostrar['Jornada'] = range(1, len(df_mostrar)+1)
-            df_mostrar = df_mostrar.sort_values('Date', ascending=False)
+        # FIX J10 CADIZ ARRIBA - ORDENA POR JORNADA NO POR DATE
+        if not df_filtrada_min.empty:
+            tmp = df_filtrada_min.copy()
+            tmp['Date_parsed'] = pd.to_datetime(tmp['Date'], dayfirst=True, errors='coerce')
+            tmp['fid_num'] = pd.to_numeric(tmp['fixture_id'], errors='coerce')
+            tmp = tmp.sort_values(['Date_parsed','fid_num'], ascending=[True, True], na_position='last')
+            tmp['Jornada'] = range(1, len(tmp)+1)
+            df_mostrar = tmp.sort_values('Jornada', ascending=False)
+        else:
+            df_mostrar = df_filtrada_min
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
