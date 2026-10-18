@@ -1786,7 +1786,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_europa.parquet"
         df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
         if not df_e.empty:
-            df_e['Date'] = pd.to_datetime(df_e['Date'], errors='coerce')
+            def _parse_fecha_base_fix2(s):
+                try:
+                    d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                    if pd.isna(d):
+                        d = pd.to_datetime(s, errors='coerce')
+                    return d
+                except:
+                    return pd.NaT
+            df_e['Date'] = df_e['Date'].apply(_parse_fecha_base_fix2)
             df_e = df_e.sort_values(['League','Season','Date']).copy()
             df_e['Jornada'] = 0
             for (l_name, s_name), g_s in df_e.groupby(['League','Season'], sort=False):
@@ -2095,12 +2103,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} FIX2</div>", unsafe_allow_html=True)
-                if 'Jornada' not in df_team_base_pred_fix2.columns:
-                    df_team_base_pred_fix2['Jornada'] = 1
-                if 'Jornada' not in df_team_fix2.columns:
-                    df_team_fix2['Jornada'] = df_team_base_pred_fix2['Jornada'] if 'Jornada' in df_team_base_pred_fix2.columns else 1
-                df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values(['Jornada','Date'], ascending=[False, False])
-                df_team_fix2 = df_team_fix2.sort_values(['Jornada','Date'], ascending=[False, False]) if not df_team_fix2.empty else df_team_fix2
+                # FIX2 ORDEN J10 arriba = ultimo partido
+                def _parse_fecha_fix2_robusto(s):
+                    try:
+                        if pd.isna(s):
+                            return pd.NaT
+                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                        if pd.isna(d):
+                            d = pd.to_datetime(s, errors='coerce')
+                        return d
+                    except:
+                        return pd.NaT
+                df_team_base_pred_fix2['Date_parsed'] = df_team_base_pred_fix2['Date'].apply(_parse_fecha_fix2_robusto)
+                df_team_base_pred_fix2['fid_num'] = pd.to_numeric(df_team_base_pred_fix2['fixture_id'], errors='coerce')
+                df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
+                df_team_fix2['Date_parsed'] = df_team_fix2['Date'].apply(_parse_fecha_fix2_robusto) if not df_team_fix2.empty else df_team_fix2.get('Date')
+                df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
+                df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
+                df_team_base_pred_fix2['Jornada'] = range(1, len(df_team_base_pred_fix2)+1)
+                if not df_team_fix2.empty:
+                    df_team_fix2['Jornada'] = range(1, len(df_team_fix2)+1)
                 jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j_fix2 in jornadas_fix2:
                     d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
