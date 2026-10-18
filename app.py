@@ -2176,7 +2176,38 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
                         else:
                             h_txt = h; a_txt = a
-                        html_lineas_fix2 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {hg}-{ag} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 FIX2 - [TAG-FIX2-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX3] ---
+                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;" # 
+                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # 
+                        if norm_eq_fix2 == hn: #  local
+                            if hg == 0 and ag > 0: hg_disp = f"{hg}" #  0-1 no subraya
+                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>" # 
+                            ag_disp = f"{ag}" # 
+                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" #  ej 30'[0-1]
+                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>" # 
+                            htag_disp = f"{htag}" # 
+                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
+                        elif norm_eq_fix2 == an: #  visitante
+                            hg_disp = f"{hg}" # 
+                            if ag == 0 and hg > 0: ag_disp = f"{ag}" # 
+                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>" # 
+                            hthg_disp = f"{hthg}" # 
+                            if htag == 0 and hthg > 0: htag_disp = f"{htag}" # 
+                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>" # 
+                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
+                        else:
+                            ft_txt = f"{hg}-{ag}" # 
+                            ht_inner = f"{hthg}-{htag}" # 
+                        ht_str = f"[{ht_inner}]" # 
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
+                        # rearma mins_html con HT nuevo negro
+                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
+                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
+                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
+                        else: mins_html = ht_html # 
+                        html_lineas_fix2 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # 
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
