@@ -1027,10 +1027,13 @@ elif st.session_state.show_partidos:
             except:
                 pass
             # FIX J10 ARRIBA = CADIZ ULTIMO - POR EQUIPO
-            df_eq = df_eq.sort_values('Date', ascending=True) if not df_eq.empty else df_eq
             if not df_eq.empty:
-                df_eq['Jornada'] = range(1, len(df_eq)+1)
-                df_eq = df_eq.sort_values('Date', ascending=False)
+                tmp2 = df_eq.copy()
+                tmp2['Date_parsed'] = pd.to_datetime(tmp2['Date'], dayfirst=True, errors='coerce')
+                tmp2['fid_num'] = pd.to_numeric(tmp2['fixture_id'], errors='coerce')
+                tmp2 = tmp2.sort_values(['Date_parsed','fid_num'], ascending=[True, True], na_position='last')
+                tmp2['Jornada'] = range(1, len(tmp2)+1)
+                df_eq = tmp2.sort_values('Jornada', ascending=False)
             df_eq = df_eq.head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
