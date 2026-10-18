@@ -226,6 +226,11 @@ def get_base():
 
 BASE = get_base()
 
+try:
+    st.cache_data.clear()
+except:
+    pass
+
 @st.cache_data(show_spinner=False)
 def cargar_todo_lite():
     f_parquet = BASE / "base_partidos.parquet"
@@ -254,10 +259,10 @@ def cargar_todo_lite():
     if 'fixture_id' in df.columns and not df.empty:
         df = df.sort_values('Date').drop_duplicates(subset=['fixture_id'], keep='last')
 
-    if 'Jornada' not in df.columns and not df.empty:
+    # FIX DEFINITIVO - SIEMPRE RECALCULA JORNADA POR EQUIPO, AUNQUE EL PARQUET TRAIGA JORNADA VIEJA
+    if not df.empty:
         df = df.sort_values(['League','Season','Date']).copy()
         df['Jornada'] = 0
-        # FIX REAL: Jornada por equipo, no por fecha unica de liga
         for (l,s), g in df.groupby(['League','Season'], sort=False):
             teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
             for team in teams:
@@ -266,7 +271,6 @@ def cargar_todo_lite():
                 if sub.empty:
                     continue
                 idxs = sub.index.to_numpy()
-                # J1 = 15/08 OVIEDO (viejo), J10 = 18/10 CADIZ (nuevo)
                 df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
 
     if 'HomeAbbr' not in df.columns and 'HomeTeam' in df.columns:
