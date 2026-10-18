@@ -361,7 +361,47 @@ if df.empty:
 # --- UI ---
 if 'show_partidos' not in st.session_state:
     st.session_state.show_partidos = False
+#########################
 
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+######################################
+
+####################
+
+
+##############
 filtros = st.expander("FILTROS", expanded=False)
 with filtros:
     if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
@@ -464,19 +504,15 @@ def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
     n_eq = normaliza(equipo)
-    # usa columna pre-calculada si existe
-    if 'HomeNorm' in dframe.columns:
-        if condicion == "Local":
-            return dframe[dframe['HomeNorm']==n_eq]
-        if condicion == "Visitante":
-            return dframe[dframe['AwayNorm']==n_eq]
-        return dframe[(dframe['HomeNorm']==n_eq) | (dframe['AwayNorm']==n_eq)]
-    # fallback por si es un df sin HomeNorm
+    if 'HomeNorm' not in dframe.columns:
+        dframe = dframe.copy()
+        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).map(normaliza)
+        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).map(normaliza)
     if condicion == "Local":
-        return dframe[dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)]
+        return dframe[dframe['HomeNorm']==n_eq]
     if condicion == "Visitante":
-        return dframe[dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq)]
-    return dframe[(dframe['HomeTeam'].apply(lambda x: normaliza(x)==n_eq)) | (dframe['AwayTeam'].apply(lambda x: normaliza(x)==n_eq))]
+        return dframe[dframe['AwayNorm']==n_eq]
+    return dframe[(dframe['HomeNorm']==n_eq) | (dframe['AwayNorm']==n_eq)]
 
 if eq1!= "Ninguno" and eq2!= "Ninguno":
     df_eq1 = filtrar_equipo(df_f, eq1, eq1_loc)
@@ -1039,7 +1075,43 @@ if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostra
     st.rerun()
 ##########################################
 ##########################################
-
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+####################################################################
+##########################################
+######################################
+###############
+############################
+##########################
+##############################
+#############################
+########################
 ##########################################
 with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
     import requests, re, json, html
