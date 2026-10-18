@@ -2847,11 +2847,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     except:
                         return False
                     if fk == "HT":
-                        return 25 <= num <= 45
+                        return 30 <= num <= 45
                     elif fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"]:
                         return 75 <= num <= 90
                     elif fk == "AMBOS":
-                        return (25 <= num <= 45) or (75 <= num <= 90)
+                        return (30 <= num <= 45) or (75 <= num <= 90)
                     return False
 
                 # --- TODOS los goles del partido ---
@@ -2988,6 +2988,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
+
+
+
+###############################
+
 with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
     import pathlib, unicodedata, os
 
