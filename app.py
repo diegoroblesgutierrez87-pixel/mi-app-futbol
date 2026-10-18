@@ -2799,18 +2799,30 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 fid_to_jornada = team_fid_to_j.get(normaliza(team_g), {})
 
             for p in detalle[:n_margen]:
-                # FIX 30-45 REAL: recalcula ok con minutos_todos_det, ignora ok del CSV (que viene en 25-45)
+                    # FIX 30-45 REAL: recalcula ok con minutos_todos_det (30-45) - ignora CSV 25-45
+                def _parse_min_30_45(gd):
+                    try:
+                        mn = gd.get('min_num', None)
+                        if mn not in (None, '', 0, '0'):
+                            return int(str(mn).split('+')[0].split('.')[0].strip() or 0)
+                        mtxt = str(gd.get('min','')).replace("'",'')
+                        import re
+                        mm = re.findall(r'\d+', mtxt)
+                        return int(mm[0]) if mm else 0
+                    except:
+                        return 0
+
                 _det_raw_fix = p.get('minutos_todos_det','[]')
                 try:
-                    _det_list_fix = json.loads(_det_raw_fix) if isinstance(_det_raw_fix, str) else _det_raw_fix
+                    _det_list_fix = json.loads(_det_raw_fix) if isinstance(_det_raw_fix, str) else (_det_raw_fix or [])
                 except:
                     _det_list_fix = []
+
                 _ok_real = False
                 for _gd in _det_list_fix:
-                    try:
-                        _mn = int(_gd.get('min_num',0))
-                    except:
-                        _mn = 0
+                    _mn = _parse_min_30_45(_gd)
+                    if _mn == 0:
+                        continue
                     if filtro_key == "HT" and 30 <= _mn <= 45:
                         _ok_real = True
                         break
