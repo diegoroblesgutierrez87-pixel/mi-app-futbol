@@ -259,13 +259,12 @@ def cargar_todo_lite():
         df['Jornada'] = 0
         for (l,s), g in df.groupby(['League','Season'], sort=False):
             g_sorted = g.sort_values('Date')
-            n_teams = 20
-            if 'HomeTeam' in g_sorted.columns:
-                teams = pd.unique(pd.concat([g_sorted['HomeTeam'], g_sorted['AwayTeam']]).dropna())
-                n_teams = len(teams)
-            ppj = max(n_teams // 2, 1)
-            idxs = g_sorted.index.to_numpy()
-            df.loc[idxs,'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
+            # Jornada real por fecha unica, no por ppj
+            fechas_unicas = pd.to_datetime(g_sorted['Date']).dt.date.drop_duplicates().sort_values()
+            mapa_fecha_j = {d:i+1 for i,d in enumerate(fechas_unicas)}
+            for idx in g_sorted.index:
+                d = pd.to_datetime(df.loc[idx,'Date']).date()
+                df.loc[idx,'Jornada'] = mapa_fecha_j.get(d, 0)
 
     if 'HomeAbbr' not in df.columns and 'HomeTeam' in df.columns:
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -963,7 +962,11 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        df_mostrar = df_filtrada_min.sort_values(['Date','Jornada'], ascending=[False, False]) if not df_filtrada_min.empty else df_filtrada_min
+        # FIX JORNADA POR EQUIPO - J10 arriba = ultimo
+        df_mostrar = df_filtrada_min.sort_values('Date', ascending=True) if not df_filtrada_min.empty else df_filtrada_min
+        if not df_mostrar.empty:
+            df_mostrar['Jornada'] = range(1, len(df_mostrar)+1) # J1 viejo, J10 nuevo (CADIZ)
+            df_mostrar = df_mostrar.sort_values('Date', ascending=False) # J10 arriba
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
