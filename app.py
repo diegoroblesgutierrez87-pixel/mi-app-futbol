@@ -228,11 +228,6 @@ def get_base():
 
 BASE = get_base()
 
-try:
-    st.cache_data.clear()
-except:
-    pass
-
 @st.cache_data(show_spinner=False)
 def cargar_todo_lite():
     f_parquet = BASE / "base_partidos.parquet"
