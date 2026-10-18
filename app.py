@@ -257,14 +257,17 @@ def cargar_todo_lite():
     if 'Jornada' not in df.columns and not df.empty:
         df = df.sort_values(['League','Season','Date']).copy()
         df['Jornada'] = 0
+        # FIX REAL: Jornada por equipo, no por fecha unica de liga
         for (l,s), g in df.groupby(['League','Season'], sort=False):
-            g_sorted = g.sort_values('Date')
-            # Jornada real por fecha unica, no por ppj
-            fechas_unicas = pd.to_datetime(g_sorted['Date']).dt.date.drop_duplicates().sort_values()
-            mapa_fecha_j = {d:i+1 for i,d in enumerate(fechas_unicas)}
-            for idx in g_sorted.index:
-                d = pd.to_datetime(df.loc[idx,'Date']).date()
-                df.loc[idx,'Jornada'] = mapa_fecha_j.get(d, 0)
+            teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
+            for team in teams:
+                mask = (g['HomeTeam'] == team) | (g['AwayTeam'] == team)
+                sub = g[mask].sort_values('Date')
+                if sub.empty:
+                    continue
+                idxs = sub.index.to_numpy()
+                # J1 = 15/08 OVIEDO (viejo), J10 = 18/10 CADIZ (nuevo)
+                df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
 
     if 'HomeAbbr' not in df.columns and 'HomeTeam' in df.columns:
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -939,7 +942,12 @@ elif st.session_state.show_partidos:
                     df_eq = df_eq[df_eq['fixture_id'].astype(str).str.split('.').str[0].isin(fids_v)]
             except:
                 pass
-            df_eq = df_eq.sort_values(['Jornada','Date'], ascending=[False, False]).head(30) if not df_eq.empty else df_eq
+            # FIX J10 ARRIBA = CADIZ ULTIMO - POR EQUIPO
+            df_eq = df_eq.sort_values('Date', ascending=True) if not df_eq.empty else df_eq
+            if not df_eq.empty:
+                df_eq['Jornada'] = range(1, len(df_eq)+1)
+                df_eq = df_eq.sort_values('Date', ascending=False)
+            df_eq = df_eq.head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
             for _, r in df_eq.iterrows():
@@ -962,11 +970,11 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX JORNADA POR EQUIPO - J10 arriba = ultimo
+        # FIX J10 ARRIBA = CADIZ ULTIMO - GRANADA
         df_mostrar = df_filtrada_min.sort_values('Date', ascending=True) if not df_filtrada_min.empty else df_filtrada_min
         if not df_mostrar.empty:
-            df_mostrar['Jornada'] = range(1, len(df_mostrar)+1) # J1 viejo, J10 nuevo (CADIZ)
-            df_mostrar = df_mostrar.sort_values('Date', ascending=False) # J10 arriba
+            df_mostrar['Jornada'] = range(1, len(df_mostrar)+1)
+            df_mostrar = df_mostrar.sort_values('Date', ascending=False)
         if eq_refs_orig:
             cond_txt = eq1_loc if eq1!= "Ninguno" else eq2_loc
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:6px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_refs_orig[0]} {cond_txt} | {len(df_mostrar)}</div>"
