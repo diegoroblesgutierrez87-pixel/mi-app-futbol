@@ -1531,27 +1531,27 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        def _strip_acc_fix3(s):
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 ---
+                        def _strip_acc_fix2(s):
                             try:
                                 import unicodedata
                                 return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
                             except:
                                 return str(s)
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                            _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
-                            _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
+                            _nf_clean_fix2 = _strip_acc_fix2(norm_eq_fix2)
+                            _h_clean_fix2 = _strip_acc_fix2(normaliza(h))
+                            _a_clean_fix2 = _strip_acc_fix2(normaliza(a))
+                            _is_home_fix2 = (_nf_clean_fix2 == _h_clean_fix2)
+                            _is_away_fix2 = (_nf_clean_fix2 == _a_clean_fix2)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
-                            _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
-                        if _is_home_fix3:
+                            _is_home_fix2 = (norm_eq_fix2 == normaliza(h))
+                            _is_away_fix2 = (norm_eq_fix2 == normaliza(a))
+                        if _is_home_fix2:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
-                        elif _is_away_fix3:
+                        elif _is_away_fix2:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
@@ -2084,27 +2084,27 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX3 ---
-                        def _strip_acc_fix3(s):
+                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 ---
+                        def _strip_acc_fix2(s):
                             try:
                                 import unicodedata
                                 return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
                             except:
                                 return str(s)
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                            _h_clean_fix3 = _strip_acc_fix3(normaliza(h))
-                            _a_clean_fix3 = _strip_acc_fix3(normaliza(a))
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3)
+                            _nf_clean_fix2 = _strip_acc_fix2(norm_eq_fix2)
+                            _h_clean_fix2 = _strip_acc_fix2(normaliza(h))
+                            _a_clean_fix2 = _strip_acc_fix2(normaliza(a))
+                            _is_home_fix2 = (_nf_clean_fix2 == _h_clean_fix2)
+                            _is_away_fix2 = (_nf_clean_fix2 == _a_clean_fix2)
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == normaliza(h))
-                            _is_away_fix3 = (norm_eq_fix3 == normaliza(a))
-                        if _is_home_fix3:
+                            _is_home_fix2 = (norm_eq_fix2 == normaliza(h))
+                            _is_away_fix2 = (norm_eq_fix2 == normaliza(a))
+                        if _is_home_fix2:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
-                        elif _is_away_fix3:
+                        elif _is_away_fix2:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
                             else: col_ht = "#8B4513"
