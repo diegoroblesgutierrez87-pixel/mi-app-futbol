@@ -612,15 +612,15 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                         marc_h += 1
                     else:
                         marc_a += 1
-            # si el total de goles no cuadra con el final, no inventes marcador
+            # PARCHE REAL MADRID: si goles no cuadran con final, no muestres marcador progresivo
             total_real = hg + ag
-            total_eventos = len([e for e in eventos.get(fid, []) if 'Missed' not in e.get('tipo','')])
-            if total_eventos != total_real:
+            total_ev = len([e for e in eventos.get(fid, []) if 'Missed' not in e.get('tipo','')])
+            if total_ev != total_real:
                 alterador = ""
             else:
                 alterador = f" {marc_h}-{marc_a}"
             if es_fallado:
-                alterador = f" {marc_h}-{marc_a} [PEN FALLADO]" if total_eventos == total_real else " [PEN FALLADO]"
+                alterador = (alterador + " [PEN FALLADO]") if alterador else " [PEN FALLADO]"
 
             # --- NO filtrar goles aquí, el filtro de partido se hace fuera ---
 
