@@ -2982,15 +2982,18 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     check_ht = (goles_ht_sel == "SI")
     check_75_raw = goles_7590_sel
     check_75 = (check_75_raw != "NO")
-    check_80_raw = goles_8090_sel # [TAG-GOLES-80-90-ADD-V15]
-    check_80 = (check_80_raw != "NO") # [TAG-GOLES-80-90-ADD-V15]
+    check_80_raw = goles_8090_sel
+    check_80 = (check_80_raw != "NO")
+    es_modo_no_80 = (check_80_raw == "NO") # [TAG-NO80-TEMP-V19]
 
-    if not check_ht and not check_75 and not check_80: # [TAG-GOLES-80-90-ADD-V15]
+    if not check_ht and not check_75 and not check_80 and not es_modo_no_80:
         st.info("Activa SI en GOLES HT o en GOLES 75-90 o en GOLES 80-90")
     else:
         import json
-        # --- FILTRO KEY con 80-90 --- [TAG-GOLES-80-90-LOGIC-V15]
-        if check_80 and not check_75 and not check_ht:
+        # --- FILTRO KEY con 80-90 + NO TEMPORADA --- [TAG-NO80-TEMP-V19]
+        if es_modo_no_80 and not check_ht and not check_75:
+            filtro_key = "NO_80"
+        elif check_80 and not check_75 and not check_ht:
             if check_80_raw == "Si va ganando": filtro_key = "80_GANANDO"
             elif check_80_raw == "Si va empate": filtro_key = "80_EMPATE"
             elif check_80_raw == "Si va perdiendo": filtro_key = "80_PERDIENDO"
@@ -3035,6 +3038,12 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 return 0
 
         def _ok_filtro_det(det_list, fk):
+            if fk == "NO_80": # [TAG-NO80-TEMP-V19]
+                for _gd in det_list:
+                    _mn = _parse_min_30_45_app(_gd)
+                    if 80 <= _mn <= 90:
+                        return False
+                return True
             for _gd in det_list:
                 _mn = _parse_min_30_45_app(_gd)
                 if _mn == 0:
@@ -3042,6 +3051,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 if fk == "HT" and 30 <= _mn <= 45:
                     return True
                 if fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                    return True
+                if fk in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"] and 80 <= _mn <= 90:
                     return True
                 if fk == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
                     return True
@@ -3135,6 +3146,16 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     if filtro_key in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
                         _ok_real = True
                         break
+                    if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"] and 80 <= _mn <= 90:
+                        _ok_real = True
+                        break
+                    if filtro_key == "NO_80":
+                        _ok_real = False
+                        # se calcula fuera, NO tiene gol 80-90 = OK
+                        _tiene_80 = any(80 <= _parse_min_30_45(_x) <= 90 for _x in _det_list_fix)
+                        if not _tiene_80:
+                            _ok_real = True
+                        break
                     if filtro_key == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
                         _ok_real = True
                         break
@@ -3190,6 +3211,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         return 30 <= num <= 45
                     elif fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"]:
                         return 75 <= num <= 90
+                    elif fk in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"]:
+                        return 80 <= num <= 90
+                    elif fk == "NO_80":
+                        return False
                     elif fk == "AMBOS":
                         return (30 <= num <= 45) or (75 <= num <= 90)
                     return False
