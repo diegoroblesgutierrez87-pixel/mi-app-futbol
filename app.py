@@ -3098,10 +3098,14 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             cnt_real_4 = sum(_checks_real[:4])
             cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
 
-            if cnt < n_need:
+            # para 80-90 no pidas 5/7 porque nadie llega, pide al menos 1
+            need_real = 1 if filtro_key.startswith("80") or filtro_key == "NO_80" else n_need
+            if cnt < need_real:
                 continue
-            if len(_checks_real) > 1 and not any(_checks_real[i] and _checks_real[i+1] for i in range(len(_checks_real)-1)):
-                continue
+            # 2 seguidos solo para HT y 75, no para 80
+            if not filtro_key.startswith("80") and filtro_key != "NO_80":
+                if len(_checks_real) > 1 and not any(_checks_real[i] and _checks_real[i+1] for i in range(len(_checks_real)-1)):
+                    continue
             calificados_g += 1
 
             if liga_team_g not in resumen_ligas_g:
