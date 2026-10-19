@@ -3075,13 +3075,12 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             return False
 
         html_g = ""
-        calificados_g = len(df_f)
+        calificados_g = 0
         resumen_ligas_g = {}
 
         for _, row in df_f.sort_values(['League','cnt_7'], ascending=[True, False]).iterrows():
             team_g = row['Team']
             liga_team_g = row['League']
-            # RECALCULO CNT REAL 30-45 - ignora cnt del CSV viejo 25-45
             try:
                 _detalle_cnt = json.loads(row['partidos_json'])
             except:
@@ -3098,6 +3097,12 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             cnt_real_7 = sum(_checks_real)
             cnt_real_4 = sum(_checks_real[:4])
             cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
+
+            if cnt < n_need:
+                continue
+            if len(_checks_real) > 1 and not any(_checks_real[i] and _checks_real[i+1] for i in range(len(_checks_real)-1)):
+                continue
+            calificados_g += 1
 
             if liga_team_g not in resumen_ligas_g:
                 resumen_ligas_g[liga_team_g] = []
