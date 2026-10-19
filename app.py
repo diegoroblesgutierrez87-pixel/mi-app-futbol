@@ -3018,7 +3018,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             n_margen = 4
             n_need = 2
 
-        df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
+        if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO","NO_80"]: # [TAG-FIX-80-NO-FILTRO-V20]
+            df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel)].copy()
+        else:
+            df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
         # SIN FILTRO 5/7 ni 2 seguidos - muestra todos
 
         if equipos_sel_g:
