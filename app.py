@@ -1769,7 +1769,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        # [TAG-FIX3-J-RAYITA-GRIS-V10-MIN8]
+                        # [TAG-FIX3-J-MOVIL-GAP18-V12-FIX3-ONLY]
                         if mins_1t:
                             mins_1t_html = "".join(mins_1t) + f" {ht_html}"
                         else:
@@ -1779,10 +1779,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
                             f"<div style='color:#000;font-family:monospace;font-weight:700;padding:2px 0;font-size:8px'>"
                             f"J{int(j_fix3)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
-                            f"<div style='margin-left:0px;line-height:1.3;font-size:8px'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
+                            f"<div style='font-size:8px;line-height:2.4;display:flex;flex-direction:column;gap:18px;margin-top:8px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
                             f"</div>"
-                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
-                        ) # [TAG-FIX3-J-RAYITA-GRIS-V10]
+                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 14px 12px'></div> "
+                        ) # [TAG-FIX3-J-MOVIL-GAP18-V12-FIX3-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
