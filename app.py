@@ -1769,17 +1769,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        # [TAG-FIX3-J8-TOCHACO-FINAL-V4-TEXTO-PEQUEÑO]
+                        # [TAG-FIX3-J8-TOCHACO-FINAL-V3-SOLO-FIX3]
                         if mins_1t:
                             mins_1t_html = "".join(mins_1t) + f" {ht_html}"
                         else:
                             mins_1t_html = ht_html
                         mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
                         html_lineas_fix3 += (
-                            f"<div style='background:{col_main};color:#fff;font-family:monospace;font-weight:900;padding:3px 6px;margin:6px 0 2px 0;border-radius:3px;font-size:8px'>"
+                            f"<div style='background:{col_main};color:#fff;font-family:monospace;font-weight:900;padding:6px 10px;margin:12px 0 4px 0;border-radius:4px;font-size:11px'>"
                             f"J{int(j_fix3)} | {h_txt} {ft_txt} {a_txt} {estado}</div>"
-                            f"<div style='margin-left:8px;line-height:1.2;font-size:7px'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div> "
-                        ) # [TAG-FIX3-J8-TOCHACO-FINAL-V4]
+                            f"<div style='margin-left:10px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div> "
+                        ) # [TAG-FIX3-J8-TOCHACO-FINAL-V3]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
