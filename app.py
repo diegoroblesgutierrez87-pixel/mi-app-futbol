@@ -2406,13 +2406,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
                         else: mins_html = ht_html # 
-                        # [TAG-FIX2-J-VERTICAL-SOLO-PP-V7]
+                        # [TAG-FIX2-J-VERTICAL-2LINEAS-V8]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
                         html_lineas_fix2 += (
                             f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 12px 2px'>"
                             f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
-                            f"<div style='font-size:7px;line-height:1.2;margin-top:2px'>{mins_html}</div>"
+                            f"<div style='font-size:7px;line-height:1.3;margin-left:0px'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
                             f"</div> "
-                        ) # [TAG-FIX2-J-VERTICAL-SOLO-PP-V7]
+                        ) # [TAG-FIX2-J-VERTICAL-2LINEAS-V8]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
