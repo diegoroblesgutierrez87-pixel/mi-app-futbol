@@ -3040,8 +3040,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 return 0
 
-        def _ok_filtro_det(det_list, fk):
-            if fk == "NO_80": # [TAG-NO80-TEMP-V19]
+        def _ok_filtro_det(det_list, fk, estado_75=""):
+            if fk == "NO_80":
                 for _gd in det_list:
                     _mn = _parse_min_30_45_app(_gd)
                     if 80 <= _mn <= 90:
@@ -3053,9 +3053,21 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     continue
                 if fk == "HT" and 30 <= _mn <= 45:
                     return True
-                if fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                if fk == "75" and 75 <= _mn <= 90:
                     return True
-                if fk in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"] and 80 <= _mn <= 90:
+                if fk == "75_GANANDO" and 75 <= _mn <= 90 and estado_75 == "GANANDO":
+                    return True
+                if fk == "75_EMPATE" and 75 <= _mn <= 90 and estado_75 == "EMPATE":
+                    return True
+                if fk == "75_PERDIENDO" and 75 <= _mn <= 90 and estado_75 == "PERDIENDO":
+                    return True
+                if fk == "80" and 80 <= _mn <= 90:
+                    return True
+                if fk == "80_GANANDO" and 80 <= _mn <= 90 and estado_75 == "GANANDO":
+                    return True
+                if fk == "80_EMPATE" and 80 <= _mn <= 90 and estado_75 == "EMPATE":
+                    return True
+                if fk == "80_PERDIENDO" and 80 <= _mn <= 90 and estado_75 == "PERDIENDO":
                     return True
                 if fk == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
                     return True
