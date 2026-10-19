@@ -2753,10 +2753,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 for j in jornadas_r:
                     d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
                         continue
-                    else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
                     d_j_r = d_j_ok_r
                     html_lineas_r = ""
                     for _, r in d_j_r.iterrows():
@@ -2874,7 +2871,18 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
                         else: mins_html = ht_html # [RESTO]
-                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # [RESTO]
+                        # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        html_lineas_r += (
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 12px 2px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
+                            f"<div style='font-size:7px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
+                            f"</div> "
+                        ) # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
