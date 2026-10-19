@@ -2289,11 +2289,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
                     if es_hueco_fix2:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j_fix2)}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
                         continue
-                    else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j_fix2)}</div>", unsafe_allow_html=True)
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
                     for _, r in d_j_fix2.iterrows():
@@ -2410,7 +2406,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
                         else: mins_html = ht_html # 
-                        html_lineas_fix2 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # 
+                        # [TAG-FIX2-J-VERTICAL-SOLO-PP-V7]
+                        html_lineas_fix2 += (
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 12px 2px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
+                            f"<div style='font-size:7px;line-height:1.2;margin-top:2px'>{mins_html}</div>"
+                            f"</div> "
+                        ) # [TAG-FIX2-J-VERTICAL-SOLO-PP-V7]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
