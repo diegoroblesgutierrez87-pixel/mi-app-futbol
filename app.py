@@ -2407,7 +2407,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
                         else: mins_html = ht_html # 
-                        # [TAG-FIX2-J-SEPARADO-V11]
+                        # [TAG-FIX2-J-MOVIL-14PX-V12]
                         if mins_1t:
                             mins_1t_html = "".join(mins_1t) + f" {ht_html}"
                         else:
@@ -2416,10 +2416,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         html_lineas_fix2 += (
                             f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
                             f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
-                            f"<div style='font-size:8px;line-height:1.8'><div style='margin-bottom:8px'>{mins_1t_html}</div><div style='margin-top:2px'>{mins_2t_html}</div></div>"
+                            f"<div style='font-size:8px;line-height:2.2;display:flex;flex-direction:column;gap:14px;margin-top:6px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
                             f"</div>"
                             f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
-                        ) # [TAG-FIX2-J-SEPARADO-V11]
+                        ) # [TAG-FIX2-J-MOVIL-14PX-V12]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
