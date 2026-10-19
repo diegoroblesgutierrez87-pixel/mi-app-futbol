@@ -2955,8 +2955,6 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         return df_pp, df_gp, goles_by_fid, team_fid_to_j
 
     df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
-
-    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
     if df_pre_partidos.empty:
         st.warning("No encuentro basepartidosprecalculado.parquet / basegolesprecalculado.parquet")
         st.stop()
@@ -2989,26 +2987,6 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
     if not check_ht and not check_75 and not check_80: # [TAG-GOLES-80-90-ADD-V15]
         st.info("Activa SI en GOLES HT o en GOLES 75-90 o en GOLES 80-90")
-    df_base_g = df_pre_partidos if not ligas_sel_g else df_pre_partidos[df_pre_partidos['League'].isin(ligas_sel_g)]
-
-    # equipos ya vienen en precalc -> Team
-    equipos_g = sorted(df_base_g['Team'].dropna().unique().tolist()) if not df_base_g.empty else []
-
-    with c_eq_g:
-        equipos_sel_g = st.multiselect("Equipos", equipos_g, default=[], key="eq_g_ht", placeholder="Todos")
-    with c_cond_g:
-        cond_g_sel = st.selectbox("Condición", ["TODOS","LOCAL","VISITANTE"], index=0, key="cond_g_ht")
-    with c_ht:
-        goles_ht_sel = st.selectbox("GOLES HT 30-45", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_ht_25_45")
-    with c_7590:
-        goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_75_90")
-
-    check_ht = (goles_ht_sel == "SI")
-    check_75_raw = goles_7590_sel
-    check_75 = (check_75_raw != "NO")
-
-    if not check_ht and not check_75:
-        st.info("Activa SI en GOLES HT o en GOLES 75-90")
     else:
         import json
         # --- FILTRO KEY con 80-90 --- [TAG-GOLES-80-90-LOGIC-V15]
