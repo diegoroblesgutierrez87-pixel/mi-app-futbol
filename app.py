@@ -3076,7 +3076,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         _rj = str(n_margen - _detalle_cnt[:n_margen].index(_p))
                     except:
                         _rj = '-'
-                _j_list.append(f"J{_rj}" if _is_ok else "_")
+                # C si fue en casa, F si fue fuera
+                _is_home_loc = normaliza(_p.get('home','')) == normaliza(team_g)
+                _loc = "C" if _is_home_loc else "F"
+                _j_list.append(f"J{_rj}{_loc}" if _is_ok else "_")
             _j_str = ", ".join(_j_list) if _j_list else "-"
             resumen_ligas_g[liga_team_g].append((team_g, cnt, _j_str))
 
