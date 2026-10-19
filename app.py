@@ -3018,8 +3018,9 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             n_margen = 4
             n_need = 2
 
-        if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO","NO_80"]: # [TAG-FIX-80-NO-FILTRO-V20]
+        if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO","NO_80"]:
             df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel)].copy()
+            df_f = df_f.drop_duplicates(subset=['Team','League','Condicion'], keep='last')
         else:
             df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
         # SIN FILTRO 5/7 ni 2 seguidos - muestra todos
@@ -3118,7 +3119,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             _j_str = ", ".join(_j_list) if _j_list else "-"
             resumen_ligas_g[liga_team_g].append((team_g, cnt, _j_str))
 
-            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{goles_ht_sel} 75-90:{goles_7590_sel} 80-90:{goles_8090_sel} | 2 seguidos: SI</div>"
 
             try:
                 detalle = json.loads(row['partidos_json'])
