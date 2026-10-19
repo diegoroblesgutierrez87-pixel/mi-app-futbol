@@ -1777,9 +1777,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
                         html_lineas_fix3 += (
                             f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:#000;font-family:monospace;font-weight:700;padding:2px 0;font-size:8px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;padding:2px 0;font-size:10px'>"
                             f"J{int(j_fix3)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span></div>"
-                            f"<div style='font-size:8px;line-height:1.4;display:flex;flex-direction:column;gap:4px;margin-top:3px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                            f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
                             f"</div>"
                             f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
                         ) # [TAG-FIX3-J-MOVIL-GAP18-V12-FIX3-ONLY]
