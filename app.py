@@ -3151,6 +3151,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     _det_list_fix = []
 
                 _ok_real = False
+                _estado_p2 = p.get('estado_75','') or p.get('estado','')
                 for _gd in _det_list_fix:
                     _mn = _parse_min_30_45(_gd)
                     if _mn == 0:
@@ -3158,18 +3159,32 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     if filtro_key == "HT" and 30 <= _mn <= 45:
                         _ok_real = True
                         break
-                    if filtro_key in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                    if filtro_key == "75" and 75 <= _mn <= 90:
                         _ok_real = True
                         break
-                    if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"] and 80 <= _mn <= 90:
+                    if filtro_key == "75_GANANDO" and 75 <= _mn <= 90 and _estado_p2 == "GANANDO":
                         _ok_real = True
                         break
-                    if filtro_key == "NO_80":
-                        _ok_real = False
-                        # se calcula fuera, NO tiene gol 80-90 = OK
-                        _tiene_80 = any(80 <= _parse_min_30_45(_x) <= 90 for _x in _det_list_fix)
-                        if not _tiene_80:
-                            _ok_real = True
+                    if filtro_key == "75_EMPATE" and 75 <= _mn <= 90 and _estado_p2 == "EMPATE":
+                        _ok_real = True
+                        break
+                    if filtro_key == "75_PERDIENDO" and 75 <= _mn <= 90 and _estado_p2 == "PERDIENDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80" and 80 <= _mn <= 90:
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_GANANDO" and 80 <= _mn <= 90 and _estado_p2 == "GANANDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_EMPATE" and 80 <= _mn <= 90 and _estado_p2 == "EMPATE":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_PERDIENDO" and 80 <= _mn <= 90 and _estado_p2 == "PERDIENDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "NO_80" and not any(80 <= _parse_min_30_45(_x) <= 90 for _x in _det_list_fix):
+                        _ok_real = True
                         break
                     if filtro_key == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
                         _ok_real = True
