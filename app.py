@@ -1650,12 +1650,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     if d_j_ok_fix3.empty and len(jornadas_fix3) == 1:
                         d_j_ok_fix3 = df_team_fix3.sort_values('Date', ascending=False).head(15)
                     es_hueco_fix3 = d_j_ok_fix3.empty
+                    # [TAG-FIX3-JORNADA-TOCHACO-V1-SOLO-FIX3]
                     if es_hueco_fix3:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j_fix3)}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#D3D3D3;color:#666;padding:5px 8px;margin:10px 0 4px 0;border-left:6px solid #888;border-radius:3px;font-size:10px'>J{int(j_fix3)} | SIN PARTIDOS</div>", unsafe_allow_html=True)
                         continue
                     else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j_fix3)}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 10px;margin:12px 0 6px 0;border-radius:4px;font-size:11px;border-left:6px solid #FFD700'>J{int(j_fix3)} | {h_fut_fix3} vs {a_fut_fix3} | {partes_fix3[0].strip()}</div>", unsafe_allow_html=True)
+                    # [TAG-FIX3-JORNADA-TOCHACO-V1]
                     d_j_fix3 = d_j_ok_fix3
                     html_lineas_fix3 = ""
                     for _, r in d_j_fix3.iterrows():
