@@ -3377,9 +3377,21 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen}) {j_str_r}</div>"
             html_listado_g += "</div>"
 
-        ligas_txt = ", ".join(ligas_sel_g) if ligas_sel_g else "TODAS"
-        equipos_txt = ", ".join(equipos_sel_g) if equipos_sel_g else "TODOS"
-        filtros_txt = f"FILTROS: Ligas=[{ligas_txt}] | Equipos=[{equipos_txt}] | Cond={cond_g_sel} | HT 30-45={goles_ht_sel} | 75-90={goles_7590_sel} | 80-90={goles_8090_sel} | Key={filtro_key} | Ventana={n_margen} | Cumplen={calificados_g}"
+        if not ligas_sel_g:
+            ligas_txt = "TODAS"
+        elif len(ligas_sel_g) > 4:
+            ligas_txt = f"{len(ligas_sel_g)} LIGAS"
+        else:
+            ligas_txt = ", ".join(ligas_sel_g)
+
+        if not equipos_sel_g:
+            equipos_txt = "TODOS"
+        elif len(equipos_sel_g) > 8:
+            equipos_txt = f"{len(equipos_sel_g)} EQUIPOS"
+        else:
+            equipos_txt = ", ".join(equipos_sel_g)
+
+        filtros_txt = f"FILTROS: Ligas={ligas_txt} | Equipos={equipos_txt} | Cond={cond_g_sel} | HT={goles_ht_sel} | 75-90={goles_7590_sel} | 80-90={goles_8090_sel} | Key={filtro_key} | Vent={n_margen} | Cumplen={calificados_g}"
 
         if calificados_g == 0:
             st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75}) | {filtros_txt}")
