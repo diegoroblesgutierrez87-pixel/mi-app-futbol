@@ -3092,7 +3092,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     _dl = json.loads(_raw) if isinstance(_raw, str) else (_raw or [])
                 except:
                     _dl = []
-                _checks_real.append(_ok_filtro_det(_dl, filtro_key))
+                _est_cnt = _p.get('estado_75','') or _p.get('estado','')
+                _checks_real.append(_ok_filtro_det(_dl, filtro_key, _est_cnt))
             cnt_real_7 = sum(_checks_real)
             cnt_real_4 = sum(_checks_real[:4])
             cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
@@ -3355,8 +3356,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         row_color = "#000000"
                     html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} |</span> {ht_html} {mins_1p_txt} | {mins_2p_txt}<span style='color:#000'> | {date}</span></div>"
 
-        # --- LISTADO RESUMEN ORDENADO POR LIGAS + OCULTAR/MOSTRAR ---
-        mostrar_resumen_g = st.checkbox(f"👁️ Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
+        # --- LISTADO RESUMEN ORDENADO POR LIGAS + FILTROS + COPIAR ---
+        mostrar_resumen_g = st.checkbox(f" Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
         html_listado_g = ""
         if mostrar_resumen_g:
             html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
@@ -3366,20 +3367,30 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen}) {j_str_r}</div>"
             html_listado_g += "</div>"
 
+        ligas_txt = ", ".join(ligas_sel_g) if ligas_sel_g else "TODAS"
+        equipos_txt = ", ".join(equipos_sel_g) if equipos_sel_g else "TODOS"
+        filtros_txt = f"FILTROS: Ligas=[{ligas_txt}] | Equipos=[{equipos_txt}] | Cond={cond_g_sel} | HT 30-45={goles_ht_sel} | 75-90={goles_7590_sel} | 80-90={goles_8090_sel} | Key={filtro_key} | Ventana={n_margen} | Cumplen={calificados_g}"
+
         if calificados_g == 0:
-            st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75})")
+            st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75}) | {filtros_txt}")
+            st.code(filtros_txt, language="text")
         else:
             import streamlit.components.v1 as components
             bloque = f"""
             <div style="width:100%; font-family:monospace;">
-                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                <div style='font-family:monospace;background:#FFF9C4;color:#000;padding:8px;border:1px solid #000;border-radius:6px;margin:8px 0;font-size:11px;font-weight:700'>{filtros_txt}</div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('copySourceG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='COPIAR FILTROS + RESUMEN ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>COPIAR FILTROS + RESUMEN ({calificados_g})</button>
                 <div style='font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
-                <div id='targetG' style="max-height:none; overflow:visible;">{html_listado_g}{html_g}</div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:12px; margin-bottom:20px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                <div id='copySourceG' style="max-height:none; overflow:visible;">
+                    <div style='white-space:pre-wrap;margin-bottom:10px'>{filtros_txt}</div>
+                    <div>{html_listado_g}</div>
+                    <div>{html_g}</div>
+                </div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('copySourceG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='COPIAR FILTROS + RESUMEN ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:12px; margin-bottom:20px'>COPIAR FILTROS + RESUMEN ({calificados_g})</button>
                 <div style="height:30px"></div>
             </div>
             """
-            h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g))//6 + 500))
+            h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g)+len(filtros_txt))//6 + 500))
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
