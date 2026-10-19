@@ -1275,7 +1275,25 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 ################
 
 ###################################################################
-################################################################### CLONADO FIX3 - DOBLE 100% INDEPENDIENTE
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE100% INDEPENDIENTE
 with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=False):
     import pathlib, unicodedata
 
@@ -1755,11 +1773,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        else: mins_html = ht_html #  
-                        html_lineas_fix3 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        # [TAG-FIX3-3LINEAS-PP-V2-SOLO-FIX3]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        html_lineas_fix3 += (
+                            f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.3'>"
+                            f"{h_txt} {ft_txt} {a_txt} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span><br>"
+                            f"<span style='margin-left:8px'>{mins_1t_html}</span><br>"
+                            f"<span style='margin-left:8px'>{mins_2t_html}</span>"
+                            f"</span> "
+                        ) # [TAG-FIX3-3LINEAS-PP-V2]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
@@ -1789,6 +1815,28 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
         </button>
         """, height=55, scrolling=False)
 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
 ###################
 ################################################################### CLONADO
 ##################
