@@ -3328,7 +3328,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         raw_j = '-'
                 
                 if not ok:
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>J{raw_j}</div>"
+                    continue
                 else:
                     jornada_txt = f"J{raw_j}"
                     if estado == "GANANDO":
