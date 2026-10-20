@@ -2820,9 +2820,12 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 df_team_base_pred_r['Jornada'] = range(1, len(df_team_base_pred_r)+1)
                 if not df_team_r.empty:
                     df_team_r['Jornada'] = range(1, len(df_team_r)+1)
+                # FIX REMO - orden real por fecha y sin futuros
+                df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
+                df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
                 jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j in jornadas_r:
-                    d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
+                    d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
                         continue
                     d_j_r = d_j_ok_r
