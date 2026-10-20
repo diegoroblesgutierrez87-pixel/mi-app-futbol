@@ -3180,8 +3180,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             cnt_real_4 = sum(_checks_real[:4])
             cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
 
-            # FIX HT 30-45: muestra todas las jornadas con gol, sin pedir 5/7 ni 2 seguidos
-            if filtro_key == "HT":
+            # FIX HT 30-45 y 75-90: muestra todas las jornadas con gol, sin pedir 5/7 ni 2 seguidos
+            if filtro_key == "HT" or filtro_key.startswith("75"):
                 need_real = 1
                 if cnt < need_real:
                     continue
@@ -3190,8 +3190,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                 need_real = 1 if filtro_key.startswith("80") or filtro_key == "NO_80" else n_need
                 if cnt < need_real:
                     continue
-                # 2 seguidos solo para HT y 75, no para 80
-                if not filtro_key.startswith("80") and filtro_key != "NO_80":
+                # 2 seguidos solo para AMBOS, no para HT/75/80
+                if filtro_key == "AMBOS":
                     if len(_checks_real) > 1 and not any(_checks_real[i] and _checks_real[i+1] for i in range(len(_checks_real)-1)):
                         continue
             calificados_g += 1
