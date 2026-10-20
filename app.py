@@ -1785,9 +1785,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         html_lineas_fix3 += (
                             f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:380px;line-height:1.0'>"
                             f"<div style='text-align:center;color:{col_main};font-family:monospace;font-weight:900;font-size:11px;padding:0;margin:0 0 1px 0'>{estado} ({_fecha_str_fix3})</div>"
-                            f"<div style='font-family:monospace;font-weight:900;font-size:11px;color:{col_main};line-height:1.1'>"
-                            f"<div style='display:flex;align-items:center;gap:0'><span style='width:52px;flex-shrink:0'>J{int(j_fix3)} |</span><span>{h}</span><span style='margin-left:10px'>{hg_disp}</span></div>"
-                            f"<div style='display:flex;align-items:center;gap:0'><span style='width:52px;flex-shrink:0'></span><span>{a}</span><span style='margin-left:10px'>{ag_disp}</span></div>"
+                            f"<div style='display:grid;grid-template-columns:52px 155px 18px;align-items:center;font-family:monospace;font-weight:900;font-size:11px;color:{col_main};line-height:1.1;gap:0'>"
+                            f"<span>J{int(j_fix3)} |</span><span style='text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>{h}</span><span style='text-align:center'>{hg_disp}</span>"
+                            f"<span></span><span style='text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>{a}</span><span style='text-align:center'>{ag_disp}</span>"
                             f"</div>"
                             f"<div style='text-align:center;font-size:10px;line-height:1.0;margin:1px 0 0 0;padding:0'><div style='margin:0;padding:0'>{mins_1t_html}</div><div style='margin:0;padding:0'>{mins_2t_html}</div></div>"
                             f"</div>"
