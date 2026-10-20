@@ -2800,12 +2800,16 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()}</div>", unsafe_allow_html=True)
-                # FIX RESTO ORDEN J10 arriba = ultimo
+                # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03
                 def _parse_fecha_resto_robusto(s):
                     try:
                         if pd.isna(s):
                             return pd.NaT
-                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                        # 1º intenta ISO YYYY-MM-DD que devuelve la API
+                        d = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')
+                        if pd.isna(d):
+                            # 2º intenta dd/mm/yyyy
+                            d = pd.to_datetime(s, dayfirst=True, errors='coerce')
                         if pd.isna(d):
                             d = pd.to_datetime(s, errors='coerce')
                         return d
@@ -2820,7 +2824,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 df_team_base_pred_r['Jornada'] = range(1, len(df_team_base_pred_r)+1)
                 if not df_team_r.empty:
                     df_team_r['Jornada'] = range(1, len(df_team_r)+1)
-                # FIX REMO - orden real por fecha y sin futuros
+                # FIX REMO - orden real por fecha descendente, ultimo jugado primero
                 df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
                 df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
                 jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
