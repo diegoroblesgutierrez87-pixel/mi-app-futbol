@@ -1634,16 +1634,22 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         return d
                     except:
                         return pd.NaT
+                def _parse_fecha_fix3_robusto(s):
+                    d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                    if pd.isna(d):
+                        d = pd.to_datetime(s, errors='coerce')
+                    return d
                 df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
                 df_team_base_pred_fix3['fid_num'] = pd.to_numeric(df_team_base_pred_fix3['fixture_id'], errors='coerce')
-                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
+                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[False, False])
                 df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
                 df_team_fix3['fid_num'] = pd.to_numeric(df_team_fix3['fixture_id'], errors='coerce') if not df_team_fix3.empty else 0
-                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix3.empty else df_team_fix3
-                # J1 = mas antiguo (OVIEDO), J10 = mas reciente (CADIZ)
+                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[False, False]) if not df_team_fix3.empty else df_team_fix3
+                # J1 = mas reciente (GETAFE), J5 = mas antiguo (SEVILLA)
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
+                jornadas_fix3 = sorted(df_team_base_pred_fix3['Jornada'].dropna().unique(), reverse=False)[:15]
                 jornadas_fix3 = sorted(df_team_base_pred_fix3['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j_fix3 in jornadas_fix3:
                     d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
@@ -2452,6 +2458,60 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         """, height=55, scrolling=False)
 
 ##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
 ################################################################### CLONADO
 ##################
 ################################################################### CLONADO
