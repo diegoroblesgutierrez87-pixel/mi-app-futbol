@@ -1782,7 +1782,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             _fecha_str_fix3 = _fecha_dt_fix3.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix3) else ""
                         except:
                             _fecha_str_fix3 = ""
-                        # 1 SOLO CROMO G/E/P DERECHA - FLASH - FIX SYNTAX DEFINITIVO
+                        # 1 SOLO CROMO G/E/P DERECHA - FIX DEFINITIVO SIN PARENTESIS
                         if hg > ag:
                             h_win = "font-weight:900;font-size:12.5px;color:#000"
                             a_win = "font-weight:400;opacity:0.85;font-size:11px;color:#000"
@@ -1798,21 +1798,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             a_win = "font-weight:700;font-size:11px;color:#000"
                             b_res = "E"
                             b_col = "#8B4513"
-                        html_lineas_fix3 += f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:320px;line-height:1.0'>" \
-                            f"<div style='text-align:center;color:{col_main};font-family:monospace;font-weight:900;font-size:11px;margin:0 0 2px 0'>{estado} ({_fecha_str_fix3})</div>" \
-                            f"<div style='display:flex;justify-content:space-between;align-items:center'>" \
-                            f"<div style='display:grid;grid-template-columns:52px 108px 16px;align-items:center;font-family:monospace;font-size:11px;line-height:1.1;gap:0'>" \
-                            f"<span style='color:#000'>J{int(j_fix3)} |</span><span style='white-space:nowrap;{h_win}'>{h}</span><span style='padding-left:6px;{h_win}'>{hg_disp}</span>" \
-                            f"<span></span><span style='white-space:nowrap;{a_win}'>{a}</span><span style='padding-left:6px;{a_win}'>{ag_disp}</span>" \
-                            f"</div>" \
-                            f"<div style='background:{b_col};color:#fff;font-weight:900;font-size:10px;text-align:center;border-radius:3px;padding:2px 0;width:18px;margin-left:8px'>{b_res}</div>" \
-                            f"</div>" \
-                            f"<div style='text-align:left;font-size:10px;line-height:1.2;margin:8px 0 0 0'><div style='margin:0 0 2px 0'>{mins_1t_html}</div><div>{mins_2t_html}</div></div>" \
-                            f"</div>" \
-                            f"<div style='height:1px;background:#e6e6e6;margin:6px 0 2px 12px;max-width:320px'></div> " # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]:8px 0 0 0;padding:0'><div style='margin:0 0 2px 0;padding:0'>{mins_1t_html}</div><div style='margin:0;padding:0'>{mins_2t_html}</div></div>"
-                            f"</div>"
-                            f"<div style='height:1px;background:#e6e6e6;margin:6px 0 2px 12px;max-width:320px'></div> "
-                        ) # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
+                        html_lineas_fix3 += f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:320px;line-height:1.0'>"
+                        html_lineas_fix3 += f"<div style='text-align:center;color:{col_main};font-family:monospace;font-weight:900;font-size:11px;margin:0 0 2px 0'>{estado} ({_fecha_str_fix3})</div>"
+                        html_lineas_fix3 += f"<div style='display:flex;justify-content:space-between;align-items:center'>"
+                        html_lineas_fix3 += f"<div style='display:grid;grid-template-columns:52px 108px 16px;align-items:center;font-family:monospace;font-size:11px;line-height:1.1;gap:0'>"
+                        html_lineas_fix3 += f"<span style='color:#000'>J{int(j_fix3)} |</span><span style='white-space:nowrap;{h_win}'>{h}</span><span style='padding-left:6px;{h_win}'>{hg_disp}</span>"
+                        html_lineas_fix3 += f"<span></span><span style='white-space:nowrap;{a_win}'>{a}</span><span style='padding-left:6px;{a_win}'>{ag_disp}</span>"
+                        html_lineas_fix3 += f"</div>"
+                        html_lineas_fix3 += f"<div style='background:{b_col};color:#fff;font-weight:900;font-size:10px;text-align:center;border-radius:3px;padding:2px 0;width:18px;margin-left:8px'>{b_res}</div>"
+                        html_lineas_fix3 += f"</div>"
+                        html_lineas_fix3 += f"<div style='text-align:left;font-size:10px;line-height:1.2;margin:8px 0 0 0'><div style='margin:0 0 2px 0'>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                        html_lineas_fix3 += f"</div>"
+                        html_lineas_fix3 += f"<div style='height:1px;background:#e6e6e6;margin:6px 0 2px 12px;max-width:320px'></div> " # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
