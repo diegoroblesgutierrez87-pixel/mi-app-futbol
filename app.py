@@ -1537,7 +1537,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                 norm_eq_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
                 def _is_match_fix3(team_raw):
                     t = _strip_acc_fix3(normaliza(team_raw))
-                    return t == norm_eq_clean_fix3 or norm_eq_clean_fix3 in t or t in norm_eq_clean_fix3
+                    # FIX EXACTO: ATLETICO DE MADRID != ATLETICO DE MADRID II / B / U19
+                    return t == norm_eq_clean_fix3
                 df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].apply(_is_match_fix3)) | (df_fix3['AwayTeam'].apply(_is_match_fix3))]
                 if df_team_fix3.empty:
                     df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
