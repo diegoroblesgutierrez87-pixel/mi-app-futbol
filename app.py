@@ -3234,6 +3234,14 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 detalle = []
 
+            # FIX ORDEN FECHA MAS RECIENTE PRIMERO - 18/10/2026 antes que 17/10/2026
+            def _parse_dmy_g(d):
+                try:
+                    return pd.to_datetime(d.get('date',''), dayfirst=True, errors='coerce')
+                except:
+                    return pd.NaT
+            detalle = sorted(detalle, key=lambda x: _parse_dmy_g(x), reverse=True)
+
             # jornada precalculada - 0 coste
             fid_to_jornada = team_fid_to_j.get(team_g.upper().strip(), {})
             if not fid_to_jornada:
