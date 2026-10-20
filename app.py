@@ -1782,32 +1782,37 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             _fecha_str_fix3 = _fecha_dt_fix3.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix3) else ""
                         except:
                             _fecha_str_fix3 = ""
-                        # ganador mas gordito - negro + G/E/P flashscore
+                        # 1 SOLO CROMO G/E/P A LA DERECHA EN MEDIO - FLASH SCORE - NEGRO
                         if hg > ag:
                             h_win = "font-weight:900;font-size:12.5px;letter-spacing:0.3px;color:#000"
                             a_win = "font-weight:400;opacity:0.85;font-size:11px;color:#000"
-                            h_res = "G"; a_res = "P"
-                            h_col_res = "#0f8105"; a_col_res = "#f31818"
+                            if _is_home_fix3: b_res, b_col = "G", "#0f8105"
+                            elif _is_away_fix3: b_res, b_col = "P", "#f31818"
+                            else: b_res, b_col = "G", "#0f8105"
                         elif ag > hg:
                             h_win = "font-weight:400;opacity:0.85;font-size:11px;color:#000"
                             a_win = "font-weight:900;font-size:12.5px;letter-spacing:0.3px;color:#000"
-                            h_res = "P"; a_res = "G"
-                            h_col_res = "#f31818"; a_col_res = "#0f8105"
+                            if _is_home_fix3: b_res, b_col = "P", "#f31818"
+                            elif _is_away_fix3: b_res, b_col = "G", "#0f8105"
+                            else: b_res, b_col = "G", "#0f8105"
                         else:
                             h_win = "font-weight:700;font-size:11px;color:#000"
                             a_win = "font-weight:700;font-size:11px;color:#000"
-                            h_res = "E"; a_res = "E"
-                            h_col_res = "#8B4513"; a_col_res = "#8B4513"
+                            b_res, b_col = "E", "#8B4513"
                         html_lineas_fix3 += (
-                            f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:320px;line-height:1.0'>"
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:320px;line-height:1.0;position:relative'>"
                             f"<div style='text-align:center;color:{col_main};font-family:monospace;font-weight:900;font-size:11px;padding:0;margin:0 0 2px 0'>{estado} ({_fecha_str_fix3})</div>"
-                            f"<div style='display:grid;grid-template-columns:52px 108px 22px 16px;align-items:center;font-family:monospace;font-size:11px;line-height:1.1;gap:0'>"
-                            f"<span style='color:#000'>J{int(j_fix3)} |</span><span style='text-align:left;white-space:nowrap;{h_win}'>{h}</span><span style='background:{h_col_res};color:#fff;font-weight:900;font-size:9px;text-align:center;border-radius:3px;padding:1px 0;margin-left:4px'>{h_res}</span><span style='text-align:left;padding-left:4px;{h_win}'>{hg_disp}</span>"
-                            f"<span></span><span style='text-align:left;white-space:nowrap;{a_win}'>{a}</span><span style='background:{a_col_res};color:#fff;font-weight:900;font-size:9px;text-align:center;border-radius:3px;padding:1px 0;margin-left:4px'>{a_res}</span><span style='text-align:left;padding-left:4px;{a_win}'>{ag_disp}</span>"
+                            f"<div style='display:flex;justify-content:space-between;align-items:center'>"
+                            f"<div style='display:grid;grid-template-columns:52px 108px 16px;align-items:center;font-family:monospace;font-size:11px;line-height:1.1;gap:0'>"
+                            f"<span style='color:#000'>J{int(j_fix3)} |</span><span style='text-align:left;white-space:nowrap;{h_win}'>{h}</span><span style='text-align:left;padding-left:6px;{h_win}'>{hg_disp}</span>"
+                            f"<span></span><span style='text-align:left;white-space:nowrap;{a_win}'>{a}</span><span style='text-align:left;padding-left:6px;{a_win}'>{ag_disp}</span>"
+                            f"</div>"
+                            f"<div style='background:{b_col};color:#fff;font-weight:900;font-size:10px;text-align:center;border-radius:3px;padding:2px 0;width:18px;flex-shrink:0;margin-left:8px'>{b_res}</div>"
                             f"</div>"
                             f"<div style='text-align:left;font-size:10px;line-height:1.2;margin:8px 0 0 0;padding:0'><div style='margin:0 0 2px 0;padding:0'>{mins_1t_html}</div><div style='margin:0;padding:0'>{mins_2t_html}</div></div>"
                             f"</div>"
                             f"<div style='height:1px;background:#e6e6e6;margin:6px 0 2px 12px;max-width:320px'></div> "
+                        ) # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]6e6;margin:6px 0 2px 12px;max-width:320px'></div> "
                         ) # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
