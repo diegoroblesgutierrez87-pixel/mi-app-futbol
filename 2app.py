@@ -125,6 +125,8 @@ MAPA_NORMALIZACION = {
 }
 _MAPA_UPPER = {k.upper(): v for k, v in MAPA_NORMALIZACION.items()}
 
+from functools import lru_cache
+@lru_cache(maxsize=20000)
 def normaliza(s):
     if pd.isna(s): return ""
     raw = str(s).strip()
@@ -225,11 +227,6 @@ def get_base():
     return pathlib.Path("/mnt/data")
 
 BASE = get_base()
-
-try:
-    st.cache_data.clear()
-except:
-    pass
 
 @st.cache_data(show_spinner=False)
 def cargar_todo_lite():
@@ -488,21 +485,16 @@ if fecha_sel_str != "Todas" and fechas_unicas:
     except:
         pass
 
-# Equipo lista más rápida - FIX DEDUP POR NORMALIZA
+# Equipo lista - BASE YA NORMALIZADA V5
 if not df_f.empty:
-    seen = {}
-    for t in pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str):
-        n = normaliza(t)
-        if n not in seen:
-            seen[n] = t.upper() # fuerza UPPER -> AREMA FC = Arema FC
-    equipos = sorted(seen.values())
+    equipos = sorted(pd.concat([df_f['HomeTeam'], df_f['AwayTeam']]).dropna().astype(str).str.upper().unique().tolist())
 else:
     equipos = []
 
 with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
 c4,c5 = filtros.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if normaliza(e)!= normaliza(eq1)])
+with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e.upper() != str(eq1).upper()])
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
@@ -533,15 +525,15 @@ def parse_min(v):
 MIN_DESDE = parse_min(min_desde_raw)
 MIN_HASTA = parse_min(min_hasta_raw)
 
-# --- FILTRO VECTORIZADO - FIX POR NORMALIZA ---
+# --- FILTRO VECTORIZADO - BASE YA NORMALIZADA V5 ---
 def filtrar_equipo(dframe, equipo, condicion):
     if equipo == "Ninguno" or dframe.empty:
         return dframe.iloc[0:0] if equipo!= "Ninguno" else dframe
-    n_eq = normaliza(equipo)
+    n_eq = str(equipo).strip().upper()
     if 'HomeNorm' not in dframe.columns:
         dframe = dframe.copy()
-        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).map(normaliza)
-        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).map(normaliza)
+        dframe['HomeNorm'] = dframe['HomeTeam'].astype(str).str.upper()
+        dframe['AwayNorm'] = dframe['AwayTeam'].astype(str).str.upper()
     if condicion == "Local":
         return dframe[dframe['HomeNorm']==n_eq]
     if condicion == "Visitante":
@@ -620,9 +612,15 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
                         marc_h += 1
                     else:
                         marc_a += 1
-            alterador = f" {marc_h}-{marc_a}"
+            # PARCHE REAL MADRID: si goles no cuadran con final, no muestres marcador progresivo
+            total_real = hg + ag
+            total_ev = len([e for e in eventos.get(fid, []) if 'Missed' not in e.get('tipo','')])
+            if total_ev != total_real:
+                alterador = ""
+            else:
+                alterador = f" {marc_h}-{marc_a}"
             if es_fallado:
-                alterador = f" {marc_h}-{marc_a} [PEN FALLADO]"
+                alterador = (alterador + " [PEN FALLADO]") if alterador else " [PEN FALLADO]"
 
             # --- NO filtrar goles aquí, el filtro de partido se hace fuera ---
 
@@ -1016,14 +1014,9 @@ elif st.session_state.show_partidos:
                     df_eq = df_eq[df_eq['fixture_id'].astype(str).str.split('.').str[0].isin(fids_v)]
             except:
                 pass
-            # FIX J10 ARRIBA = CADIZ ULTIMO - POR EQUIPO
+            # FIX J10 ARRIBA = respeta Jornada base
             if not df_eq.empty:
-                tmp2 = df_eq.copy()
-                tmp2['Date_parsed'] = pd.to_datetime(tmp2['Date'], dayfirst=True, errors='coerce')
-                tmp2['fid_num'] = pd.to_numeric(tmp2['fixture_id'], errors='coerce')
-                tmp2 = tmp2.sort_values(['Date_parsed','fid_num'], ascending=[True, True], na_position='last')
-                tmp2['Jornada'] = range(1, len(tmp2)+1)
-                df_eq = tmp2.sort_values('Jornada', ascending=False)
+                df_eq = df_eq.sort_values('Jornada', ascending=False)
             df_eq = df_eq.head(30) if not df_eq.empty else df_eq
             html += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:8px 0 2px 0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px'>{eq_orig} {cond} | {len(df_eq)}</div>"
             eq_norm_single = normaliza(eq_orig)
@@ -1047,7 +1040,7 @@ elif st.session_state.show_partidos:
         except:
             pass
 
-        # FIX J10 CADIZ ARRIBA - YA VIENE BIEN DE BASE, SOLO ORDENA
+        # FIX J10 CADIZ ARRIBA - respeta Jornada base, no recalcula
         if not df_filtrada_min.empty:
             df_mostrar = df_filtrada_min.sort_values('Jornada', ascending=False)
         else:
@@ -1282,7 +1275,25 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 ################
 
 ###################################################################
-################################################################### CLONADO FIX3 - DOBLE 100% INDEPENDIENTE
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+# 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE100% INDEPENDIENTE
 with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=False):
     import pathlib, unicodedata
 
@@ -1612,11 +1623,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
                     continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                # FIX3 ORDEN JORNADAS - J10 arriba = GRANADA vs CADIZ ultimo
+                # FIX3 ORDEN POR FECHAS - FIX REAL - J1=SEVILLA 15/08, J8=GETAFE 19/10 ULTIMA - FIX FECHAS FUTURAS 09/12
                 def _parse_fecha_fix3_robusto(s):
                     try:
-                        if pd.isna(s):
-                            return pd.NaT
                         d = pd.to_datetime(s, dayfirst=True, errors='coerce')
                         if pd.isna(d):
                             d = pd.to_datetime(s, errors='coerce')
@@ -1624,27 +1633,27 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     except:
                         return pd.NaT
                 df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
+                df_team_base_pred_fix3 = df_team_base_pred_fix3[df_team_base_pred_fix3['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_base_pred_fix3['fid_num'] = pd.to_numeric(df_team_base_pred_fix3['fixture_id'], errors='coerce')
                 df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
                 df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
+                df_team_fix3 = df_team_fix3[df_team_fix3['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_fix3['fid_num'] = pd.to_numeric(df_team_fix3['fixture_id'], errors='coerce') if not df_team_fix3.empty else 0
                 df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix3.empty else df_team_fix3
-                # J1 = mas antiguo (OVIEDO), J10 = mas reciente (CADIZ)
+                # J1 = mas antigua, J8 = mas reciente GETAFE 1-1 RAYO
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
-                jornadas_fix3 = sorted(df_team_base_pred_fix3['Jornada'].dropna().unique(), reverse=True)[:15]
+                # FIX ORDEN REAL POR FECHA DESCENDENTE - NO RECALCULAR JORNADA
+                df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False)
+                jornadas_fix3 = sorted(df_team_fix3['Jornada'].dropna().unique(), reverse=True)[:15] if not df_team_fix3.empty else []
                 for j_fix3 in jornadas_fix3:
-                    d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
+                    d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date_parsed', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
                     if d_j_ok_fix3.empty and len(jornadas_fix3) == 1:
-                        d_j_ok_fix3 = df_team_fix3.sort_values('Date', ascending=False).head(15)
+                        d_j_ok_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False).head(15)
                     es_hueco_fix3 = d_j_ok_fix3.empty
                     if es_hueco_fix3:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j_fix3)}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
                         continue
-                    else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j_fix3)}</div>", unsafe_allow_html=True)
                     d_j_fix3 = d_j_ok_fix3
                     html_lineas_fix3 = ""
                     for _, r in d_j_fix3.iterrows():
@@ -1762,11 +1771,25 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        else: mins_html = ht_html #  
-                        html_lineas_fix3 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html} <span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>"
+                        # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        try:
+                            _fecha_dt_fix3 = pd.to_datetime(r.get('Date'), errors='coerce')
+                            _fecha_str_fix3 = _fecha_dt_fix3.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix3) else ""
+                        except:
+                            _fecha_str_fix3 = ""
+                        html_lineas_fix3 += (
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
+                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
+                            f"J{int(j_fix3)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix3})</span></div>"
+                            f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                            f"</div>"
+                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
+                        ) # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
@@ -1796,6 +1819,28 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
         </button>
         """, height=55, scrolling=False)
 
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
 ###################
 ################################################################### CLONADO
 ##################
@@ -2239,9 +2284,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     except:
                         return pd.NaT
                 df_team_base_pred_fix2['Date_parsed'] = df_team_base_pred_fix2['Date'].apply(_parse_fecha_fix2_robusto)
+                df_team_base_pred_fix2 = df_team_base_pred_fix2[df_team_base_pred_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_base_pred_fix2['fid_num'] = pd.to_numeric(df_team_base_pred_fix2['fixture_id'], errors='coerce')
                 df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
                 df_team_fix2['Date_parsed'] = df_team_fix2['Date'].apply(_parse_fecha_fix2_robusto) if not df_team_fix2.empty else df_team_fix2.get('Date')
+                df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
                 df_team_base_pred_fix2['Jornada'] = range(1, len(df_team_base_pred_fix2)+1)
@@ -2252,11 +2299,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
                     if es_hueco_fix2:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j_fix2)}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='line-height:1.15;margin:0 0 6px 0;padding:0'></div>", unsafe_allow_html=True)
                         continue
-                    else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j_fix2)}</div>", unsafe_allow_html=True)
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
                     for _, r in d_j_fix2.iterrows():
@@ -2373,7 +2416,25 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
                         else: mins_html = ht_html # 
-                        html_lineas_fix2 += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # 
+                        # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        try:
+                            _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
+                            _fecha_str_fix2 = _fecha_dt_fix2.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix2) else ""
+                        except:
+                            _fecha_str_fix2 = ""
+                        html_lineas_fix2 += (
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
+                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
+                            f"J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix2})</span></div>"
+                            f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                            f"</div>"
+                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
+                        ) # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
@@ -2405,6 +2466,60 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         """, height=55, scrolling=False)
 
 ##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO#################
 ################################################################### CLONADO
 ##################
 ################################################################### CLONADO
@@ -2685,12 +2800,14 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()}</div>", unsafe_allow_html=True)
-                # FIX RESTO ORDEN J10 arriba = ultimo
+                # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03 - FIX REMO ULTIMO BRAGANTINO 18/10 ARRIBA
                 def _parse_fecha_resto_robusto(s):
                     try:
                         if pd.isna(s):
                             return pd.NaT
-                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
+                        d = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')
+                        if pd.isna(d):
+                            d = pd.to_datetime(s, dayfirst=True, errors='coerce')
                         if pd.isna(d):
                             d = pd.to_datetime(s, errors='coerce')
                         return d
@@ -2705,14 +2822,18 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 df_team_base_pred_r['Jornada'] = range(1, len(df_team_base_pred_r)+1)
                 if not df_team_r.empty:
                     df_team_r['Jornada'] = range(1, len(df_team_r)+1)
-                jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
+                # FIX REMO - ordena jornadas por fecha real, ultimo BRAGANTINO 18/10 primero
+                df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
+                df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
+                if not df_team_base_pred_r.empty and 'Jornada' in df_team_base_pred_r.columns:
+                    fecha_por_j = df_team_base_pred_r.groupby('Jornada')['Date_parsed'].max()
+                    jornadas_r = fecha_por_j.sort_values(ascending=False).head(15).index.tolist()
+                else:
+                    jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j in jornadas_r:
-                    d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
+                    d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#aaa;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
                         continue
-                    else:
-                        st.markdown(f"<div style='font-family:monospace;font-weight:700;color:#0A2342;margin:4px 0 0 0;font-size:10px'>J{int(j)}</div>", unsafe_allow_html=True)
                     d_j_r = d_j_ok_r
                     html_lineas_r = ""
                     for _, r in d_j_r.iterrows():
@@ -2830,7 +2951,23 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
                         else: mins_html = ht_html # [RESTO]
-                        html_lineas_r += f"<span style='color:{col_main};font-family:monospace;font-size:9px;font-weight:700;white-space:nowrap;margin-right:10px;line-height:1.1'>{h_txt} {ft_txt} {a_txt} | {mins_html}<span style='color:#fff;background:{col_main};padding:0 4px;border-radius:2px;margin-left:5px'>{estado}</span></span>" # [RESTO]
+                        # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
+                        if mins_1t:
+                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
+                        else:
+                            mins_1t_html = ht_html
+                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        try:
+                            _fecha_dt_r = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
+                            _fecha_str_r = _fecha_dt_r.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_r) else ""
+                        except:
+                            _fecha_str_r = ""
+                        html_lineas_r += (
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 12px 2px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
+                            f"<div style='font-size:7px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
+                            f"</div> "
+                        ) # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
@@ -2900,14 +3037,12 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         return df_pp, df_gp, goles_by_fid, team_fid_to_j
 
     df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
-
-    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
     if df_pre_partidos.empty:
         st.warning("No encuentro basepartidosprecalculado.parquet / basegolesprecalculado.parquet")
         st.stop()
 
     ligas_g = sorted(df_pre_partidos['League'].dropna().unique().tolist())
-    c_liga_g, c_eq_g, c_cond_g, c_ht, c_7590 = st.columns([2,2,1,1,1])
+    c_liga_g, c_eq_g, c_cond_g, c_ht, c_7590, c_8090 = st.columns([1,2,1,1,1,1]) # [TAG-GOLES-80-90-ADD-V15]
     with c_liga_g:
         ligas_sel_g = st.multiselect("Ligas", ligas_g, default=[], key="ligas_g_ht", placeholder="Todas")
     df_base_g = df_pre_partidos if not ligas_sel_g else df_pre_partidos[df_pre_partidos['League'].isin(ligas_sel_g)]
@@ -2923,16 +3058,29 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         goles_ht_sel = st.selectbox("GOLES HT 30-45", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_ht_25_45")
     with c_7590:
         goles_7590_sel = st.selectbox("GOLES 75-90", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_75_90")
+    with c_8090:
+        goles_8090_sel = st.selectbox("GOLES 80-90", ["NO","SI","Si va ganando","Si va empate","Si va perdiendo"], index=0, key="goles_80_90") # [TAG-GOLES-80-90-ADD-V15]
 
     check_ht = (goles_ht_sel == "SI")
     check_75_raw = goles_7590_sel
     check_75 = (check_75_raw != "NO")
+    check_80_raw = goles_8090_sel
+    check_80 = (check_80_raw != "NO")
+    es_modo_no_80 = (check_80_raw == "NO") # [TAG-NO80-TEMP-V19]
 
-    if not check_ht and not check_75:
-        st.info("Activa SI en GOLES HT o en GOLES 75-90")
+    if not check_ht and not check_75 and not check_80 and not es_modo_no_80:
+        st.info("Activa SI en GOLES HT o en GOLES 75-90 o en GOLES 80-90")
     else:
         import json
-        if check_75_raw == "Si va ganando":
+        # --- FILTRO KEY con 80-90 + NO TEMPORADA --- [TAG-NO80-TEMP-V19]
+        if es_modo_no_80 and not check_ht and not check_75:
+            filtro_key = "NO_80"
+        elif check_80 and not check_75 and not check_ht:
+            if check_80_raw == "Si va ganando": filtro_key = "80_GANANDO"
+            elif check_80_raw == "Si va empate": filtro_key = "80_EMPATE"
+            elif check_80_raw == "Si va perdiendo": filtro_key = "80_PERDIENDO"
+            else: filtro_key = "80"
+        elif check_75_raw == "Si va ganando":
             filtro_key = "75_GANANDO"
         elif check_75_raw == "Si va empate":
             filtro_key = "75_EMPATE"
@@ -2952,7 +3100,11 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             n_margen = 4
             n_need = 2
 
-        df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
+        if filtro_key in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO","NO_80"]:
+            df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel)].copy()
+            df_f = df_f.drop_duplicates(subset=['Team','League','Condicion'], keep='last')
+        else:
+            df_f = df_base_g[(df_base_g['Condicion']==cond_g_sel) & (df_base_g['Filtro']==filtro_key)].copy()
         # SIN FILTRO 5/7 ni 2 seguidos - muestra todos
 
         if equipos_sel_g:
@@ -2971,27 +3123,46 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 return 0
 
-        def _ok_filtro_det(det_list, fk):
+        def _ok_filtro_det(det_list, fk, estado_75=""):
+            if fk == "NO_80":
+                for _gd in det_list:
+                    _mn = _parse_min_30_45_app(_gd)
+                    if 80 <= _mn <= 90:
+                        return False
+                return True
             for _gd in det_list:
                 _mn = _parse_min_30_45_app(_gd)
                 if _mn == 0:
                     continue
                 if fk == "HT" and 30 <= _mn <= 45:
                     return True
-                if fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                if fk == "75" and 75 <= _mn <= 90:
+                    return True
+                if fk == "75_GANANDO" and 75 <= _mn <= 90 and estado_75 == "GANANDO":
+                    return True
+                if fk == "75_EMPATE" and 75 <= _mn <= 90 and estado_75 == "EMPATE":
+                    return True
+                if fk == "75_PERDIENDO" and 75 <= _mn <= 90 and estado_75 == "PERDIENDO":
+                    return True
+                if fk == "80" and 80 <= _mn <= 90:
+                    return True
+                if fk == "80_GANANDO" and 80 <= _mn <= 90 and estado_75 == "GANANDO":
+                    return True
+                if fk == "80_EMPATE" and 80 <= _mn <= 90 and estado_75 == "EMPATE":
+                    return True
+                if fk == "80_PERDIENDO" and 80 <= _mn <= 90 and estado_75 == "PERDIENDO":
                     return True
                 if fk == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
                     return True
             return False
 
         html_g = ""
-        calificados_g = len(df_f)
+        calificados_g = 0
         resumen_ligas_g = {}
 
         for _, row in df_f.sort_values(['League','cnt_7'], ascending=[True, False]).iterrows():
             team_g = row['Team']
             liga_team_g = row['League']
-            # RECALCULO CNT REAL 30-45 - ignora cnt del CSV viejo 25-45
             try:
                 _detalle_cnt = json.loads(row['partidos_json'])
             except:
@@ -3003,10 +3174,17 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     _dl = json.loads(_raw) if isinstance(_raw, str) else (_raw or [])
                 except:
                     _dl = []
-                _checks_real.append(_ok_filtro_det(_dl, filtro_key))
+                _est_cnt = _p.get('estado_75','') or _p.get('estado','')
+                _checks_real.append(_ok_filtro_det(_dl, filtro_key, _est_cnt))
             cnt_real_7 = sum(_checks_real)
             cnt_real_4 = sum(_checks_real[:4])
             cnt = cnt_real_7 if cond_g_sel=="TODOS" else cnt_real_4
+
+            # FIX TOTAL: HT 30-45, 75-90 y 80-90 sin 5/7 ni 2 seguidos
+            need_real = 1
+            if cnt < need_real:
+                continue
+            calificados_g += 1
 
             if liga_team_g not in resumen_ligas_g:
                 resumen_ligas_g[liga_team_g] = []
@@ -3021,11 +3199,14 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         _rj = str(n_margen - _detalle_cnt[:n_margen].index(_p))
                     except:
                         _rj = '-'
-                _j_list.append(f"J{_rj}" if _is_ok else "_")
+                # C si fue en casa, F si fue fuera
+                _is_home_loc = normaliza(_p.get('home','')) == normaliza(team_g)
+                _loc = "C" if _is_home_loc else "F"
+                _j_list.append(f"J{_rj}{_loc}" if _is_ok else "_")
             _j_str = ", ".join(_j_list) if _j_list else "-"
             resumen_ligas_g[liga_team_g].append((team_g, cnt, _j_str))
 
-            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{check_ht} 75-90:{check_75} | 2 seguidos: SI</div>"
+            html_g += f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:4px 6px;margin:10px 0 2px 0'>{team_g} | {cnt}/{n_margen} cumplen 30-45:{goles_ht_sel} 75-90:{goles_7590_sel} 80-90:{goles_8090_sel} | 2 seguidos: SI</div>"
 
             try:
                 detalle = json.loads(row['partidos_json'])
@@ -3059,6 +3240,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     _det_list_fix = []
 
                 _ok_real = False
+                _estado_p2 = p.get('estado_75','') or p.get('estado','')
                 for _gd in _det_list_fix:
                     _mn = _parse_min_30_45(_gd)
                     if _mn == 0:
@@ -3066,7 +3248,31 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     if filtro_key == "HT" and 30 <= _mn <= 45:
                         _ok_real = True
                         break
-                    if filtro_key in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"] and 75 <= _mn <= 90:
+                    if filtro_key == "75" and 75 <= _mn <= 90:
+                        _ok_real = True
+                        break
+                    if filtro_key == "75_GANANDO" and 75 <= _mn <= 90 and _estado_p2 == "GANANDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "75_EMPATE" and 75 <= _mn <= 90 and _estado_p2 == "EMPATE":
+                        _ok_real = True
+                        break
+                    if filtro_key == "75_PERDIENDO" and 75 <= _mn <= 90 and _estado_p2 == "PERDIENDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80" and 80 <= _mn <= 90:
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_GANANDO" and 80 <= _mn <= 90 and _estado_p2 == "GANANDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_EMPATE" and 80 <= _mn <= 90 and _estado_p2 == "EMPATE":
+                        _ok_real = True
+                        break
+                    if filtro_key == "80_PERDIENDO" and 80 <= _mn <= 90 and _estado_p2 == "PERDIENDO":
+                        _ok_real = True
+                        break
+                    if filtro_key == "NO_80" and not any(80 <= _parse_min_30_45(_x) <= 90 for _x in _det_list_fix):
                         _ok_real = True
                         break
                     if filtro_key == "AMBOS" and (30 <= _mn <= 45 or 75 <= _mn <= 90):
@@ -3124,6 +3330,10 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         return 30 <= num <= 45
                     elif fk in ["75","75_GANANDO","75_EMPATE","75_PERDIENDO"]:
                         return 75 <= num <= 90
+                    elif fk in ["80","80_GANANDO","80_EMPATE","80_PERDIENDO"]:
+                        return 80 <= num <= 90
+                    elif fk == "NO_80":
+                        return False
                     elif fk == "AMBOS":
                         return (30 <= num <= 45) or (75 <= num <= 90)
                     return False
@@ -3205,7 +3415,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         raw_j = '-'
                 
                 if not ok:
-                    html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;color:#000'>J{raw_j}</div>"
+                    continue
                 else:
                     jornada_txt = f"J{raw_j}"
                     if estado == "GANANDO":
@@ -3234,31 +3444,50 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                         row_color = "#000000"
                     html_g += f"<div style='font-family:monospace;font-size:11px;padding:3px 4px;border-bottom:1px solid #ddd;'><span style='color:{row_color};font-weight:700'>{jornada_txt} {h_show} {ft} {a_show} |</span> {ht_html} {mins_1p_txt} | {mins_2p_txt}<span style='color:#000'> | {date}</span></div>"
 
-        # --- LISTADO RESUMEN ORDENADO POR LIGAS + OCULTAR/MOSTRAR ---
-        mostrar_resumen_g = st.checkbox(f"👁️ Mostrar resumen por ligas ({len(resumen_ligas_g)} ligas / {calificados_g} equipos)", value=False, key=f"mostrar_resumen_{filtro_key}_{cond_g_sel}")
-        html_listado_g = ""
-        if mostrar_resumen_g:
-            html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
-            for liga_name in sorted(resumen_ligas_g.keys()):
-                html_listado_g += f"<div style='font-weight:900;margin-top:12px;color:#fff;background:#000;padding:4px 6px;border-radius:3px'>{liga_name.upper()}</div>"
-                for team_r, cnt_r, j_str_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
-                    html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen}) {j_str_r}</div>"
-            html_listado_g += "</div>"
+        # --- LISTADO RESUMEN ORDENADO POR LIGAS + FILTROS + COPIAR - RESTAURADO ---
+        html_listado_g = "<div style='font-family:monospace;background:#fff;color:#000;padding:8px;border-radius:6px;margin:6px 0;font-size:11px;border:1px solid #000'>"
+        for liga_name in sorted(resumen_ligas_g.keys()):
+            html_listado_g += f"<div style='font-weight:900;margin-top:12px;color:#fff;background:#000;padding:4px 6px;border-radius:3px'>{liga_name.upper()}</div>"
+            for team_r, cnt_r, j_str_r in sorted(resumen_ligas_g[liga_name], key=lambda x: x[1], reverse=True):
+                html_listado_g += f"<div style='margin-left:12px;color:#000;padding:2px 0;border-bottom:1px dotted #ccc'>• {team_r} ({cnt_r}/{n_margen}) {j_str_r}</div>"
+        html_listado_g += "</div>"
+
+        if not ligas_sel_g:
+            ligas_txt = "TODAS"
+        elif len(ligas_sel_g) > 4:
+            ligas_txt = f"{len(ligas_sel_g)} LIGAS"
+        else:
+            ligas_txt = ", ".join(ligas_sel_g)
+
+        if not equipos_sel_g:
+            equipos_txt = "TODOS"
+        elif len(equipos_sel_g) > 8:
+            equipos_txt = f"{len(equipos_sel_g)} EQUIPOS"
+        else:
+            equipos_txt = ", ".join(equipos_sel_g)
+
+        filtros_txt = f"FILTROS: Ligas={ligas_txt} | Equipos={equipos_txt} | Cond={cond_g_sel} | HT={goles_ht_sel} | 75-90={goles_7590_sel} | 80-90={goles_8090_sel} | Key={filtro_key} | Vent={n_margen} | Cumplen={calificados_g}"
 
         if calificados_g == 0:
-            st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75})")
+            st.info(f"Ningún equipo cumple 3/5 con 2 seguidos (25-45={check_ht} 75-90={check_75}) | {filtros_txt}")
+            st.code(filtros_txt, language="text")
         else:
             import streamlit.components.v1 as components
             bloque = f"""
             <div style="width:100%; font-family:monospace;">
-                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                <div style='font-family:monospace;background:#FFF9C4;color:#000;padding:8px;border:1px solid #000;border-radius:6px;margin:8px 0;font-size:11px;font-weight:700'>{filtros_txt}</div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('copySourceG').innerText).then(()=>{{let b=document.getElementById('btnG_top'); b.innerText='COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='COPIAR FILTROS + RESUMEN ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG_top' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-bottom:8px'>COPIAR FILTROS + RESUMEN ({calificados_g})</button>
                 <div style='font-weight:900;background:#000;color:#fff;padding:6px;margin-bottom:6px'>EQUIPOS QUE CUMPLEN: {calificados_g}</div>
-                <div id='targetG' style="max-height:none; overflow:visible;">{html_listado_g}{html_g}</div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('targetG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='📋 COPIAR GOLES HT 75-90 ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:12px; margin-bottom:20px'>📋 COPIAR GOLES HT 75-90 ({calificados_g})</button>
+                <div id='copySourceG' style="max-height:none; overflow:visible;">
+                    <div style='white-space:pre-wrap;margin-bottom:10px'>{filtros_txt}</div>
+                    <div>{html_listado_g}</div>
+                    <div>{html_g}</div>
+                </div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('copySourceG').innerText).then(()=>{{let b=document.getElementById('btnG'); b.innerText='COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText='COPIAR FILTROS + RESUMEN ({calificados_g})'; b.style.background='#0A2342'}},1200)}})" id='btnG' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:12px; margin-bottom:20px'>COPIAR FILTROS + RESUMEN ({calificados_g})</button>
                 <div style="height:30px"></div>
             </div>
             """
-            h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g))//6 + 500))
+            h_g = min(8000, max(1200, (len(html_g)+len(html_listado_g)+len(filtros_txt))//6 + 500))
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
