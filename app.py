@@ -1639,11 +1639,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
+                # FIX ORDEN REAL POR FECHA DESCENDENTE - NO RECALCULAR JORNADA
+                df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False)
                 jornadas_fix3 = sorted(df_team_fix3['Jornada'].dropna().unique(), reverse=True)[:15] if not df_team_fix3.empty else []
                 for j_fix3 in jornadas_fix3:
-                    d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
+                    d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date_parsed', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
                     if d_j_ok_fix3.empty and len(jornadas_fix3) == 1:
-                        d_j_ok_fix3 = df_team_fix3.sort_values('Date', ascending=False).head(15)
+                        d_j_ok_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False).head(15)
                     es_hueco_fix3 = d_j_ok_fix3.empty
                     if es_hueco_fix3:
                         continue
