@@ -2800,15 +2800,13 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()}</div>", unsafe_allow_html=True)
-                # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03
+                # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03 - FIX REMO ULTIMO BRAGANTINO 18/10 ARRIBA
                 def _parse_fecha_resto_robusto(s):
                     try:
                         if pd.isna(s):
                             return pd.NaT
-                        # 1º intenta ISO YYYY-MM-DD que devuelve la API
                         d = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')
                         if pd.isna(d):
-                            # 2º intenta dd/mm/yyyy
                             d = pd.to_datetime(s, dayfirst=True, errors='coerce')
                         if pd.isna(d):
                             d = pd.to_datetime(s, errors='coerce')
@@ -2824,10 +2822,14 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 df_team_base_pred_r['Jornada'] = range(1, len(df_team_base_pred_r)+1)
                 if not df_team_r.empty:
                     df_team_r['Jornada'] = range(1, len(df_team_r)+1)
-                # FIX REMO - orden real por fecha descendente, ultimo jugado primero
+                # FIX REMO - ordena jornadas por fecha real, ultimo BRAGANTINO 18/10 primero
                 df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
                 df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
-                jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
+                if not df_team_base_pred_r.empty and 'Jornada' in df_team_base_pred_r.columns:
+                    fecha_por_j = df_team_base_pred_r.groupby('Jornada')['Date_parsed'].max()
+                    jornadas_r = fecha_por_j.sort_values(ascending=False).head(15).index.tolist()
+                else:
+                    jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j in jornadas_r:
                     d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
