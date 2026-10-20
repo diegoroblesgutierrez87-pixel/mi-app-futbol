@@ -1518,14 +1518,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
             except:
                 continue
             st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO FIX3: {h_fut_fix3} vs {a_fut_fix3} | {partes_fix3[0].strip()}</div>", unsafe_allow_html=True)
+            # [TAG-VISUAL-LOCAL-VISITANTE-FIX3] LOCAL arriba / VISITANTE abajo - no toca colores/logica
             if "MANUAL" in partido_str_fix3:
-                equipos_a_mostrar_fix3 = []
-                if equipos_manuales_1_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_1_fix3)
-                if equipos_manuales_2_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_2_fix3)
+                equipos_locales_fix3 = []
+                equipos_visitantes_fix3 = []
+                if equipos_manuales_1_fix3: equipos_locales_fix3.extend(equipos_manuales_1_fix3)
+                if equipos_manuales_2_fix3: equipos_visitantes_fix3.extend(equipos_manuales_2_fix3)
+                equipos_a_mostrar_fix3 = equipos_locales_fix3 + equipos_visitantes_fix3
             else:
-                equipos_a_mostrar_fix3 = [h_fut_fix3, a_fut_fix3]
-                if equipos_manuales_1_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_1_fix3)
-                if equipos_manuales_2_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_2_fix3)
+                equipos_locales_fix3 = [h_fut_fix3]
+                equipos_visitantes_fix3 = [a_fut_fix3]
+                if equipos_manuales_1_fix3: equipos_locales_fix3.extend(equipos_manuales_1_fix3)
+                if equipos_manuales_2_fix3: equipos_visitantes_fix3.extend(equipos_manuales_2_fix3)
+                equipos_a_mostrar_fix3 = equipos_locales_fix3 + equipos_visitantes_fix3
             for nombre_eq_fix3 in equipos_a_mostrar_fix3:
                 norm_eq_fix3 = normaliza(nombre_eq_fix3)
                 eq_up_fix3 = nombre_eq_fix3.upper().strip()
