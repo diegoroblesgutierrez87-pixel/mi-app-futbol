@@ -1783,12 +1783,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         except:
                             _fecha_str_fix3 = ""
                         html_lineas_fix3 += (
-                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
-                            f"J{int(j_fix3)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix3})</span></div>"
-                            f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px;max-width:380px'>"
+                            f"<div style='text-align:center;color:{col_main};font-family:monospace;font-weight:900;font-size:11px;margin-bottom:6px'>{estado} ({_fecha_str_fix3})</div>"
+                            f"<div style='display:grid;grid-template-columns:65px 1fr 24px;align-items:center;font-family:monospace;font-weight:900;font-size:11px;color:{col_main};line-height:1.5'>"
+                            f"<span>J{int(j_fix3)} |</span><span style='text-align:left;padding-left:4px'>{h}</span><span style='text-align:right'>{hg_disp}</span>"
+                            f"<span></span><span style='text-align:left;padding-left:4px'>{a}</span><span style='text-align:right'>{ag_disp}</span>"
                             f"</div>"
-                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px'></div> "
+                            f"<div style='text-align:center;font-size:10px;line-height:1.6;margin-top:6px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
+                            f"</div>"
+                            f"<div style='height:1px;background:#e6e6e6;margin:0 0 10px 12px;max-width:380px'></div> "
                         ) # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
