@@ -1623,17 +1623,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                     st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
                     continue
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                # FIX3 ORDEN POR FECHAS - J1=PRIMERA SEVILLA, J8=ULTIMA GETAFE 1-1 RAYO
+                # FIX3 ORDEN POR FECHAS - FIX REAL - J1=SEVILLA 15/08, J8=GETAFE 19/10 ULTIMA
                 def _parse_fecha_fix3_robusto(s):
                     try:
                         return pd.to_datetime(s, errors='coerce')
                     except:
                         return pd.NaT
                 df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
-                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values('Date_parsed', ascending=True)
+                df_team_base_pred_fix3['fid_num'] = pd.to_numeric(df_team_base_pred_fix3['fixture_id'], errors='coerce')
+                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
                 df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
-                df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=True) if not df_team_fix3.empty else df_team_fix3
-                # J1 = mas antigua (SEVILLA 2026-08-15), J8 = mas reciente (GETAFE 1-1 RAYO 2026-10-19)
+                df_team_fix3['fid_num'] = pd.to_numeric(df_team_fix3['fixture_id'], errors='coerce') if not df_team_fix3.empty else 0
+                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix3.empty else df_team_fix3
+                # J1 = mas antigua, J8 = mas reciente GETAFE 1-1 RAYO
                 df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
                 if not df_team_fix3.empty:
                     df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
