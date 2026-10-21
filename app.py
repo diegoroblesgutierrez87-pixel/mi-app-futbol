@@ -2420,7 +2420,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else: col_ht = "#8B4513"
                         else:
                             col_ht = "#0A2342"
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
+                        # FIX: elimina [2-1] rojo, pone GANA/PIERDE/EMPATE letra normal
+                        if _is_home_fix2:
+                            if hthg > htag: estado_1p_fix2 = "GANA"
+                            elif hthg < htag: estado_1p_fix2 = "PIERDE"
+                            else: estado_1p_fix2 = "EMPATE"
+                        elif _is_away_fix2:
+                            if htag > hthg: estado_1p_fix2 = "GANA"
+                            elif htag < hthg: estado_1p_fix2 = "PIERDE"
+                            else: estado_1p_fix2 = "EMPATE"
+                        else:
+                            estado_1p_fix2 = "EMPATE"
+                        ht_html = f"<span style='color:{col_ht};font-weight:700;font-size:10px;margin-left:6px'>{estado_1p_fix2}</span>"
                         # [TAG-FIX2-V4-MINI] - AGRUPADO + 4-1 OK - NO TOCA COLORES NI LOGICA
                         filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         evs_sorted_fix2 = sorted(eventos_fix2.get(fid, []), key=lambda x: x['m'])
