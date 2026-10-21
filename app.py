@@ -2573,7 +2573,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" #  ej 30'[0-1]
                             else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>" # 
                             htag_disp = f"{htag}" # 
-                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ft_txt = f"[{hg_disp}-{ag_disp}]" # 
                             ht_inner = f"{hthg_disp}-{htag_disp}" # 
                         elif norm_eq_fix2 == an: #  visitante
                             hg_disp = f"{hg}" # 
@@ -2582,10 +2582,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             hthg_disp = f"{hthg}" # 
                             if htag == 0 and hthg > 0: htag_disp = f"{htag}" # 
                             else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>" # 
-                            ft_txt = f"{hg_disp}-{ag_disp}" # 
+                            ft_txt = f"[{hg_disp}-{ag_disp}]" # 
                             ht_inner = f"{hthg_disp}-{htag_disp}" # 
                         else:
-                            ft_txt = f"{hg}-{ag}" # 
+                            ft_txt = f"[{hg}-{ag}]" # 
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
