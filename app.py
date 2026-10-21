@@ -2966,7 +2966,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX RESTO ---
+                        # [RESTO-FIX2-VISUAL] - MISMA LOGICA QUE FIX2
                         try:
                             _nf_clean = str(norm_eq_r).upper().strip()
                             _h_clean = str(h_norm_r).upper().strip()
@@ -2976,39 +2976,95 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         except:
                             _is_home = (norm_eq_r == h_norm_r)
                             _is_away = (norm_eq_r == a_norm_r)
-
                         if _is_home:
-                            if hthg > htag: col_ht = "#0f8105"  # GANA -> verde
-                            elif hthg < htag: col_ht = "#f31818" # PIERDE -> rojo
-                            else: col_ht = "#8B4513" # EMPATE -> marron
+                            if hthg > htag: col_ht = "#000"
+                            elif hthg < htag: col_ht = "#000"
+                            else: col_ht = "#000"
                         elif _is_away:
-                            if htag > hthg: col_ht = "#0f8105"
-                            elif htag < hthg: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
+                            if htag > hthg: col_ht = "#000"
+                            elif htag < hthg: col_ht = "#000"
+                            else: col_ht = "#000"
                         else:
-                            col_ht = "#0A2342"
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        mins_1t = []; mins_2t = [] # [RESTO]
-                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None) # [RESTO]
-                        u_min_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
-                        for ev in sorted(eventos_r.get(fid, []), key=lambda x: x['m']): # [RESTO]
-                            if 'Missed' in ev.get('tipo',''): continue # [RESTO]
-                            m = ev.get('m',-1); team_ev = ev['team'] # [RESTO]
-                            es_mio = norm_eq_r in team_ev # [RESTO]
-                            col_min = col_main if es_mio else "#000" # [RESTO]
-                            peso = "font-weight:900;" if es_mio else "font-weight:700;" # [RESTO]
-                            sub_min_r = u_min_black_r if es_mio else "" # [RESTO] solo mios
-                            en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R) # [RESTO]
-                            if filtro_act and en_rango: # [RESTO]
-                                span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>" # [RESTO]
-                            else: # [RESTO]
-                                span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:2px'> {m}'</span>" # [RESTO]
-                            if m <= 45: mins_1t.append(span) # [RESTO]
-                            else: mins_2t.append(span) # [RESTO]
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
-                        else: mins_html = ht_html # [RESTO]
+                            col_ht = "#000"
+                        # 0-0 lo ponemos
+                        if hthg == 0 and htag == 0:
+                            estado_1p_r = "0-0 EMPATE"
+                        elif _is_home:
+                            if hthg > htag: estado_1p_r = "GANA"
+                            elif hthg < htag: estado_1p_r = "PIERDE"
+                            else: estado_1p_r = "EMPATE"
+                        elif _is_away:
+                            if htag > hthg: estado_1p_r = "GANA"
+                            elif htag < hthg: estado_1p_r = "PIERDE"
+                            else: estado_1p_r = "EMPATE"
+                        else:
+                            estado_1p_r = "EMPATE"
+                        ht_html = f"<span style='color:#000;font-weight:700;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
+
+                        # [RESTO-FIX2-AGRUPADO] - GOLES DIVIDIDOS IZQ/DER IGUAL QUE FIX2
+                        import re
+                        def _es_home_r(team_str):
+                            def _clean(s):
+                                s = str(s).upper().strip()
+                                s = re.sub(r'^(VFL|1 FC|1\. FC|FC|CF|SC|SV|TSG|BORUSSIA|BAYER|SPVGG|SG|VfB|FSV|BSC)\s+', '', s)
+                                return s.strip()
+                            t = _clean(team_str)
+                            hn_c = _clean(h_norm_r)
+                            an_c = _clean(a_norm_r)
+                            if t == hn_c: return True
+                            if t == an_c: return False
+                            if hn_c in t or t in hn_c: return True
+                            if an_c in t or t in an_c: return False
+                            if t.split()[-1] == hn_c.split()[-1]: return True
+                            if t.split()[-1] == an_c.split()[-1]: return False
+                            return False
+                        def _agrupa_r_con_score(evs, sh=0, sa=0):
+                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa
+                            for ev in evs:
+                                if 'Missed' in ev.get('tipo',''): continue
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
+                                is_home = not _es_home_r(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_r(team_ev)
+                                if is_home: h+=1
+                                else: a+=1
+                                benef = h_norm_r if is_home else a_norm_r
+                                es_mio = norm_eq_r in benef
+                                col_min = col_main if es_mio else "#000"
+                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                                sub_min_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
+                                en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
+                                if filtro_act if 'filtro_act' in locals() else False and en_rango:
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
+                                else:
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px'>{m}'</span>"
+                                if last is not None and is_home != last and cur:
+                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
+                                cur.append(span); last=is_home; lh=h; la=a
+                            if cur: grupos.append(("".join(cur), lh, la, last))
+                            return grupos, h, a
+                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
+                        evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
+                        evs_1p_r = [e for e in evs_sorted_r if e.get('m',0) <= 45]
+                        evs_2p_r = [e for e in evs_sorted_r if e.get('m',0) > 45]
+                        g1_data_r, h1_r, a1_r = _agrupa_r_con_score(evs_1p_r, 0, 0)
+                        g2_data_r, _, _ = _agrupa_r_con_score(evs_2p_r, h1_r, a1_r)
+                        if g1_data_r: g1_data_r[-1] = (g1_data_r[-1][0], hthg, htag, g1_data_r[-1][3])
+                        if g2_data_r: g2_data_r[-1] = (g2_data_r[-1][0], hg, ag, g2_data_r[-1][3])
+                        def fmt_r(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
+                        g1_r = [fmt_r(t) for t in g1_data_r]
+                        g2_r = [fmt_r(t) for t in g2_data_r]
+                        left_parts = []
+                        for ii, gg in enumerate(g1_r):
+                            if ii == len(g1_r)-1:
+                                left_parts.append(f"{gg} {ht_html}")
+                            else:
+                                left_parts.append(gg)
+                        if not left_parts:
+                            left_parts = [ht_html]
+                        right_parts = g2_r if g2_r else []
+                        left_col = "<br>".join(left_parts)
+                        right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
+                        mins_html = f"<div style='display:flex;gap:8px;align-items:flex-start;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900'>|</div><div style='flex:1;text-align:left'>{right_col}</div></div>"
+                        mins_1t = g1_r; mins_2t = g2_r
                         def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_r == h_norm_r: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
                         elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
