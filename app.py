@@ -2598,7 +2598,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _fecha_str_fix2 = ""
                         html_lineas_fix2 += (
-                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
+                            f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
                             f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
                             f"J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix2})</span></div>"
                             f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
