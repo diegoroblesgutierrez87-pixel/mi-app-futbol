@@ -3078,38 +3078,32 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             a_txt = f"<span style='border-bottom:3.5px solid #000;padding-bottom:0px;'>{a}</span>" # [RESTO] negro
                         else: # [RESTO]
                             h_txt = h; a_txt = a # [RESTO]
-                        # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 RESTO - [TAG-RESTO-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX2-FIX3] ---
+                        # --- SUBRAYADO NEGRO FT SOLO - MANTIENE AGRUPADO FIX2 - NO REESCRIBE HT ---
                         u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
                         u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
                         if norm_eq_r == h_norm_r: # [RESTO] local
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}" # [RESTO]
-                            else: hg_disp = f"<span style='{u_black_r}'>{hg}</span>" # [RESTO]
-                            ag_disp = f"{ag}" # [RESTO]
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" # [RESTO]
-                            else: hthg_disp = f"<span style='{u_black_w_r}'>{hthg}</span>" # [RESTO]
-                            htag_disp = f"{htag}" # [RESTO]
-                            ft_txt = f"{hg_disp}-{ag_disp}" # [RESTO]
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # [RESTO]
+                            if hg == 0 and ag > 0: hg_disp = f"{hg}"
+                            else: hg_disp = f"<span style='{u_black_r}'>{hg}</span>"
+                            ag_disp = f"{ag}"
+                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}"
+                            else: hthg_disp = f"<span style='{u_black_w_r}'>{hthg}</span>"
+                            htag_disp = f"{htag}"
+                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            ht_inner = f"{hthg_disp}-{htag_disp}"
                         elif norm_eq_r == a_norm_r: # [RESTO] visitante
-                            hg_disp = f"{hg}" # [RESTO]
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}" # [RESTO]
-                            else: ag_disp = f"<span style='{u_black_r}'>{ag}</span>" # [RESTO]
-                            hthg_disp = f"{hthg}" # [RESTO]
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}" # [RESTO]
-                            else: htag_disp = f"<span style='{u_black_w_r}'>{htag}</span>" # [RESTO]
-                            ft_txt = f"{hg_disp}-{ag_disp}" # [RESTO]
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # [RESTO]
+                            hg_disp = f"{hg}"
+                            if ag == 0 and hg > 0: ag_disp = f"{ag}"
+                            else: ag_disp = f"<span style='{u_black_r}'>{ag}</span>"
+                            hthg_disp = f"{hthg}"
+                            if htag == 0 and hthg > 0: htag_disp = f"{htag}"
+                            else: htag_disp = f"<span style='{u_black_w_r}'>{htag}</span>"
+                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            ht_inner = f"{hthg_disp}-{htag_disp}"
                         else:
-                            ft_txt = f"{hg}-{ag}" # [RESTO]
-                            ht_inner = f"{hthg}-{htag}" # [RESTO]
-                        ht_str = f"[{ht_inner}]" # [RESTO]
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # [RESTO]
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # [RESTO]
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
-                        else: mins_html = ht_html # [RESTO]
-                        # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
-                        # [TAG-FIX2-V4-MINI-2] - ya viene en mins_html, no duplicar
+                            ft_txt = f"{hg}-{ag}"
+                            ht_inner = f"{hthg}-{htag}"
+                        ht_str = f"[.{ht_inner}]" # solo para copiar
+                        # NO reescribas ht_html ni mins_html - mantiene GANA/PIERDE + agrupado izq/der + 10px
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
