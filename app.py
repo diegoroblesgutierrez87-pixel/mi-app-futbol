@@ -1529,8 +1529,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
             for nombre_eq_fix3 in equipos_a_mostrar_fix3:
                 norm_eq_fix3 = normaliza(nombre_eq_fix3)
                 eq_up_fix3 = nombre_eq_fix3.upper().strip()
-                # FIX RAPIDO EXACTO - vectorizado, ATLETICO MADRID != ATLETICO MADRID II
                 eq_up_fix3 = nombre_eq_fix3.upper().strip()
+                def _is_match_fix3(team_raw):
+                    return str(team_raw).upper().strip() == eq_up_fix3
                 df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if cond_loc_pred_fix3 == "equipo local solamente partidos de local" and nombre_eq_fix3 == h_fut_fix3:
                     df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
@@ -1673,14 +1674,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                         ht_str = f"[{hthg}-{htag}]"
                         # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO + SUBRAYADO GOLES FIX3 - [TAG-FIX3-HT-SUBRAYADO-FINAL-NO-TOCAR-FIX2] ---
                         try:
-                            _nf_clean_fix3 = _strip_acc_fix3(norm_eq_fix3) # 
-                            _h_clean_fix3 = _strip_acc_fix3(h_norm_r) # 
-                            _a_clean_fix3 = _strip_acc_fix3(a_norm_r) # 
-                            _is_home_fix3 = (_nf_clean_fix3 == _h_clean_fix3) or (_nf_clean_fix3 in _h_clean_fix3) or (_h_clean_fix3 in _nf_clean_fix3)
-                            _is_away_fix3 = (_nf_clean_fix3 == _a_clean_fix3) or (_nf_clean_fix3 in _a_clean_fix3) or (_a_clean_fix3 in _nf_clean_fix3)
+                            _nf_clean_fix3 = str(norm_eq_fix3).upper().strip()
+                            _h_clean_fix3 = str(h_norm_r).upper().strip()
+                            _a_clean_fix3 = str(a_norm_r).upper().strip()
+                            _is_home_fix3 = _nf_clean_fix3 == _h_clean_fix3
+                            _is_away_fix3 = _nf_clean_fix3 == _a_clean_fix3
                         except:
-                            _is_home_fix3 = (norm_eq_fix3 == hn) # 
-                            _is_away_fix3 = (norm_eq_fix3 == an) # 
+                            _is_home_fix3 = (norm_eq_fix3 == hn)
+                            _is_away_fix3 = (norm_eq_fix3 == an)
                         if _is_home_fix3:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
