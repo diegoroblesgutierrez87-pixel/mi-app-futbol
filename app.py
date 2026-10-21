@@ -2339,20 +2339,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
                         # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 CORREGIDO - [TAG-FIX2-HT-UNICO-NO-TOCAR-FIX3] ---
-                        def _strip_acc_fix2(s): # [FIX2-ONLY]
-                            try:
-                                return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-                            except:
-                                return str(s)
                         try:
-                            _nf_clean_fix2 = _strip_acc_fix2(norm_eq_fix2) # 
-                            _h_clean_fix2 = _strip_acc_fix2(h_norm_r) # 
-                            _a_clean_fix2 = _strip_acc_fix2(a_norm_r) # 
-                            _is_home_fix2 = (_nf_clean_fix2 == _h_clean_fix2) or (_nf_clean_fix2 in _h_clean_fix2) or (_h_clean_fix2 in _nf_clean_fix2)
-                            _is_away_fix2 = (_nf_clean_fix2 == _a_clean_fix2) or (_nf_clean_fix2 in _a_clean_fix2) or (_a_clean_fix2 in _nf_clean_fix2)
+                            _nf_clean_fix2 = str(norm_eq_fix2).upper().strip()
+                            _h_clean_fix2 = str(h_norm_r).upper().strip()
+                            _a_clean_fix2 = str(a_norm_r).upper().strip()
+                            _is_home_fix2 = _nf_clean_fix2 == _h_clean_fix2
+                            _is_away_fix2 = _nf_clean_fix2 == _a_clean_fix2
                         except:
-                            _is_home_fix2 = (norm_eq_fix2 == hn) # 
-                            _is_away_fix2 = (norm_eq_fix2 == an) # 
+                            _is_home_fix2 = (norm_eq_fix2 == hn)
+                            _is_away_fix2 = (norm_eq_fix2 == an)
                         if _is_home_fix2:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
