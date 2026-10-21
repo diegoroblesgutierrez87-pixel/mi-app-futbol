@@ -2461,15 +2461,21 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         def fmt_fix2(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
                         g1_fix2 = [fmt_fix2(t) for t in g1_data_fix2]
                         g2_fix2 = [fmt_fix2(t) for t in g2_data_fix2]
-                        max_r = max(len(g1_fix2), len(g2_fix2), 1)
-                        filas_fix2 = ""
-                        for ii in range(max_r):
-                            left = g1_fix2[ii] if ii < len(g1_fix2) else ""
-                            right = g2_fix2[ii] if ii < len(g2_fix2) else ""
-                            if ii == len(g1_fix2)-1 and g1_fix2: left = f"{left} {ht_html}" if left else ht_html
-                            if not g1_fix2 and ii == 0: left = ht_html
-                            filas_fix2 += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;line-height:1.6'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
-                        mins_html = f"<div style='margin-top:2px'>{filas_fix2}</div>"
+                        # [TAG-FIX2-V4-FIX-DESCOLOCADO] - 2 columnas verticales - NO PETA
+                        left_col = ""
+                        for ii, gg in enumerate(g1_fix2):
+                            if ii == len(g1_fix2)-1:
+                                left_col += f"<div>{gg} {ht_html}</div>"
+                            else:
+                                left_col += f"<div>{gg}</div>"
+                        if not g1_fix2:
+                            left_col = f"<div>{ht_html}</div>"
+                        right_col = ""
+                        for gg in g2_fix2:
+                            right_col += f"<div>{gg}</div>"
+                        if not g2_fix2:
+                            right_col = "<div style='color:#888'>-</div>"
+                        mins_html = f"<div style='display:grid;grid-template-columns:1fr 16px 1fr;gap:4px;align-items:start;margin-top:2px'><div style='text-align:left;line-height:1.7'>{left_col}</div><div style='text-align:center;color:#000;font-weight:900;line-height:1.7'>|</div><div style='text-align:left;line-height:1.7'>{right_col}</div></div>"
                         mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
