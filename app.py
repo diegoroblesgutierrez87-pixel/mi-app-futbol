@@ -2558,11 +2558,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
                         if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"; a_txt = a
+                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
                         elif norm_eq_fix2 == a_norm_r:
-                            h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
+                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                         else:
-                            h_txt = h; a_txt = a
+                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
                         # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 FIX2 - [TAG-FIX2-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX3] ---
                         u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;" # 
                         u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # 
@@ -2599,7 +2599,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _fecha_str_fix2 = ""
                         html_lineas_fix2 += (
                             f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
                             f"J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix2})</span></div>"
                             f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
                             f"</div>"
