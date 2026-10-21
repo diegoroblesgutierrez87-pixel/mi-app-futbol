@@ -3531,9 +3531,8 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
 
             if liga_team_g not in resumen_ligas_g:
                 resumen_ligas_g[liga_team_g] = []
-            # JORNADAS para resumen: J23,J22,_,... - FIX ORDEN RECIENTE -> ANTIGUA
-            _fid_map = team_fid_to_j.get(team_g.upper().strip(), {}) or team_fid_to_j.get(normaliza(team_g), {})
-            def _key_dmy_cnt(p):
+            # JORNADAS para resumen: J7=reciente -> J1=antigua - FIX DEFINITIVO SIN DESCOLGARSE
+            def _key_dmy_cnt_fix(p):
                 s = p.get('date','')
                 try:
                     if '/' in s:
@@ -3542,7 +3541,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     return s
                 except:
                     return ""
-            _detalle_cnt_ord = sorted(_detalle_cnt, key=_key_dmy_cnt, reverse=True)
+            _detalle_cnt_ord = sorted(_detalle_cnt, key=_key_dmy_cnt_fix, reverse=True)
             _checks_real_ord = []
             for _po in _detalle_cnt_ord:
                 try:
@@ -3553,12 +3552,7 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             _j_list = []
             for _idx, _p in enumerate(_detalle_cnt_ord[:n_margen]):
                 _is_ok = _checks_real_ord[_idx] if _idx < len(_checks_real_ord) else False
-                _rj = _fid_map.get(str(_p.get('fid','')), '-')
-                if _rj == '-':
-                    try:
-                        _rj = str(_p.get('jornada','') or '-') 
-                    except:
-                        _rj = '-'
+                _rj = n_margen - _idx
                 _is_home_loc = normaliza(_p.get('home','')) == normaliza(team_g)
                 _loc = "C" if _is_home_loc else "F"
                 _j_list.append(f"J{_rj}{_loc}" if _is_ok else "_")
