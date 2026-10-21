@@ -2547,9 +2547,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not left_parts:
                             left_parts = [ht_html]
                         right_parts = g2_fix2 if g2_fix2 else []
-                        # FIX2 - VISUAL 1ªParte / 2ªParte EN 2 LINEAS - [TAG-FIX2-VISUAL-2LINEAS]
-                        left_inline = " ".join(left_parts) if left_parts else ht_html
-                        right_inline = " ".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
+                        # FIX2 - VISUAL 1ªParte / 2ªParte EN 2 LINEAS CON COMA - [TAG-FIX2-VISUAL-2LINEAS-COMA]
+                        left_inline = " , ".join(left_parts) if left_parts else ht_html
+                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
                         mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
                         mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
@@ -3297,8 +3297,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         if not left_parts:
                             left_parts = [ht_html]
                         right_parts = g2_r if g2_r else []
-                        left_inline = " ".join(left_parts) if left_parts else ht_html
-                        right_inline = " ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
+                        left_inline = " , ".join(left_parts) if left_parts else ht_html
+                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
                         mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
                         mins_1t = g1_r; mins_2t = g2_r
                         def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
