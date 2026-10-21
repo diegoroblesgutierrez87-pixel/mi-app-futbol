@@ -2484,7 +2484,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not left_parts:
                             left_parts = [ht_html]
                         right_parts = g2_fix2 if g2_fix2 else []
-                        # une con <br> para que quede vertical de verdad
+                        # une con <br> para que quede vertical de verdad MLS
                         left_col = "<br>".join(left_parts)
                         right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
                         mins_html = f"<div style='display:flex;gap:8px;align-items:flex-start;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900'>|</div><div style='flex:1;text-align:left'>{right_col}</div></div>"
@@ -3032,10 +3032,10 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 peso = "font-weight:900;" if es_mio else "font-weight:700;"
                                 sub_min_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
                                 en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
-                                if filtro_act if 'filtro_act' in locals() else False and en_rango:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
+                                if filtro_act and en_rango:
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px;font-size:10px'>{m}'</span>"
                                 else:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px'>{m}'</span>"
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px;font-size:10px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
                                     grupos.append(("".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
@@ -3049,7 +3049,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         g2_data_r, _, _ = _agrupa_r_con_score(evs_2p_r, h1_r, a1_r)
                         if g1_data_r: g1_data_r[-1] = (g1_data_r[-1][0], hthg, htag, g1_data_r[-1][3])
                         if g2_data_r: g2_data_r[-1] = (g2_data_r[-1][0], hg, ag, g2_data_r[-1][3])
-                        def fmt_r(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
+                        def fmt_r(t): return t[0] + f"<span style='color:#000;font-weight:700;font-size:10px;margin-left:4px'>{t[1]}-{t[2]}</span>"
                         g1_r = [fmt_r(t) for t in g1_data_r]
                         g2_r = [fmt_r(t) for t in g2_data_r]
                         left_parts = []
@@ -3062,8 +3062,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             left_parts = [ht_html]
                         right_parts = g2_r if g2_r else []
                         left_col = "<br>".join(left_parts)
-                        right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
-                        mins_html = f"<div style='display:flex;gap:8px;align-items:flex-start;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900'>|</div><div style='flex:1;text-align:left'>{right_col}</div></div>"
+                        right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
+                        mins_html = f"<div style='display:flex;gap:12px;align-items:flex-start;margin-top:2px;line-height:1.8;padding-right:24px;box-sizing:border-box'><div style='flex:1;text-align:left;padding-left:2px'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900;flex-shrink:0'>|</div><div style='flex:1;text-align:left;padding-left:16px'>{right_col}</div></div>"
                         mins_1t = g1_r; mins_2t = g2_r
                         def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_r == h_norm_r: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
