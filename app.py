@@ -2999,7 +2999,10 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             else: estado_1p_r = "EMPATE"
                         else:
                             estado_1p_r = "EMPATE"
-                        ht_html = f"<span style='color:#000;font-weight:700;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
+                        if "GANA" in estado_1p_r: col_estado_r = "#0f8105"
+                        elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
+                        else: col_estado_r = "#8B4513"
+                        ht_html = f"<span style='color:{col_estado_r};font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
 
                         # [RESTO-FIX2-AGRUPADO] - GOLES DIVIDIDOS IZQ/DER IGUAL QUE FIX2
                         import re
