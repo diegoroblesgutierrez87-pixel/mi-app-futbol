@@ -2547,10 +2547,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not left_parts:
                             left_parts = [ht_html]
                         right_parts = g2_fix2 if g2_fix2 else []
-                        # une con <br> para que quede vertical de verdad MLS
+                        # une con <br> para que quede vertical de verdad MLS - SEPARACION VERTICAL 1ª|2ª
                         left_col = "<br>".join(left_parts)
                         right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
-                        mins_html = f"<div style='display:flex;gap:8px;align-items:flex-start;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900'>|</div><div style='flex:1;text-align:left'>{right_col}</div></div>"
+                        mins_html = f"<div style='display:flex;gap:0;align-items:stretch;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left;padding-right:10px'>{left_col}</div><div style='width:3px;background:#000;min-height:22px'></div><div style='flex:1;text-align:left;padding-left:10px'>{right_col}</div></div>"
                         mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
