@@ -2420,8 +2420,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else: col_ht = "#8B4513"
                         else:
                             col_ht = "#0A2342"
-                        # FIX: elimina [2-1] rojo, pone GANA/PIERDE/EMPATE sin color
-                        if _is_home_fix2:
+                        # FIX: GANA/PIERDE/EMPATE sin color, si 0-0 lo ponemos
+                        if hthg == 0 and htag == 0:
+                            estado_1p_fix2 = "0-0 EMPATE"
+                        elif _is_home_fix2:
                             if hthg > htag: estado_1p_fix2 = "GANA"
                             elif hthg < htag: estado_1p_fix2 = "PIERDE"
                             else: estado_1p_fix2 = "EMPATE"
