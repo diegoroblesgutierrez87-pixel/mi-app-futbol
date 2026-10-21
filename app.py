@@ -3306,14 +3306,14 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
-                        if norm_eq_r == h_norm_r: # [RESTO]
-                            h_txt = f"<span style='border-bottom:3.5px solid #000;padding-bottom:0px;'>{h}</span>" # [RESTO] negro
-                            a_txt = a # [RESTO]
-                        elif norm_eq_r == a_norm_r: # [RESTO]
-                            h_txt = h # [RESTO]
-                            a_txt = f"<span style='border-bottom:3.5px solid #000;padding-bottom:0px;'>{a}</span>" # [RESTO] negro
-                        else: # [RESTO]
-                            h_txt = h; a_txt = a # [RESTO]
+                        if norm_eq_r == h_norm_r: # [RESTO] solo filtrado con color
+                            h_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{h}</span>"
+                            a_txt = f"<span style='color:#000'>{a}</span>"
+                        elif norm_eq_r == a_norm_r:
+                            h_txt = f"<span style='color:#000'>{h}</span>"
+                            a_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{a}</span>"
+                        else:
+                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
                         # --- SUBRAYADO NEGRO FT SOLO - MANTIENE AGRUPADO FIX2 - NO REESCRIBE HT ---
                         u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
                         u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
