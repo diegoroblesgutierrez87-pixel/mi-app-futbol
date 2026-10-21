@@ -2572,17 +2572,37 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             mm = evc.get('m',0)
                             if mm <= 45: m1.append(f"{mm}'")
                             else: m2.append(f"{mm}'")
+                        # visual con HTML (sigue igual)
                         if m1 and m2: mins_txt = " ".join(m1) + f"{ht_str} " + " ".join(m2)
                         elif m1: mins_txt = " ".join(m1) + f"{ht_str}"
                         elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
                         else: mins_txt = f"{ht_str}"
-                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}|{h} {hg}-{ag} {a} {mins_txt}{estado}")
+                        # limpio para copiar - sin <span>
+                        ht_clean = f"[{hthg}-{htag}]"
+                        ft_clean = f"{hg}-{ag}"
+                        if m1 and m2: mins_txt_clean = " ".join(m1) + f"{ht_clean} " + " ".join(m2)
+                        elif m1: mins_txt_clean = " ".join(m1) + f"{ht_clean}"
+                        elif m2: mins_txt_clean = f"{ht_clean} " + " ".join(m2)
+                        else: mins_txt_clean = f"{ht_clean}"
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}|{h} {ft_clean} {a} {mins_txt_clean} {estado}")
 
                     st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix2}</div>", unsafe_allow_html=True)
 
     if partidos_pred_copy_fix2:
         import html as _html
-        texto_final_fix2 = "\n".join(partidos_pred_copy_fix2[:200])
+        # cabecera filtros para que se copie también
+        try:
+            _ligas_txt = ", ".join(ligas_pred_sel_fix2) if ligas_pred_sel_fix2 else "TODAS"
+            _fecha_txt = fecha_pred_sel_fix2
+            _cond_loc_txt = cond_loc_pred_fix2
+            _res_1p_txt = f"{res_1p_tipo_fix2} {resultados_pred_sel_fix2}"
+            _overs_txt = ", ".join(overs_sel_fix2) if overs_sel_fix2 else "TODOS"
+            _live_txt = f"{res_live_tipo_fix2} MIN:{min_live_raw_fix2 or '-'}"
+            _min_txt = f"DESDE:{min_desde_pred_raw_fix2 or '-'} HASTA:{min_hasta_pred_raw_fix2 or '-'}"
+            filtros_txt_fix2 = f"FILTROS FIX2: Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | CondLoc={_cond_loc_txt} | 1P={_res_1p_txt} | Overs={_overs_txt} | LIVE={_live_txt} | {_min_txt} | Equipos={equipos_a_mostrar_fix2}"
+        except:
+            filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2}"
+        texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
         components.html(f"""
