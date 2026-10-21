@@ -3350,6 +3350,17 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
                         else: col_estado_r = "#8B4513"
                         ht_html = f"<span style='color:{col_estado_r} !important;font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
+                        left_parts = []
+                        for ii, gg in enumerate(g1_r):
+                            if ii == len(g1_r)-1:
+                                left_parts.append(f"{gg} {ht_html}")
+                            else:
+                                left_parts.append(gg)
+                        if not left_parts:
+                            left_parts = [ht_html]
+                        left_inline = " , ".join(left_parts) if left_parts else ht_html
+                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
+                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
@@ -3358,8 +3369,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         except:
                             _fecha_str_r = ""
                         html_lineas_r += (
-                            f"<div style='border-left:3.5px solid {col_main};padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
+                            f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {h_txt} {ft_txt} {a_txt} <span style='background:#000;color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
                             f"<div style='font-size:7px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
                             f"</div>"
                             f"<div style='height:2px;background:#000;margin:0 0 10px 12px'></div>"
