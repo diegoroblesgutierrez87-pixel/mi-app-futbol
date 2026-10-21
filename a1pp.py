@@ -1,5 +1,4 @@
-#####################copia 21/10/2026
-import streamlit as st          
+import streamlit as st
 import pandas as pd
 import pathlib
 import re
@@ -1703,29 +1702,49 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        mins_1t = []; mins_2t = []
+                        # [TAG-FIX3-GOLES-LAYOUT-NUEVO-AGRUPADO-IZQ-DER] - NO TOCAR FIX2 NI RESTO
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
-                        # --- SUBRAYADO MINUTOS EQUIPO SELECCIONADO FIX3 - [TAG-FIX3-SUBRAYADO-MINUTOS-NO-TOCAR-FIX2] ---
-                        for ev in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
-                            if 'Missed' in ev.get('tipo',''): continue
-                            m = ev.get('m',-1); team_ev = ev['team']
-                            benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') else team_ev
-                            es_mio = norm_eq_fix3 in benef
-                            col_min = col_main if es_mio else "#000"
-                            peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                            #  subrayado solo mios
-                            sub_min = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:2px;" if es_mio else ""
-                            en_rango = (MIN_DESDE_PRED_FIX3 is None or m >= MIN_DESDE_PRED_FIX3) and (MIN_HASTA_PRED_FIX3 is None or m <= MIN_HASTA_PRED_FIX3)
-                            if filtro_act and en_rango:
-                                span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>"
-                            else:
-                                span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:2px'> {m}'</span>"
-                            if m <= 45: mins_1t.append(span)
-                            else: mins_2t.append(span)
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        else: mins_html = ht_html
+                        evs_sorted_fix3 = sorted(eventos_fix3.get(fid, []), key=lambda x: x['m'])
+                        def _agrupa_fix3(evs):  # [TAG-FIX3-AGRUPA-POR-EQUIPO-SEGUIDO]
+                            grupos = []
+                            last_team = None
+                            cur = []
+                            for ev in evs:
+                                if 'Missed' in ev.get('tipo',''): continue
+                                m = ev.get('m',-1); team_ev = ev['team']
+                                benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') else team_ev
+                                es_mio = norm_eq_fix3 in benef
+                                col_min = col_main if es_mio else "#000"
+                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                                sub_min = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:2px;" if es_mio else ""
+                                en_rango = (MIN_DESDE_PRED_FIX3 is None or m >= MIN_DESDE_PRED_FIX3) and (MIN_HASTA_PRED_FIX3 is None or m <= MIN_HASTA_PRED_FIX3)
+                                if filtro_act and en_rango:
+                                    span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:3px'>{m}'</span>"
+                                else:
+                                    span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:3px'>{m}'</span>"
+                                if benef != last_team and cur:
+                                    grupos.append("".join(cur))
+                                    cur = []
+                                cur.append(span)
+                                last_team = benef
+                            if cur:
+                                grupos.append("".join(cur))
+                            return grupos
+                        evs_1p_fix3 = [e for e in evs_sorted_fix3 if e.get('m',0) <= 45]
+                        evs_2p_fix3 = [e for e in evs_sorted_fix3 if e.get('m',0) > 45]
+                        g1_fix3 = _agrupa_fix3(evs_1p_fix3)
+                        g2_fix3 = _agrupa_fix3(evs_2p_fix3)
+                        max_rows_fix3 = max(len(g1_fix3), len(g2_fix3), 1)
+                        filas_html_fix3 = ""
+                        for ii in range(max_rows_fix3):
+                            left = g1_fix3[ii] if ii < len(g1_fix3) else ""
+                            right = g2_fix3[ii] if ii < len(g2_fix3) else ""
+                            if ii == len(g1_fix3)-1 and g1_fix3:
+                                left = left + f" {ht_html}" if left else ht_html
+                            if not g1_fix3 and ii == 0:
+                                left = ht_html
+                            filas_html_fix3 += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;gap:2px;line-height:1.5'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
+                        mins_html = f"<div style='margin-top:2px'>{filas_html_fix3}</div>"
                         def res_eq_pred_fix3(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix3 == hn: r1 = res_eq_pred_fix3(hthg, htag); rF = res_eq_pred_fix3(hg, ag)
                         elif norm_eq_fix3 == an: r1 = res_eq_pred_fix3(htag, hthg); rF = res_eq_pred_fix3(ag, hg)
