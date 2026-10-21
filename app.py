@@ -3105,8 +3105,27 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         else:
                             ft_txt = f"{hg}-{ag}"
                             ht_inner = f"{hthg}-{htag}"
-                        ht_str = f"[.{ht_inner}]" # solo para copiar
-                        # NO reescribas ht_html ni mins_html - mantiene GANA/PIERDE + agrupado izq/der + 10px
+                        ht_str = f"[{ht_inner}]" # solo para copiar - sin punto
+                        # FORZAR COLOR - GANA verde / PIERDE rojo / EMPATE marron
+                        if "GANA" in estado_1p_r: col_estado_r = "#0f8105"
+                        elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
+                        else: col_estado_r = "#8B4513"
+                        ht_html = f"<span style='color:{col_estado_r} !important;font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
+                        # Reinyectar ht_html coloreado en la columna izquierda
+                        if left_parts:
+                            left_parts[-1] = f"{g1_r[-1].split('>')[0].replace('<span','<span').split('</span>')[0] if False else ''}"  # no-op para mantener estructura
+                            # Reconstruir left_col con el nuevo ht_html coloreado
+                            left_parts = []
+                            for ii, gg in enumerate(g1_r):
+                                if ii == len(g1_r)-1:
+                                    left_parts.append(f"{gg} {ht_html}")
+                                else:
+                                    left_parts.append(gg)
+                            if not left_parts:
+                                left_parts = [ht_html]
+                            left_col = "<br>".join(left_parts)
+                            right_col = "<br>".join(right_parts) if 'right_parts' in locals() and right_parts else "<span style='color:#888;font-size:10px'>-</span>"
+                            mins_html = f"<div style='display:flex;gap:12px;align-items:flex-start;margin-top:2px;line-height:1.8;padding-right:24px;box-sizing:border-box'><div style='flex:1;text-align:left;padding-left:2px'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900;flex-shrink:0'>|</div><div style='flex:1;text-align:left;padding-left:16px'>{right_col}</div></div>"
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
