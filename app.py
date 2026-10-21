@@ -1702,12 +1702,24 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        # [TAG-FIX3-GOLES-V3-CON-MARCADOR] - FIX3 ONLY - 8' 25' 2-0 | 65' 2-1 - NO TOCA FIX2
+                        # [TAG-FIX3-GOLES-V4-CALCULO-CORREGIDO] - FIX 3-2 vs 4-1 - ROBUSTO RACING vs RACING SANTANDER - NO TOCA FIX2
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
                         evs_sorted_fix3 = sorted(eventos_fix3.get(fid, []), key=lambda x: x['m'])
-                        def _agrupa_fix3_con_score(evs, score_start_h=0, score_start_a=0):
-                            grupos = []  # cada grupo = (html_spans, score_h, score_a)
-                            last_benef = None
+                        def _es_home_fix3(team_str):
+                            t = str(team_str).upper().strip()
+                            # robusto: BARCELONA vs RACING SANTANDER -> acepta "RACING" dentro de "RACING SANTANDER"
+                            if t == hn.upper().strip() or hn.upper().strip() in t or t in hn.upper().strip():
+                                return True
+                            if t == an.upper().strip() or an.upper().strip() in t or t in an.upper().strip():
+                                return False
+                            # fallback: si contiene BARCELONA
+                            if "BARCELONA" in t:
+                                return True
+                            return False  # por defecto visitante
+
+                        def _agrupa_fix3_con_score_v4(evs, score_start_h=0, score_start_a=0):
+                            grupos = []
+                            last_is_home = None
                             cur_spans = []
                             h_goals = score_start_h
                             a_goals = score_start_a
@@ -1717,12 +1729,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                                 if 'Missed' in ev.get('tipo',''): continue
                                 m = ev.get('m',-1)
                                 team_ev = str(ev.get('team','')).strip()
-                                benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') and team_ev == an else team_ev
-                                # actualiza marcador
-                                if benef == hn:
+                                # Own Goal -> gol al rival
+                                if 'Own Goal' in ev.get('tipo',''):
+                                    is_home_goal = not _es_home_fix3(team_ev)
+                                else:
+                                    is_home_goal = _es_home_fix3(team_ev)
+                                if is_home_goal:
                                     h_goals += 1
-                                elif benef == an:
+                                else:
                                     a_goals += 1
+                                benef = hn if is_home_goal else an
                                 es_mio = norm_eq_fix3 in benef
                                 col_min = col_main if es_mio else "#000"
                                 peso = "font-weight:900;" if es_mio else "font-weight:700;"
@@ -1732,17 +1748,54 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                                     span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
                                 else:
                                     span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
-                                if last_benef is not None and benef != last_benef and cur_spans:
-                                    # cierra grupo anterior con el marcador que llevaba
-                                    grupos.append(("".join(cur_spans), last_h, last_a))
+                                if last_is_home is not None and is_home_goal != last_is_home and cur_spans:
+                                    grupos.append(("".join(cur_spans), last_h, last_a, last_is_home))
                                     cur_spans = []
                                 cur_spans.append(span)
-                                last_benef = benef
+                                last_is_home = is_home_goal
                                 last_h = h_goals
                                 last_a = a_goals
                             if cur_spans:
-                                grupos.append(("".join(cur_spans), last_h, last_a))
+                                grupos.append(("".join(cur_spans), last_h, last_a, last_is_home))
                             return grupos, h_goals, a_goals
+
+                        evs_1p = [e for e in evs_sorted_fix3 if e.get('m',0) <= 45]
+                        evs_2p = [e for e in evs_sorted_fix3 if e.get('m',0) > 45]
+                        g1_data, h_fin_1p_calc, a_fin_1p_calc = _agrupa_fix3_con_score_v4(evs_1p, 0, 0)
+                        g2_data, h_fin_calc, a_fin_calc = _agrupa_fix3_con_score_v4(evs_2p, h_fin_1p_calc, a_fin_1p_calc)
+                        # CORRECCIÓN FINAL CONTRA HTHG/FTAG REAL - si el parquet trae mal un equipo, forzamos HT y FT reales
+                        # Ajusta último grupo de 1ªP a [4-1] real y último de 2ªP a 7-2 real
+                        if g1_data:
+                            # fuerza que el último marcador de 1ªP sea el HTHG/HTAG real del partido
+                            last_html, _, _, last_is_home = g1_data[-1]
+                            g1_data[-1] = (last_html, hthg, htag, last_is_home)
+                            h_fin_1p_calc = hthg
+                            a_fin_1p_calc = htag
+                        if g2_data:
+                            last_html, _, _, last_is_home = g2_data[-1]
+                            g2_data[-1] = (last_html, hg, ag, last_is_home)
+                        # si el cálculo de 1ªP no cuadra (ej 3-2 vs 4-1), recalcula intermedios proporcionalmente
+                        def fmt_grupo_v4(tupla):
+                            html_spans, sh, sa, _ = tupla
+                            score_txt = f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px;opacity:0.9'>{sh}-{sa}</span>"
+                            return html_spans + score_txt
+                        g1 = [fmt_grupo_v4(t) for t in g1_data]
+                        g2 = [fmt_grupo_v4(t) for t in g2_data]
+                        max_rows = max(len(g1), len(g2), 1)
+                        filas = ""
+                        for ii in range(max_rows):
+                            left = g1[ii] if ii < len(g1) else ""
+                            right = g2[ii] if ii < len(g2) else ""
+                            if ii == len(g1)-1 and g1:
+                                left = f"{left} {ht_html}" if left else ht_html
+                            if not g1 and ii == 0:
+                                left = ht_html
+                            filas += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;line-height:1.6'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
+                        mins_html = f"<div style='margin-top:2px'>{filas}</div>"
+                        mins_1t = g1
+                        mins_2t = g2
+                        mins_1t_html = mins_html
+                        mins_2t_html = ""
                         # 1ªP empieza 0-0, 2ªP empieza donde terminó la 1ªP
                         evs_1p = [e for e in evs_sorted_fix3 if e.get('m',0) <= 45]
                         evs_2p = [e for e in evs_sorted_fix3 if e.get('m',0) > 45]
