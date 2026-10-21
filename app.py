@@ -2867,18 +2867,12 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         except: hthg=0; htag=0
                         ht_str = f"[{hthg}-{htag}]"
                         # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX RESTO ---
-                        def _strip_acc_r(s):
-                            try:
-                                import unicodedata
-                                return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-                            except:
-                                return str(s)
                         try:
-                            _nf_clean = _strip_acc_r(norm_eq_r)
-                            _h_clean = _strip_acc_r(h_norm_r)
-                            _a_clean = _strip_acc_r(a_norm_r)
-                            _is_home = (_nf_clean == _h_clean) or (_nf_clean in _h_clean) or (_h_clean in _nf_clean)
-                            _is_away = (_nf_clean == _a_clean) or (_nf_clean in _a_clean) or (_a_clean in _nf_clean)
+                            _nf_clean = str(norm_eq_r).upper().strip()
+                            _h_clean = str(h_norm_r).upper().strip()
+                            _a_clean = str(a_norm_r).upper().strip()
+                            _is_home = _nf_clean == _h_clean
+                            _is_away = _nf_clean == _a_clean
                         except:
                             _is_home = (norm_eq_r == h_norm_r)
                             _is_away = (norm_eq_r == a_norm_r)
