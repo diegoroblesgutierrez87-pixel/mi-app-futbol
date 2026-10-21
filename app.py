@@ -3185,6 +3185,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 for j in jornadas_r:
                     d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
+                        st.markdown(f"<div style='padding-left:8px;margin:8px 0 10px 2px'><div style='color:#000;font-family:monospace;font-weight:700;font-size:9px'>J{int(j)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
                         continue
                     d_j_r = d_j_ok_r
                     html_lineas_r = ""
