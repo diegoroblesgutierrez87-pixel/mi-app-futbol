@@ -2532,16 +2532,30 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             return grupos, h, a
                         def fmt_fix2(t): 
                             return f"{t[0]}<span style='color:#333;font-weight:700;font-size:10px;margin-left:1px;margin-right:12px'>{t[1]}-{t[2]}</span>"
-
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
                         evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
                         g1_data_fix2, h1, a1 = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
                         g2_data_fix2, _, _ = _agrupa_fix2_con_score(evs_2p_fix2, h1, a1)
                         if g1_data_fix2: g1_data_fix2[-1] = (g1_data_fix2[-1][0], hthg, htag, g1_data_fix2[-1][3])
                         if g2_data_fix2: g2_data_fix2[-1] = (g2_data_fix2[-1][0], hg, ag, g2_data_fix2[-1][3])
-
+                        def fmt_fix2(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
                         g1_fix2 = [fmt_fix2(t) for t in g1_data_fix2]
                         g2_fix2 = [fmt_fix2(t) for t in g2_data_fix2]
+                        # [TAG-FIX2-V4-FIX-DESCOLOCADO-V2] - VERTICAL REAL - 1 gol por linea
+                        left_parts = []
+                        for ii, gg in enumerate(g1_fix2):
+                            if ii == len(g1_fix2)-1:
+                                left_parts.append(f"{gg} {ht_html}")
+                            else:
+                                left_parts.append(gg)
+                        if not left_parts:
+                            left_parts = [ht_html]
+                        right_parts = g2_fix2 if g2_fix2 else []
+                        # FIX2 - VISUAL 1ªParte / 2ªParte EN 2 LINEAS CON COMA - [TAG-FIX2-VISUAL-2LINEAS-COMA]
+                        left_inline = " , ".join(left_parts) if left_parts else ht_html
+                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
+                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
+                        mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
                         elif norm_eq_fix2 == an: r1 = res_eq_pred_fix2(htag, hthg); rF = res_eq_pred_fix2(ag, hg)
@@ -2577,20 +2591,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             ft_txt = f"[{hg}-{ag}]" # 
                             ht_inner = f"{hthg}-{htag}" # 
-                        ht_str = f"[{ht_inner}]"
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
-                        left_parts = []
-                        for ii, gg in enumerate(g1_fix2):
-                            if ii == len(g1_fix2)-1:
-                                left_parts.append(f"{gg} {ht_html} {estado_1p_fix2}")
-                            else:
-                                left_parts.append(gg)
-                        if not left_parts:
-                            left_parts = [f"{ht_html} {estado_1p_fix2}"]
-                        right_parts = g2_fix2 if g2_fix2 else []
-                        left_inline = " , ".join(left_parts) if left_parts else f"{ht_html} {estado_1p_fix2}"
-                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
-                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
+                        ht_str = f"[{ht_inner}]" # 
+                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
+                        # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY] - FIX DESCOLOCADO - MANTIENE AGRUPADO
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
