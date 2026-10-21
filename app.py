@@ -2524,9 +2524,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if filtro_act and en_rango: span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
                                 else: span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
-                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
+                                    grupos.append((" , ".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append(("".join(cur), lh, la, last))
+                            if cur: grupos.append((" , ".join(cur), lh, la, last))
                             return grupos, h, a
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
                         evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
@@ -3273,9 +3273,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 else:
                                     span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px;font-size:10px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
-                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
+                                    grupos.append((" , ".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append(("".join(cur), lh, la, last))
+                            if cur: grupos.append((" , ".join(cur), lh, la, last))
                             return grupos, h, a
                         filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
