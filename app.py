@@ -1529,19 +1529,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
             for nombre_eq_fix3 in equipos_a_mostrar_fix3:
                 norm_eq_fix3 = normaliza(nombre_eq_fix3)
                 eq_up_fix3 = nombre_eq_fix3.upper().strip()
-                def _strip_acc_fix3(s):
-                    try:
-                        return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-                    except:
-                        return str(s)
-                norm_eq_clean_fix3 = _strip_acc_fix3(norm_eq_fix3)
-                def _is_match_fix3(team_raw):
-                    t = _strip_acc_fix3(normaliza(team_raw))
-                    # FIX EXACTO: ATLETICO DE MADRID != ATLETICO DE MADRID II / B / U19
-                    return t == norm_eq_clean_fix3
-                df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].apply(_is_match_fix3)) | (df_fix3['AwayTeam'].apply(_is_match_fix3))]
-                if df_team_fix3.empty:
-                    df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
+                # FIX RAPIDO EXACTO - vectorizado, ATLETICO MADRID != ATLETICO MADRID II
+                eq_up_fix3 = nombre_eq_fix3.upper().strip()
+                df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
                 if cond_loc_pred_fix3 == "equipo local solamente partidos de local" and nombre_eq_fix3 == h_fut_fix3:
                     df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
                 elif cond_loc_pred_fix3 == "equipo visitante solamente sus partidos de visitante" and nombre_eq_fix3 == a_fut_fix3:
@@ -3234,13 +3224,17 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             except:
                 detalle = []
 
-            # FIX ORDEN FECHA MAS RECIENTE PRIMERO - 18/10/2026 antes que 17/10/2026
-            def _parse_dmy_g(d):
+            # FIX RAPIDO - mas reciente primero sin pd.to_datetime lento
+            def _key_dmy_fast(p):
+                s = p.get('date','')
                 try:
-                    return pd.to_datetime(d.get('date',''), dayfirst=True, errors='coerce')
+                    if '/' in s:
+                        d,m,y = s.split('/')
+                        return f"{y}{m.zfill(2)}{d.zfill(2)}"
+                    return s
                 except:
-                    return pd.NaT
-            detalle = sorted(detalle, key=lambda x: _parse_dmy_g(x), reverse=True)
+                    return ""
+            detalle = sorted(detalle, key=_key_dmy_fast, reverse=True)
 
             # jornada precalculada - 0 coste
             fid_to_jornada = team_fid_to_j.get(team_g.upper().strip(), {})
