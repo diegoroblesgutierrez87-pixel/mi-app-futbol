@@ -2461,21 +2461,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         def fmt_fix2(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
                         g1_fix2 = [fmt_fix2(t) for t in g1_data_fix2]
                         g2_fix2 = [fmt_fix2(t) for t in g2_data_fix2]
-                        # [TAG-FIX2-V4-FIX-DESCOLOCADO] - 2 columnas verticales - NO PETA
-                        left_col = ""
+                        # [TAG-FIX2-V4-FIX-DESCOLOCADO-V2] - VERTICAL REAL - 1 gol por linea
+                        left_parts = []
                         for ii, gg in enumerate(g1_fix2):
                             if ii == len(g1_fix2)-1:
-                                left_col += f"<div>{gg} {ht_html}</div>"
+                                left_parts.append(f"{gg} {ht_html}")
                             else:
-                                left_col += f"<div>{gg}</div>"
-                        if not g1_fix2:
-                            left_col = f"<div>{ht_html}</div>"
-                        right_col = ""
-                        for gg in g2_fix2:
-                            right_col += f"<div>{gg}</div>"
-                        if not g2_fix2:
-                            right_col = "<div style='color:#888'>-</div>"
-                        mins_html = f"<div style='display:grid;grid-template-columns:1fr 16px 1fr;gap:4px;align-items:start;margin-top:2px'><div style='text-align:left;line-height:1.7'>{left_col}</div><div style='text-align:center;color:#000;font-weight:900;line-height:1.7'>|</div><div style='text-align:left;line-height:1.7'>{right_col}</div></div>"
+                                left_parts.append(gg)
+                        if not left_parts:
+                            left_parts = [ht_html]
+                        right_parts = g2_fix2 if g2_fix2 else []
+                        # une con <br> para que quede vertical de verdad
+                        left_col = "<br>".join(left_parts)
+                        right_col = "<br>".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
+                        mins_html = f"<div style='display:flex;gap:8px;align-items:flex-start;margin-top:2px;line-height:1.8'><div style='flex:1;text-align:left'>{left_col}</div><div style='width:14px;text-align:center;color:#000;font-weight:900'>|</div><div style='flex:1;text-align:left'>{right_col}</div></div>"
                         mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
