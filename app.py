@@ -1702,18 +1702,27 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                             ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        # [TAG-FIX3-GOLES-V2-AGRUPADO-IZQ-DER] - FIX3 ONLY - NO TOCA FIX2/RESTO
+                        # [TAG-FIX3-GOLES-V3-CON-MARCADOR] - FIX3 ONLY - 8' 25' 2-0 | 65' 2-1 - NO TOCA FIX2
                         filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
                         evs_sorted_fix3 = sorted(eventos_fix3.get(fid, []), key=lambda x: x['m'])
-                        def _agrupa_fix3(evs):
-                            grupos = []
+                        def _agrupa_fix3_con_score(evs, score_start_h=0, score_start_a=0):
+                            grupos = []  # cada grupo = (html_spans, score_h, score_a)
                             last_benef = None
-                            cur = []
+                            cur_spans = []
+                            h_goals = score_start_h
+                            a_goals = score_start_a
+                            last_h = h_goals
+                            last_a = a_goals
                             for ev in evs:
                                 if 'Missed' in ev.get('tipo',''): continue
                                 m = ev.get('m',-1)
                                 team_ev = str(ev.get('team','')).strip()
                                 benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') and team_ev == an else team_ev
+                                # actualiza marcador
+                                if benef == hn:
+                                    h_goals += 1
+                                elif benef == an:
+                                    a_goals += 1
                                 es_mio = norm_eq_fix3 in benef
                                 col_min = col_main if es_mio else "#000"
                                 peso = "font-weight:900;" if es_mio else "font-weight:700;"
@@ -1723,18 +1732,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                                     span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
                                 else:
                                     span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
-                                if last_benef is not None and benef != last_benef and cur:
-                                    grupos.append("".join(cur))
-                                    cur = []
-                                cur.append(span)
+                                if last_benef is not None and benef != last_benef and cur_spans:
+                                    # cierra grupo anterior con el marcador que llevaba
+                                    grupos.append(("".join(cur_spans), last_h, last_a))
+                                    cur_spans = []
+                                cur_spans.append(span)
                                 last_benef = benef
-                            if cur:
-                                grupos.append("".join(cur))
-                            return grupos
+                                last_h = h_goals
+                                last_a = a_goals
+                            if cur_spans:
+                                grupos.append(("".join(cur_spans), last_h, last_a))
+                            return grupos, h_goals, a_goals
+                        # 1ªP empieza 0-0, 2ªP empieza donde terminó la 1ªP
                         evs_1p = [e for e in evs_sorted_fix3 if e.get('m',0) <= 45]
                         evs_2p = [e for e in evs_sorted_fix3 if e.get('m',0) > 45]
-                        g1 = _agrupa_fix3(evs_1p)
-                        g2 = _agrupa_fix3(evs_2p)
+                        g1_data, h_fin_1p, a_fin_1p = _agrupa_fix3_con_score(evs_1p, 0, 0)
+                        g2_data, _, _ = _agrupa_fix3_con_score(evs_2p, h_fin_1p, a_fin_1p)
+                        # formatea con marcador en texto normal
+                        def fmt_grupo(tupla):
+                            html_spans, sh, sa = tupla
+                            score_txt = f"<span style='color:#000;font-weight:400;font-size:10px;margin-left:5px'>{sh}-{sa}</span>"
+                            return html_spans + score_txt
+                        g1 = [fmt_grupo(t) for t in g1_data]
+                        g2 = [fmt_grupo(t) for t in g2_data]
                         max_rows = max(len(g1), len(g2), 1)
                         filas = ""
                         for ii in range(max_rows):
@@ -1746,7 +1766,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
                                 left = ht_html
                             filas += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;line-height:1.6'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
                         mins_html = f"<div style='margin-top:2px'>{filas}</div>"
-                        # compat para no petar linea 1787
                         mins_1t = g1
                         mins_2t = g2
                         mins_1t_html = mins_html
