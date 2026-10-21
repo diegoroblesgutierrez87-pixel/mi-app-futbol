@@ -2421,28 +2421,56 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             col_ht = "#0A2342"
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        mins_1t = []; mins_2t = [] # 
-                        filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None) # 
-                        u_min_black = "border-bottom:3.5px solid #000;padding-bottom:0px;" #  minutos propios en negro
-                        for ev in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']): # 
-                            if 'Missed' in ev.get('tipo',''): continue # 
-                            m = ev.get('m',-1); team_ev = ev['team'] # 
-                            benef = an if 'Own Goal' in ev.get('tipo','') and team_ev == hn else hn if 'Own Goal' in ev.get('tipo','') else team_ev # 
-                            es_mio = norm_eq_fix2 in benef # 
-                            col_min = col_main if es_mio else "#000" # 
-                            peso = "font-weight:900;" if es_mio else "font-weight:700;" # 
-                            sub_min = u_min_black if es_mio else "" #  solo mios subrayado negro
-                            en_rango = (MIN_DESDE_PRED_FIX2 is None or m >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or m <= MIN_HASTA_PRED_FIX2) # 
-                            if filtro_act and en_rango: # 
-                                span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:2px'> {m}'</span>" # 
-                            else: # 
-                                span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:2px'> {m}'</span>" # 
-                            if m <= 45: mins_1t.append(span) # 
-                            else: mins_2t.append(span) # 
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t)
-                        else: mins_html = ht_html
+                        # [TAG-FIX2-V4-MINI] - AGRUPADO + 4-1 OK - NO TOCA COLORES NI LOGICA
+                        filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
+                        evs_sorted_fix2 = sorted(eventos_fix2.get(fid, []), key=lambda x: x['m'])
+                        def _es_home_fix2(team_str):
+                            t = str(team_str).upper().strip()
+                            hn_u = str(hn).upper().strip()
+                            an_u = str(an).upper().strip()
+                            if t == hn_u or hn_u in t or t in hn_u: return True
+                            if t == an_u or an_u in t or t in an_u: return False
+                            return False
+                        def _agrupa_fix2_con_score(evs, sh=0, sa=0):
+                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa
+                            for ev in evs:
+                                if 'Missed' in ev.get('tipo',''): continue
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
+                                is_home = not _es_home_fix2(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_fix2(team_ev)
+                                if is_home: h+=1
+                                else: a+=1
+                                benef = hn if is_home else an
+                                es_mio = norm_eq_fix2 in benef
+                                col_min = col_main if es_mio else "#000"
+                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
+                                sub_min = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
+                                en_rango = (MIN_DESDE_PRED_FIX2 is None or m >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or m <= MIN_HASTA_PRED_FIX2)
+                                if filtro_act and en_rango: span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
+                                else: span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
+                                if last is not None and is_home != last and cur:
+                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
+                                cur.append(span); last=is_home; lh=h; la=a
+                            if cur: grupos.append(("".join(cur), lh, la, last))
+                            return grupos, h, a
+                        evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
+                        evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
+                        g1_data_fix2, h1, a1 = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
+                        g2_data_fix2, _, _ = _agrupa_fix2_con_score(evs_2p_fix2, h1, a1)
+                        if g1_data_fix2: g1_data_fix2[-1] = (g1_data_fix2[-1][0], hthg, htag, g1_data_fix2[-1][3])
+                        if g2_data_fix2: g2_data_fix2[-1] = (g2_data_fix2[-1][0], hg, ag, g2_data_fix2[-1][3])
+                        def fmt_fix2(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
+                        g1_fix2 = [fmt_fix2(t) for t in g1_data_fix2]
+                        g2_fix2 = [fmt_fix2(t) for t in g2_data_fix2]
+                        max_r = max(len(g1_fix2), len(g2_fix2), 1)
+                        filas_fix2 = ""
+                        for ii in range(max_r):
+                            left = g1_fix2[ii] if ii < len(g1_fix2) else ""
+                            right = g2_fix2[ii] if ii < len(g2_fix2) else ""
+                            if ii == len(g1_fix2)-1 and g1_fix2: left = f"{left} {ht_html}" if left else ht_html
+                            if not g1_fix2 and ii == 0: left = ht_html
+                            filas_fix2 += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;line-height:1.6'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
+                        mins_html = f"<div style='margin-top:2px'>{filas_fix2}</div>"
+                        mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
                         def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
                         if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
                         elif norm_eq_fix2 == an: r1 = res_eq_pred_fix2(htag, hthg); rF = res_eq_pred_fix2(ag, hg)
@@ -3015,11 +3043,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # [RESTO]
                         else: mins_html = ht_html # [RESTO]
                         # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
-                        if mins_1t:
-                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
-                        else:
-                            mins_1t_html = ht_html
-                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        # [TAG-FIX2-V4-MINI-2] - ya viene en mins_html, no duplicar
+                        mins_1t_html = mins_html
+                        mins_2t_html = ""
                         try:
                             _fecha_dt_r = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
                             _fecha_str_r = _fecha_dt_r.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_r) else ""
