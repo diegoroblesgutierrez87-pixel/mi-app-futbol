@@ -2346,8 +2346,46 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_team_fix2 = df_team_fix2[df_team_fix2.apply(_cumple_live_fix2, axis=1)]
 
                 if df_team_fix2.empty:
-                    st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
-                    continue
+                    # FIX BAYERN MÜNCHEN / ARSENAL - si parquet no trae equipo, usa base_partidos.csv
+                    try:
+                        import pathlib as _p
+                        _pp = _p.Path("/mnt/data/base_partidos.csv")
+                        _gp = _p.Path("/mnt/data/base_goles.csv")
+                        if _pp.exists():
+                            _df_csv = pd.read_csv(_pp, on_bad_lines='skip')
+                            _df_csv['Date'] = pd.to_datetime(_df_csv['Date'], dayfirst=True, errors='coerce')
+                            _norm = normaliza(nombre_eq_fix2)
+                            _up = nombre_eq_fix2.upper().strip()
+                            _df_try = _df_csv[(_df_csv['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (_df_csv['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
+                            if _df_try.empty:
+                                _df_try = _df_csv[(_df_csv['HomeTeam'].apply(lambda x: normaliza(str(x))==_norm)) | (_df_csv['AwayTeam'].apply(lambda x: normaliza(str(x))==_norm))]
+                            if not _df_try.empty:
+                                _df_try = _df_try.copy()
+                                _df_try['Jornada'] = _df_try.get('jornada_num','').astype(str).str.extract(r'(\d+)').astype(float).fillna(0).astype(int)
+                                _df_try['fixture_id'] = _df_try.get('fixture_id', _df_try.index)
+                                df_team_fix2 = _df_try
+                                df_team_base_total_fix2 = _df_try.copy()
+                                df_team_base_pred_fix2 = _df_try.copy()
+                                # carga eventos de base_goles.csv para que filtre 25-45
+                                if _gp.exists():
+                                    try:
+                                        _df_g = pd.read_csv(_gp, on_bad_lines='skip')
+                                        _df_g['fid_str'] = _df_g['fixture_id'].astype(str).str.split('.').str[0]
+                                        _df_g['m'] = pd.to_numeric(_df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
+                                        for fid, sub in _df_g.groupby('fid_str'):
+                                            if fid not in eventos_fix2:
+                                                eventos_fix2[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
+                                    except:
+                                        pass
+                            else:
+                                st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
+                                continue
+                        else:
+                            st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
+                            continue
+                    except:
+                        st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
+                        continue
 
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} FIX2</div>", unsafe_allow_html=True)
                 # FIX2 ORDEN J10 arriba = ultimo partido
