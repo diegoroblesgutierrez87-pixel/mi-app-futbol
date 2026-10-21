@@ -1924,6 +1924,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
 ################################################################### CLONADO
 ##################
 ################################################################### CLONADO
+################################################################# CLONADO
+##################
+################################################################### CLONADO
 with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=False):
     import pathlib
 
@@ -2521,17 +2524,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 peso = "font-weight:900;" if es_mio else "font-weight:700;"
                                 sub_min = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
                                 en_rango = (MIN_DESDE_PRED_FIX2 is None or m >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or m <= MIN_HASTA_PRED_FIX2)
-                                if filtro_act and en_rango: 
-                                    span = f"<span style='color:{col_min};{peso}{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:1px'>{m}'</span>"
-                                else: 
-                                    span = f"<span style='color:{col_min};{peso}{sub_min}margin-right:1px'>{m}'</span>"
+                                if filtro_act and en_rango: span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
+                                else: span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
                                     grupos.append(("".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
                             if cur: grupos.append(("".join(cur), lh, la, last))
                             return grupos, h, a
-                        def fmt_fix2(t): 
-                            return f"{t[0]}<span style='color:#333;font-weight:700;font-size:10px;margin-left:1px;margin-right:12px'>{t[1]}-{t[2]}</span>"
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
                         evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
                         g1_data_fix2, h1, a1 = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
@@ -2659,6 +2658,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         </button>
         """, height=55, scrolling=False)
 
+##################
+################################################################### CLONADO
+##################
 ##################
 ################################################################### CLONADO
 ##################
@@ -3277,9 +3279,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 else:
                                     span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px;font-size:10px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
-                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
+                                    grupos.append((" , ".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append(("".join(cur), lh, la, last))
+                            if cur: grupos.append((" , ".join(cur), lh, la, last))
                             return grupos, h, a
                         filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
