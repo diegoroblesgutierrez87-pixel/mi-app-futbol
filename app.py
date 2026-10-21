@@ -2602,7 +2602,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _fecha_str_fix2 = ""
                         html_lineas_fix2 += (
                             f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:#000;font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
+                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
                             f"J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix2})</span></div>"
                             f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
                             f"</div>"
@@ -3275,13 +3275,13 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 sub_min_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
                                 en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
                                 if filtro_act and en_rango:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px;font-size:10px'>{m}'</span>"
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:1px;font-size:10px'>{m}'</span>"
                                 else:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:4px;font-size:10px'>{m}'</span>"
+                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:1px;font-size:10px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
-                                    grupos.append((" , ".join(cur), lh, la, last)); cur=[]
+                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
                                 cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append((" , ".join(cur), lh, la, last))
+                            if cur: grupos.append(("".join(cur), lh, la, last))
                             return grupos, h, a
                         filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
@@ -3350,21 +3350,6 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
                         else: col_estado_r = "#8B4513"
                         ht_html = f"<span style='color:{col_estado_r} !important;font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
-                        # Reinyectar ht_html coloreado en la columna izquierda
-                        if left_parts:
-                            left_parts[-1] = f"{g1_r[-1].split('>')[0].replace('<span','<span').split('</span>')[0] if False else ''}"  # no-op para mantener estructura
-                            # Reconstruir left_col con el nuevo ht_html coloreado
-                            left_parts = []
-                            for ii, gg in enumerate(g1_r):
-                                if ii == len(g1_r)-1:
-                                    left_parts.append(f"{gg} {ht_html}")
-                                else:
-                                    left_parts.append(gg)
-                            if not left_parts:
-                                left_parts = [ht_html]
-                            left_inline = " ".join(left_parts) if left_parts else ht_html
-                            right_inline = " ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
-                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
