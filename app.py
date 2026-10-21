@@ -2185,6 +2185,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     elif nombre_eq_fix2 == a_fut_fix2:
                         df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
 
+                # BASE TOTAL SIN FILTROS - Para testigo JX ante cualquier filtro
+                df_team_base_total_fix2 = df_team_fix2.copy()
+
                 if nombre_eq_fix2 in equipos_manuales_1_fix2:
                     if cond_manual_1_fix2 == "solo local":
                         df_team_fix2 = df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
@@ -2196,7 +2199,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     elif cond_manual_2_fix2 == "solo visitante":
                         df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
 
-                df_team_base_pred_fix2 = df_team_fix2.copy()
+                # Esta es la base que usaremos para sacar las 15 jornadas - SIN filtros de desplegables
+                df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
                 if resultados_pred_sel_fix2: # [TAG-FIX2-SET-UNICO-NO-TOCAR-FIX3] - [TAG-FIX2-SET-FINAL]
                     sel_fix2 = resultados_pred_sel_fix2
                     set_1p_fix2 = set(); set_2p_fix2 = set()
@@ -2365,18 +2369,31 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
-                # FIX DEFINITIVO - Jornadas desde base sin filtro para no perder testigo
+                # FIX DEFINITIVO - Jornadas desde base TOTAL sin filtros para testigo ante cualquier filtro
                 if not df_team_base_pred_fix2.empty and 'Jornada' in df_team_base_pred_fix2.columns:
-                    # Base = equipo sin filtros de resultado/overs/live -> tiene todas las J del equipo
                     fecha_por_j_base_fix2 = df_team_base_pred_fix2.groupby('Jornada')['Date_parsed'].max()
                     jornadas_fix2 = fecha_por_j_base_fix2.sort_values(ascending=False).head(15).index.tolist()
                 else:
-                    jornadas_fix2 = sorted(df_team_fix2['Jornada'].dropna().unique(), reverse=True)[:15] if 'Jornada' in df_team_fix2.columns else []
+                    jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15] if 'Jornada' in df_team_base_pred_fix2.columns else []
                 for j_fix2 in jornadas_fix2:
                     d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
+                    # Para MIN DESDE/HASTA: si la jornada existe pero ningún partido tiene eventos en ese rango, también es hueco
+                    if not es_hueco_fix2 and (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None):
+                        _tiene_algun_evento_jornada = False
+                        for _, _rr_tmp in d_j_ok_fix2.iterrows():
+                            _fid_tmp = str(_rr_tmp.get('fixture_id','')).split('.')[0]
+                            for _ev_tmp in eventos_fix2.get(_fid_tmp, []):
+                                if 'Missed' in _ev_tmp.get('tipo',''): continue
+                                _mm_tmp = _ev_tmp.get('m', -1)
+                                if MIN_DESDE_PRED_FIX2 is not None and _mm_tmp < MIN_DESDE_PRED_FIX2: continue
+                                if MIN_HASTA_PRED_FIX2 is not None and _mm_tmp > MIN_HASTA_PRED_FIX2: continue
+                                _tiene_algun_evento_jornada = True
+                                break
+                            if _tiene_algun_evento_jornada: break
+                        if not _tiene_algun_evento_jornada:
+                            es_hueco_fix2 = True
                     if es_hueco_fix2:
-                        # Testigo - Jornada que no cumple filtro, línea vacía
                         st.markdown(f"<div style='border-left:3.5px solid #bbb;padding-left:8px;margin:8px 0 10px 2px'><div style='color:#999;font-family:monospace;font-weight:700;font-size:9px'>J{int(j_fix2)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
