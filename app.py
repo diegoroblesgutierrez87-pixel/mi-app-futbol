@@ -3165,15 +3165,21 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 df_team_r['Date_parsed'] = df_team_r['Date'].apply(_parse_fecha_resto_robusto) if not df_team_r.empty else df_team_r.get('Date')
                 df_team_r['fid_num'] = pd.to_numeric(df_team_r['fixture_id'], errors='coerce') if not df_team_r.empty else 0
                 df_team_r = df_team_r.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_r.empty else df_team_r
-                df_team_base_pred_r['Jornada'] = range(1, len(df_team_base_pred_r)+1)
-                if not df_team_r.empty:
-                    df_team_r['Jornada'] = range(1, len(df_team_r)+1)
-                # FIX REMO - ordena jornadas por fecha real, ultimo BRAGANTINO 18/10 primero
+                # FIX JORNADA REAL - NO REENUMERAR - MANTIENE J DEL PARQUET
                 df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
                 df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
                 if not df_team_base_pred_r.empty and 'Jornada' in df_team_base_pred_r.columns:
                     fecha_por_j = df_team_base_pred_r.groupby('Jornada')['Date_parsed'].max()
                     jornadas_r = fecha_por_j.sort_values(ascending=False).head(15).index.tolist()
+                    if not df_team_r.empty and 'Jornada' in df_team_r.columns:
+                        jornadas_existentes = set(df_team_r['Jornada'].dropna().unique())
+                        jornadas_r = [j for j in jornadas_r if j in jornadas_existentes]
+                        if len(jornadas_r) < 15:
+                            for j in sorted(jornadas_existentes, reverse=True):
+                                if j not in jornadas_r:
+                                    jornadas_r.append(j)
+                                if len(jornadas_r) >= 15:
+                                    break
                 else:
                     jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
                 for j in jornadas_r:
