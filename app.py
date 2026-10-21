@@ -2435,7 +2435,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not _tiene_algun_evento_jornada:
                             es_hueco_fix2 = True
                     if es_hueco_fix2:
-                        st.markdown(f"<div style='border-left:3.5px solid #bbb;padding-left:8px;margin:8px 0 10px 2px'><div style='color:#999;font-family:monospace;font-weight:700;font-size:9px'>J{int(j_fix2)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='padding-left:8px;margin:8px 0 10px 2px'><div style='color:#000;font-family:monospace;font-weight:700;font-size:9px'>J{int(j_fix2)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
