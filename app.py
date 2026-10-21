@@ -2513,17 +2513,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ht_inner = f"{hthg}-{htag}" # 
                         ht_str = f"[{ht_inner}]" # 
                         ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        # rearma mins_html con HT nuevo negro
-                        if mins_1t and mins_2t: mins_html = "".join(mins_1t) + ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        elif mins_1t: mins_html = "".join(mins_1t) + ht_html # 
-                        elif mins_2t: mins_html = ht_html + "<span style='color:#000;font-weight:900;margin:0 4px'>|</span>" + "".join(mins_2t) # 
-                        else: mins_html = ht_html # 
-                        # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY]
-                        if mins_1t:
-                            mins_1t_html = "".join(mins_1t) + f" {ht_html}"
-                        else:
-                            mins_1t_html = ht_html
-                        mins_2t_html = "".join(mins_2t) if mins_2t else "<span style='color:#888'>-</span>"
+                        # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY] - FIX DESCOLOCADO - MANTIENE AGRUPADO
+                        mins_1t_html = mins_html
+                        mins_2t_html = ""
                         try:
                             _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
                             _fecha_str_fix2 = _fecha_dt_fix2.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix2) else ""
