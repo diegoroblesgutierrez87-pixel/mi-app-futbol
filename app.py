@@ -2365,10 +2365,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
-                df_team_base_pred_fix2['Jornada'] = range(1, len(df_team_base_pred_fix2)+1)
-                if not df_team_fix2.empty:
-                    df_team_fix2['Jornada'] = range(1, len(df_team_fix2)+1)
-                jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15]
+                # FIX BUG JORNADA - NO renumerar
+                if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns:
+                    fecha_por_j_fix2 = df_team_fix2.groupby('Jornada')['Date_parsed'].max()
+                    jornadas_fix2 = fecha_por_j_fix2.sort_values(ascending=False).head(15).index.tolist()
+                else:
+                    jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15] if 'Jornada' in df_team_base_pred_fix2.columns else []
                 for j_fix2 in jornadas_fix2:
                     d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
