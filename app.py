@@ -2654,10 +2654,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif 'Penalty' in tp: out.append(f"(p) {mm}'")
                                 else: out.append(f"{mm}'")
                             return "  ".join(out)
-######### FIX 2
                         goles_parte_fix2 = st.session_state.get("goles_parte_fix2", "Todo")
                         mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
+                        filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
@@ -2666,14 +2666,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
                                 for mins_tipo, sh, sa, is_home in g1_data:
-                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                    base_txt = _fmt_mins(mins_tipo)
                                     emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                    if base_txt:
-                                        parts = [p for p in base_txt.split("  ") if p]
-                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
-                                    else:
-                                        mins_txt = ""
+                                    parts = []
+                                    for mm, tp in mins_tipo:
+                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
+                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
+                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
+                                        else: base = f"{mm}'"
+                                        txt = f"{base}{emoji_gol}"
+                                        en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
+                                        if filtro_act_fix2 and en_rango:
+                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
+                                        parts.append(txt)
+                                    mins_txt = "  ".join(parts)
+                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
                                     if es_mio and '(x)' not in mins_txt:
                                         mins_txt = f"<span style='font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
@@ -2691,13 +2697,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
                                 for mins_tipo, sh, sa, is_home in g2_data:
-                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                    base_txt = _fmt_mins(mins_tipo)
                                     emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                    if base_txt:
-                                        mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
-                                    else:
-                                        mins_txt = ""
+                                    parts = []
+                                    for mm, tp in mins_tipo:
+                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
+                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
+                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
+                                        else: base = f"{mm}'"
+                                        txt = f"{base}{emoji_gol}"
+                                        en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
+                                        if filtro_act_fix2 and en_rango:
+                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
+                                        parts.append(txt)
+                                    mins_txt = "  ".join(parts)
+                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
                                     if es_mio and '(x)' not in mins_txt:
                                         mins_txt = f"<span style='font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
