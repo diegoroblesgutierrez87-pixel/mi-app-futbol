@@ -3351,135 +3351,138 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 cur.append(span); last=is_home; lh=h; la=a
                             if cur: grupos.append(("".join(cur), lh, la, last))
                             return grupos, h, a
-                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
-                        evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
-                        evs_1p_r = [e for e in evs_sorted_r if e.get('m',0) <= 45]
-                        evs_2p_r = [e for e in evs_sorted_r if e.get('m',0) > 45]
-                        g1_data_r, h1_r, a1_r = _agrupa_r_con_score(evs_1p_r, 0, 0)
-                        g2_data_r, _, _ = _agrupa_r_con_score(evs_2p_r, h1_r, a1_r)
-                        if g1_data_r: g1_data_r[-1] = (g1_data_r[-1][0], hthg, htag, g1_data_r[-1][3])
-                        if g2_data_r: g2_data_r[-1] = (g2_data_r[-1][0], hg, ag, g2_data_r[-1][3])
-                        def fmt_r(t): return t[0] + f"<span style='color:#000;font-weight:700;font-size:10px;margin-left:4px'>{t[1]}-{t[2]}</span>"
-                        g1_r = [fmt_r(t) for t in g1_data_r]
-                        g2_r = [fmt_r(t) for t in g2_data_r]
-                        left_parts = []
-                        for ii, gg in enumerate(g1_r):
-                            if ii == len(g1_r)-1:
-                                left_parts.append(f"{gg} {ht_html}")
-                            else:
-                                left_parts.append(gg)
-                        if not left_parts:
-                            left_parts = [ht_html]
-                        right_parts = g2_r if g2_r else []
-                        left_inline = " , ".join(left_parts) if left_parts else ht_html
-                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
-                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
-                        mins_1t = g1_r; mins_2t = g2_r
-                        def res_eq_pred(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
-                        if norm_eq_r == h_norm_r: r1 = res_eq_pred(hthg, htag); rF = res_eq_pred(hg, ag)
-                        elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
+                        # --- FIX2 STYLE PARA RESTO ---
+                        hn = h_norm_r; an = a_norm_r
+                        def res_eq_pred_r(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
+                        if norm_eq_r == hn: r1 = res_eq_pred_r(hthg, htag); rF = res_eq_pred_r(hg, ag)
+                        elif norm_eq_r == an: r1 = res_eq_pred_r(htag, hthg); rF = res_eq_pred_r(ag, hg)
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
                         EMOJI_SEL_R = "⚪"
                         EMOJI_RIVAL_R = "⚫"
-                        if norm_eq_r == h_norm_r:
-                            h_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{h}</span>"
+                        if norm_eq_r == hn:
+                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#000'>{a}</span>"
-                            emoji_home_r = EMOJI_SEL_R if norm_eq_r==h_norm_r else EMOJI_RIVAL_R
-                            emoji_away_r = EMOJI_RIVAL_R
-                            if norm_eq_r == h_norm_r:
-                                emoji_home_r = EMOJI_SEL_R
-                                emoji_away_r = EMOJI_RIVAL_R
-                            else:
-                                emoji_home_r = EMOJI_RIVAL_R
-                                emoji_away_r = EMOJI_SEL_R
-                        elif norm_eq_r == a_norm_r:
+                            emoji_home_r = EMOJI_SEL_R; emoji_away_r = EMOJI_RIVAL_R
+                        elif norm_eq_r == an:
                             h_txt = f"<span style='color:#000'>{h}</span>"
-                            a_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{a}</span>"
-                            emoji_home_r = EMOJI_RIVAL_R
-                            emoji_away_r = EMOJI_SEL_R
+                            a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
+                            emoji_home_r = EMOJI_RIVAL_R; emoji_away_r = EMOJI_SEL_R
                         else:
                             h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
-                            emoji_home_r = EMOJI_RIVAL_R
-                            emoji_away_r = EMOJI_SEL_R
-                        # corrige: home emoji segun equipo
-                        if norm_eq_r == h_norm_r:
-                            emoji_home_r = EMOJI_SEL_R
-                            emoji_away_r = EMOJI_RIVAL_R
-                        elif norm_eq_r == a_norm_r:
-                            emoji_home_r = EMOJI_RIVAL_R
-                            emoji_away_r = EMOJI_SEL_R
-                        # --- SUBRAYADO NEGRO FT SOLO - MANTIENE AGRUPADO FIX2 - NO REESCRIBE HT ---
-                        u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
-                        u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
-                        if norm_eq_r == h_norm_r: # [RESTO] local
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}"
-                            else: hg_disp = f"<span style='{u_black_r}'>{hg}</span>"
+                            emoji_home_r = EMOJI_RIVAL_R; emoji_away_r = EMOJI_SEL_R
+                        u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;"
+                        u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;"
+                        if norm_eq_r == hn:
+                            hg_disp = f"{hg}" if hg==0 and ag>0 else f"<span style='{u_black_r}'>{hg}</span>"
                             ag_disp = f"{ag}"
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}"
-                            else: hthg_disp = f"<span style='{u_black_w_r}'>{hthg}</span>"
+                            hthg_disp = f"{hthg}" if hthg==0 and htag>0 else f"<span style='{u_black_w_r}'>{hthg}</span>"
                             htag_disp = f"{htag}"
-                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            ft_txt = f"[{hg_disp}-{ag_disp}]"
                             ht_inner = f"{hthg_disp}-{htag_disp}"
-                        elif norm_eq_r == a_norm_r: # [RESTO] visitante
+                        elif norm_eq_r == an:
                             hg_disp = f"{hg}"
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}"
-                            else: ag_disp = f"<span style='{u_black_r}'>{ag}</span>"
+                            ag_disp = f"{ag}" if ag==0 and hg>0 else f"<span style='{u_black_r}'>{ag}</span>"
                             hthg_disp = f"{hthg}"
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}"
-                            else: htag_disp = f"<span style='{u_black_w_r}'>{htag}</span>"
-                            ft_txt = f"{hg_disp}-{ag_disp}"
+                            htag_disp = f"{htag}" if htag==0 and hthg>0 else f"<span style='{u_black_w_r}'>{htag}</span>"
+                            ft_txt = f"[{hg_disp}-{ag_disp}]"
                             ht_inner = f"{hthg_disp}-{htag_disp}"
                         else:
-                            ft_txt = f"{hg}-{ag}"
-                            ht_inner = f"{hthg}-{htag}"
-                        ht_str = f"[{ht_inner}]" # solo para copiar - sin punto
-                        # FORZAR COLOR - GANA verde / PIERDE rojo / EMPATE marron
-                        if "GANA" in estado_1p_r: col_estado_r = "#0f8105"
-                        elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
-                        else: col_estado_r = "#8B4513"
-                        ht_html = f"<span style='color:{col_estado_r} !important;font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
-                        goles_parte_r = st.session_state.get("goles_parte_resto", "Todo")
-                        mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
-                        mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
-                        left_parts = []
-                        for ii, gg in enumerate(g1_r):
-                            gg = gg.replace(f"{EMOJI_RIVAL_R} ", "").replace(f"{EMOJI_SEL_R} ", "")
-                            gg = gg.replace("'", f"'{EMOJI_SEL_R}")
-                            if ii == len(g1_r)-1:
-                                left_parts.append(f"{gg} {ht_html}")
-                            else:
-                                left_parts.append(gg)
-                        if not left_parts:
-                            left_parts = [ht_html]
-                        right_parts_raw = g2_r if g2_r else []
-                        right_parts = []
-                        for gg in right_parts_raw:
-                            gg = gg.replace(f"{EMOJI_SEL_R} ", "").replace(f"{EMOJI_RIVAL_R} ", "")
-                            gg = gg.replace("'", f"'{EMOJI_RIVAL_R}")
-                            right_parts.append(gg)
-                        left_inline = " , ".join(left_parts) if left_parts else ht_html
-                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
-                        if mostrar_1p_r and mostrar_2p_r:
-                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>1ªParte: {left_inline}</div><div style='margin-top:3px'>___________________2ª________________<br>2ªParte: {right_inline}</div></div>"
-                        elif mostrar_1p_r:
-                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>1ªParte: {left_inline}</div></div>"
-                        else:
-                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>___________________2ª________________<br>2ªParte: {right_inline}</div></div>"
-                        mins_1t_html = mins_html
-                        mins_2t_html = ""
+                            ft_txt = f"[{hg}-{ag}]"; ht_inner = f"{hthg}-{htag}"
+                        ht_str = f"[{ht_inner}]"
                         try:
                             _fecha_dt_r = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
                             _fecha_str_r = _fecha_dt_r.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_r) else ""
                         except:
                             _fecha_str_r = ""
-                        html_lineas_r += (
-                            f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {emoji_home_r} {h_txt} {ft_txt} {a_txt}{emoji_away_r} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
-                            f"<div style='font-size:7px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
-                            f"</div>"
-                            f"<div style='height:2px;background:#000;margin:0 0 10px 12px'></div>"
-                        ) # [TAG-RESTO-J-VERTICAL-2LINEAS-V8]
+                        def _es_home_r2(team_str):
+                            t = str(team_str).upper().strip(); hn_u = str(hn).upper().strip(); an_u = str(an).upper().strip()
+                            if t == hn_u or hn_u in t or t in hn_u: return True
+                            if t == an_u or an_u in t or t in an_u: return False
+                            return False
+                        def _agrupa_r_con_score_sub(evs, sh=0, sa=0):
+                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
+                            for ev in evs:
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
+                                is_home_raw = _es_home_r2(team_ev)
+                                is_own = 'Own Goal' in tipo
+                                is_home_scoring = (not is_home_raw) if is_own else is_home_raw
+                                if 'Missed Penalty' in tipo:
+                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
+                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
+                                if is_home_scoring: h+=1
+                                else: a+=1
+                                if last is not None and is_home_scoring != last and cur:
+                                    grupos.append((cur, lh, la, last_is_home)); cur=[]
+                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
+                            if cur: grupos.append((cur, lh, la, last_is_home))
+                            return grupos
+                        evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
+                        evs_1p_r = [e for e in evs_sorted_r if e.get('m',0) <= 45]
+                        evs_2p_r = [e for e in evs_sorted_r if e.get('m',0) > 45]
+                        def _fmt_mins_r(min_tipo_list):
+                            out=[]
+                            for mm, tp in min_tipo_list:
+                                if 'Own Goal' in tp: out.append(f"(pp) {mm}'")
+                                elif 'Missed Penalty' in tp: out.append(f"(x) {mm}'")
+                                elif 'Penalty' in tp: out.append(f"(p) {mm}'")
+                                else: out.append(f"{mm}'")
+                            return "  ".join(out)
+                        g1_data = _agrupa_r_con_score_sub(evs_1p_r, 0, 0)
+                        if g1_data and not any('Missed' in tp for _, tp in g1_data[-1][0]): g1_data[-1] = (g1_data[-1][0], hthg, htag, g1_data[-1][3])
+                        g2_data = _agrupa_r_con_score_sub(evs_2p_r, hthg, htag)
+                        if g2_data and not any('Missed' in tp for _, tp in g2_data[-1][0]): g2_data[-1] = (g2_data[-1][0], hg, ag, g2_data[-1][3])
+                        goles_parte_r = st.session_state.get("goles_parte_resto", "Todo")
+                        mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
+                        mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
+                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j)} | {emoji_home_r} {h_txt}  {ft_txt}  {a_txt}{emoji_away_r}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_r})</span></div>"
+                        html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
+                        if mostrar_1p_r:
+                            if not g1_data:
+                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                            else:
+                                for mins_tipo, sh, sa, is_home in g1_data:
+                                    base_txt = _fmt_mins_r(mins_tipo)
+                                    emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
+                                    if base_txt:
+                                        parts = [p for p in base_txt.split('  ') if p]
+                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
+                                    else:
+                                        mins_txt = ""
+                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                    score_txt = "" if is_missed else f"{sh}-{sa}"
+                                    if is_missed:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
+                                    else:
+                                        if is_home:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        else:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
+                        if mostrar_2p_r:
+                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+                            if not g2_data:
+                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                            else:
+                                for mins_tipo, sh, sa, is_home in g2_data:
+                                    base_txt = _fmt_mins_r(mins_tipo)
+                                    emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
+                                    if base_txt:
+                                        parts = [p for p in base_txt.split('  ') if p]
+                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
+                                    else:
+                                        mins_txt = ""
+                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                    score_txt = "" if is_missed else f"{sh}-{sa}"
+                                    if is_missed:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
+                                    else:
+                                        if is_home:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        else:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
+                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
+                        html_lineas_r += html
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
