@@ -2497,7 +2497,21 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not _tiene_algun_evento_jornada:
                             es_hueco_fix2 = True
                     if es_hueco_fix2:
-                        st.markdown(f"<div style='padding-left:8px;margin:8px 0 10px 2px'><div style='color:#000;font-family:monospace;font-weight:700;font-size:9px'>J{int(j_fix2)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
+                        try:
+                            _base_j = df_team_base_pred_fix2[df_team_base_pred_fix2['Jornada']==j_fix2]
+                            if not _base_j.empty:
+                                _r0 = _base_j.iloc[0]
+                                _h0 = str(_r0.get('HomeTeam','')).strip()
+                                _es_local_hueco = (normaliza(nombre_eq_fix2) == normaliza(_h0))
+                                _loc_txt = "CASA" if _es_local_hueco else "VISITANTE"
+                                _bg_hueco = "#ffffff" if _es_local_hueco else "#fffde7"
+                            else:
+                                _loc_txt = ""
+                                _bg_hueco = "#f5f5f5"
+                        except:
+                            _loc_txt = ""
+                            _bg_hueco = "#f5f5f5"
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #ececec;'><div style='color:#000; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
@@ -2685,7 +2699,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
-                        html = f"<div style='font-family:monospace; text-align:center; padding:1px 0 0 0; max-width:480px; margin:0 auto; line-height:1.1;'>"
+                        es_local_j = (norm_eq_fix2 == h_norm_r)
+                        bg_j = "#ffffff" if es_local_j else "#fffde7"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j}; border-radius:6px; border:1px solid #ececec;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px; line-height:1.1; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='margin-top:1px; font-size:10px; color:#000; line-height:1.1;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
@@ -2749,7 +2765,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:2px; font-size:10px; line-height:1.1; margin:0; padding:0;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
+                        html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
                         m1 = []; m2 = []
@@ -2778,18 +2794,32 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     if partidos_pred_copy_fix2:
         import html as _html
-        # cabecera filtros para que se copie también
+        # cabecera filtros - TODO lo de los desplegables
         try:
             _ligas_txt = ", ".join(ligas_pred_sel_fix2) if ligas_pred_sel_fix2 else "TODAS"
             _fecha_txt = fecha_pred_sel_fix2
+            _goles_parte_txt = st.session_state.get("goles_parte_fix2", "Todo")
             _cond_loc_txt = cond_loc_pred_fix2
-            _res_1p_txt = f"{res_1p_tipo_fix2} {resultados_pred_sel_fix2}"
+            _res_1p_tipo_txt = res_1p_tipo_fix2
+            _res_ht_ft_txt = ", ".join(resultados_pred_sel_fix2) if resultados_pred_sel_fix2 else "TODOS"
             _overs_txt = ", ".join(overs_sel_fix2) if overs_sel_fix2 else "TODOS"
             _live_txt = f"{res_live_tipo_fix2} MIN:{min_live_raw_fix2 or '-'}"
-            _min_txt = f"DESDE:{min_desde_pred_raw_fix2 or '-'} HASTA:{min_hasta_pred_raw_fix2 or '-'}"
-            filtros_txt_fix2 = f"FILTROS FIX2: Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | CondLoc={_cond_loc_txt} | 1P={_res_1p_txt} | Overs={_overs_txt} | LIVE={_live_txt} | {_min_txt} | Equipos={equipos_a_mostrar_fix2}"
-        except:
-            filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2}"
+            _min_desde_txt = min_desde_pred_raw_fix2 or "-"
+            _min_hasta_txt = min_hasta_pred_raw_fix2 or "-"
+            _eq_man1_txt = f"{equipos_manuales_1_fix2} [{cond_manual_1_fix2}]" if equipos_manuales_1_fix2 else "-"
+            _eq_man2_txt = f"{equipos_manuales_2_fix2} [{cond_manual_2_fix2}]" if equipos_manuales_2_fix2 else "-"
+            _partidos_fut_txt = f"{len(partidos_sel_fix2)}: {partidos_sel_fix2[:2]}" if partidos_sel_fix2 else "MANUAL"
+            filtros_txt_fix2 = (
+                f"FILTROS FIX2 | PARTIDOS FUT={_partidos_fut_txt} | Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | "
+                f"GOLES_PARTE={_goles_parte_txt} | Filtro={_cond_loc_txt} | "
+                f"1P_TIPO={_res_1p_tipo_txt} | 1P/2P_RES=[{_res_ht_ft_txt}] | Overs=[{_overs_txt}] | "
+                f"LIVE={_live_txt} | MIN_DESDE={_min_desde_txt} HASTA={_min_hasta_txt} | "
+                f"MANUAL1={_eq_man1_txt} | MANUAL2={_eq_man2_txt} | EQUIPOS_MOSTRADOS={equipos_a_mostrar_fix2}"
+            )
+        except Exception as e:
+            filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2} | ERR:{e}"
+        # TEXTO VISIBLE EN PANTALLA PARA VER FILTROS PUESTOS
+        st.markdown(f"<div style='font-family:monospace; font-size:9px; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
         texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
@@ -3113,6 +3143,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         opciones_res_r = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_r = st.multiselect("Resultado 1ªP / 2ªP R", opciones_res_r, default=[], key="filtro_ht_ft_resto", placeholder="Ej: 0-0_1ªP")
         overs_sel_r = st.multiselect("Overs / Unders R", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_resto", placeholder="Ej: 1P >0.5")
+        res_live_tipo_r = st.selectbox("Resultado LIVE R", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_resto")
+        min_live_raw_r = st.text_input("MIN LIVE R", key="min_live_resto", placeholder="Ej: 76")
 
     # --- EQUIPOS MANUALES RESTO - AÑADIDO (igual que EUROPA) ---
     lista_hist_equipos_resto = sorted(pd.concat([df_r['HomeTeam'], df_r['AwayTeam']]).dropna().astype(str).unique().tolist())
@@ -3131,6 +3163,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         except: return None
     MIN_DESDE_PRED_R = _parse_min_pred_r(min_desde_pred_raw_r)
     MIN_HASTA_PRED_R = _parse_min_pred_r(min_hasta_pred_raw_r)
+    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
+    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
 
     if fecha_pred_sel_r!= "Todas":
         try:
@@ -3327,6 +3361,95 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         if res_1p_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
                         return True
                     df_team_r = df_team_r[df_team_r.apply(_cumple_1p_tipo_r, axis=1)]
+
+                # --- LIVE R: RESULTADO EN MINUTO X ---
+                if res_live_tipo_r != "TODOS" and MIN_LIVE_R is not None:
+                    def _strip_acc_r(s):
+                        try:
+                            return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
+                        except:
+                            return str(s)
+                    def _equipo_es_local_r(team_str, home_norm, away_norm):
+                        try:
+                            t = normaliza(team_str)
+                            h = normaliza(home_norm)
+                            a = normaliza(away_norm)
+                            if t == h: return True
+                            if t == a: return False
+                            if h and (h in t or t in h): return True
+                            if a and (a in t or t in a): return False
+                        except:
+                            pass
+                        tu = str(team_str).upper().strip()
+                        hu = str(home_norm).upper().strip()
+                        au = str(away_norm).upper().strip()
+                        if tu == hu or hu in tu or tu in hu: return True
+                        if tu == au or au in tu or tu in au: return False
+                        return False
+                    def _cumple_live_r(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                        hn_c = _strip_acc_r(hn_); an_c = _strip_acc_r(an_)
+                        norm_eq_c = _strip_acc_r(norm_eq_r)
+                        try:
+                            hg_ft = int(float(rr.get('FTHG',0) or 0)); ag_ft = int(float(rr.get('FTAG',0) or 0))
+                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            hg_ft=0; ag_ft=0; hthg=0; htag=0
+                        evs = eventos_r.get(fid, [])
+                        sh_total = (hg_ft - hthg) + (ag_ft - htag)
+                        if sh_total <0: sh_total=0
+                        sh_up_to = 0
+                        hg_live = 0; ag_live = 0; cnt_match=0
+                        for ev in evs:
+                            m = ev.get('m',0)
+                            if m <= 45 or m > MIN_LIVE_R:
+                                if m <= MIN_LIVE_R:
+                                    team_ev = _strip_acc_r(ev.get('team',''))
+                                    tipo = ev.get('tipo','')
+                                    if 'Missed' in tipo: continue
+                                    if 'Own Goal' in tipo:
+                                        if team_ev == hn_c: ag_live+=1; cnt_match+=1
+                                        elif team_ev == an_c: hg_live+=1; cnt_match+=1
+                                    else:
+                                        if team_ev == hn_c: hg_live+=1; cnt_match+=1
+                                        elif team_ev == an_c: ag_live+=1; cnt_match+=1
+                                continue
+                            sh_up_to += 1
+                            team_ev = _strip_acc_r(ev.get('team',''))
+                            tipo = ev.get('tipo','')
+                            if 'Missed' in tipo: continue
+                            es_local_raw_live = _equipo_es_local_r(team_ev, hn_, an_)
+                            is_home_live = (not es_local_raw_live) if 'Own Goal' in tipo else es_local_raw_live
+                            if is_home_live: hg_live+=1; cnt_match+=1
+                            else: ag_live+=1; cnt_match+=1
+                        if MIN_LIVE_R <= 45:
+                            if cnt_match==0:
+                                hg_live = hthg if hthg+htag>0 else 0
+                                ag_live = htag if hthg+htag>0 else 0
+                        else:
+                            if sh_up_to == 0:
+                                hg_live = hthg; ag_live = htag
+                            elif sh_up_to == sh_total and sh_total>0:
+                                hg_live = hg_ft; ag_live = ag_ft
+                            else:
+                                if cnt_match==0 and sh_up_to>0:
+                                    hg_live = hg_ft if sh_up_to==sh_total else hthg
+                                    ag_live = ag_ft if sh_up_to==sh_total else htag
+                        if norm_eq_c == hn_c:
+                            r_ = "GANA" if hg_live > ag_live else "EMPATE" if hg_live == ag_live else "PIERDE"
+                        elif norm_eq_c == an_c:
+                            r_ = "GANA" if ag_live > hg_live else "EMPATE" if ag_live == hg_live else "PIERDE"
+                        else:
+                            return False
+                        if res_live_tipo_r == "EMPATE": return r_ == "EMPATE"
+                        if res_live_tipo_r == "GANA": return r_ == "GANA"
+                        if res_live_tipo_r == "PIERDE": return r_ == "PIERDE"
+                        if res_live_tipo_r == "EMPATEGANA": return r_ in ("EMPATE","GANA")
+                        if res_live_tipo_r == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
+                        if res_live_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                        return True
+                    df_team_r = df_team_r[df_team_r.apply(_cumple_live_r, axis=1)]
 
                 if df_team_r.empty:
                     st.caption(f"{nombre_eq_r} - sin historial en base RESTO")
@@ -3626,7 +3749,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:2px; font-size:10px; line-height:1.1; margin:0; padding:0;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
+                        html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
                         html_lineas_r += html
                         m1 = []; m2 = []
                         for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
