@@ -2609,9 +2609,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else: out.append(f"{mm}'")
                             return "  ".join(out)
 
-                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:440px; margin:0 auto; line-height:1.6;'>"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:460px; margin:0 auto; line-height:1.7;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
+                        
+                        # Cabecera 3 columnas para que veas que el marcador queda en medio
+                        def _row_3col(mins_html, score_html, is_home):
+                            if is_home:
+                                # Local: minuto izq, marcador centro
+                                return f"<div style='display:grid; grid-template-columns: 1fr 70px 1fr; font-size:10px;'><div style='text-align:left; padding-left:10px;'>{mins_html}</div><div style='text-align:center; font-weight:700;'>{score_html}</div><div></div></div>"
+                            else:
+                                # Visitante: marcador centro, minuto der
+                                return f"<div style='display:grid; grid-template-columns: 1fr 70px 1fr; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_html}</div><div style='text-align:right; padding-right:10px;'>{mins_html}</div></div>"
+
                         if not g1_data:
                             html += f"<div style='font-size:10px; color:#888;'>—</div>"
                         else:
@@ -2621,14 +2631,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                if is_missed:
-                                    line = f"{mins_txt}"
-                                else:
-                                    line = f"{mins_txt}  {sh}-{sa}" if is_home else f"{sh}-{sa}  {mins_txt}"
-                                if is_home:
-                                    html += f"<div style='font-size:10px; text-align:left; padding-left:12px;'>{line}</div>"
-                                else:
-                                    html += f"<div style='font-size:10px; text-align:right; padding-right:12px;'>{line}</div>"
+                                score_txt = "" if is_missed else f"{sh}-{sa}"
+                                html += _row_3col(mins_txt, score_txt, is_home)
 
                         html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
 
@@ -2641,16 +2645,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                if is_missed:
-                                    line = f"{mins_txt}"
-                                else:
-                                    line = f"{mins_txt}  {sh}-{sa}" if is_home else f"{sh}-{sa}  {mins_txt}"
-                                if is_home:
-                                    html += f"<div style='font-size:10px; text-align:left; padding-left:12px;'>{line}</div>"
-                                else:
-                                    html += f"<div style='font-size:10px; text-align:right; padding-right:12px;'>{line}</div>"
+                                score_txt = "" if is_missed else f"{sh}-{sa}"
+                                html += _row_3col(mins_txt, score_txt, is_home)
                         
-                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:440px;'></div>"
+                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:460px;'></div>"
 
                         html_lineas_fix2 += html
                         m1 = []; m2 = []
