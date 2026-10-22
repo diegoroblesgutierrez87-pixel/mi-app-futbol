@@ -2572,7 +2572,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _fecha_str_fix2 = ""
 
-                        # --- NUEVA VISUALIZACION CENTRADA + IZQ=LOCAL DER=VISITANTE + (pp)(p)(x) + SUBRAYADO + EMOJI POR GOL ---
+                        # --- NUEVA VISUALIZACION CENTRADA + IZQ=LOCAL DER=VISITANTE + (pp)(p)(x) + SUBRAYADO ---
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
                             grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
                             for ev in evs:
@@ -2607,7 +2607,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif 'Missed Penalty' in tp: out.append(f"(x) {mm}'")
                                 elif 'Penalty' in tp: out.append(f"(p) {mm}'")
                                 else: out.append(f"{mm}'")
-                            return out
+                            return "  ".join(out)
 
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
@@ -2618,21 +2618,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             for mins_tipo, sh, sa, is_home in g1_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                base_mins = _fmt_mins(mins_tipo)
-                                # emoji por cada gol
-                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                mins_con_emoji = f"{emoji_gol} " + base_mins.replace("  ", f"  {emoji_gol} ") if base_mins else ""
-                                if es_mio and '(x)' not in mins_con_emoji:
-                                    mins_con_emoji = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_con_emoji}</span>"
+                                mins_txt = _fmt_mins(mins_tipo)
+                                if es_mio and '(x)' not in mins_txt:
+                                    mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                 score_txt = "" if is_missed else f"{sh}-{sa}"
                                 if is_missed:
-                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_con_emoji if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_con_emoji}</div></div>"
+                                    # penalti fallado sin marcador, centrado
+                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                 else:
                                     if is_home:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_con_emoji}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
                                     else:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_con_emoji}</div></div>"
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
 
                         html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
 
@@ -2641,20 +2639,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             for mins_tipo, sh, sa, is_home in g2_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                base_mins = _fmt_mins(mins_tipo)
-                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                mins_con_emoji = "  ".join([f"{emoji_gol} {x}" for x in base_mins.split("  ")])
-                                if es_mio and '(x)' not in mins_con_emoji:
-                                    mins_con_emoji = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_con_emoji}</span>"
+                                mins_txt = _fmt_mins(mins_tipo)
+                                if es_mio and '(x)' not in mins_txt:
+                                    mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                 score_txt = "" if is_missed else f"{sh}-{sa}"
                                 if is_missed:
-                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_con_emoji if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_con_emoji}</div></div>"
+                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                 else:
                                     if is_home:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_con_emoji}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
                                     else:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_con_emoji}</div></div>"
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         
                         html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
 
