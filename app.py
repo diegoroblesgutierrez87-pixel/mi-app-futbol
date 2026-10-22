@@ -2719,7 +2719,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         if mostrar_2p:
-                            html += f"<div style='margin:2px auto 1px auto; font-size:9px; letter-spacing:2px; color:#000; line-height:1;'>{ '___________________2ª________________' }</div>"
+                            html += f"<div style='display:flex; align-items:center; gap:8px; margin:4px auto 2px auto; max-width:480px;'><div style='flex:1; height:1.2px; background:#000;'></div><span style='font-size:9px; font-weight:900; color:#000; letter-spacing:1px;'>2ª</span><div style='flex:1; height:1.2px; background:#000;'></div></div>"
                             if not g2_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
@@ -3599,7 +3599,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         if mostrar_2p_r:
-                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+                            html += f"<div style='display:flex; align-items:center; gap:8px; margin:4px auto 2px auto; max-width:480px;'><div style='flex:1; height:1.2px; background:#000;'></div><span style='font-size:9px; font-weight:900; color:#000; letter-spacing:1px;'>2ª</span><div style='flex:1; height:1.2px; background:#000;'></div></div>"
                             if not g2_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
