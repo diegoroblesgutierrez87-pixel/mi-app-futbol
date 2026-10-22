@@ -2494,11 +2494,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
 
-                        # --- NOMBRES con subrayado ---
+                        # --- NOMBRES con subrayado + EMOJI AZUL SELECCIONADO / NEGRO RIVAL ---
+                        EMOJI_SEL = "🔵"
+                        EMOJI_RIVAL = "⚫"
                         if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
+                            h_txt = f"{EMOJI_SEL} <span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"; a_txt = f"{EMOJI_RIVAL} <span style='color:#000'>{a}</span>"
                         elif norm_eq_fix2 == a_norm_r:
-                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
+                            h_txt = f"{EMOJI_RIVAL} <span style='color:#000'>{h}</span>"; a_txt = f"{EMOJI_SEL} <span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                         else:
                             h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
 
