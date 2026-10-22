@@ -2353,12 +2353,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             team_ev = _strip_acc_l(ev.get('team',''))
                             tipo = ev.get('tipo','')
                             if 'Missed' in tipo: continue
-                            if 'Own Goal' in tipo:
-                                if team_ev == hn_c: ag_live+=1; cnt_match+=1
-                                elif team_ev == an_c: hg_live+=1; cnt_match+=1
-                            else:
-                                if team_ev == hn_c: hg_live+=1; cnt_match+=1
-                                elif team_ev == an_c: ag_live+=1; cnt_match+=1
+                            # FIX OWN GOAL LIVE
+                            es_local_raw_live = _equipo_es_local(team_ev, hn, an) if '_equipo_es_local' in locals() else (team_ev == hn_c)
+                            es_own_live = 'Own Goal' in tipo
+                            is_home_live = (not es_local_raw_live) if es_own_live else es_local_raw_live
+                            if is_home_live: hg_live+=1; cnt_match+=1
+                            else: ag_live+=1; cnt_match+=1
                         # LOGICA HT
                         if MIN_LIVE_FIX2 <= 45:
                             # solo 1ª parte
@@ -2599,22 +2599,35 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         ht_str = f"[{ht_inner}]"
                         ht_html_badge = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
 
-                        # --- GOLES AGRUPADOS ---
+                        # --- GOLES AGRUPADOS FIX OWN GOAL 2-0 -> 3-0 ---
                         filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         evs_sorted_fix2 = sorted(eventos_fix2.get(fid, []), key=lambda x: x['m'])
-                        def _es_home_fix2(team_str):
-                            t = str(team_str).upper().strip()
-                            hn_u = str(hn).upper().strip()
-                            an_u = str(an).upper().strip()
-                            if t == hn_u or hn_u in t or t in hn_u: return True
-                            if t == an_u or an_u in t or t in an_u: return False
+
+                        def _equipo_es_local(team_str, home_norm, away_norm):
+                            try:
+                                t = normaliza(team_str)
+                                h = normaliza(home_norm)
+                                a = normaliza(away_norm)
+                                if t == h: return True
+                                if t == a: return False
+                                if h and (h in t or t in h): return True
+                                if a and (a in t or t in a): return False
+                            except:
+                                pass
+                            tu = str(team_str).upper().strip()
+                            hu = str(home_norm).upper().strip()
+                            au = str(away_norm).upper().strip()
+                            if tu == hu or hu in tu or tu in hu: return True
+                            if tu == au or au in tu or tu in au: return False
                             return False
+
                         def _agrupa_fix2_con_score(evs, sh=0, sa=0):
                             grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa
                             for ev in evs:
                                 if 'Missed' in ev.get('tipo',''): continue
-                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
-                                is_home = not _es_home_fix2(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_fix2(team_ev)
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
+                                es_local_raw = _equipo_es_local(team_ev, hn, an)
+                                is_home = (not es_local_raw) if 'Own Goal' in tipo else es_local_raw
                                 if is_home: h+=1
                                 else: a+=1
                                 if last is not None and is_home != last and cur:
@@ -2622,37 +2635,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 cur.append(m); last=is_home; lh=h; la=a
                             if cur: grupos.append((cur, lh, la))
                             return grupos
-                        evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
-                        evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
-                        g1_data = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
-                        # corrige último con HT real
-                        if g1_data: 
-                            # fuerza HT real
-                            g1_data[-1] = (g1_data[-1][0], hthg, htag)
-                        # 2ª parte empieza desde HT
-                        g2_data = _agrupa_fix2_con_score(evs_2p_fix2, hthg, htag)
-                        if g2_data:
-                            g2_data[-1] = (g2_data[-1][0], hg, ag)
 
-                        try:
-                            _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
-                            _fecha_str_fix2 = _fecha_dt_fix2.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix2) else ""
-                        except:
-                            _fecha_str_fix2 = ""
-
-                        # --- NUEVA VISUALIZACION CENTRADA + IZQ=LOCAL DER=VISITANTE + (pp)(p)(x) + SUBRAYADO ---
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
                             grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
                             for ev in evs:
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
-                                is_home_raw = _es_home_fix2(team_ev)
-                                is_own = 'Own Goal' in tipo
-                                is_home_scoring = (not is_home_raw) if is_own else is_home_raw
+                                es_local_raw = _equipo_es_local(team_ev, hn, an)
+                                is_home_scoring = (not es_local_raw) if 'Own Goal' in tipo else es_local_raw
                                 if 'Missed Penalty' in tipo:
-                                    if cur:
-                                        grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
-                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring))
-                                    continue
+                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
+                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
                                 if is_home_scoring: h+=1
                                 else: a+=1
                                 if last is not None and is_home_scoring != last and cur:
@@ -2660,6 +2652,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
                             if cur: grupos.append((cur, lh, la, last_is_home))
                             return grupos
+
+                        evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
+                        evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
+                        g1_data = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
+                        if g1_data: g1_data[-1] = (g1_data[-1][0], hthg, htag)
+                        g2_data = _agrupa_fix2_con_score(evs_2p_fix2, hthg, htag)
+                        if g2_data: g2_data[-1] = (g2_data[-1][0], hg, ag)
+
+                        try:
+                            _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
+                            _fecha_str_fix2 = _fecha_dt_fix2.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix2) else ""
+                        except:
+                            _fecha_str_fix2 = ""
 
                         g1_data = _agrupa_fix2_con_score_sub(evs_1p_fix2, 0, 0)
                         if g1_data and not any('Missed' in tp for _, tp in g1_data[-1][0]): 
