@@ -2623,7 +2623,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
-                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
                             if not g1_data:
