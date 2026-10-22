@@ -2615,8 +2615,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
-                            html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
                             if not g1_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
@@ -2639,11 +2639,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        if mostrar_1p and mostrar_2p:
-                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
                         if mostrar_2p:
-                            if not mostrar_1p:
-                                html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
                             if not g2_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
