@@ -3499,7 +3499,21 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                 for j in jornadas_r:
                     d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
                     if d_j_ok_r.empty:
-                        st.markdown(f"<div style='padding-left:8px;margin:8px 0 10px 2px'><div style='color:#000;font-family:monospace;font-weight:700;font-size:9px'>J{int(j)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
+                        try:
+                            _base_j_r = df_team_base_pred_r[df_team_base_pred_r['Jornada']==j] if 'df_team_base_pred_r' in locals() else df_team_base_total_r[df_team_base_total_r['Jornada']==j]
+                            if not _base_j_r.empty:
+                                _r0_r = _base_j_r.iloc[0]
+                                _h0_r = str(_r0_r.get('HomeTeam','')).strip()
+                                _es_local_hueco_r = (normaliza(nombre_eq_r) == normaliza(_h0_r))
+                                _loc_txt_r = "CASA" if _es_local_hueco_r else "VISITANTE"
+                                _bg_hueco_r = "#ffffff" if _es_local_hueco_r else "#fffde7"
+                            else:
+                                _loc_txt_r = ""
+                                _bg_hueco_r = "#f5f5f5"
+                        except:
+                            _loc_txt_r = ""
+                            _bg_hueco_r = "#f5f5f5"
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco_r}; border-radius:6px; border:1px solid #ececec;'><div style='color:#000; font-weight:900; font-size:10px;'>J{int(j)} | — {_loc_txt_r}</div></div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_r = d_j_ok_r
                     html_lineas_r = ""
@@ -3690,7 +3704,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
                         mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
                         filtro_act_r = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
-                        html = f"<div style='font-family:monospace; text-align:center; padding:1px 0 0 0; max-width:480px; margin:0 auto; line-height:1.1;'>"
+                        es_local_j_r = (norm_eq_r == h_norm_r)
+                        bg_j_r = "#ffffff" if es_local_j_r else "#fffde7"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j_r}; border-radius:6px; border:1px solid #ececec;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j)} | {emoji_home_r} {h_txt}  {ft_txt}  {a_txt}{emoji_away_r}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_r})</span></div>"
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p_r:
