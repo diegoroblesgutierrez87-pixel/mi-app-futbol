@@ -2169,7 +2169,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     _df = df_fix2[(df_fix2['HomeTeam'].apply(lambda x: normaliza(x)==_norm)) | (df_fix2['AwayTeam'].apply(lambda x: normaliza(x)==_norm))]
                 _tot = len(_df)
                 _df_f = _df.copy()
-                # aplica mismos filtros que el bloque principal (resultados, overs, 1p tipo, live, min desde/hasta)
                 if resultados_pred_sel_fix2:
                     sel_fix2 = resultados_pred_sel_fix2
                     set_1p = set(); set_2p = set()
@@ -2190,8 +2189,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if set_2p and (hg_, ag_) in set_2p: return True
                             return False
                         _df_f = _df_f[_df_f.apply(_cumple, axis=1)]
-                # overs y 1p tipo y live se aplican igual que abajo si quieres 100% exacto, para no alargar usamos lo principal
-                # min desde/hasta se filtra por eventos luego, lo dejamos en total filtrado base
+                # MIN DESDE / HASTA - cuenta solo partidos con gol en ese rango
+                if MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None:
+                    def _tiene_min_f(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        for ev in eventos_fix2.get(fid, []):
+                            if 'Missed' in ev.get('tipo',''): continue
+                            mm = ev.get('m',-1)
+                            if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
+                            if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
+                            return True
+                        return False
+                    _df_f = _df_f[_df_f.apply(_tiene_min_f, axis=1)]
                 return len(_df_f), _tot
             f_h_filt, f_h_tot = _cnt_fut_fix2(h_fut_fix2)
             f_a_filt, f_a_tot = _cnt_fut_fix2(a_fut_fix2)
@@ -2426,7 +2435,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         continue
 
                 total_fix2 = len(df_team_base_total_fix2) if 'df_team_base_total_fix2' in locals() else len(df_team_fix2)
-                filt_fix2 = len(df_team_fix2)
+                # filt con MIN incluido
+                if MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None:
+                    def _tiene_min_eq(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        for ev in eventos_fix2.get(fid, []):
+                            if 'Missed' in ev.get('tipo',''): continue
+                            mm = ev.get('m',-1)
+                            if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
+                            if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
+                            return True
+                        return False
+                    filt_fix2 = len(df_team_fix2[df_team_fix2.apply(_tiene_min_eq, axis=1)])
+                else:
+                    filt_fix2 = len(df_team_fix2)
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2</div>", unsafe_allow_html=True)
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
@@ -3158,7 +3180,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         continue
                 except:
                     continue
-                # conteo futuro resto
+                # conteo futuro resto CON MIN
                 def _cnt_fut_r(nom):
                     _norm = normaliza(nom); _up = nom.upper().strip()
                     _df = df_r[(df_r['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_r['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
@@ -3185,6 +3207,17 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 if set_2p_r and (hg_, ag_) in set_2p_r: return True
                                 return False
                             _df_f = _df_f[_df_f.apply(_cumple_r, axis=1)]
+                    if MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None:
+                        def _tiene_min_fr(rr):
+                            fid = str(rr.get('fixture_id','')).split('.')[0]
+                            for ev in eventos_r.get(fid, []):
+                                if 'Missed' in ev.get('tipo',''): continue
+                                mm = ev.get('m',-1)
+                                if MIN_DESDE_PRED_R is not None and mm < MIN_DESDE_PRED_R: continue
+                                if MIN_HASTA_PRED_R is not None and mm > MIN_HASTA_PRED_R: continue
+                                return True
+                            return False
+                        _df_f = _df_f[_df_f.apply(_tiene_min_fr, axis=1)]
                     return len(_df_f), _tot
                 f_h_filt_r, f_h_tot_r = _cnt_fut_r(h_fut_r)
                 f_a_filt_r, f_a_tot_r = _cnt_fut_r(a_fut_r)
@@ -3295,7 +3328,19 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     continue
 
                 total_r = len(df_team_base_total_r) if 'df_team_base_total_r' in locals() else len(df_team_r)
-                filt_r = len(df_team_r)
+                if MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None:
+                    def _tiene_min_eq_r(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        for ev in eventos_r.get(fid, []):
+                            if 'Missed' in ev.get('tipo',''): continue
+                            mm = ev.get('m',-1)
+                            if MIN_DESDE_PRED_R is not None and mm < MIN_DESDE_PRED_R: continue
+                            if MIN_HASTA_PRED_R is not None and mm > MIN_HASTA_PRED_R: continue
+                            return True
+                        return False
+                    filt_r = len(df_team_r[df_team_r.apply(_tiene_min_eq_r, axis=1)])
+                else:
+                    filt_r = len(df_team_r)
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()} {filt_r}/{total_r} RESTO</div>", unsafe_allow_html=True)
                 # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03 - FIX REMO ULTIMO BRAGANTINO 18/10 ARRIBA
                 def _parse_fecha_resto_robusto(s):
