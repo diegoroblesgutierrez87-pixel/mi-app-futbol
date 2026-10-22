@@ -2497,7 +2497,21 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if not _tiene_algun_evento_jornada:
                             es_hueco_fix2 = True
                     if es_hueco_fix2:
-                        st.markdown(f"<div style='padding-left:8px;margin:8px 0 10px 2px'><div style='color:#000;font-family:monospace;font-weight:700;font-size:9px'>J{int(j_fix2)} | —</div><div style='height:12px'></div></div>", unsafe_allow_html=True)
+                        try:
+                            _base_j = df_team_base_pred_fix2[df_team_base_pred_fix2['Jornada']==j_fix2]
+                            if not _base_j.empty:
+                                _r0 = _base_j.iloc[0]
+                                _h0 = str(_r0.get('HomeTeam','')).strip()
+                                _es_local_hueco = (normaliza(nombre_eq_fix2) == normaliza(_h0))
+                                _loc_txt = "CASA" if _es_local_hueco else "VISITANTE"
+                                _bg_hueco = "#ffffff" if _es_local_hueco else "#fffde7"
+                            else:
+                                _loc_txt = ""
+                                _bg_hueco = "#f5f5f5"
+                        except:
+                            _loc_txt = ""
+                            _bg_hueco = "#f5f5f5"
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #ececec;'><div style='color:#000; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
