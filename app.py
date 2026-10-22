@@ -3158,7 +3158,37 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         continue
                 except:
                     continue
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} vs {a_fut_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
+                # conteo futuro resto
+                def _cnt_fut_r(nom):
+                    _norm = normaliza(nom); _up = nom.upper().strip()
+                    _df = df_r[(df_r['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_r['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
+                    if _df.empty:
+                        _df = df_r[(df_r['HomeTeam'].apply(lambda x: normaliza(x)==_norm)) | (df_r['AwayTeam'].apply(lambda x: normaliza(x)==_norm))]
+                    _tot = len(_df)
+                    _df_f = _df.copy()
+                    if resultados_pred_sel_r:
+                        set_1p_r = set(); set_2p_r = set()
+                        for s in resultados_pred_sel_r:
+                            if "_1ªP" in s:
+                                try: a,b = s.replace("_1ªP","").split("-"); set_1p_r.add((int(a),int(b)))
+                                except: pass
+                            if "_2ªP" in s:
+                                try: a,b = s.replace("_2ªP","").split("-"); set_2p_r.add((int(a),int(b)))
+                                except: pass
+                        if set_1p_r or set_2p_r:
+                            def _cumple_r(rr):
+                                try:
+                                    hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                                    hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                                except: return False
+                                if set_1p_r and (hthg_, htag_) in set_1p_r: return True
+                                if set_2p_r and (hg_, ag_) in set_2p_r: return True
+                                return False
+                            _df_f = _df_f[_df_f.apply(_cumple_r, axis=1)]
+                    return len(_df_f), _tot
+                f_h_filt_r, f_h_tot_r = _cnt_fut_r(h_fut_r)
+                f_a_filt_r, f_a_tot_r = _cnt_fut_r(a_fut_r)
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} {f_h_filt_r}/{f_h_tot_r} vs {a_fut_r} {f_a_filt_r}/{f_a_tot_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
                 equipos_a_mostrar_r = [h_fut_r, a_fut_r]
                 if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r:
                     equipos_a_mostrar_r.extend(equipos_manuales_1_r)
@@ -3264,7 +3294,9 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                     st.caption(f"{nombre_eq_r} - sin historial en base RESTO")
                     continue
 
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()}</div>", unsafe_allow_html=True)
+                total_r = len(df_team_base_total_r) if 'df_team_base_total_r' in locals() else len(df_team_r)
+                filt_r = len(df_team_r)
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()} {filt_r}/{total_r} RESTO</div>", unsafe_allow_html=True)
                 # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03 - FIX REMO ULTIMO BRAGANTINO 18/10 ARRIBA
                 def _parse_fecha_resto_robusto(s):
                     try:
@@ -3360,6 +3392,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         else: col_estado_r = "#8B4513"
                         ht_html = f"<span style='color:{col_estado_r};font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
 
+                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         # [RESTO-FIX2-AGRUPADO] - GOLES DIVIDIDOS IZQ/DER IGUAL QUE FIX2
                         import re
                         def _es_home_r(team_str):
@@ -3484,6 +3517,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         goles_parte_r = st.session_state.get("goles_parte_resto", "Todo")
                         mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
                         mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
+                        filtro_act_r = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j)} | {emoji_home_r} {h_txt}  {ft_txt}  {a_txt}{emoji_away_r}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_r})</span></div>"
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
@@ -3492,13 +3526,19 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
                                 for mins_tipo, sh, sa, is_home in g1_data:
-                                    base_txt = _fmt_mins_r(mins_tipo)
                                     emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
-                                    if base_txt:
-                                        parts = [p for p in base_txt.split('  ') if p]
-                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
-                                    else:
-                                        mins_txt = ""
+                                    parts = []
+                                    for mm, tp in mins_tipo:
+                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
+                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
+                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
+                                        else: base = f"{mm}'"
+                                        txt = f"{base}{emoji_gol}"
+                                        en_rango = (MIN_DESDE_PRED_R is None or mm >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or mm <= MIN_HASTA_PRED_R)
+                                        if filtro_act_r and en_rango:
+                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
+                                        parts.append(txt)
+                                    mins_txt = "  ".join(parts)
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                     score_txt = "" if is_missed else f"{sh}-{sa}"
                                     if is_missed:
@@ -3514,13 +3554,19 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
                                 for mins_tipo, sh, sa, is_home in g2_data:
-                                    base_txt = _fmt_mins_r(mins_tipo)
                                     emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
-                                    if base_txt:
-                                        parts = [p for p in base_txt.split('  ') if p]
-                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
-                                    else:
-                                        mins_txt = ""
+                                    parts = []
+                                    for mm, tp in mins_tipo:
+                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
+                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
+                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
+                                        else: base = f"{mm}'"
+                                        txt = f"{base}{emoji_gol}"
+                                        en_rango = (MIN_DESDE_PRED_R is None or mm >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or mm <= MIN_HASTA_PRED_R)
+                                        if filtro_act_r and en_rango:
+                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
+                                        parts.append(txt)
+                                    mins_txt = "  ".join(parts)
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                     score_txt = "" if is_missed else f"{sh}-{sa}"
                                     if is_missed:
