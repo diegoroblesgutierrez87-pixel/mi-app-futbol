@@ -3444,21 +3444,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
                         left_parts = []
                         for ii, gg in enumerate(g1_r):
-                            # cambia ⚫ 51' por 51'⚫
-                            gg_fix = gg.replace(f"{EMOJI_RIVAL_R} ", "").replace(f"{EMOJI_SEL_R} ", "").replace(f" {EMOJI_RIVAL_R}", "").replace(f" {EMOJI_SEL_R}", "")
-                            # re-inserta emoji despues del minuto: busca 51'
-                            import re as _re_r
-                            def _add_emoji_after(m):
-                                # m es "51'" o con (p)
-                                return f"{m}{emoji_home_r if norm_eq_r==h_norm_r and 'local' in str(gg).lower() or True else emoji_away_r}"
-                            # simplificado: pone emoji al final de cada bloque de minuto
-                            # si es mio usa SEL, si no RIVAL - usamos el del equipo del gol ya calculado en _agrupa
-                            # para no liar, ponemos emoji generico despues
-                            gg = gg.replace("'", f"'{emoji_home_r if norm_eq_r==h_norm_r else emoji_away_r}" if ii==0 else f"'{emoji_away_r}")
-                            # si ya tenia emoji delante lo movemos detras
-                            gg = gg.replace(f"{EMOJI_SEL_R} ", "").replace(f"{EMOJI_RIVAL_R} ", "")
-                            # asegura formato 51'⚪
-                            gg = _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_SEL_R if norm_eq_r in h_norm_r or norm_eq_r in a_norm_r else EMOJI_RIVAL_R}", gg)
+                            gg = gg.replace(f"{EMOJI_RIVAL_R} ", "").replace(f"{EMOJI_SEL_R} ", "")
+                            gg = gg.replace("'", f"'{EMOJI_SEL_R}")
                             if ii == len(g1_r)-1:
                                 left_parts.append(f"{gg} {ht_html}")
                             else:
@@ -3466,13 +3453,10 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         if not left_parts:
                             left_parts = [ht_html]
                         right_parts_raw = g2_r if g2_r else []
-                        # mismo fix para 2ª parte - emoji despues
                         right_parts = []
                         for gg in right_parts_raw:
                             gg = gg.replace(f"{EMOJI_SEL_R} ", "").replace(f"{EMOJI_RIVAL_R} ", "")
-                            gg = _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_SEL_R}", gg) if 'local' in gg.lower() else _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_RIVAL_R}", gg)
-                            # final simple: 51'⚪
-                            gg = gg.replace("''", "'")
+                            gg = gg.replace("'", f"'{EMOJI_RIVAL_R}")
                             right_parts.append(gg)
                         left_inline = " , ".join(left_parts) if left_parts else ht_html
                         right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
