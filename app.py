@@ -2621,14 +2621,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                 score_txt = "" if is_missed else f"{sh}-{sa}"
-                                # PEGADO: minuto + marcador juntos, en el centro
                                 if is_missed:
-                                    combo = f"{mins_txt}"
+                                    # penalti fallado sin marcador, centrado
+                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                 else:
-                                    combo = f"{mins_txt}  {score_txt}" if is_home else f"{score_txt}  {mins_txt}"
-                                # local un pelin a izq, visitante un pelin a der, pero todo junto en medio
-                                shift = "margin-right:24px;" if is_home else "margin-left:24px;"
-                                html += f"<div style='font-size:10px; text-align:center; {shift}'>{combo}</div>"
+                                    if is_home:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                    else:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
 
                         html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
 
@@ -2643,11 +2643,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                 score_txt = "" if is_missed else f"{sh}-{sa}"
                                 if is_missed:
-                                    combo = f"{mins_txt}"
+                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                 else:
-                                    combo = f"{mins_txt}  {score_txt}" if is_home else f"{score_txt}  {mins_txt}"
-                                shift = "margin-right:24px;" if is_home else "margin-left:24px;"
-                                html += f"<div style='font-size:10px; text-align:center; {shift}'>{combo}</div>"
+                                    if is_home:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                    else:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         
                         html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
 
