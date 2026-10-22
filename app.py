@@ -2634,7 +2634,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     base_txt = _fmt_mins(mins_tipo)
                                     emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
                                     if base_txt:
-                                        mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
+                                        parts = [p for p in base_txt.split("  ") if p]
+                                        mins_txt = "  ".join([f"{p}{emoji_gol}" for p in parts])
                                     else:
                                         mins_txt = ""
                                     if es_mio and '(x)' not in mins_txt:
