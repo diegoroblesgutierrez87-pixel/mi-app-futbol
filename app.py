@@ -2074,6 +2074,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     c_lp1_fix2, c_lp2_fix2, c_lp3_fix2, c_lp4_fix2 = st.columns([2,1,1,1])
     with c_lp4_fix2:
+        goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
         cond_loc_pred_fix2 = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix2")
         res_1p_tipo_fix2 = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix2")
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
@@ -2609,59 +2610,62 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else: out.append(f"{mm}'")
                             return "  ".join(out)
 
+                        goles_parte_fix2 = st.session_state.get("goles_parte_fix2", "Todo")
+                        mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
+                        mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:480px; margin:0 auto; line-height:1.8;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
-                        html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
-
-                        if not g1_data:
-                            html += f"<div style='font-size:10px; color:#888;'>—</div>"
-                        else:
-                            for mins_tipo, sh, sa, is_home in g1_data:
-                                es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                base_txt = _fmt_mins(mins_tipo)
-                                # emoji segun equipo: azul seleccionado, negro rival
-                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                if base_txt:
-                                    mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
-                                else:
-                                    mins_txt = ""
-                                if es_mio and '(x)' not in mins_txt:
-                                    mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
-                                is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                score_txt = "" if is_missed else f"{sh}-{sa}"
-                                if is_missed:
-                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
-                                else:
-                                    if is_home:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                        if mostrar_1p:
+                            html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
+                            if not g1_data:
+                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                            else:
+                                for mins_tipo, sh, sa, is_home in g1_data:
+                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
+                                    base_txt = _fmt_mins(mins_tipo)
+                                    emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
+                                    if base_txt:
+                                        mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
                                     else:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-
-                        html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
-
-                        if not g2_data:
-                            html += f"<div style='font-size:10px; color:#888;'>—</div>"
-                        else:
-                            for mins_tipo, sh, sa, is_home in g2_data:
-                                es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                base_txt = _fmt_mins(mins_tipo)
-                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                if base_txt:
-                                    mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
-                                else:
-                                    mins_txt = ""
-                                if es_mio and '(x)' not in mins_txt:
-                                    mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
-                                is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                score_txt = "" if is_missed else f"{sh}-{sa}"
-                                if is_missed:
-                                    html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
-                                else:
-                                    if is_home:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        mins_txt = ""
+                                    if es_mio and '(x)' not in mins_txt:
+                                        mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
+                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                    score_txt = "" if is_missed else f"{sh}-{sa}"
+                                    if is_missed:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                     else:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        
+                                        if is_home:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        else:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
+                        if mostrar_1p and mostrar_2p:
+                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+                        if mostrar_2p:
+                            if not mostrar_1p:
+                                html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+                            if not g2_data:
+                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                            else:
+                                for mins_tipo, sh, sa, is_home in g2_data:
+                                    es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
+                                    base_txt = _fmt_mins(mins_tipo)
+                                    emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
+                                    if base_txt:
+                                        mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
+                                    else:
+                                        mins_txt = ""
+                                    if es_mio and '(x)' not in mins_txt:
+                                        mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
+                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                    score_txt = "" if is_missed else f"{sh}-{sa}"
+                                    if is_missed:
+                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
+                                    else:
+                                        if is_home:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
+                                        else:
+                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
