@@ -2570,57 +2570,87 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _fecha_str_fix2 = ""
 
-                        # --- NUEVA VISUALIZACION CENTRADA + SUBRAYADO GOLES EQUIPO SELECCIONADO ---
+                        # --- NUEVA VISUALIZACION CENTRADA + IZQ=LOCAL DER=VISITANTE + (pp)(p)(x) + SUBRAYADO ---
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
                             grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
                             for ev in evs:
-                                if 'Missed' in ev.get('tipo',''): continue
-                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
-                                is_home = not _es_home_fix2(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_fix2(team_ev)
-                                if is_home: h+=1
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
+                                is_home_raw = _es_home_fix2(team_ev)
+                                is_own = 'Own Goal' in tipo
+                                is_home_scoring = (not is_home_raw) if is_own else is_home_raw
+                                # Missed Penalty no suma gol pero se muestra
+                                if 'Missed Penalty' in tipo:
+                                    if cur:
+                                        grupos.append((cur, lh, la, last_is_home)); cur=[]
+                                        last=None
+                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring))
+                                    continue
+                                if is_home_scoring: h+=1
                                 else: a+=1
-                                if last is not None and is_home != last and cur:
+                                if last is not None and is_home_scoring != last and cur:
                                     grupos.append((cur, lh, la, last_is_home)); cur=[]
-                                cur.append(m); last=is_home; last_is_home=is_home; lh=h; la=a
+                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
                             if cur: grupos.append((cur, lh, la, last_is_home))
                             return grupos
 
                         g1_data = _agrupa_fix2_con_score_sub(evs_1p_fix2, 0, 0)
-                        if g1_data: 
+                        if g1_data and not any('Missed' in tp for _, tp in g1_data[-1][0]): 
                             g1_data[-1] = (g1_data[-1][0], hthg, htag, g1_data[-1][3])
                         g2_data = _agrupa_fix2_con_score_sub(evs_2p_fix2, hthg, htag)
-                        if g2_data:
+                        if g2_data and not any('Missed' in tp for _, tp in g2_data[-1][0]):
                             g2_data[-1] = (g2_data[-1][0], hg, ag, g2_data[-1][3])
 
-                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:380px; margin:0 auto; line-height:1.5;'>"
+                        def _fmt_mins(min_tipo_list):
+                            out=[]
+                            for mm, tp in min_tipo_list:
+                                if 'Own Goal' in tp: out.append(f"(pp) {mm}'")
+                                elif 'Missed Penalty' in tp: out.append(f"(x) {mm}'")
+                                elif 'Penalty' in tp: out.append(f"(p) {mm}'")
+                                else: out.append(f"{mm}'")
+                            return "  ".join(out)
+
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:440px; margin:0 auto; line-height:1.6;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
-                        
                         html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
                         if not g1_data:
                             html += f"<div style='font-size:10px; color:#888;'>—</div>"
                         else:
-                            for mins, sh, sa, is_home in g1_data:
+                            for mins_tipo, sh, sa, is_home in g1_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                mins_txt = "  ".join([f"{m}'" for m in mins])
-                                if es_mio:
+                                mins_txt = _fmt_mins(mins_tipo)
+                                if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
-                                score_txt = f"{sh}-{sa}"
-                                html += f"<div style='font-size:10px;'>{mins_txt}  {score_txt}</div>"
+                                is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                if is_missed:
+                                    line = f"{mins_txt}"
+                                else:
+                                    line = f"{mins_txt}  {sh}-{sa}" if is_home else f"{sh}-{sa}  {mins_txt}"
+                                if is_home:
+                                    html += f"<div style='font-size:10px; text-align:left; padding-left:12px;'>{line}</div>"
+                                else:
+                                    html += f"<div style='font-size:10px; text-align:right; padding-right:12px;'>{line}</div>"
 
                         html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
 
                         if not g2_data:
                             html += f"<div style='font-size:10px; color:#888;'>—</div>"
                         else:
-                            for mins, sh, sa, is_home in g2_data:
+                            for mins_tipo, sh, sa, is_home in g2_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                mins_txt = "  ".join([f"{m}'" for m in mins])
-                                if es_mio:
+                                mins_txt = _fmt_mins(mins_tipo)
+                                if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
-                                score_txt = f"{sh}-{sa}"
-                                html += f"<div style='font-size:10px;'>{mins_txt}   {score_txt}</div>"
+                                is_missed = any('Missed' in tp for _, tp in mins_tipo)
+                                if is_missed:
+                                    line = f"{mins_txt}"
+                                else:
+                                    line = f"{mins_txt}  {sh}-{sa}" if is_home else f"{sh}-{sa}  {mins_txt}"
+                                if is_home:
+                                    html += f"<div style='font-size:10px; text-align:left; padding-left:12px;'>{line}</div>"
+                                else:
+                                    html += f"<div style='font-size:10px; text-align:right; padding-right:12px;'>{line}</div>"
                         
-                        html += f"</div><div style='height:2px;background:#000;margin:4px 0 10px 12px; max-width:380px; margin-left:auto; margin-right:auto;'></div>"
+                        html += f"</div><div style='height:2px;background:#000;margin:4px auto 10px auto; max-width:440px;'></div>"
 
                         html_lineas_fix2 += html
                         m1 = []; m2 = []
