@@ -2621,7 +2621,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 base_mins = _fmt_mins(mins_tipo)
                                 # emoji por cada gol
                                 emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                mins_con_emoji = "  ".join([f"{emoji_gol} {x}" for x in base_mins.split("  ")])
+                                mins_con_emoji = f"{emoji_gol} " + base_mins.replace("  ", f"  {emoji_gol} ") if base_mins else ""
                                 if es_mio and '(x)' not in mins_con_emoji:
                                     mins_con_emoji = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_con_emoji}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
