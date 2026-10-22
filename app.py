@@ -2342,8 +2342,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     tipo = ev.get('tipo','')
                                     if 'Missed' in tipo: continue
                                     if 'Own Goal' in tipo:
-                                        if team_ev == hn_c: ag_live+=1; cnt_match+=1
-                                        elif team_ev == an_c: hg_live+=1; cnt_match+=1
+                                        if team_ev == hn_c: hg_live+=1; cnt_match+=1
+                                        elif team_ev == an_c: ag_live+=1; cnt_match+=1
                                     else:
                                         if team_ev == hn_c: hg_live+=1; cnt_match+=1
                                         elif team_ev == an_c: ag_live+=1; cnt_match+=1
@@ -2355,8 +2355,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if 'Missed' in tipo: continue
                             # FIX OWN GOAL LIVE
                             es_local_raw_live = _equipo_es_local(team_ev, hn, an) if '_equipo_es_local' in locals() else (team_ev == hn_c)
-                            es_own_live = 'Own Goal' in tipo
-                            is_home_live = (not es_local_raw_live) if es_own_live else es_local_raw_live
+                            is_home_live = es_local_raw_live
                             if is_home_live: hg_live+=1; cnt_match+=1
                             else: ag_live+=1; cnt_match+=1
                         # LOGICA HT
@@ -2641,7 +2640,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if 'Missed' in ev.get('tipo',''): continue
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
-                                is_home = (not es_local_raw) if 'Own Goal' in tipo else es_local_raw
+                                is_home = es_local_raw
                                 if is_home: h+=1
                                 else: a+=1
                                 if last is not None and is_home != last and cur:
@@ -2655,7 +2654,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             for ev in evs:
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
-                                is_home_scoring = (not es_local_raw) if 'Own Goal' in tipo else es_local_raw
+                                is_home_scoring = es_local_raw
                                 if 'Missed Penalty' in tipo:
                                     if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
                                     grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
