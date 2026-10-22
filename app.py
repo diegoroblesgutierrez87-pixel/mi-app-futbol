@@ -2618,7 +2618,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif 'Penalty' in tp: out.append(f"(p) {mm}'")
                                 else: out.append(f"{mm}'")
                             return "  ".join(out)
-
+######### FIX 2
                         goles_parte_fix2 = st.session_state.get("goles_parte_fix2", "Todo")
                         mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
