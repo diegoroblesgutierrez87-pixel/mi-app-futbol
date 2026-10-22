@@ -2618,13 +2618,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             for mins_tipo, sh, sa, is_home in g1_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                mins_txt = _fmt_mins(mins_tipo)
+                                base_txt = _fmt_mins(mins_tipo)
+                                # emoji segun equipo: azul seleccionado, negro rival
+                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
+                                if base_txt:
+                                    mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
+                                else:
+                                    mins_txt = ""
                                 if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                 score_txt = "" if is_missed else f"{sh}-{sa}"
                                 if is_missed:
-                                    # penalti fallado sin marcador, centrado
                                     html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
                                 else:
                                     if is_home:
@@ -2639,7 +2644,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             for mins_tipo, sh, sa, is_home in g2_data:
                                 es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                mins_txt = _fmt_mins(mins_tipo)
+                                base_txt = _fmt_mins(mins_tipo)
+                                emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
+                                if base_txt:
+                                    mins_txt = f"{emoji_gol} " + base_txt.replace("  ", f"  {emoji_gol} ")
+                                else:
+                                    mins_txt = ""
                                 if es_mio and '(x)' not in mins_txt:
                                     mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                 is_missed = any('Missed' in tp for _, tp in mins_tipo)
