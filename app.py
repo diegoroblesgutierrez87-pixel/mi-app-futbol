@@ -2685,7 +2685,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         mostrar_1p = goles_parte_fix2 in ("Todo","1ªParte")
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
-                        html = f"<div style='font-family:monospace; text-align:center; padding:1px 0 0 0; max-width:480px; margin:0 auto; line-height:1.1;'>"
+                        es_local_j = (norm_eq_fix2 == h_norm_r)
+                        bg_j = "#ffffff" if es_local_j else "#fffde7"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j}; border-radius:6px; border:1px solid #ececec;'>"
                         html += f"<div style='font-weight:900; color:{col_main}; font-size:11px; line-height:1.1; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='margin-top:1px; font-size:10px; color:#000; line-height:1.1;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
