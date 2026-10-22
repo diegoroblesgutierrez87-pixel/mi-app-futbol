@@ -2639,7 +2639,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     else:
                                         mins_txt = ""
                                     if es_mio and '(x)' not in mins_txt:
-                                        mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
+                                        mins_txt = f"<span style='font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                     score_txt = "" if is_missed else f"{sh}-{sa}"
                                     if is_missed:
@@ -2663,7 +2663,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     else:
                                         mins_txt = ""
                                     if es_mio and '(x)' not in mins_txt:
-                                        mins_txt = f"<span style='border-bottom:3.5px solid #000; padding-bottom:0px; font-weight:900; color:{col_main};'>{mins_txt}</span>"
+                                        mins_txt = f"<span style='font-weight:900; color:{col_main};'>{mins_txt}</span>"
                                     is_missed = any('Missed' in tp for _, tp in mins_tipo)
                                     score_txt = "" if is_missed else f"{sh}-{sa}"
                                     if is_missed:
@@ -3340,7 +3340,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                                 es_mio = norm_eq_r in benef
                                 col_min = col_main if es_mio else "#000"
                                 peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                                sub_min_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
+                                sub_min_r = ""
                                 en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
                                 if filtro_act and en_rango:
                                     span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:1px;font-size:10px'>{m}'</span>"
