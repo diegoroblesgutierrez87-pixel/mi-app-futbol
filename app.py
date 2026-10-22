@@ -2465,8 +2465,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         hn = h_norm_r; an = a_norm_r
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
                         except: hthg=0; htag=0
-                        ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO - FIX2 CORREGIDO - [TAG-FIX2-HT-UNICO-NO-TOCAR-FIX3] ---
+
+                        # --- COLOR HT ---
                         try:
                             _nf_clean_fix2 = str(norm_eq_fix2).upper().strip()
                             _h_clean_fix2 = str(h_norm_r).upper().strip()
@@ -2486,21 +2486,50 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else: col_ht = "#8B4513"
                         else:
                             col_ht = "#0A2342"
-                        # FIX: GANA/PIERDE/EMPATE sin color, si 0-0 lo ponemos
-                        if hthg == 0 and htag == 0:
-                            estado_1p_fix2 = "0-0 EMPATE"
-                        elif _is_home_fix2:
-                            if hthg > htag: estado_1p_fix2 = "GANA"
-                            elif hthg < htag: estado_1p_fix2 = "PIERDE"
-                            else: estado_1p_fix2 = "EMPATE"
-                        elif _is_away_fix2:
-                            if htag > hthg: estado_1p_fix2 = "GANA"
-                            elif htag < hthg: estado_1p_fix2 = "PIERDE"
-                            else: estado_1p_fix2 = "EMPATE"
+
+                        # --- G/E/P ---
+                        def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
+                        if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
+                        elif norm_eq_fix2 == an: r1 = res_eq_pred_fix2(htag, hthg); rF = res_eq_pred_fix2(ag, hg)
+                        else: r1="E"; rF="E"
+                        estado = f"{r1}/{rF}"
+
+                        # --- NOMBRES con subrayado ---
+                        if norm_eq_fix2 == h_norm_r:
+                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
+                        elif norm_eq_fix2 == a_norm_r:
+                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                         else:
-                            estado_1p_fix2 = "EMPATE"
-                        ht_html = f"<span style='color:#000;font-weight:700;font-size:10px;margin-left:6px'>{estado_1p_fix2}</span>"
-                        # [TAG-FIX2-V4-MINI] - AGRUPADO + 4-1 OK - NO TOCA COLORES NI LOGICA
+                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
+
+                        # --- FT / HT con tu lógica de subrayado negro ---
+                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;"
+                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;"
+                        if norm_eq_fix2 == hn:
+                            if hg == 0 and ag > 0: hg_disp = f"{hg}"
+                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>"
+                            ag_disp = f"{ag}"
+                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}"
+                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>"
+                            htag_disp = f"{htag}"
+                            ft_txt = f"[{hg_disp}-{ag_disp}]"
+                            ht_inner = f"{hthg_disp}-{htag_disp}"
+                        elif norm_eq_fix2 == an:
+                            hg_disp = f"{hg}"
+                            if ag == 0 and hg > 0: ag_disp = f"{ag}"
+                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>"
+                            hthg_disp = f"{hthg}"
+                            if htag == 0 and hthg > 0: htag_disp = f"{htag}"
+                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>"
+                            ft_txt = f"[{hg_disp}-{ag_disp}]"
+                            ht_inner = f"{hthg_disp}-{htag_disp}"
+                        else:
+                            ft_txt = f"[{hg}-{ag}]"
+                            ht_inner = f"{hthg}-{htag}"
+                        ht_str = f"[{ht_inner}]"
+                        ht_html_badge = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
+
+                        # --- GOLES AGRUPADOS ---
                         filtro_act = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         evs_sorted_fix2 = sorted(eventos_fix2.get(fid, []), key=lambda x: x['m'])
                         def _es_home_fix2(team_str):
@@ -2518,96 +2547,57 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 is_home = not _es_home_fix2(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_fix2(team_ev)
                                 if is_home: h+=1
                                 else: a+=1
-                                benef = hn if is_home else an
-                                es_mio = norm_eq_fix2 in benef
-                                col_min = col_main if es_mio else "#000"
-                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                                sub_min = "border-bottom:3.5px solid #000;padding-bottom:0px;" if es_mio else ""
-                                en_rango = (MIN_DESDE_PRED_FIX2 is None or m >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or m <= MIN_HASTA_PRED_FIX2)
-                                if filtro_act and en_rango: span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
-                                else: span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
                                 if last is not None and is_home != last and cur:
-                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
-                                cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append(("".join(cur), lh, la, last))
-                            return grupos, h, a
+                                    grupos.append((cur, lh, la)); cur=[]
+                                cur.append(m); last=is_home; lh=h; la=a
+                            if cur: grupos.append((cur, lh, la))
+                            return grupos
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
                         evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
-                        g1_data_fix2, h1, a1 = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
-                        g2_data_fix2, _, _ = _agrupa_fix2_con_score(evs_2p_fix2, h1, a1)
-                        if g1_data_fix2: g1_data_fix2[-1] = (g1_data_fix2[-1][0], hthg, htag, g1_data_fix2[-1][3])
-                        if g2_data_fix2: g2_data_fix2[-1] = (g2_data_fix2[-1][0], hg, ag, g2_data_fix2[-1][3])
-                        def fmt_fix2(t): return t[0] + f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px'>{t[1]}-{t[2]}</span>"
-                        g1_fix2 = [fmt_fix2(t) for t in g1_data_fix2]
-                        g2_fix2 = [fmt_fix2(t) for t in g2_data_fix2]
-                        # [TAG-FIX2-V4-FIX-DESCOLOCADO-V2] - VERTICAL REAL - 1 gol por linea
-                        left_parts = []
-                        for ii, gg in enumerate(g1_fix2):
-                            if ii == len(g1_fix2)-1:
-                                left_parts.append(f"{gg} {ht_html}")
-                            else:
-                                left_parts.append(gg)
-                        if not left_parts:
-                            left_parts = [ht_html]
-                        right_parts = g2_fix2 if g2_fix2 else []
-                        # FIX2 - VISUAL 1ªParte / 2ªParte EN 2 LINEAS CON COMA - [TAG-FIX2-VISUAL-2LINEAS-COMA]
-                        left_inline = " , ".join(left_parts) if left_parts else ht_html
-                        right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888'>-</span>"
-                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
-                        mins_1t = g1_fix2; mins_2t = g2_fix2; mins_1t_html = mins_html; mins_2t_html = ""
-                        def res_eq_pred_fix2(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
-                        if norm_eq_fix2 == hn: r1 = res_eq_pred_fix2(hthg, htag); rF = res_eq_pred_fix2(hg, ag)
-                        elif norm_eq_fix2 == an: r1 = res_eq_pred_fix2(htag, hthg); rF = res_eq_pred_fix2(ag, hg)
-                        else: r1="E"; rF="E"
-                        estado = f"{r1}/{rF}"
-                        if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
-                        elif norm_eq_fix2 == a_norm_r:
-                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
-                        else:
-                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
-                        # --- SUBRAYADO NEGRO FT Y HT CON LOGICA 0 FIX2 - [TAG-FIX2-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX3] ---
-                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;" # 
-                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # 
-                        if norm_eq_fix2 == hn: #  local
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}" #  0-1 no subraya
-                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>" # 
-                            ag_disp = f"{ag}" # 
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" #  ej 30'[0-1]
-                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>" # 
-                            htag_disp = f"{htag}" # 
-                            ft_txt = f"[{hg_disp}-{ag_disp}]" # 
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
-                        elif norm_eq_fix2 == an: #  visitante
-                            hg_disp = f"{hg}" # 
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}" # 
-                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>" # 
-                            hthg_disp = f"{hthg}" # 
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}" # 
-                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>" # 
-                            ft_txt = f"[{hg_disp}-{ag_disp}]" # 
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
-                        else:
-                            ft_txt = f"[{hg}-{ag}]" # 
-                            ht_inner = f"{hthg}-{htag}" # 
-                        ht_str = f"[{ht_inner}]" # 
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY] - FIX DESCOLOCADO - MANTIENE AGRUPADO
-                        mins_1t_html = mins_html
-                        mins_2t_html = ""
+                        g1_data = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
+                        # corrige último con HT real
+                        if g1_data: 
+                            # fuerza HT real
+                            g1_data[-1] = (g1_data[-1][0], hthg, htag)
+                        # 2ª parte empieza desde HT
+                        g2_data = _agrupa_fix2_con_score(evs_2p_fix2, hthg, htag)
+                        if g2_data:
+                            g2_data[-1] = (g2_data[-1][0], hg, ag)
+
                         try:
                             _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
                             _fecha_str_fix2 = _fecha_dt_fix2.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix2) else ""
                         except:
                             _fecha_str_fix2 = ""
-                        html_lineas_fix2 += (
-                            f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:{col_main};font-family:monospace;font-weight:900;padding:2px 0;font-size:10px'>"
-                            f"J{int(j_fix2)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_fix2})</span></div>"
-                            f"<div style='font-size:10px;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:4px'><div>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
-                            f"</div>"
-                            f"<div style='height:2px;background:#000;margin:0 0 10px 12px'></div> "
-                        ) # [TAG-FIX2-J-COLOR-RESULT-V14-FIX2-ONLY]
+
+                        # --- NUEVA VISUALIZACION CENTRADA ---
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 0 4px 0; max-width:380px; margin:0 auto; line-height:1.35;'>"
+                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j_fix2)} | {h_txt}  {ft_txt}  {a_txt}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
+                        
+                        # 1ª parte
+                        html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
+                        if not g1_data:
+                            html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                        else:
+                            for mins, sh, sa in g1_data:
+                                mins_txt = "  ".join([f"{m}'" for m in mins])
+                                score_txt = f"{sh}-{sa}"
+                                html += f"<div style='font-size:10px;'>{mins_txt}  {score_txt}</div>"
+
+                        # separador 2ª
+                        html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
+
+                        if not g2_data:
+                            html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                        else:
+                            for mins, sh, sa in g2_data:
+                                mins_txt = "  ".join([f"{m}'" for m in mins])
+                                score_txt = f"{sh}-{sa}"
+                                html += f"<div style='font-size:10px;'>{mins_txt}   {score_txt}</div>"
+                        
+                        html += f"</div><div style='height:2px;background:#000;margin:4px 0 10px 12px; max-width:380px; margin-left:auto; margin-right:auto;'></div>"
+
+                        html_lineas_fix2 += html
                         m1 = []; m2 = []
                         for evc in sorted(eventos_fix2.get(fid, []), key=lambda x: x['m']):
                             if MIN_DESDE_PRED_FIX2 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX2: continue
