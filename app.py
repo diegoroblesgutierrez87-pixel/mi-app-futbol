@@ -3031,6 +3031,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         with c_m2r:
             min_hasta_pred_raw_r = st.text_input("MIN HASTA R", key="min_hasta_pred_resto", placeholder="-")
     with c4r:
+        goles_parte_r = st.selectbox("GOLES PARTE R", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_resto")
         cond_loc_pred_r = st.selectbox("Filtro R", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_resto")
         res_1p_tipo_r = st.selectbox("Resultado 1ªP R", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_resto")
         opciones_res_r = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
@@ -3379,14 +3380,35 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif norm_eq_r == a_norm_r: r1 = res_eq_pred(htag, hthg); rF = res_eq_pred(ag, hg)
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
-                        if norm_eq_r == h_norm_r: # [RESTO] solo filtrado con color
+                        EMOJI_SEL_R = "⚪"
+                        EMOJI_RIVAL_R = "⚫"
+                        if norm_eq_r == h_norm_r:
                             h_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#000'>{a}</span>"
+                            emoji_home_r = EMOJI_SEL_R if norm_eq_r==h_norm_r else EMOJI_RIVAL_R
+                            emoji_away_r = EMOJI_RIVAL_R
+                            if norm_eq_r == h_norm_r:
+                                emoji_home_r = EMOJI_SEL_R
+                                emoji_away_r = EMOJI_RIVAL_R
+                            else:
+                                emoji_home_r = EMOJI_RIVAL_R
+                                emoji_away_r = EMOJI_SEL_R
                         elif norm_eq_r == a_norm_r:
                             h_txt = f"<span style='color:#000'>{h}</span>"
                             a_txt = f"<span style='color:{col_main};border-bottom:3.5px solid #000;padding-bottom:0px;font-weight:900'>{a}</span>"
+                            emoji_home_r = EMOJI_RIVAL_R
+                            emoji_away_r = EMOJI_SEL_R
                         else:
                             h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
+                            emoji_home_r = EMOJI_RIVAL_R
+                            emoji_away_r = EMOJI_SEL_R
+                        # corrige: home emoji segun equipo
+                        if norm_eq_r == h_norm_r:
+                            emoji_home_r = EMOJI_SEL_R
+                            emoji_away_r = EMOJI_RIVAL_R
+                        elif norm_eq_r == a_norm_r:
+                            emoji_home_r = EMOJI_RIVAL_R
+                            emoji_away_r = EMOJI_SEL_R
                         # --- SUBRAYADO NEGRO FT SOLO - MANTIENE AGRUPADO FIX2 - NO REESCRIBE HT ---
                         u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;" # [RESTO]
                         u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # [RESTO]
@@ -3417,17 +3439,49 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
                         else: col_estado_r = "#8B4513"
                         ht_html = f"<span style='color:{col_estado_r} !important;font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
+                        goles_parte_r = st.session_state.get("goles_parte_resto", "Todo")
+                        mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
+                        mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
                         left_parts = []
                         for ii, gg in enumerate(g1_r):
+                            # cambia ⚫ 51' por 51'⚫
+                            gg_fix = gg.replace(f"{EMOJI_RIVAL_R} ", "").replace(f"{EMOJI_SEL_R} ", "").replace(f" {EMOJI_RIVAL_R}", "").replace(f" {EMOJI_SEL_R}", "")
+                            # re-inserta emoji despues del minuto: busca 51'
+                            import re as _re_r
+                            def _add_emoji_after(m):
+                                # m es "51'" o con (p)
+                                return f"{m}{emoji_home_r if norm_eq_r==h_norm_r and 'local' in str(gg).lower() or True else emoji_away_r}"
+                            # simplificado: pone emoji al final de cada bloque de minuto
+                            # si es mio usa SEL, si no RIVAL - usamos el del equipo del gol ya calculado en _agrupa
+                            # para no liar, ponemos emoji generico despues
+                            gg = gg.replace("'", f"'{emoji_home_r if norm_eq_r==h_norm_r else emoji_away_r}" if ii==0 else f"'{emoji_away_r}")
+                            # si ya tenia emoji delante lo movemos detras
+                            gg = gg.replace(f"{EMOJI_SEL_R} ", "").replace(f"{EMOJI_RIVAL_R} ", "")
+                            # asegura formato 51'⚪
+                            gg = _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_SEL_R if norm_eq_r in h_norm_r or norm_eq_r in a_norm_r else EMOJI_RIVAL_R}", gg)
                             if ii == len(g1_r)-1:
                                 left_parts.append(f"{gg} {ht_html}")
                             else:
                                 left_parts.append(gg)
                         if not left_parts:
                             left_parts = [ht_html]
+                        right_parts_raw = g2_r if g2_r else []
+                        # mismo fix para 2ª parte - emoji despues
+                        right_parts = []
+                        for gg in right_parts_raw:
+                            gg = gg.replace(f"{EMOJI_SEL_R} ", "").replace(f"{EMOJI_RIVAL_R} ", "")
+                            gg = _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_SEL_R}", gg) if 'local' in gg.lower() else _re_r.sub(r"(\d+'(?:\(p\)|\(pp\)|\(x\)|)?)", lambda x: f"{x.group(1)}{EMOJI_RIVAL_R}", gg)
+                            # final simple: 51'⚪
+                            gg = gg.replace("''", "'")
+                            right_parts.append(gg)
                         left_inline = " , ".join(left_parts) if left_parts else ht_html
                         right_inline = " , ".join(right_parts) if right_parts else "<span style='color:#888;font-size:10px'>-</span>"
-                        mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>1ªParte: {left_inline}</div><div style='margin-top:3px'>2ªParte: {right_inline}</div></div>"
+                        if mostrar_1p_r and mostrar_2p_r:
+                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>1ªParte: {left_inline}</div><div style='margin-top:3px'>___________________2ª________________<br>2ªParte: {right_inline}</div></div>"
+                        elif mostrar_1p_r:
+                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>1ªParte: {left_inline}</div></div>"
+                        else:
+                            mins_html = f"<div style='margin-top:4px;line-height:1.8;font-size:10px'><div>(1ª parte {hthg}-{htag})<br>___________________2ª________________<br>2ªParte: {right_inline}</div></div>"
                         mins_1t_html = mins_html
                         mins_2t_html = ""
                         try:
@@ -3437,7 +3491,7 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                             _fecha_str_r = ""
                         html_lineas_r += (
                             f"<div style='padding-left:8px;margin:8px 0 2px 2px'>"
-                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {h_txt} {ft_txt} {a_txt} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
+                            f"<div style='color:#000;font-family:monospace;font-weight:700;font-size:8px'>J{int(j)} | {emoji_home_r} {h_txt} {ft_txt} {a_txt}{emoji_away_r} <span style='background:{col_main};color:#fff;font-weight:900;padding:1px 5px;border-radius:3px;margin-left:4px'>{estado}</span> <span style='color:#000;font-weight:700;margin-left:6px'>({_fecha_str_r})</span></div>"
                             f"<div style='font-size:7px;line-height:1.3'><span>{mins_1t_html}</span><br><span>{mins_2t_html}</span></div>"
                             f"</div>"
                             f"<div style='height:2px;background:#000;margin:0 0 10px 12px'></div>"
