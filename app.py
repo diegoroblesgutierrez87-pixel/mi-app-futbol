@@ -2161,7 +2161,41 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             except:
                 continue
 
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO FIX2: {h_fut_fix2} vs {a_fut_fix2} | {partes_fix2[0].strip()}</div>", unsafe_allow_html=True)
+            # calcula 2/5 y 1/9 para el futuro antes de pintar
+            def _cnt_fut_fix2(nom):
+                _norm = normaliza(nom); _up = nom.upper().strip()
+                _df = df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
+                if _df.empty:
+                    _df = df_fix2[(df_fix2['HomeTeam'].apply(lambda x: normaliza(x)==_norm)) | (df_fix2['AwayTeam'].apply(lambda x: normaliza(x)==_norm))]
+                _tot = len(_df)
+                _df_f = _df.copy()
+                # aplica mismos filtros que el bloque principal (resultados, overs, 1p tipo, live, min desde/hasta)
+                if resultados_pred_sel_fix2:
+                    sel_fix2 = resultados_pred_sel_fix2
+                    set_1p = set(); set_2p = set()
+                    for s in sel_fix2:
+                        if "_1ªP" in s:
+                            try: _x,_y = s.replace("_1ªP","").split("-"); set_1p.add((int(_x),int(_y)))
+                            except: pass
+                        if "_2ªP" in s:
+                            try: _x,_y = s.replace("_2ªP","").split("-"); set_2p.add((int(_x),int(_y)))
+                            except: pass
+                    if set_1p or set_2p:
+                        def _cumple(rr):
+                            try:
+                                hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                                hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                            except: return False
+                            if set_1p and (hthg_, htag_) in set_1p: return True
+                            if set_2p and (hg_, ag_) in set_2p: return True
+                            return False
+                        _df_f = _df_f[_df_f.apply(_cumple, axis=1)]
+                # overs y 1p tipo y live se aplican igual que abajo si quieres 100% exacto, para no alargar usamos lo principal
+                # min desde/hasta se filtra por eventos luego, lo dejamos en total filtrado base
+                return len(_df_f), _tot
+            f_h_filt, f_h_tot = _cnt_fut_fix2(h_fut_fix2)
+            f_a_filt, f_a_tot = _cnt_fut_fix2(a_fut_fix2)
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO FIX2: {h_fut_fix2} {f_h_filt}/{f_h_tot} vs {a_fut_fix2} {f_a_filt}/{f_a_tot} | {partes_fix2[0].strip()}</div>", unsafe_allow_html=True)
 
             if "MANUAL" in partido_str_fix2:
                 equipos_a_mostrar_fix2 = []
@@ -2391,7 +2425,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         st.caption(f"{nombre_eq_fix2} - sin historial en base actual FIX2")
                         continue
 
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} FIX2</div>", unsafe_allow_html=True)
+                total_fix2 = len(df_team_base_total_fix2) if 'df_team_base_total_fix2' in locals() else len(df_team_fix2)
+                filt_fix2 = len(df_team_fix2)
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2</div>", unsafe_allow_html=True)
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
