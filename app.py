@@ -3129,6 +3129,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         opciones_res_r = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_r = st.multiselect("Resultado 1ªP / 2ªP R", opciones_res_r, default=[], key="filtro_ht_ft_resto", placeholder="Ej: 0-0_1ªP")
         overs_sel_r = st.multiselect("Overs / Unders R", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_resto", placeholder="Ej: 1P >0.5")
+        res_live_tipo_r = st.selectbox("Resultado LIVE R", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_resto")
+        min_live_raw_r = st.text_input("MIN LIVE R", key="min_live_resto", placeholder="Ej: 76")
 
     # --- EQUIPOS MANUALES RESTO - AÑADIDO (igual que EUROPA) ---
     lista_hist_equipos_resto = sorted(pd.concat([df_r['HomeTeam'], df_r['AwayTeam']]).dropna().astype(str).unique().tolist())
@@ -3147,6 +3149,8 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
         except: return None
     MIN_DESDE_PRED_R = _parse_min_pred_r(min_desde_pred_raw_r)
     MIN_HASTA_PRED_R = _parse_min_pred_r(min_hasta_pred_raw_r)
+    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
+    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
 
     if fecha_pred_sel_r!= "Todas":
         try:
@@ -3343,6 +3347,95 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
                         if res_1p_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
                         return True
                     df_team_r = df_team_r[df_team_r.apply(_cumple_1p_tipo_r, axis=1)]
+
+                # --- LIVE R: RESULTADO EN MINUTO X ---
+                if res_live_tipo_r != "TODOS" and MIN_LIVE_R is not None:
+                    def _strip_acc_r(s):
+                        try:
+                            return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
+                        except:
+                            return str(s)
+                    def _equipo_es_local_r(team_str, home_norm, away_norm):
+                        try:
+                            t = normaliza(team_str)
+                            h = normaliza(home_norm)
+                            a = normaliza(away_norm)
+                            if t == h: return True
+                            if t == a: return False
+                            if h and (h in t or t in h): return True
+                            if a and (a in t or t in a): return False
+                        except:
+                            pass
+                        tu = str(team_str).upper().strip()
+                        hu = str(home_norm).upper().strip()
+                        au = str(away_norm).upper().strip()
+                        if tu == hu or hu in tu or tu in hu: return True
+                        if tu == au or au in tu or tu in au: return False
+                        return False
+                    def _cumple_live_r(rr):
+                        fid = str(rr.get('fixture_id','')).split('.')[0]
+                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                        hn_c = _strip_acc_r(hn_); an_c = _strip_acc_r(an_)
+                        norm_eq_c = _strip_acc_r(norm_eq_r)
+                        try:
+                            hg_ft = int(float(rr.get('FTHG',0) or 0)); ag_ft = int(float(rr.get('FTAG',0) or 0))
+                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            hg_ft=0; ag_ft=0; hthg=0; htag=0
+                        evs = eventos_r.get(fid, [])
+                        sh_total = (hg_ft - hthg) + (ag_ft - htag)
+                        if sh_total <0: sh_total=0
+                        sh_up_to = 0
+                        hg_live = 0; ag_live = 0; cnt_match=0
+                        for ev in evs:
+                            m = ev.get('m',0)
+                            if m <= 45 or m > MIN_LIVE_R:
+                                if m <= MIN_LIVE_R:
+                                    team_ev = _strip_acc_r(ev.get('team',''))
+                                    tipo = ev.get('tipo','')
+                                    if 'Missed' in tipo: continue
+                                    if 'Own Goal' in tipo:
+                                        if team_ev == hn_c: ag_live+=1; cnt_match+=1
+                                        elif team_ev == an_c: hg_live+=1; cnt_match+=1
+                                    else:
+                                        if team_ev == hn_c: hg_live+=1; cnt_match+=1
+                                        elif team_ev == an_c: ag_live+=1; cnt_match+=1
+                                continue
+                            sh_up_to += 1
+                            team_ev = _strip_acc_r(ev.get('team',''))
+                            tipo = ev.get('tipo','')
+                            if 'Missed' in tipo: continue
+                            es_local_raw_live = _equipo_es_local_r(team_ev, hn_, an_)
+                            is_home_live = (not es_local_raw_live) if 'Own Goal' in tipo else es_local_raw_live
+                            if is_home_live: hg_live+=1; cnt_match+=1
+                            else: ag_live+=1; cnt_match+=1
+                        if MIN_LIVE_R <= 45:
+                            if cnt_match==0:
+                                hg_live = hthg if hthg+htag>0 else 0
+                                ag_live = htag if hthg+htag>0 else 0
+                        else:
+                            if sh_up_to == 0:
+                                hg_live = hthg; ag_live = htag
+                            elif sh_up_to == sh_total and sh_total>0:
+                                hg_live = hg_ft; ag_live = ag_ft
+                            else:
+                                if cnt_match==0 and sh_up_to>0:
+                                    hg_live = hg_ft if sh_up_to==sh_total else hthg
+                                    ag_live = ag_ft if sh_up_to==sh_total else htag
+                        if norm_eq_c == hn_c:
+                            r_ = "GANA" if hg_live > ag_live else "EMPATE" if hg_live == ag_live else "PIERDE"
+                        elif norm_eq_c == an_c:
+                            r_ = "GANA" if ag_live > hg_live else "EMPATE" if ag_live == hg_live else "PIERDE"
+                        else:
+                            return False
+                        if res_live_tipo_r == "EMPATE": return r_ == "EMPATE"
+                        if res_live_tipo_r == "GANA": return r_ == "GANA"
+                        if res_live_tipo_r == "PIERDE": return r_ == "PIERDE"
+                        if res_live_tipo_r == "EMPATEGANA": return r_ in ("EMPATE","GANA")
+                        if res_live_tipo_r == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
+                        if res_live_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                        return True
+                    df_team_r = df_team_r[df_team_r.apply(_cumple_live_r, axis=1)]
 
                 if df_team_r.empty:
                     st.caption(f"{nombre_eq_r} - sin historial en base RESTO")
