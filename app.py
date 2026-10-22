@@ -2794,18 +2794,32 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     if partidos_pred_copy_fix2:
         import html as _html
-        # cabecera filtros para que se copie también
+        # cabecera filtros - TODO lo de los desplegables
         try:
             _ligas_txt = ", ".join(ligas_pred_sel_fix2) if ligas_pred_sel_fix2 else "TODAS"
             _fecha_txt = fecha_pred_sel_fix2
+            _goles_parte_txt = st.session_state.get("goles_parte_fix2", "Todo")
             _cond_loc_txt = cond_loc_pred_fix2
-            _res_1p_txt = f"{res_1p_tipo_fix2} {resultados_pred_sel_fix2}"
+            _res_1p_tipo_txt = res_1p_tipo_fix2
+            _res_ht_ft_txt = ", ".join(resultados_pred_sel_fix2) if resultados_pred_sel_fix2 else "TODOS"
             _overs_txt = ", ".join(overs_sel_fix2) if overs_sel_fix2 else "TODOS"
             _live_txt = f"{res_live_tipo_fix2} MIN:{min_live_raw_fix2 or '-'}"
-            _min_txt = f"DESDE:{min_desde_pred_raw_fix2 or '-'} HASTA:{min_hasta_pred_raw_fix2 or '-'}"
-            filtros_txt_fix2 = f"FILTROS FIX2: Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | CondLoc={_cond_loc_txt} | 1P={_res_1p_txt} | Overs={_overs_txt} | LIVE={_live_txt} | {_min_txt} | Equipos={equipos_a_mostrar_fix2}"
-        except:
-            filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2}"
+            _min_desde_txt = min_desde_pred_raw_fix2 or "-"
+            _min_hasta_txt = min_hasta_pred_raw_fix2 or "-"
+            _eq_man1_txt = f"{equipos_manuales_1_fix2} [{cond_manual_1_fix2}]" if equipos_manuales_1_fix2 else "-"
+            _eq_man2_txt = f"{equipos_manuales_2_fix2} [{cond_manual_2_fix2}]" if equipos_manuales_2_fix2 else "-"
+            _partidos_fut_txt = f"{len(partidos_sel_fix2)}: {partidos_sel_fix2[:2]}" if partidos_sel_fix2 else "MANUAL"
+            filtros_txt_fix2 = (
+                f"FILTROS FIX2 | PARTIDOS FUT={_partidos_fut_txt} | Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | "
+                f"GOLES_PARTE={_goles_parte_txt} | Filtro={_cond_loc_txt} | "
+                f"1P_TIPO={_res_1p_tipo_txt} | 1P/2P_RES=[{_res_ht_ft_txt}] | Overs=[{_overs_txt}] | "
+                f"LIVE={_live_txt} | MIN_DESDE={_min_desde_txt} HASTA={_min_hasta_txt} | "
+                f"MANUAL1={_eq_man1_txt} | MANUAL2={_eq_man2_txt} | EQUIPOS_MOSTRADOS={equipos_a_mostrar_fix2}"
+            )
+        except Exception as e:
+            filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2} | ERR:{e}"
+        # TEXTO VISIBLE EN PANTALLA PARA VER FILTROS PUESTOS
+        st.markdown(f"<div style='font-family:monospace; font-size:9px; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
         texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
