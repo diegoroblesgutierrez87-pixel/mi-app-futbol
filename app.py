@@ -2566,8 +2566,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
                         except: hg=0; ag=0
                         h_norm_r = normaliza(h); a_norm_r = normaliza(a)
-                        if norm_eq_fix2 == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#F7DC6F"
-                        elif norm_eq_fix2 == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#F7DC6F"
+                        if norm_eq_fix2 == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#DAA520"
+                        elif norm_eq_fix2 == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#DAA520"
                         else: col_main = "#000"
                         hn = h_norm_r; an = a_norm_r
                         try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
@@ -2586,11 +2586,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if _is_home_fix2:
                             if hthg > htag: col_ht = "#0f8105"
                             elif hthg < htag: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
+                            else: col_ht = "#DAA520"
                         elif _is_away_fix2:
                             if htag > hthg: col_ht = "#0f8105"
                             elif htag < hthg: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
+                            else: col_ht = "#DAA520"
                         else:
                             col_ht = "#0A2342"
 
