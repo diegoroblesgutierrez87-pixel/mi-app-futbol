@@ -2724,11 +2724,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
                                         score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
-                                        # POCO DESPLAZADO: casi centro
+                                        # HUECO 5 CHARS - 85px
                                         if is_home:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(-28px);'>{txt_min} {score_txt}</div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.8; font-weight:700; transform:translateX(-85px);'>{txt_min} {score_txt}</div>"
                                         else:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(28px);'>{score_txt} {txt_min}</div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.8; font-weight:700; transform:translateX(85px);'>{score_txt} {txt_min}</div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
