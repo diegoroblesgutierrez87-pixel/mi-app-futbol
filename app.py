@@ -2705,7 +2705,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         html += f"<div style='margin-top:2px; font-size:13px; color:#fff; line-height:1.2;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
                             if not g1_data:
-                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
+                                html += f"<div style='font-size:10px; color:#888; text-align:center;'>—</div>"
                             else:
                                 for mins_tipo, sh, sa, is_home in g1_data:
                                     for mm, tp in mins_tipo:
@@ -2722,9 +2722,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         if es_mio and '(x)' not in txt_min:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
-                                        score_txt = "" if is_missed else f"<span style='color:#ffffff'>{sh}-{sa}</span>"
-                                        # FORMATO NUEVO: 2'⚫ 1-0 - TEXTO GRANDE
-                                        html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:28%; line-height:1.6; font-weight:700;'>{txt_min} {score_txt}</div>"
+                                        if is_missed: continue
+                                        score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
+                                        # NUEVO: local izquierda, visitante derecha
+                                        if is_home:
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:12%; line-height:1.6; font-weight:700;'>{txt_min} {score_txt}</div>"
+                                        else:
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:right; padding-right:12%; line-height:1.6; font-weight:700;'>{score_txt} {txt_min}</div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
@@ -2744,8 +2748,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
                                         if es_mio:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
-                                        # FORMATO NUEVO 2ª: 3-1 49'⚪ - GRANDE
-                                        html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.6; font-weight:700;'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
+                                        if is_home:
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:12%; line-height:1.6; font-weight:700;'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span></div>"
+                                        else:
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:right; padding-right:12%; line-height:1.6; font-weight:700;'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
