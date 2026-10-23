@@ -2510,7 +2510,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _loc_txt = ""
                             _bg_hueco = "#f5f5f5"
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #ececec;'><div style='color:#000; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #444;'><div style='color:#fff; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
@@ -2571,17 +2571,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         EMOJI_RIVAL = "⚫"
                         if norm_eq_fix2 == h_norm_r:
                             h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
-                            a_txt = f"<span style='color:#000'>{a}</span>"
+                            a_txt = f"<span style='color:#ffffff'>{a}</span>"
                             emoji_home = EMOJI_SEL
                             emoji_away = EMOJI_RIVAL
                         elif norm_eq_fix2 == a_norm_r:
-                            h_txt = f"<span style='color:#000'>{h}</span>"
+                            h_txt = f"<span style='color:#ffffff'>{h}</span>"
                             a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
                         else:
-                            h_txt = f"<span style='color:#000'>{h}</span>"
-                            a_txt = f"<span style='color:#000'>{a}</span>"
+                            h_txt = f"<span style='color:#ffffff'>{h}</span>"
+                            a_txt = f"<span style='color:#ffffff'>{a}</span>"
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
 
@@ -2734,7 +2734,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         else:
                                             html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
                         if mostrar_2p:
-                            html += f"<div style='margin:2px auto 1px auto; font-size:9px; letter-spacing:2px; color:#000; line-height:1;'>{ '___________________2ª________________' }</div>"
+                            html += f"<div style='margin:2px auto 1px auto; font-size:9px; letter-spacing:2px; color:#aaa; line-height:1;'>{ '___________________2ª________________' }</div>"
                             if not g2_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
                             else:
