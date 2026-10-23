@@ -2603,7 +2603,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                         # --- NOMBRES con subrayado + EMOJI FUERA COMO QUIERES ---
                         EMOJI_SEL = "⚪"
-                        EMOJI_RIVAL = "⚫"
+                        EMOJI_RIVAL = "🔵"
                         if norm_eq_fix2 == h_norm_r:
                             h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#ffffff'>{a}</span>"
