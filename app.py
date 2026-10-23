@@ -2724,11 +2724,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
                                         score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
-                                        # NUEVO: local izquierda, visitante derecha
+                                        # POCO DESPLAZADO: casi centro
                                         if is_home:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:12%; line-height:1.6; font-weight:700;'>{txt_min} {score_txt}</div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(-28px);'>{txt_min} {score_txt}</div>"
                                         else:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:right; padding-right:12%; line-height:1.6; font-weight:700;'>{score_txt} {txt_min}</div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(28px);'>{score_txt} {txt_min}</div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
@@ -2749,9 +2749,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         if es_mio:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
                                         if is_home:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:12%; line-height:1.6; font-weight:700;'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span></div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(-28px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span></div>"
                                         else:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:right; padding-right:12%; line-height:1.6; font-weight:700;'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
+                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(28px);'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
