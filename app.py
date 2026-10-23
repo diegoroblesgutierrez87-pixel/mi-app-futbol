@@ -2503,10 +2503,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 _h0 = str(_r0.get('HomeTeam','')).strip()
                                 _es_local_hueco = (normaliza(nombre_eq_fix2) == normaliza(_h0))
                                 _loc_txt = "CASA" if _es_local_hueco else "VISITANTE"
-                                _bg_hueco = "#ffffff" if _es_local_hueco else "#fffde7"
+                                _bg_hueco = "#111111" if _es_local_hueco else "#1a1a1a"
                             else:
                                 _loc_txt = ""
-                                _bg_hueco = "#f5f5f5"
+                                _bg_hueco = "#0a0a0a"
                         except:
                             _loc_txt = ""
                             _bg_hueco = "#f5f5f5"
@@ -2699,10 +2699,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         mostrar_2p = goles_parte_fix2 in ("Todo","2ªParte")
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         es_local_j = (norm_eq_fix2 == h_norm_r)
-                        bg_j = "#ffffff" if es_local_j else "#fffde7"
-                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j}; border-radius:6px; border:1px solid #ececec;'>"
-                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px; line-height:1.1; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_fix2})</span></div>"
-                        html += f"<div style='margin-top:1px; font-size:10px; color:#000; line-height:1.1;'>(1ª parte {hthg}-{htag})</div>"
+                        bg_j = "#111111" if es_local_j else "#1a1a1a"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
+                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px; line-height:1.1; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#fff;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='margin-top:1px; font-size:10px; color:#fff; line-height:1.1;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
                             if not g1_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
@@ -4363,5 +4363,4 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
-
 
