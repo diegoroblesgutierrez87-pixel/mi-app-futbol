@@ -2749,9 +2749,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         if es_mio:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
                                         if is_home:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(-28px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span></span></div>"
                                         else:
-                                            html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.7; font-weight:700; transform:translateX(28px);'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
+                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</span></div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
