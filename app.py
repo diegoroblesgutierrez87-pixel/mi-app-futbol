@@ -3798,7 +3798,58 @@ with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
 ##############################clonado
 
 
+############################################################
 ###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###########################################################################
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###########################################################################
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###########################################################################
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###########################################################################
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+###############
+
 
 with st.expander("GOLES HT / GOLES 75-90", expanded=False):
     st.caption("Precalculado - 8 partidos TODOS 6 cumplen / 5 LOCAL-VISITANTE 3 cumplen + 2 seguidos")
@@ -3825,16 +3876,22 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
         for team, g in df_gp.groupby(df_gp['HomeTeam'].astype(str).str.upper().str.strip()):
             # lo haremos luego por team normalizado, pero precalculamos lista ordenada por fecha
             pass
-        # precalc simple para no recalcular en bucle
+        # precalc simple para no recalcular en bucle - FIX JORNADA REAL DMY
         df_gp['fid_str'] = df_gp['fixture_id'].astype(str)
+        if 'jornada_num' in df_gp.columns:
+            jornada_by_fid = df_gp.set_index('fid_str')['jornada_num'].astype(str).to_dict()
+        else:
+            jornada_by_fid = {}
         team_fids = {}
         for _, r in df_gp.sort_values('Date').iterrows():
             for t in [str(r['HomeTeam']).upper().strip(), str(r['AwayTeam']).upper().strip()]:
                 team_fids.setdefault(t, []).append(str(r['fixture_id']))
         team_fid_to_j = {t: {fid:i+1 for i,fid in enumerate(fids)} for t,fids in team_fids.items()}
-        return df_pp, df_gp, goles_by_fid, team_fid_to_j
+        return df_pp, df_gp, goles_by_fid, team_fid_to_j, jornada_by_fid
 
-    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j = cargar_precalc_goles()
+    df_pre_partidos, df_pre_goles, goles_by_fid, team_fid_to_j, jornada_by_fid = cargar_precalc_goles()
+    if not jornada_by_fid:
+        jornada_by_fid = {}
     if df_pre_partidos.empty:
         st.warning("No encuentro basepartidosprecalculado.parquet / basegolesprecalculado.parquet")
         st.stop()
@@ -3996,14 +4053,9 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
                     return s
                 except:
                     return ""
+            checks_by_fid = {p.get('fid',''): ok for p, ok in zip(_detalle_cnt, _checks_real)}
             _detalle_cnt_ord = sorted(_detalle_cnt, key=_key_dmy_cnt_fix, reverse=True)
-            _checks_real_ord = []
-            for _po in _detalle_cnt_ord:
-                try:
-                    _idx_o = _detalle_cnt.index(_po)
-                    _checks_real_ord.append(_checks_real[_idx_o] if _idx_o < len(_checks_real) else False)
-                except:
-                    _checks_real_ord.append(False)
+            _checks_real_ord = [checks_by_fid.get(p.get('fid',''), False) for p in _detalle_cnt_ord]
             _j_list = []
             for _idx, _p in enumerate(_detalle_cnt_ord[:n_margen]):
                 _is_ok = _checks_real_ord[_idx] if _idx < len(_checks_real_ord) else False
@@ -4313,260 +4365,3 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
 
 
-
-###############################
-
-with st.expander("BLOQUE PRE - PREDICCION 8 ESCENARIOS", expanded=False):
-    import pathlib, unicodedata, os
-
-    def PRE_strip(s):
-        try: return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c)).upper().strip()
-        except: return str(s).upper().strip()
-    def PRE_norm(s):
-        if pd.isna(s): return ""
-        return str(s).strip().upper()
-
-    def PRE_find_file(names):
-        # busca en todos los sitios posibles de Streamlit Cloud
-        search_roots = [
-            pathlib.Path("/mnt/data"),
-            pathlib.Path("."),
-            pathlib.Path(__file__).parent.resolve() if '__file__' in globals() else pathlib.Path("."),
-            pathlib.Path.cwd(),
-        ]
-        for root in search_roots:
-            for name in names:
-                p = root / name
-                if p.exists():
-                    return p
-        # lista lo que hay para debug
-        return None
-
-    @st.cache_data(show_spinner=False)
-    def PRE_cargar_partidos():
-        candidatos = ["base_partidos.csv","base_partidos_europa.csv","base_partidos_resto.csv","base_partidos.parquet","base_partidos_europa.parquet"]
-        f = PRE_find_file(candidatos)
-        if not f:
-            # debug: que hay en cada carpeta
-            try:
-                txt = []
-                for r in [pathlib.Path("/mnt/data"), pathlib.Path("."), pathlib.Path(__file__).parent.resolve()]:
-                    if r.exists():
-                        txt.append(f"{r}: {os.listdir(r)[:20]}")
-                st.error(f"No encuentro base_partidos. Busqué {candidatos}. Contenido:\n" + "\n".join(txt))
-            except:
-                st.error(f"No encuentro base_partidos. Busqué {candidatos} en /mnt/data, ./ y script dir")
-            return pd.DataFrame()
-        try:
-            if str(f).endswith(".parquet"):
-                df = pd.read_parquet(f)
-            else:
-                df = pd.read_csv(f, on_bad_lines='skip')
-            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-            df['HomeNorm'] = df['HomeTeam'].apply(PRE_norm)
-            df['AwayNorm'] = df['AwayTeam'].apply(PRE_norm)
-            df['HomeStrip'] = df['HomeTeam'].apply(PRE_strip)
-            df['AwayStrip'] = df['AwayTeam'].apply(PRE_strip)
-            df['xG_H'] = pd.to_numeric(df.get('HS', 0), errors='coerce').fillna(0)*0.1 + pd.to_numeric(df.get('HST', 0), errors='coerce').fillna(0)*0.3
-            df['xG_A'] = pd.to_numeric(df.get('AS', 0), errors='coerce').fillna(0)*0.1 + pd.to_numeric(df.get('AST', 0), errors='coerce').fillna(0)*0.3
-            st.caption(f"PRE cargado: {f} -> {len(df)} partidos")
-            return df
-        except Exception as e:
-            st.error(f"Error cargando {f}: {e}")
-            return pd.DataFrame()
-
-    @st.cache_data(show_spinner=False)
-    def PRE_cargar_goles():
-        candidatos = ["base_goles.csv","base_goles_europa.csv","base_goles_resto.csv"]
-        f = PRE_find_file(candidatos)
-        if not f:
-            return pd.DataFrame()
-        try:
-            dg = pd.read_csv(f, on_bad_lines='skip')
-            dg['equipo_norm'] = dg['equipo'].apply(PRE_norm)
-            dg['equipo_strip'] = dg['equipo'].apply(PRE_strip)
-            return dg
-        except:
-            return pd.DataFrame()
-
-    PRE_df = PRE_cargar_partidos()
-    PRE_goles = PRE_cargar_goles()
-    if PRE_df.empty:
-        st.stop()
-
-    @st.cache_data(show_spinner=False)
-    def PRE_nivel_liga(df):
-        niv={}
-        for liga, sub in df.groupby('League'):
-            tabla={}
-            for _, r in sub.iterrows():
-                h=r['HomeNorm']; a=r['AwayNorm']
-                for t in [h,a]:
-                    if t not in tabla: tabla[t]={'pts':0,'gf':0,'gc':0,'xg':0}
-                try:
-                    fthg=int(float(r['FTHG'] or 0)); ftag=int(float(r['FTAG'] or 0))
-                except: continue
-                tabla[h]['gf']+=fthg; tabla[h]['gc']+=ftag; tabla[h]['xg']+=float(r.get('xG_H',0) or 0)
-                tabla[a]['gf']+=ftag; tabla[a]['gc']+=fthg; tabla[a]['xg']+=float(r.get('xG_A',0) or 0)
-                if fthg>ftag: tabla[h]['pts']+=3
-                elif fthg<ftag: tabla[a]['pts']+=3
-                else: tabla[h]['pts']+=1; tabla[a]['pts']+=1
-            orden=sorted(tabla.items(), key=lambda x:(x[1]['pts'], x[1]['gf']-x[1]['gc'], x[1]['xg']), reverse=True)
-            n=len(orden)
-            for idx,(team,_) in enumerate(orden):
-                if idx < n*0.2: niv[(liga, team)]=1
-                elif idx < n*0.5: niv[(liga, team)]=2
-                elif idx < n*0.8: niv[(liga, team)]=3
-                else: niv[(liga, team)]=4
-        return niv
-    PRE_niveles = PRE_nivel_liga(PRE_df)
-    def PRE_get_nivel(liga, team_norm):
-        return PRE_niveles.get((liga, team_norm), 2)
-
-    def PRE_stats_equipo(df, eq_norm, eq_strip, cond="TODOS", liga_filtro=None):
-        mask=(df['HomeStrip']==eq_strip)|(df['AwayStrip']==eq_strip)
-        if mask.sum()==0: mask=(df['HomeNorm']==eq_norm)|(df['AwayNorm']==eq_norm)
-        d=df[mask].copy()
-        if liga_filtro: d=d[d['League']==liga_filtro]
-        if d.empty: return None
-        if cond=="LOCAL": d=d[(df['HomeNorm']==eq_norm)|(df['HomeStrip']==eq_strip) & (d['League']==liga_filtro if liga_filtro else True)]
-        if cond=="VISITANTE": d=d[(df['AwayNorm']==eq_norm)|(df['AwayStrip']==eq_strip)]
-        # correccion simple local/visit
-        if cond=="LOCAL":
-            d=df[mask].copy()
-            d=d[d['HomeNorm']==eq_norm] if (d['HomeNorm']==eq_norm).any() else d[d['HomeStrip']==eq_strip]
-        elif cond=="VISITANTE":
-            d=df[mask].copy()
-            d=d[d['AwayNorm']==eq_norm] if (d['AwayNorm']==eq_norm).any() else d[d['AwayStrip']==eq_strip]
-        if liga_filtro: d=d[d['League']==liga_filtro]
-        if d.empty: return None
-        d=d.sort_values('Date')
-        ult4=d.tail(4)
-        tot=len(d); btts=o05ht=o15ht=bttsht=o05=o15=o25=o35=g=p=e=0
-        gf1_sum=gf2_sum=0; vs_nivel={1:[],2:[],3:[],4:[]}
-        c00=gol2_00=btts2_00=cEmp=gol2_Emp=cGan=mantGan=empGan=perGan=cPer=remPer=empPer=perPer=0
-        for _, r in d.iterrows():
-            try:
-                fthg=int(float(r['FTHG'] or 0)); ftag=int(float(r['FTAG'] or 0))
-                hthg=int(float(r['HTHG'] or 0)); htag=int(float(r['HTAG'] or 0))
-            except: continue
-            es_local = (r['HomeStrip']==eq_strip or r['HomeNorm']==eq_norm)
-            gf = fthg if es_local else ftag; gc = ftag if es_local else fthg
-            gf_ht = hthg if es_local else htag; gc_ht = htag if es_local else hthg
-            rival_norm = r['AwayNorm'] if es_local else r['HomeNorm']
-            rival_niv = PRE_get_nivel(r['League'], rival_norm)
-            vs_nivel[rival_niv].append({'btts':1 if fthg>0 and ftag>0 else 0})
-            gf1_sum+=gf_ht; gf2_sum+=max(0, gf-gf_ht)
-            if fthg>0 and ftag>0: btts+=1
-            if hthg+htag>0: o05ht+=1
-            if hthg+htag>1: o15ht+=1
-            if hthg>0 and htag>0: bttsht+=1
-            if fthg+ftag>0: o05+=1
-            if fthg+ftag>1: o15+=1
-            if fthg+ftag>2: o25+=1
-            if fthg+ftag>3: o35+=1
-            if gf>gc: g+=1
-            elif gf==gc: e+=1
-            else: p+=1
-            if hthg==0 and htag==0:
-                c00+=1
-                if (fthg+ftag)-(hthg+htag)>0: gol2_00+=1
-                if (fthg-hthg)>0 and (ftag-htag)>0: btts2_00+=1
-            if hthg==htag:
-                cEmp+=1
-                if (fthg+ftag)-(hthg+htag)>0: gol2_Emp+=1
-            if gf_ht>gc_ht:
-                cGan+=1
-                if gf>gc: mantGan+=1
-                elif gf==gc: empGan+=1
-                else: perGan+=1
-            if gf_ht<gc_ht:
-                cPer+=1
-                if gf>gc: remPer+=1
-                elif gf==gc: empPer+=1
-                else: perPer+=1
-        pts_ult2=pts_prev2=0
-        for _, r in ult4.tail(2).iterrows():
-            try:
-                fthg=int(float(r['FTHG'] or 0)); ftag=int(float(r['FTAG'] or 0))
-                es_local=(r['HomeStrip']==eq_strip or r['HomeNorm']==eq_norm)
-                gf=fthg if es_local else ftag; gc=ftag if es_local else fthg
-                if gf>gc: pts_ult2+=3
-                elif gf==gc: pts_ult2+=1
-            except: pass
-        for _, r in ult4.head(2).iterrows():
-            try:
-                fthg=int(float(r['FTHG'] or 0)); ftag=int(float(r['FTAG'] or 0))
-                es_local=(r['HomeStrip']==eq_strip or r['HomeNorm']==eq_norm)
-                gf=fthg if es_local else ftag; gc=ftag if es_local else fthg
-                if gf>gc: pts_prev2+=3
-                elif gf==gc: pts_prev2+=1
-            except: pass
-        vs_btts={}
-        for niv in [1,2,3,4]:
-            arr=vs_nivel[niv]
-            vs_btts[niv]=sum(x['btts'] for x in arr)/len(arr)*100 if arr else None
-        return {
-            'total':tot,'btts':btts/tot*100 if tot else 0,
-            'o05ht':o05ht/tot*100 if tot else 0,'o15ht':o15ht/tot*100 if tot else 0,'bttsht':bttsht/tot*100 if tot else 0,
-            'o05':o05/tot*100 if tot else 0,'o15':o15/tot*100 if tot else 0,'o25':o25/tot*100 if tot else 0,'o35':o35/tot*100 if tot else 0,
-            'g':g/tot*100 if tot else 0,'e':e/tot*100 if tot else 0,'p':p/tot*100 if tot else 0,
-            'gf1_avg':gf1_sum/tot if tot else 0,'gf2_avg':gf2_sum/tot if tot else 0,
-            'c00':c00,'gol2_00':gol2_00/c00*100 if c00 else 0,'btts2_00':btts2_00/c00*100 if c00 else 0,
-            'cEmp':cEmp,'gol2_Emp':gol2_Emp/cEmp*100 if cEmp else 0,
-            'cGan':cGan,'mantGan':mantGan/cGan*100 if cGan else 0,'empGan':empGan/cGan*100 if cGan else 0,'perGan':perGan/cGan*100 if cGan else 0,
-            'cPer':cPer,'remPer':remPer/cPer*100 if cPer else 0,'empPer':empPer/cPer*100 if cPer else 0,'perPer':perPer/cPer*100 if cPer else 0,
-            'trend':pts_ult2-pts_prev2,'vs_btts':vs_btts
-        }
-
-    st.markdown("""
-    <style>
-    .PRE-card{background:#111111;border:2px solid #FFD700;border-radius:12px;padding:16px;margin:14px 0;color:#FFFFFF;font-family:monospace}
-    .PRE-title{background:#FFD700;color:#111111;font-weight:900;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px}
-    .PRE-row{padding:6px 0;border-bottom:1px solid #333333;font-size:11px;line-height:1.5;color:#FFFFFF}
-    .PRE-pct{font-weight:900;color:#111111;background:#FFD700;padding:2px 7px;border-radius:4px}
-    .PRE-lab{color:#FFD700;font-weight:700}
-    </style>
-    """, unsafe_allow_html=True)
-
-    ligas_pre = sorted(PRE_df['League'].dropna().unique())
-    c1,c2,c3 = st.columns([2,2,2])
-    with c1: liga_pre = st.selectbox("PRE Liga", ligas_pre, key="PRE_liga_sel_v2")
-    df_l = PRE_df[PRE_df['League']==liga_pre]
-    eqs_l = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().unique())
-    with c2: home_pre = st.selectbox("PRE Local", eqs_l, key="PRE_home_sel_v2")
-    with c3: away_pre = st.selectbox("PRE Visitante", [x for x in eqs_l if x!=home_pre], key="PRE_away_sel_v2")
-
-    if st.button("PRE CALCULAR 8 ESCENARIOS", key="PRE_btn_calc_v2", use_container_width=True):
-        hn=PRE_norm(home_pre); hs=PRE_strip(home_pre)
-        an=PRE_norm(away_pre); ass=PRE_strip(away_pre)
-        n_h=PRE_get_nivel(liga_pre, hn); n_a=PRE_get_nivel(liga_pre, an)
-        s_h_loc = PRE_stats_equipo(PRE_df, hn, hs, "LOCAL", liga_pre)
-        s_a_vis = PRE_stats_equipo(PRE_df, an, ass, "VISITANTE", liga_pre)
-        s_h = s_h_loc if s_h_loc and s_h_loc['total']>=3 else PRE_stats_equipo(PRE_df, hn, hs, "TODOS", liga_pre)
-        s_a = s_a_vis if s_a_vis and s_a_vis['total']>=3 else PRE_stats_equipo(PRE_df, an, ass, "TODOS", liga_pre)
-        if not s_h or not s_a:
-            st.error("PRE: sin datos"); st.stop()
-        def PRE_vs_btts(stt, rn):
-            v=stt['vs_btts'].get(rn); return v if v is not None else stt['btts']
-        btts_h_vs=PRE_vs_btts(s_h, n_a); btts_a_vs=PRE_vs_btts(s_a, n_h)
-        trend_h=50+s_h['trend']*10; trend_a=50+s_a['trend']*10
-        btts_pred = (s_h['btts']*0.6 + btts_h_vs*0.25 + trend_h*0.15)*0.55 + (s_a['btts']*0.6 + btts_a_vs*0.25 + trend_a*0.15)*0.45
-        o05ht = (s_h['o05ht']+s_a['o05ht'])/2; o15ht=(s_h['o15ht']+s_a['o15ht'])/2; bttsht=(s_h['bttsht']+s_a['bttsht'])/2
-        o25=(s_h['o25']+s_a['o25'])/2; o35=(s_h['o35']+s_a['o35'])/2
-        prob_h=(s_h['g']+(100-s_a['g']))/2; prob_a=(s_a['g']+(100-s_h['g']))/2; prob_x=max(0,100-prob_h-prob_a)
-        html_pre = f"""
-        <div class="PRE-card">
-          <div class="PRE-title">PRE {home_pre} (N{n_h} Loc:{s_h['total']} T:{s_h['trend']}) vs {away_pre} (N{n_a} Vis:{s_a['total']} T:{s_a['trend']}) | {liga_pre}</div>
-          <div class="PRE-row"><span class="PRE-lab">1. BTTS 90'</span> -> <span class="PRE-pct">{btts_pred:.0f}%</span> | H:{s_h['btts']:.0f}% vs N{n_a}:{btts_h_vs:.0f}% / A:{s_a['btts']:.0f}% vs N{n_h}:{btts_a_vs:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">2. 1P</span> -> O0.5 <span class="PRE-pct">{o05ht:.0f}%</span> O1.5 {o15ht:.0f}% BTTS HT {bttsht:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">3. FINAL</span> -> 1 {prob_h:.0f}% X {prob_x:.0f}% 2 {prob_a:.0f}% | 1X {(prob_h+prob_x):.0f}% X2 {(prob_a+prob_x):.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">4. TOTAL</span> -> O2.5 <span class="PRE-pct">{o25:.0f}%</span> O3.5 {o35:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">5. 0-0 HT</span> -> Gol2P {(s_h['gol2_00']+s_a['gol2_00'])/2:.0f}% BTTS2P {(s_h['btts2_00']+s_a['btts2_00'])/2:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">6. EMPATE HT</span> -> Gol2P {(s_h['gol2_Emp']+s_a['gol2_Emp'])/2:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">7. GANANDO HT</span> -> Mantiene {(s_h['mantGan']+s_a['mantGan'])/2:.0f}%</div>
-          <div class="PRE-row"><span class="PRE-lab">8. PERDIENDO HT</span> -> Remonta {(s_h['remPer']+s_a['remPer'])/2:.0f}% Empata {(s_h['empPer']+s_a['empPer'])/2:.0f}%</div>
-        </div>
-        """
-        st.markdown(html_pre, unsafe_allow_html=True)
-# ================= FIN BLOQUE PRE V2 =================
