@@ -2700,9 +2700,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         es_local_j = (norm_eq_fix2 == h_norm_r)
                         bg_j = "#111111" if es_local_j else "#1a1a1a"
-                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
-                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px; line-height:1.1; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#fff;'>({_fecha_str_fix2})</span></div>"
-                        html += f"<div style='margin-top:1px; font-size:10px; color:#fff; line-height:1.1;'>(1ª parte {hthg}-{htag})</div>"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
+                        html += f"<div style='font-weight:900; color:{col_main}; font-size:15px; line-height:1.2; margin:0;'>J{int(j_fix2)} | {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#fff;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='margin-top:2px; font-size:13px; color:#fff; line-height:1.2;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
                             if not g1_data:
                                 html += f"<div style='font-size:10px; color:#888;'>—</div>"
@@ -2723,8 +2723,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
                                         score_txt = "" if is_missed else f"<span style='color:#ffffff'>{sh}-{sa}</span>"
-                                        # FORMATO NUEVO: 2'⚫ 1-0 como pediste
-                                        html += f"<div style='font-size:11px; color:#fff; text-align:left; padding-left:30%; line-height:1.4;'>{txt_min} {score_txt}</div>"
+                                        # FORMATO NUEVO: 2'⚫ 1-0 - TEXTO GRANDE
+                                        html += f"<div style='font-size:14px; color:#fff; text-align:left; padding-left:28%; line-height:1.6; font-weight:700;'>{txt_min} {score_txt}</div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
@@ -2744,8 +2744,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
                                         if es_mio:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
-                                        # FORMATO NUEVO 2ª: 3-1 49'⚪ como pediste
-                                        html += f"<div style='font-size:11px; color:#fff; text-align:center; line-height:1.5;'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
+                                        # FORMATO NUEVO 2ª: 3-1 49'⚪ - GRANDE
+                                        html += f"<div style='font-size:14px; color:#fff; text-align:center; line-height:1.6; font-weight:700;'><span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
