@@ -2828,9 +2828,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                         gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g}</div>"
                                                 break
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-50px);'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-20px); word-break:break-word; white-space:normal;'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
                                         else:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(50px);'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(20px); word-break:break-word; white-space:normal;'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
@@ -2868,7 +2868,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                 score_2p = f"<span style='color:#00ff00;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#00ff00;font-weight:900'>{sa}</span>"
                                             else:
                                                 score_2p = f"<span style='color:#ff4444;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#ff4444;font-weight:900'>{sa}</span>"
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} {score_2p} {emoji_gol}{gol_html}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:360px; max-width:92vw; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-20px); word-break:break-word; white-space:normal; line-height:1.2;'>{txt_min} {score_2p} {emoji_gol}{gol_html}</span></div>"
                                         else:
                                             html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'>{emoji_gol} <span style='color:#fff;'>{sh}-{sa}</span> {txt_min}{gol_html}</span></div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
