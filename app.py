@@ -2533,6 +2533,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 cabecera_txt = f"{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2{desglose}"
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{cabecera_txt}</div>", unsafe_allow_html=True)
                 partidos_pred_copy_fix2.append(cabecera_txt)
+                # --- GENERA RESUMEN L/V CON JORNADAS ---
+                try:
+                    j_loc = []
+                    j_vis = []
+                    for _, rr in df_filtrada_real_fix2.iterrows():
+                        try:
+                            jn = int(rr.get('Jornada', 0))
+                        except:
+                            continue
+                        es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                        if es_loc:
+                            j_loc.append(f"J{jn}")
+                        else:
+                            j_vis.append(f"J{jn}")
+                    j_loc_txt = ", ".join(sorted(j_loc, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_loc else "-"
+                    j_vis_txt = ", ".join(sorted(j_vis, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_vis else "-"
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
+                    lista_resumen_fix2.append(linea_res)
+                except:
+                    pass
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
@@ -2917,7 +2937,21 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2} | ERR:{e}"
         # TEXTO VISIBLE EN PANTALLA PARA VER FILTROS PUESTOS
         st.markdown(f"<div style='font-family:monospace; font-size:9px; color:#000; font-weight:900; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
-        texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
+        # --- CABECERA FINAL VISUAL ORDENADA ---
+        try:
+            if lista_resumen_fix2:
+                resumen_html = "<br>".join(lista_resumen_fix2)
+                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#000; font-weight:900; background:#FFFFFF; border:2px solid #000; border-radius:8px; padding:10px; margin:12px 0; white-space:pre-wrap; line-height:1.6;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
+        except:
+            pass
+        try:
+            resumen_copy = "\n".join(lista_resumen_fix2) if lista_resumen_fix2 else ""
+            if resumen_copy:
+                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300]) + "\n\n--- RESUMEN FINAL ---\n" + resumen_copy
+            else:
+                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300])
+        except:
+            texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
         components.html(f"""
