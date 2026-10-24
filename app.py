@@ -2093,6 +2093,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         # GOLES: europa + resto
         df_g = _load_concat_goles(["base_goles_europa.parquet", "base_goles_resto.parquet"])
         ev = {}
+        ###########BLOQUE GOLES FIX 2 GOLEADOR ASISTENTE
         if not df_g.empty:
             df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
             df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
@@ -2768,10 +2769,23 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
                                         score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
+                                        # NUEVO - busca goleador de ese minuto
+                                        fid_tmp = str(r.get('fixture_id','')).split('.')[0] if 'r' in locals() else fid
+                                        gol_info = ""
+                                        for ev_tmp in eventos_fix2.get(fid_tmp, []):
+                                            if ev_tmp.get('m', -1) == mm:
+                                                g = ev_tmp.get('goleador','').strip()
+                                                a_s = ev_tmp.get('asistente','').strip()
+                                                if g and g.lower() not in ["nan",""]:
+                                                    if a_s and a_s.lower() not in ["nan",""]:
+                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g} <span style='color:#888'>(ast: {a_s})</span></div>"
+                                                    else:
+                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g}</div>"
+                                                break
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-50px);'>{txt_min} {score_txt} {emoji_gol}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-50px);'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
                                         else:
-                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(50px);'>{emoji_gol} {score_txt} {txt_min}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(50px);'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
