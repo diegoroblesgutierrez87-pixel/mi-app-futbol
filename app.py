@@ -2829,7 +2829,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
-                                        score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
+                                        # --- MARCADOR VERDE FAVORABLE / ROJO RIVAL ---
+                                        es_fav = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                        if es_fav:
+                                            score_txt = f"<span style='color:#00ff00;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#00ff00;font-weight:900'>{sa}</span>"
+                                        else:
+                                            score_txt = f"<span style='color:#ff4444;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#ff4444;font-weight:900'>{sa}</span>"
                                         # NUEVO - busca goleador de ese minuto
                                         fid_tmp = str(r.get('fixture_id','')).split('.')[0] if 'r' in locals() else fid
                                         gol_info = ""
@@ -2879,7 +2884,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         else:
                                             gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span> {emoji_gol}{gol_html}</span></div>"
+                                            es_fav2 = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                            if es_fav2:
+                                                score_2p = f"<span style='color:#00ff00;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#00ff00;font-weight:900'>{sa}</span>"
+                                            else:
+                                                score_2p = f"<span style='color:#ff4444;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#ff4444;font-weight:900'>{sa}</span>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} {score_2p} {emoji_gol}{gol_html}</span></div>"
                                         else:
                                             html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'>{emoji_gol} <span style='color:#fff;'>{sh}-{sa}</span> {txt_min}{gol_html}</span></div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
