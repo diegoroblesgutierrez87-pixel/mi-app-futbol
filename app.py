@@ -1925,7 +1925,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
 ###################
 ################################################################### CLONADO
 ##################
-################################################################### CLONADO
+################################################################### CLONADOF
 ##################
 ################################################################### CLONADO##################
 ################################################################### CLONADO
@@ -2098,7 +2098,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
             df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
             for fid, sub in df_g.groupby('fid_str'):
-                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
+                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
         return df_e, ev
 
     df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2()
@@ -2463,7 +2463,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         _df_g['m'] = pd.to_numeric(_df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
                                         for fid, sub in _df_g.groupby('fid_str'):
                                             if fid not in eventos_fix2:
-                                                eventos_fix2[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
+                                                eventos_fix2[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
                                     except:
                                         pass
                             else:
@@ -2805,10 +2805,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
                                         if es_mio:
                                             txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
+                                        gol_txt = ""
+                                        for evb in eventos_fix2.get(fid, []):
+                                            if evb.get('m', -1) == mm:
+                                                g = evb.get('goleador','').strip()
+                                                a_s = evb.get('asistente','').strip()
+                                                if g.lower() not in ["","nan","none"]:
+                                                    gol_txt = g if not a_s or a_s.lower() in ["","nan","none"] else f"{g} ({a_s})"
+                                                break
+                                        gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span> {emoji_gol}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span> {emoji_gol}{gol_html}</span></div>"
                                         else:
-                                            html += f"<div style='text-align:center; line-height:1.9;'><span style='display:inline-block; width:160px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'>{emoji_gol} <span style='color:#fff;'>{sh}-{sa}</span> {txt_min}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'>{emoji_gol} <span style='color:#fff;'>{sh}-{sa}</span> {txt_min}{gol_html}</span></div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
 
                         html_lineas_fix2 += html
