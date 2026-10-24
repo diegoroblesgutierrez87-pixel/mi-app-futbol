@@ -2690,30 +2690,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
 
-                        # --- FT / HT con tu lógica de subrayado negro ---
-                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;"
-                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;"
-                        if norm_eq_fix2 == hn:
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}"
-                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>"
-                            ag_disp = f"{ag}"
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}"
-                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>"
-                            htag_disp = f"{htag}"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        elif norm_eq_fix2 == an:
-                            hg_disp = f"{hg}"
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}"
-                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>"
-                            hthg_disp = f"{hthg}"
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}"
-                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        else:
-                            ft_txt = f"[{hg}-{ag}]"
-                            ht_inner = f"{hthg}-{htag}"
+                        # --- FT / HT sin subrayado, números alineados ---
+                        ft_txt = f"[{hg}-{ag}]"
+                        ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html_badge = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
 
