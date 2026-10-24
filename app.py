@@ -2204,6 +2204,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         st.caption("Selecciona partido futuro o equipo manual FIX2")
     else:
         partidos_pred_copy_fix2 = []
+        lista_resumen_fix2 = []
         partidos_a_iterar_fix2 = partidos_sel_fix2 if partidos_sel_fix2 else ["MANUAL | Manual | Manual vs Manual | 0"]
 
         for partido_str_fix2 in partidos_a_iterar_fix2:
@@ -2529,9 +2530,22 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 except:
                     desglose = ""
 
-                cabecera_txt = f"{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2{desglose}"
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{cabecera_txt}</div>", unsafe_allow_html=True)
-                partidos_pred_copy_fix2.append(cabecera_txt)
+                # --- MINI RESUMEN PARA CABECERA FINAL ---
+                try:
+                    j_list = []
+                    for _, rr in df_filtrada_real_fix2.iterrows():
+                        try:
+                            jn = int(rr.get('Jornada', 0))
+                        except:
+                            jn = 0
+                        es_local = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                        tag = "CASA" if es_local else "FUERA"
+                        j_list.append(f"J{jn}-{tag}")
+                    j_txt = ", ".join(j_list) if j_list else "-"
+                    resumen_txt = f"{nombre_eq_fix2}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} | V:{visitante_filt}/{visitante_total} | {j_txt}"
+                    lista_resumen_fix2.append(resumen_txt)
+                except:
+                    pass
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
@@ -2916,7 +2930,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2} | ERR:{e}"
         # TEXTO VISIBLE EN PANTALLA PARA VER FILTROS PUESTOS
         st.markdown(f"<div style='font-family:monospace; font-size:9px; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
-        texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
+        resumen_final_txt = "\n".join(lista_resumen_fix2) if 'lista_resumen_fix2' in locals() and lista_resumen_fix2 else ""
+        if resumen_final_txt:
+            texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200]) + "\n\n--- MINI RESUMEN FINAL ---\n" + resumen_final_txt
+        else:
+            texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
         components.html(f"""
