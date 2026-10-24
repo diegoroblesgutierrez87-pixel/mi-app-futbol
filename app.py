@@ -491,10 +491,41 @@ if not df_f.empty:
 else:
     equipos = []
 
-with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos, key="eq1_main")
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
+
+# --- NUEVO: COINCIDIR FECHAS -> AUTO EQUIPO 2 ---
+c_cf1, c_cf2 = filtros.columns(2)
+with c_cf1:
+    coincidir_fecha_sel = st.selectbox("Coincidir fechas", ["No"] + fechas_str, key="coincidir_fechas")
+with c_cf2:
+    rival_auto = None
+    if coincidir_fecha_sel != "No" and eq1 != "Ninguno":
+        try:
+            _cf_date = pd.to_datetime(coincidir_fecha_sel, dayfirst=True).date()
+            _df_cf = df_f[df_f['Date'].dt.date == _cf_date] if not df_f.empty else df_f
+            _mask_eq1 = (_df_cf['HomeTeam'].astype(str).str.upper() == eq1.upper()) | (_df_cf['AwayTeam'].astype(str).str.upper() == eq1.upper())
+            _match = _df_cf[_mask_eq1]
+            if not _match.empty:
+                _row = _match.iloc[0]
+                _home = str(_row['HomeTeam']).upper()
+                _away = str(_row['AwayTeam']).upper()
+                rival_auto = _away if _home == eq1.upper() else _home
+                st.caption(f"Rival: {rival_auto}")
+            else:
+                st.caption(f"Sin partido para {eq1} el {coincidir_fecha_sel}")
+        except:
+            rival_auto = None
+
 c4,c5 = filtros.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e.upper() != str(eq1).upper()])
+with c4:
+    lista_eq2 = [e for e in equipos if e.upper() != str(eq1).upper()]
+    if rival_auto and rival_auto in lista_eq2:
+        lista_eq2 = [rival_auto] + [e for e in lista_eq2 if e != rival_auto]
+        default_idx = 1
+    else:
+        default_idx = 0
+    eq2 = st.selectbox("Equipo 2", ["Ninguno"] + lista_eq2, index=default_idx, key="eq2_main")
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
