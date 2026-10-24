@@ -2132,7 +2132,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         res_live_tipo_fix2 = st.selectbox("Resultado LIVE", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_fix2")
         min_live_raw_fix2 = st.text_input("MIN LIVE", key="min_live_fix2", placeholder="Ej: 76")
 
-    lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
+    # --- NUEVO DESPLEGABLE LIGAS PARA FILTRAR EQUIPOS ---
+    ligas_hist_fix2 = ["TODAS"] + sorted(df_fix2['League'].dropna().astype(str).unique().tolist()) if not df_fix2.empty and 'League' in df_fix2.columns else ["TODAS"]
+    liga_hist_sel_fix2 = st.selectbox("LIGA HISTORIAL FIX2", ligas_hist_fix2, index=0, key="liga_hist_fix2")
+    if liga_hist_sel_fix2 != "TODAS":
+        df_liga_filt = df_fix2[df_fix2['League'].astype(str) == liga_hist_sel_fix2]
+        lista_hist_equipos_fix2 = sorted(pd.concat([df_liga_filt['HomeTeam'], df_liga_filt['AwayTeam']]).dropna().astype(str).unique().tolist())
+    else:
+        lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
