@@ -1984,6 +1984,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 "cond_manual_2_fix2": st.session_state.get("cond_manual_2_fix2", "TODOS"),
                 "cond_loc_pred_fix2": st.session_state.get("cond_loc_pred_fix2", "Local en casa / Visitante fuera"),
                 "filtro_ht_ft_unico_2026_v9_fix2": st.session_state.get("filtro_ht_ft_unico_2026_v9_fix2", []),
+                "ver_goleadores_fix2": st.session_state.get("ver_goleadores_fix2", "OFF"),
             }
             with open(FILE_PERSIST_PRED_FIX2, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
