@@ -2915,7 +2915,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         except Exception as e:
             filtros_txt_fix2 = f"FILTROS FIX2: {ligas_pred_sel_fix2} {fecha_pred_sel_fix2} {cond_loc_pred_fix2} | ERR:{e}"
         # TEXTO VISIBLE EN PANTALLA PARA VER FILTROS PUESTOS
-        st.markdown(f"<div style='font-family:monospace; font-size:9px; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-family:monospace; font-size:9px; color:#000; font-weight:900; background:#f0f0f0; border:1px solid #0A2342; border-radius:6px; padding:6px 8px; margin:8px 0; white-space:pre-wrap; word-break:break-word;'>{filtros_txt_fix2}</div>", unsafe_allow_html=True)
         texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:200])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
         import streamlit.components.v1 as components
