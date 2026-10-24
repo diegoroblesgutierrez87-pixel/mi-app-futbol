@@ -667,10 +667,11 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             else:
                 extra_jug = ""
             min_txt = f"<span style='font-size:12px; {bold} {gris}'>{m}'</span>"
+            bolita = "<span style='color:#1E90FF'>●</span>" if es_mio else "<span style='color:#000000'>●</span>"
             if is_local:
-                html_gol = f"<div style='text-align:left; color:{color_gol}; {extra_style} margin:0; padding:0; line-height:1.0; font-size:11px'>{min_txt} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:left; color:{color_gol}; {extra_style} margin:0; padding:0; line-height:1.0; font-size:11px'>{bolita} {min_txt} {alterador.strip()}{extra_jug}</div>"
             else:
-                html_gol = f"<div style='text-align:right; color:{color_gol}; {extra_style} margin:0; padding:0; line-height:1.0; font-size:11px'>{min_txt} {alterador.strip()}{extra_jug}</div>"
+                html_gol = f"<div style='text-align:right; color:{color_gol}; {extra_style} margin:0; padding:0; line-height:1.0; font-size:11px'>{min_txt} {alterador.strip()}{extra_jug} {bolita}</div>"
             if m <= 45:
                 mins_1t.append(html_gol)
             else:
