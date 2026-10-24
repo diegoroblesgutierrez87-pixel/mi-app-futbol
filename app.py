@@ -2245,7 +2245,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 return len(_df_f), _tot
             f_h_filt, f_h_tot = _cnt_fut_fix2(h_fut_fix2)
             f_a_filt, f_a_tot = _cnt_fut_fix2(a_fut_fix2)
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO FIX2: {h_fut_fix2} {f_h_filt}/{f_h_tot} vs {a_fut_fix2} {f_a_filt}/{f_a_tot} | {partes_fix2[0].strip()}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:6px 8px;margin:12px 0 4px 0;font-size:12px;border:1px solid #000'>🔮 FUTURO FIX2: {h_fut_fix2} {f_h_filt}/{f_h_tot} vs {a_fut_fix2} {f_a_filt}/{f_a_tot} | {partes_fix2[0].strip()}</div>", unsafe_allow_html=True)
 
             if "MANUAL" in partido_str_fix2:
                 equipos_a_mostrar_fix2 = []
@@ -2489,7 +2489,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     filt_fix2 = len(df_team_fix2[df_team_fix2.apply(_tiene_min_eq, axis=1)])
                 else:
                     filt_fix2 = len(df_team_fix2)
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2</div>", unsafe_allow_html=True)
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
