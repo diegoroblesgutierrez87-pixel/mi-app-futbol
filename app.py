@@ -2678,29 +2678,35 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             return False
 
                         def _agrupa_fix2_con_score(evs, sh=0, sa=0):
-                            grupos=[]; h=sh; a=sa
+                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa
                             for ev in evs:
                                 if 'Missed' in ev.get('tipo',''): continue
-                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
+                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
                                 is_home = es_local_raw
                                 if is_home: h+=1
                                 else: a+=1
-                                grupos.append(([m], h, a))
+                                if last is not None and is_home != last and cur:
+                                    grupos.append((cur, lh, la)); cur=[]
+                                cur.append(m); last=is_home; lh=h; la=a
+                            if cur: grupos.append((cur, lh, la))
                             return grupos
 
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
-                            grupos=[]; h=sh; a=sa
+                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
                             for ev in evs:
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
                                 is_home_scoring = es_local_raw
                                 if 'Missed Penalty' in tipo:
-                                    grupos.append(([(m, tipo)], h, a, is_home_scoring))
-                                    continue
+                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
+                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
                                 if is_home_scoring: h+=1
                                 else: a+=1
-                                grupos.append(([(m, tipo)], h, a, is_home_scoring))
+                                if last is not None and is_home_scoring != last and cur:
+                                    grupos.append((cur, lh, la, last_is_home)); cur=[]
+                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
+                            if cur: grupos.append((cur, lh, la, last_is_home))
                             return grupos
 
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
@@ -2779,7 +2785,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         elif 'Penalty' in tp: base = f"(p) {mm}'"
                                         else: base = f"{mm}'"
                                         emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                        txt_min = f"{base}{emoji_gol}"
+                                        txt_min = f"{base}"
                                         if filtro_act_fix2 and (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2):
                                             txt_min = f"<span style='background:#444;color:#fff;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
                                         es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
