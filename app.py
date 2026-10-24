@@ -2672,8 +2672,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         estado = f"{r1}/{rF}"
 
                         # --- NOMBRES con subrayado + EMOJI FUERA COMO QUIERES ---
-                        EMOJI_SEL = "🔵"
-                        EMOJI_RIVAL = "⚪"
+                        EMOJI_SEL = "⚽"
+                        EMOJI_RIVAL = "⚽"
                         if norm_eq_fix2 == h_norm_r:
                             h_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#ffffff'>{a}</span>"
