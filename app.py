@@ -2204,6 +2204,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         st.caption("Selecciona partido futuro o equipo manual FIX2")
     else:
         partidos_pred_copy_fix2 = []
+        lista_resumen_fix2 = []
         partidos_a_iterar_fix2 = partidos_sel_fix2 if partidos_sel_fix2 else ["MANUAL | Manual | Manual vs Manual | 0"]
 
         for partido_str_fix2 in partidos_a_iterar_fix2:
