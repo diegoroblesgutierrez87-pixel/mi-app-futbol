@@ -2823,9 +2823,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                 a_s = ev_tmp.get('asistente','').strip()
                                                 if g and g.lower() not in ["nan",""]:
                                                     if a_s and a_s.lower() not in ["nan",""]:
-                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g} <span style='color:#888'>(ast: {a_s})</span></div>"
+                                                        gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g} <span style='color:#bbb'>(ast: {a_s})</span></div>"
                                                     else:
-                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g}</div>"
+                                                        gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g}</div>"
                                                 break
                                         if is_home:
                                             html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-50px);'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
@@ -2861,7 +2861,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         if st.session_state.get("ver_goleadores_fix2","ON") == "OFF":
                                             gol_html = ""
                                         else:
-                                            gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
+                                            gol_html = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{gol_txt}</div>" if gol_txt else ""
                                         if is_home:
                                             es_fav2 = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
                                             if es_fav2:
