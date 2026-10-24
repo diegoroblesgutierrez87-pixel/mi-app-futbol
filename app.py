@@ -2828,9 +2828,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                         gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g}</div>"
                                                 break
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.2; margin:5px 0;'><div style='font-size:14px; color:#fff; font-weight:700;'>{txt_min} {score_txt} {emoji_gol}</div><div style='font-size:12px; color:#fff; font-weight:700; word-break:break-word; white-space:normal; max-width:360px; margin:2px auto 0 auto; line-height:1.2;'>{gol_info.replace('<div','<span').replace('</div>','</span>')}</div></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-20px); word-break:break-word; white-space:normal;'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
                                         else:
-                                            html += f"<div style='text-align:center; line-height:1.2; margin:5px 0;'><div style='font-size:14px; color:#fff; font-weight:700;'>{emoji_gol} {score_txt} {txt_min}</div><div style='font-size:12px; color:#fff; font-weight:700; word-break:break-word; white-space:normal; max-width:360px; margin:2px auto 0 auto; line-height:1.2;'>{gol_info.replace('<div','<span').replace('</div>','</span>')}</div></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(20px); word-break:break-word; white-space:normal;'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
