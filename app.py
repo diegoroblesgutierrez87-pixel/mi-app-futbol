@@ -494,16 +494,42 @@ else:
 with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos, key="eq1_main")
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
 
-# --- NUEVO: COINCIDIR FECHAS -> AUTO EQUIPO 2 ---
+# --- NUEVO: COINCIDIR FECHAS -> AUTO EQUIPO 2 (FUTURO) ---
+@st.cache_data(show_spinner=False)
+def _cargar_cal_completo():
+    import pathlib
+    for p in [pathlib.Path("/mnt/data/calendario_completo_2026_2027.csv"), pathlib.Path("calendario_completo_2026_2027.csv"), pathlib.Path(__file__).parent / "calendario_completo_2026_2027.csv"]:
+        if p.exists():
+            try:
+                _dfc = pd.read_csv(p, on_bad_lines='skip')
+                _dfc['Date'] = pd.to_datetime(_dfc['Date'], dayfirst=True, errors='coerce')
+                return _dfc
+            except:
+                pass
+    return pd.DataFrame()
+
+_df_cal = _cargar_cal_completo()
+if not _df_cal.empty and 'Date' in _df_cal.columns:
+    try:
+        fechas_cal_unicas = sorted(_df_cal['Date'].dropna().dt.date.unique())
+        fechas_cal_str = [d.strftime("%d/%m/%Y") for d in fechas_cal_unicas]
+    except:
+        fechas_cal_str = fechas_str
+else:
+    fechas_cal_str = fechas_str
+
 c_cf1, c_cf2 = filtros.columns(2)
 with c_cf1:
-    coincidir_fecha_sel = st.selectbox("Coincidir fechas", ["No"] + fechas_str, key="coincidir_fechas")
+    coincidir_fecha_sel = st.selectbox("Coincidir fechas (futuro)", ["No"] + fechas_cal_str, key="coincidir_fechas")
 with c_cf2:
     rival_auto = None
-    if coincidir_fecha_sel != "No" and eq1 != "Ninguno":
+    if coincidir_fecha_sel != "No" and eq1 != "Ninguno" and not _df_cal.empty:
         try:
             _cf_date = pd.to_datetime(coincidir_fecha_sel, dayfirst=True).date()
-            _df_cf = df_f[df_f['Date'].dt.date == _cf_date] if not df_f.empty else df_f
+            _df_cf = _df_cal[_df_cal['Date'].dt.date == _cf_date]
+            # filtra por liga si hay liga seleccionada
+            if liga_sel != "Todas":
+                _df_cf = _df_cf[_df_cf['League'].astype(str).str.upper() == liga_sel.upper()]
             _mask_eq1 = (_df_cf['HomeTeam'].astype(str).str.upper() == eq1.upper()) | (_df_cf['AwayTeam'].astype(str).str.upper() == eq1.upper())
             _match = _df_cf[_mask_eq1]
             if not _match.empty:
@@ -511,7 +537,7 @@ with c_cf2:
                 _home = str(_row['HomeTeam']).upper()
                 _away = str(_row['AwayTeam']).upper()
                 rival_auto = _away if _home == eq1.upper() else _home
-                st.caption(f"Rival: {rival_auto}")
+                st.success(f"Rival futuro: {rival_auto} el {coincidir_fecha_sel}")
             else:
                 st.caption(f"Sin partido para {eq1} el {coincidir_fecha_sel}")
         except:
