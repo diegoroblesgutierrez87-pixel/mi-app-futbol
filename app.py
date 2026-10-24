@@ -968,9 +968,15 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
             except:
                 liga_team = liga_sel
             color_pct = "#0f8105" if pct>=70 else "#0A2342"
+            # FONDO BEIGE PARA FILTRO
             html_partidos += f"<div style='font-family:monospace;font-weight:900;background:{color_pct};color:#fff;padding:4px 6px;margin:8px 0 2px 0'>{team} {loc_cond} - {liga_team} | {filtro_tipo} {pct:.0f}% ({ok}/{total})</div>"
             for _, r in d_team_cumple.iterrows():
-                html_partidos += fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
+                # fmt_rapido normal devuelve fondo #111, lo convertimos a beige
+                _html_tmp = fmt_rapido(r.to_dict(), [normaliza(team)], normaliza(team), team)
+                _html_tmp = _html_tmp.replace("background:#111", "background:#F5E6C8").replace("background:#111111", "background:#F5E6C8").replace("color:#fff", "color:#000").replace("color:#bbb", "color:#444")
+                # mantiene el color del equipo filtrado pero fondo beige
+                _html_tmp = _html_tmp.replace("border-bottom:2px solid #333", "border-bottom:2px solid #D2C4A3")
+                html_partidos += _html_tmp.replace("<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #333;line-height:1.2;max-width:380px;margin:0 auto;background:#111;color:#fff'", "<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #D2C4A3;line-height:1.2;max-width:380px;margin:0 auto;background:#F5E6C8;color:#000'")
         html = header_html + html_partidos
         # --- FIX COPIAR FILTRO - SOLO PARTIDOS ---
         if html_partidos:
