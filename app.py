@@ -2813,7 +2813,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                 if g.lower() not in ["","nan","none"]:
                                                     gol_txt = g if not a_s or a_s.lower() in ["","nan","none"] else f"{g} ({a_s})"
                                                 break
-                                        gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
+                                        if st.session_state.get("ver_goleadores_fix2","ON") == "OFF":
+                                            gol_html = ""
+                                        else:
+                                            gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
                                         if is_home:
                                             html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span> {emoji_gol}{gol_html}</span></div>"
                                         else:
