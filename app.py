@@ -2502,11 +2502,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     except:
                         return pd.NaT
                 df_team_base_pred_fix2['Date_parsed'] = df_team_base_pred_fix2['Date'].apply(_parse_fecha_fix2_robusto)
-                df_team_base_pred_fix2 = df_team_base_pred_fix2[df_team_base_pred_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
+                # FIX: sin corte duro, muestra hasta hoy
+                df_team_base_pred_fix2 = df_team_base_pred_fix2[df_team_base_pred_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
                 df_team_base_pred_fix2['fid_num'] = pd.to_numeric(df_team_base_pred_fix2['fixture_id'], errors='coerce')
                 df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
                 df_team_fix2['Date_parsed'] = df_team_fix2['Date'].apply(_parse_fecha_fix2_robusto) if not df_team_fix2.empty else df_team_fix2.get('Date')
-                df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-10-20")]
+                df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
                 # FIX DEFINITIVO - Jornadas continuas 15 últimas para testigo J|— aunque no haya partido en esa J
@@ -4393,4 +4394,3 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
-
