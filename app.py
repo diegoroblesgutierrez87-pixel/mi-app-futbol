@@ -2755,20 +2755,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             return grupos
 
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
-                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
+                            grupos=[]; h=sh; a=sa
                             for ev in evs:
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
                                 is_home_scoring = es_local_raw
                                 if 'Missed Penalty' in tipo:
-                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
-                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
+                                    grupos.append(([(m, tipo)], h, a, is_home_scoring)); continue
                                 if is_home_scoring: h+=1
                                 else: a+=1
-                                if last is not None and is_home_scoring != last and cur:
-                                    grupos.append((cur, lh, la, last_is_home)); cur=[]
-                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
-                            if cur: grupos.append((cur, lh, la, last_is_home))
+                                grupos.append(([(m, tipo)], h, a, is_home_scoring))
                             return grupos
 
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
