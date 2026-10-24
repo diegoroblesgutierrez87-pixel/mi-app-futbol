@@ -2675,13 +2675,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         EMOJI_SEL = "🔵"
                         EMOJI_RIVAL = "⚪"
                         if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
+                            h_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#ffffff'>{a}</span>"
                             emoji_home = EMOJI_SEL
                             emoji_away = EMOJI_RIVAL
                         elif norm_eq_fix2 == a_norm_r:
                             h_txt = f"<span style='color:#ffffff'>{h}</span>"
-                            a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
+                            a_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
                         else:
