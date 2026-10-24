@@ -2504,16 +2504,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
                             return True
                         return False
-                    filt_fix2 = len(df_team_fix2[df_team_fix2.apply(_tiene_min_eq, axis=1)])
+                    df_filtrada_real_fix2 = df_team_fix2[df_team_fix2.apply(_tiene_min_eq, axis=1)] if not df_team_fix2.empty else df_team_fix2
+                    filt_fix2 = len(df_filtrada_real_fix2)
                 else:
+                    df_filtrada_real_fix2 = df_team_fix2
                     filt_fix2 = len(df_team_fix2)
 
-                # DESGLOSE LOCAL/VISITANTE segun Cond manual 1/2
+                # DESGLOSE LOCAL/VISITANTE segun Cond manual 1/2 - CORREGIDO
                 try:
                     _mask_local_total = df_team_base_total_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2
-                    _mask_local_filt = df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2 if not df_team_fix2.empty else _mask_local_total[:0]
                     local_total = int(_mask_local_total.sum())
                     visitante_total = total_fix2 - local_total
+                    _mask_local_filt = df_filtrada_real_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2 if not df_filtrada_real_fix2.empty else _mask_local_total[:0]
                     local_filt = int(_mask_local_filt.sum())
                     visitante_filt = filt_fix2 - local_filt
                     desglose = f" [L:{local_filt}/{local_total} V:{visitante_filt}/{visitante_total}]"
