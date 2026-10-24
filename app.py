@@ -2760,6 +2760,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
                                 is_home_scoring = es_local_raw
+                                if 'Own Goal' in tipo:
+                                    is_home_scoring = not es_local_raw
                                 if 'Missed Penalty' in tipo:
                                     grupos.append(([(m, tipo)], h, a, is_home_scoring)); continue
                                 if is_home_scoring: h+=1
