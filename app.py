@@ -2493,7 +2493,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     filt_fix2 = len(df_team_fix2[df_team_fix2.apply(_tiene_min_eq, axis=1)])
                 else:
                     filt_fix2 = len(df_team_fix2)
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2</div>", unsafe_allow_html=True)
+
+                # DESGLOSE LOCAL/VISITANTE segun Cond manual 1/2
+                try:
+                    _mask_local_total = df_team_base_total_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2
+                    _mask_local_filt = df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2 if not df_team_fix2.empty else _mask_local_total[:0]
+                    local_total = int(_mask_local_total.sum())
+                    visitante_total = total_fix2 - local_total
+                    local_filt = int(_mask_local_filt.sum())
+                    visitante_filt = filt_fix2 - local_filt
+                    desglose = f" [L:{local_filt}/{local_total} V:{visitante_filt}/{visitante_total}]"
+                except:
+                    desglose = ""
+
+                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2{desglose}</div>", unsafe_allow_html=True)
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
