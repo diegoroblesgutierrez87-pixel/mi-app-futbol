@@ -2820,9 +2820,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
                                         if filtro_act_fix2 and en_rango:
                                             txt_min = f"<span style='background:#444;color:#fff;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
-                                        es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                        if es_mio and '(x)' not in base:
-                                            txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
+                                        es_fav_min = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                        color_min = "#00ff00" if es_fav_min else "#ff4444"
+                                        if '(x)' not in base:
+                                            txt_min = f"<span style='font-weight:900; color:{color_min};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
                                         # --- MARCADOR VERDE FAVORABLE / ROJO RIVAL ---
