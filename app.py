@@ -2814,9 +2814,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             return f"{hthg}-{htag}" if es_local_team else f"{htag}-{hthg}"
                         else:
                             return f"{hg}-{ag}" if es_local_team else f"{ag}-{hg}"
-                    # Para el resumen HTML guardamos con colores, para el copy usamos plain
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
-                    lista_resumen_fix2.append(linea_res)
+                    # DUPLICADO DESACTIVADO - RESUMEN HT YA CORRECTO
+                    # linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
+                    # lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     # Fallback al original si peta
                     try:
