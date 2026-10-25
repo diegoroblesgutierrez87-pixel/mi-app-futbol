@@ -2164,8 +2164,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         ev = {}
         ###########BLOQUE GOLES FIX 2 GOLEADOR ASISTENTE
         if not df_g.empty:
+            def _parse_min_fix2(v):
+                try:
+                    s=str(v).strip().replace("'", "")
+                    if "+" in s:
+                        a,b=s.split("+",1)
+                        return int(a)+int(b)
+                    return int(float(s))
+                except:
+                    return 0
             df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
+            df_g['m'] = df_g.get('minuto', 0).apply(_parse_min_fix2)
             for fid, sub in df_g.groupby('fid_str'):
                 ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
         return df_e, ev
