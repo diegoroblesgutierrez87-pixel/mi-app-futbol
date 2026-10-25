@@ -491,10 +491,67 @@ if not df_f.empty:
 else:
     equipos = []
 
-with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos)
+with c2: eq1 = st.selectbox("Equipo 1", ["Ninguno"] + equipos, key="eq1_main")
 with c3: eq1_loc = st.selectbox("Eq1 Condición", ["Todos","Local","Visitante"], key="eq1loc")
+
+# --- NUEVO: COINCIDIR FECHAS -> AUTO EQUIPO 2 (FUTURO) ---
+@st.cache_data(show_spinner=False)
+def _cargar_cal_completo():
+    import pathlib
+    for p in [pathlib.Path("/mnt/data/calendario_completo_2026_2027.csv"), pathlib.Path("calendario_completo_2026_2027.csv"), pathlib.Path(__file__).parent / "calendario_completo_2026_2027.csv"]:
+        if p.exists():
+            try:
+                _dfc = pd.read_csv(p, on_bad_lines='skip')
+                _dfc['Date'] = pd.to_datetime(_dfc['Date'], dayfirst=True, errors='coerce')
+                return _dfc
+            except:
+                pass
+    return pd.DataFrame()
+
+_df_cal = _cargar_cal_completo()
+if not _df_cal.empty and 'Date' in _df_cal.columns:
+    try:
+        fechas_cal_unicas = sorted(_df_cal['Date'].dropna().dt.date.unique())
+        fechas_cal_str = [d.strftime("%d/%m/%Y") for d in fechas_cal_unicas]
+    except:
+        fechas_cal_str = fechas_str
+else:
+    fechas_cal_str = fechas_str
+
+c_cf1, c_cf2 = filtros.columns(2)
+with c_cf1:
+    coincidir_fecha_sel = st.selectbox("Coincidir fechas (futuro)", ["No"] + fechas_cal_str, key="coincidir_fechas")
+with c_cf2:
+    rival_auto = None
+    if coincidir_fecha_sel != "No" and eq1 != "Ninguno" and not _df_cal.empty:
+        try:
+            _cf_date = pd.to_datetime(coincidir_fecha_sel, dayfirst=True).date()
+            _df_cf = _df_cal[_df_cal['Date'].dt.date == _cf_date]
+            # filtra por liga si hay liga seleccionada
+            if liga_sel != "Todas":
+                _df_cf = _df_cf[_df_cf['League'].astype(str).str.upper() == liga_sel.upper()]
+            _mask_eq1 = (_df_cf['HomeTeam'].astype(str).str.upper() == eq1.upper()) | (_df_cf['AwayTeam'].astype(str).str.upper() == eq1.upper())
+            _match = _df_cf[_mask_eq1]
+            if not _match.empty:
+                _row = _match.iloc[0]
+                _home = str(_row['HomeTeam']).upper()
+                _away = str(_row['AwayTeam']).upper()
+                rival_auto = _away if _home == eq1.upper() else _home
+                st.success(f"Rival futuro: {rival_auto} el {coincidir_fecha_sel}")
+            else:
+                st.caption(f"Sin partido para {eq1} el {coincidir_fecha_sel}")
+        except:
+            rival_auto = None
+
 c4,c5 = filtros.columns(2)
-with c4: eq2 = st.selectbox("Equipo 2", ["Ninguno"] + [e for e in equipos if e.upper() != str(eq1).upper()])
+with c4:
+    lista_eq2 = [e for e in equipos if e.upper() != str(eq1).upper()]
+    if rival_auto and rival_auto in lista_eq2:
+        lista_eq2 = [rival_auto] + [e for e in lista_eq2 if e != rival_auto]
+        default_idx = 1
+    else:
+        default_idx = 0
+    eq2 = st.selectbox("Equipo 2", ["Ninguno"] + lista_eq2, index=default_idx, key="eq2_main")
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
 # --- BUSCADOR POR % ---
@@ -1435,7 +1492,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
         ligas_europa_set_fix3 = set(df_europa_fix3['League'].dropna().astype(str).tolist())
         ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix3)]
         if not ligas_fut_fix3:
-            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga"]
+            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","A-League","MLS","Brasileirao","Liga MX"]
             ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(k.lower() in l.lower() for k in keywords_eu)]
     else:
         ligas_fut_fix3 = ligas_fut_all_fix3
@@ -1939,22 +1996,30 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     @st.cache_data(show_spinner=False)
     def cargar_futuro_fix2():
-        p = pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv")
-        if not p.exists():
-            for q in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
-                if (q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv").exists():
-                    p = q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"
-                    break
-        if not p.exists():
+        # tu calendario real que está en github
+        candidatos = [
+            pathlib.Path("/mnt/data/calendario_completo_2026_2027.csv"),
+            pathlib.Path(__file__).parent.resolve() / "calendario_completo_2026_2027.csv",
+            pathlib.Path(".").resolve() / "calendario_completo_2026_2027.csv",
+            pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"),
+        ]
+        p = None
+        for c in candidatos:
+            if c.exists():
+                p = c
+                break
+        if not p:
             return pd.DataFrame()
         df_fut = pd.read_csv(p, on_bad_lines='skip')
+        # normaliza columnas para que tu resto del bloque siga funcionando
+        # tu csv nuevo trae 'League' no 'League_CSV'
+        if 'League_CSV' not in df_fut.columns and 'League' in df_fut.columns:
+            df_fut['League_CSV'] = df_fut['League']
         df_fut['Date'] = pd.to_datetime(df_fut['Date'], errors='coerce')
         return df_fut
 
     df_futuro_fix2 = cargar_futuro_fix2()
-    if df_futuro_fix2.empty:
-        st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
-        st.stop()
+############
 
     import json, time
     FILE_PERSIST_PRED_FIX2 = pathlib.Path(__file__).parent.resolve() / ".persist_pred_48h_fix2.json"
@@ -2110,14 +2175,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     eventos_fix2 = eventos_europa_fix2
 
     ligas_fut_all_fix2 = sorted(df_futuro_fix2['League_CSV'].dropna().unique().tolist())
+    keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","Chinese Super League","A-League","MLS","Brasileirao","Liga MX"]
     if not df_europa_fix2.empty and 'League' in df_europa_fix2.columns:
         ligas_europa_set_fix2 = set(df_europa_fix2['League'].dropna().astype(str).tolist())
-        ligas_fut_fix2 = [l for l in ligas_fut_all_fix2 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix2)]
+        ligas_por_europa = [l for l in ligas_fut_all_fix2 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix2)]
+        ligas_por_key = [l for l in ligas_fut_all_fix2 if any(k.lower() in l.lower() for k in keywords_eu)]
+        ligas_fut_fix2 = sorted(list(set(ligas_por_europa + ligas_por_key)))
         if not ligas_fut_fix2:
-            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga"]
-            ligas_fut_fix2 = [l for l in ligas_fut_all_fix2 if any(k.lower() in l.lower() for k in keywords_eu)]
+            ligas_fut_fix2 = sorted(list(set(ligas_por_key)))
     else:
-        ligas_fut_fix2 = ligas_fut_all_fix2
+        ligas_fut_fix2 = [l for l in ligas_fut_all_fix2 if any(k.lower() in l.lower() for k in keywords_eu)]
+        if not ligas_fut_fix2:
+            ligas_fut_fix2 = ligas_fut_all_fix2
 
     c_lp1_fix2, c_lp2_fix2, c_lp3_fix2, c_lp4_fix2 = st.columns([2,1,1,1])
     with c_lp4_fix2:
@@ -2672,16 +2741,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         estado = f"{r1}/{rF}"
 
                         # --- NOMBRES con subrayado + EMOJI FUERA COMO QUIERES ---
-                        EMOJI_SEL = "🔵"
-                        EMOJI_RIVAL = "⚪"
+                        EMOJI_SEL = "⚽"
+                        EMOJI_RIVAL = "⚽"
                         if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
+                            h_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
                             a_txt = f"<span style='color:#ffffff'>{a}</span>"
                             emoji_home = EMOJI_SEL
                             emoji_away = EMOJI_RIVAL
                         elif norm_eq_fix2 == a_norm_r:
                             h_txt = f"<span style='color:#ffffff'>{h}</span>"
-                            a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
+                            a_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
                         else:
@@ -2690,30 +2759,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
 
-                        # --- FT / HT con tu lógica de subrayado negro ---
-                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;"
-                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;"
-                        if norm_eq_fix2 == hn:
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}"
-                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>"
-                            ag_disp = f"{ag}"
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}"
-                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>"
-                            htag_disp = f"{htag}"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        elif norm_eq_fix2 == an:
-                            hg_disp = f"{hg}"
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}"
-                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>"
-                            hthg_disp = f"{hthg}"
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}"
-                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        else:
-                            ft_txt = f"[{hg}-{ag}]"
-                            ht_inner = f"{hthg}-{htag}"
+                        # --- FT / HT sin subrayado, números alineados ---
+                        ft_txt = f"[{hg}-{ag}]"
+                        ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html_badge = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
 
@@ -2755,20 +2803,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             return grupos
 
                         def _agrupa_fix2_con_score_sub(evs, sh=0, sa=0):
-                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
+                            grupos=[]; h=sh; a=sa
                             for ev in evs:
                                 m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
                                 es_local_raw = _equipo_es_local(team_ev, hn, an)
                                 is_home_scoring = es_local_raw
+                                if 'Own Goal' in tipo:
+                                    is_home_scoring = not es_local_raw
                                 if 'Missed Penalty' in tipo:
-                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
-                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
+                                    grupos.append(([(m, tipo)], h, a, is_home_scoring)); continue
                                 if is_home_scoring: h+=1
                                 else: a+=1
-                                if last is not None and is_home_scoring != last and cur:
-                                    grupos.append((cur, lh, la, last_is_home)); cur=[]
-                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
-                            if cur: grupos.append((cur, lh, la, last_is_home))
+                                grupos.append(([(m, tipo)], h, a, is_home_scoring))
                             return grupos
 
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
@@ -2807,8 +2853,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         ###########FONDO LOCAL VISITANTE
                         bg_j = "#131314C4" if es_local_j else "#17152FC2"
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
-                        html += f"<div style='font-weight:900; color:{col_main}; font-size:15px; line-height:1.2; margin:0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px; margin-right:6px;'>{estado}</span> {emoji_home} {h_txt}  {ft_txt}  {a_txt}{emoji_away}  <span style='color:#fff;'>({_fecha_str_fix2})</span></div>"
-                        html += f"<div style='margin-top:2px; font-size:13px; color:#fff; line-height:1.2;'>(1ª parte {hthg}-{htag})</div>"
+                        html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
+                        html += f"<div style='margin-top:3px; font-size:12px; color:#fff; line-height:1.2;'>(1ª parte {hthg}-{htag})</div>"
                         if mostrar_1p:
                             if not g1_data:
                                 html += f"<div style='font-size:10px; color:#888; text-align:center;'>—</div>"
@@ -2824,12 +2871,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
                                         if filtro_act_fix2 and en_rango:
                                             txt_min = f"<span style='background:#444;color:#fff;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
-                                        es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                        if es_mio and '(x)' not in base:
-                                            txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
+                                        es_fav_min = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                        color_min = "#00ff00" if es_fav_min else "#ff4444"
+                                        if '(x)' not in base:
+                                            txt_min = f"<span style='font-weight:900; color:{color_min};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
-                                        score_txt = f"<span style='color:#ffffff'>{sh}-{sa}</span>"
+                                        # --- MARCADOR VERDE FAVORABLE / ROJO RIVAL ---
+                                        es_fav = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                        if es_fav:
+                                            score_txt = f"<span style='color:#00ff00;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#00ff00;font-weight:900'>{sa}</span>"
+                                        else:
+                                            score_txt = f"<span style='color:#ff4444;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#ff4444;font-weight:900'>{sa}</span>"
                                         # NUEVO - busca goleador de ese minuto
                                         fid_tmp = str(r.get('fixture_id','')).split('.')[0] if 'r' in locals() else fid
                                         gol_info = ""
@@ -2839,14 +2892,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                                 a_s = ev_tmp.get('asistente','').strip()
                                                 if g and g.lower() not in ["nan",""]:
                                                     if a_s and a_s.lower() not in ["nan",""]:
-                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g} <span style='color:#888'>(ast: {a_s})</span></div>"
+                                                        gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g} <span style='color:#bbb'>(ast: {a_s})</span></div>"
                                                     else:
-                                                        gol_info = f"<div style='font-size:9px;color:#ccc;margin-top:1px'>{g}</div>"
+                                                        gol_info = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{g}</div>"
                                                 break
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-50px);'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-20px); word-break:break-word; white-space:normal;'>{txt_min} {score_txt} {emoji_gol}{gol_info}</span></div>"
                                         else:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:3px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(50px);'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:4px 0;'><span style='display:inline-block; width:340px; max-width:92vw; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(20px); word-break:break-word; white-space:normal;'>{emoji_gol} {score_txt} {txt_min}{gol_info}</span></div>"
                         if mostrar_2p:
                             html += f"<div style='margin:6px auto 4px auto; font-size:9px; letter-spacing:2px; color:#aaa; text-align:center; line-height:1;'>___________________2ª________________</div>"
                             if not g2_data:
@@ -2863,9 +2916,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         txt_min = f"{base}"
                                         if filtro_act_fix2 and (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2):
                                             txt_min = f"<span style='background:#444;color:#fff;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
-                                        es_mio = (is_home and norm_eq_fix2 == hn) or (not is_home and norm_eq_fix2 == an)
-                                        if es_mio:
-                                            txt_min = f"<span style='font-weight:900; color:{col_main};'>{txt_min}</span>"
+                                        es_fav_min2 = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                        color_min2 = "#00ff00" if es_fav_min2 else "#ff4444"
+                                        txt_min = f"<span style='font-weight:900; color:{color_min2};'>{txt_min}</span>"
                                         gol_txt = ""
                                         for evb in eventos_fix2.get(fid, []):
                                             if evb.get('m', -1) == mm:
@@ -2877,9 +2930,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         if st.session_state.get("ver_goleadores_fix2","ON") == "OFF":
                                             gol_html = ""
                                         else:
-                                            gol_html = f"<div style='font-size:9px;color:#ccc;margin-top:1px;'>{gol_txt}</div>" if gol_txt else ""
+                                            gol_html = f"<div style='font-size:13px;color:#fff;margin-top:2px;font-weight:700'>{gol_txt}</div>" if gol_txt else ""
                                         if is_home:
-                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-85px);'>{txt_min} <span style='color:#fff;'>{sh}-{sa}</span> {emoji_gol}{gol_html}</span></div>"
+                                            es_fav2 = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
+                                            if es_fav2:
+                                                score_2p = f"<span style='color:#00ff00;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#00ff00;font-weight:900'>{sa}</span>"
+                                            else:
+                                                score_2p = f"<span style='color:#ff4444;font-weight:900'>{sh}</span><span style='color:#fff'>-{sa}</span>" if is_home else f"<span style='color:#fff'>{sh}-</span><span style='color:#ff4444;font-weight:900'>{sa}</span>"
+                                            html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:360px; max-width:92vw; text-align:left; font-size:14px; color:#fff; font-weight:700; transform:translateX(-20px); word-break:break-word; white-space:normal; line-height:1.2;'>{txt_min} {score_2p} {emoji_gol}{gol_html}</span></div>"
                                         else:
                                             html += f"<div style='text-align:center; line-height:1.3; margin:2px 0;'><span style='display:inline-block; width:220px; text-align:right; font-size:14px; color:#fff; font-weight:700; transform:translateX(85px);'>{emoji_gol} <span style='color:#fff;'>{sh}-{sa}</span> {txt_min}{gol_html}</span></div>"
                         html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
