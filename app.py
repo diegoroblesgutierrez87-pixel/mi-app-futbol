@@ -2972,8 +2972,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
 
-                        # --- FT / HT sin subrayado, números alineados ---
-                        ft_txt = f"[{hg}-{ag}]"
+                        # --- FT / HT con colores verde fav / rojo rival ---
+                        if norm_eq_fix2 == h_norm_r:
+                            ft_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                        elif norm_eq_fix2 == a_norm_r:
+                            ft_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                        else:
+                            ft_txt = f"[{hg}-{ag}]"
                         ht_inner = f"{hthg}-{htag}"
                         ht_str = f"[{ht_inner}]"
                         ht_html_badge = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>"
