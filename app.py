@@ -2602,26 +2602,120 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 cabecera_txt = f"{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2{desglose}"
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{cabecera_txt}</div>", unsafe_allow_html=True)
                 partidos_pred_copy_fix2.append(cabecera_txt)
-                # --- GENERA RESUMEN L/V CON JORNADAS ---
+                # --- GENERA RESUMEN L/V CON JORNADAS + RESULTADO FILTRADO CON COLORES ---
                 try:
                     j_loc = []
                     j_vis = []
+                    # Para ordenar por Jornada numérica y tener acceso a score
+                    def _score_para_resumen(rr, es_local_team):
+                        # Si el filtro es de 1P, mostramos HT, si no FT
+                        # Detecta si hay filtro 1P activo
+                        try:
+                            hg = int(float(rr.get('FTHG',0) or 0)); ag = int(float(rr.get('FTAG',0) or 0))
+                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            hg=0; ag=0; hthg=0; htag=0
+                        # Si overs contiene 1P, usa HT, si no FT
+                        usa_ht = False
+                        try:
+                            if 'overs_sel_fix2' in locals() or 'overs_sel_fix2' in globals() or True:
+                                _ov = overs_sel_fix2 if 'overs_sel_fix2' in locals() else []
+                                if any("1P" in str(o) for o in _ov):
+                                    usa_ht = True
+                        except:
+                            pass
+                        # Si hay filtro MIN <=45, también usa HT
+                        try:
+                            if MIN_DESDE_PRED_FIX2 is not None and MIN_DESDE_PRED_FIX2 <=45:
+                                usa_ht = True
+                        except:
+                            pass
+                        if usa_ht:
+                            g_fav = hthg if es_local_team else htag
+                            g_riv = htag if es_local_team else hthg
+                        else:
+                            g_fav = hg if es_local_team else ag
+                            g_riv = ag if es_local_team else hg
+                        return g_fav, g_riv, hthg, htag, hg, ag
+
+                    lista_loc_detalle = []
+                    lista_vis_detalle = []
+
                     for _, rr in df_filtrada_real_fix2.iterrows():
                         try:
                             jn = int(rr.get('Jornada', 0))
                         except:
                             continue
                         es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                        g_fav, g_riv, hthg, htag, hg, ag = _score_para_resumen(rr, es_loc)
+                        
+                        # Colores: gol del filtrado VERDE #00c800, rival ROJO #ff2a2a, 0 gris
                         if es_loc:
-                            j_loc.append(f"J{jn}")
+                            # Formato JX(a-b) donde a=home (filtrado), b=away (rival)
+                            # a es fav, b es rival
+                            c_fav = "#00c800" if g_fav>0 else "#000000"
+                            c_riv = "#ff2a2a" if g_riv>0 else "#000000"
+                            # Si es HT que mostramos
+                            fav_txt = f"<span style='color:{c_fav};font-weight:900'>{g_fav}</span>"
+                            riv_txt = f"<span style='color:{c_riv};font-weight:900'>{g_riv}</span>"
+                            detalle = f"J{jn}({fav_txt}-{riv_txt})"
                         else:
-                            j_vis.append(f"J{jn}")
-                    j_loc_txt = ", ".join(sorted(j_loc, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_loc else "-"
-                    j_vis_txt = ", ".join(sorted(j_vis, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_vis else "-"
+                            # Visitante filtrado: formato a-b donde b es filtrado
+                            # g_fav es del visitante, g_riv del local
+                            c_fav = "#00c800" if g_fav>0 else "#000000"
+                            c_riv = "#ff2a2a" if g_riv>0 else "#000000"
+                            fav_txt = f"<span style='color:{c_fav};font-weight:900'>{g_fav}</span>"
+                            riv_txt = f"<span style='color:{c_riv};font-weight:900'>{g_riv}</span>"
+                            # Para visitante: rival - filtrado => (riv-fav)
+                            detalle = f"J{jn}({riv_txt}-{fav_txt})"
+                        
+                        if es_loc:
+                            lista_loc_detalle.append((jn, detalle))
+                        else:
+                            lista_vis_detalle.append((jn, detalle))
+
+                    # Ordena por J
+                    lista_loc_detalle_sorted = [d for _, d in sorted(lista_loc_detalle, key=lambda x: x[0])]
+                    lista_vis_detalle_sorted = [d for _, d in sorted(lista_vis_detalle, key=lambda x: x[0])]
+
+                    j_loc_txt = ", ".join(lista_loc_detalle_sorted) if lista_loc_detalle_sorted else "-"
+                    j_vis_txt = ", ".join(lista_vis_detalle_sorted) if lista_vis_detalle_sorted else "-"
+                    
+                    # Texto plano para copiar (sin HTML)
+                    j_loc_txt_plain = ", ".join([f"J{jn}" for jn,_ in sorted(lista_loc_detalle, key=lambda x: x[0])])
+                    # Pero con score para el txt copiable
+                    def _plain_score(rr, es_local_team):
+                        try:
+                            hg = int(float(rr.get('FTHG',0) or 0)); ag = int(float(rr.get('FTAG',0) or 0))
+                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            hg=0; ag=0; hthg=0; htag=0
+                        usa_ht = any("1P" in str(o) for o in (overs_sel_fix2 if 'overs_sel_fix2' in locals() else []))
+                        if usa_ht:
+                            return f"{hthg}-{htag}" if es_local_team else f"{htag}-{hthg}"
+                        else:
+                            return f"{hg}-{ag}" if es_local_team else f"{ag}-{hg}"
+                    # Para el resumen HTML guardamos con colores, para el copy usamos plain
                     linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
                     lista_resumen_fix2.append(linea_res)
-                except:
-                    pass
+                except Exception as e:
+                    # Fallback al original si peta
+                    try:
+                        j_loc = []
+                        j_vis = []
+                        for _, rr in df_filtrada_real_fix2.iterrows():
+                            jn = int(rr.get('Jornada', 0))
+                            es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                            if es_loc:
+                                j_loc.append(f"J{jn}")
+                            else:
+                                j_vis.append(f"J{jn}")
+                        j_loc_txt = ", ".join(sorted(j_loc, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_loc else "-"
+                        j_vis_txt = ", ".join(sorted(j_vis, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_vis else "-"
+                        linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
+                        lista_resumen_fix2.append(linea_res)
+                    except:
+                        pass
                 # FIX2 ORDEN J10 arriba = ultimo partido
                 def _parse_fecha_fix2_robusto(s):
                     try:
