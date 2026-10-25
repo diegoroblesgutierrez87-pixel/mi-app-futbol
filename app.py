@@ -2989,9 +2989,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                         # --- FT / HT con colores verde fav / rojo rival ---
                         if norm_eq_fix2 == h_norm_r:
-                            ft_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                            hg_c = f"<span style='color:#00c800;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
+                            ag_c = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
+                            ft_txt = f"[{hg_c}-{ag_c}]"
                         elif norm_eq_fix2 == a_norm_r:
-                            ft_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                            hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
+                            ag_c = f"<span style='color:#00c800;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
+                            ft_txt = f"[{hg_c}-{ag_c}]"
                         else:
                             ft_txt = f"[{hg}-{ag}]"
                         ht_inner = f"{hthg}-{htag}"
@@ -3085,9 +3089,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
                         if norm_eq_fix2 == h_norm_r:
-                            ht_colored = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>-<span style='color:#ff2a2a;font-weight:900'>{htag}</span>"
+                            hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
+                            htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
+                            ht_colored = f"{hthg_c}-{htag_c}"
                         elif norm_eq_fix2 == a_norm_r:
-                            ht_colored = f"<span style='color:#ff2a2a;font-weight:900'>{hthg}</span>-<span style='color:#00c800;font-weight:900'>{htag}</span>"
+                            hthg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
+                            htag_c = f"<span style='color:#00c800;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
+                            ht_colored = f"{hthg_c}-{htag_c}"
                         else:
                             ht_colored = f"{hthg}-{htag}"
                         html += f"<div style='margin-top:3px; font-size:12px; color:#fff; line-height:1.2;'>(1ª parte {ht_colored})</div>"
