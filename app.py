@@ -1996,22 +1996,30 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     @st.cache_data(show_spinner=False)
     def cargar_futuro_fix2():
-        p = pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv")
-        if not p.exists():
-            for q in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
-                if (q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv").exists():
-                    p = q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"
-                    break
-        if not p.exists():
+        # tu calendario real que está en github
+        candidatos = [
+            pathlib.Path("/mnt/data/calendario_completo_2026_2027.csv"),
+            pathlib.Path(__file__).parent.resolve() / "calendario_completo_2026_2027.csv",
+            pathlib.Path(".").resolve() / "calendario_completo_2026_2027.csv",
+            pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"),
+        ]
+        p = None
+        for c in candidatos:
+            if c.exists():
+                p = c
+                break
+        if not p:
             return pd.DataFrame()
         df_fut = pd.read_csv(p, on_bad_lines='skip')
+        # normaliza columnas para que tu resto del bloque siga funcionando
+        # tu csv nuevo trae 'League' no 'League_CSV'
+        if 'League_CSV' not in df_fut.columns and 'League' in df_fut.columns:
+            df_fut['League_CSV'] = df_fut['League']
         df_fut['Date'] = pd.to_datetime(df_fut['Date'], errors='coerce')
         return df_fut
 
     df_futuro_fix2 = cargar_futuro_fix2()
-    if df_futuro_fix2.empty:
-        st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
-        st.stop()
+############
 
     import json, time
     FILE_PERSIST_PRED_FIX2 = pathlib.Path(__file__).parent.resolve() / ".persist_pred_48h_fix2.json"
