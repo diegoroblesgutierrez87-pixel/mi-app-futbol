@@ -2602,7 +2602,123 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 cabecera_txt = f"{nombre_eq_fix2.upper()} {filt_fix2}/{total_fix2} FIX2{desglose}"
                 st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#FFFFFF;color:#000;padding:2px 6px;margin:6px 0 2px 0;font-size:10px;border:1px solid #000'>{cabecera_txt}</div>", unsafe_allow_html=True)
                 partidos_pred_copy_fix2.append(cabecera_txt)
-                # --- GENERA RESUMEN L/V CON JORNADAS + RESULTADO FILTRADO CON COLORES ---
+                # --- GENERA RESUMEN L/V CON JORNADAS + RESULTADO FILTRADO CORREGIDO: 1P MUESTRA HT ---
+                try:
+                    def _es_filtro_1p():
+                        try:
+                            # Overs 1P
+                            for o in (overs_sel_fix2 if 'overs_sel_fix2' in locals() else []):
+                                if "1P" in str(o):
+                                    return True
+                            # Resultado 1ªP 0-0_1ªP etc
+                            for r in (resultados_pred_sel_fix2 if 'resultados_pred_sel_fix2' in locals() else []):
+                                if "_1ªP" in str(r):
+                                    return True
+                            # MIN DESDE/HASTA <=45
+                            if MIN_DESDE_PRED_FIX2 is not None and MIN_DESDE_PRED_FIX2 <= 45:
+                                return True
+                            if MIN_HASTA_PRED_FIX2 is not None and MIN_HASTA_PRED_FIX2 <= 45:
+                                return True
+                            # Si Tipo Resultado 1P != TODOS, es filtro de 1P
+                            if 'res_1p_tipo_fix2' in locals() and res_1p_tipo_fix2 != "TODOS":
+                                return True
+                        except:
+                            pass
+                        return False
+
+                    def _es_filtro_2p():
+                        try:
+                            for o in (overs_sel_fix2 if 'overs_sel_fix2' in locals() else []):
+                                if "2P" in str(o):
+                                    return True
+                            for r in (resultados_pred_sel_fix2 if 'resultados_pred_sel_fix2' in locals() else []):
+                                if "_2ªP" in str(r):
+                                    return True
+                            if MIN_DESDE_PRED_FIX2 is not None and MIN_DESDE_PRED_FIX2 > 45:
+                                return True
+                        except:
+                            pass
+                        return False
+
+                    es_filtro_1p_activo = _es_filtro_1p()
+                    es_filtro_2p_activo = _es_filtro_2p() and not es_filtro_1p_activo
+
+                    lista_loc_detalle = []
+                    lista_vis_detalle = []
+
+                    for _, rr in df_filtrada_real_fix2.iterrows():
+                        try:
+                            jn = int(rr.get('Jornada', 0))
+                        except:
+                            continue
+                        es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                        try:
+                            hg = int(float(rr.get('FTHG',0) or 0)); ag = int(float(rr.get('FTAG',0) or 0))
+                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
+                        except:
+                            hg=0; ag=0; hthg=0; htag=0
+
+                        # LOGICA CORREGIDA: si es filtro 0.5 1P -> muestra SIEMPRE primera parte
+                        if es_filtro_1p_activo:
+                            # Primera parte
+                            g_home = hthg
+                            g_away = htag
+                        elif es_filtro_2p_activo:
+                            # Segunda parte: FT - HT
+                            g_home = hg - hthg
+                            g_away = ag - htag
+                            if g_home <0: g_home=0
+                            if g_away <0: g_away=0
+                        else:
+                            # Sin filtro 1P/2P especifico -> final
+                            g_home = hg
+                            g_away = ag
+
+                        if es_loc:
+                            g_fav = g_home
+                            g_riv = g_away
+                        else:
+                            g_fav = g_away
+                            g_riv = g_home
+
+                        # Colores: fav VERDE #00c800, rival ROJO #ff2a2a, 0 negro
+                        c_fav = "#00c800" if g_fav>0 else "#000000"
+                        c_riv = "#ff2a2a" if g_riv>0 else "#000000"
+                        fav_txt = f"<span style='color:{c_fav};font-weight:900'>{g_fav}</span>"
+                        riv_txt = f"<span style='color:{c_riv};font-weight:900'>{g_riv}</span>"
+
+                        if es_loc:
+                            detalle = f"J{jn}({fav_txt}-{riv_txt})"
+                            lista_loc_detalle.append((jn, detalle))
+                        else:
+                            detalle = f"J{jn}({riv_txt}-{fav_txt})"
+                            lista_vis_detalle.append((jn, detalle))
+
+                    lista_loc_detalle_sorted = [d for _, d in sorted(lista_loc_detalle, key=lambda x: x[0])]
+                    lista_vis_detalle_sorted = [d for _, d in sorted(lista_vis_detalle, key=lambda x: x[0])]
+
+                    j_loc_txt = ", ".join(lista_loc_detalle_sorted) if lista_loc_detalle_sorted else "-"
+                    j_vis_txt = ", ".join(lista_vis_detalle_sorted) if lista_vis_detalle_sorted else "-"
+                    
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
+                    lista_resumen_fix2.append(linea_res)
+                except Exception as e:
+                    try:
+                        j_loc = []
+                        j_vis = []
+                        for _, rr in df_filtrada_real_fix2.iterrows():
+                            jn = int(rr.get('Jornada', 0))
+                            es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                            if es_loc:
+                                j_loc.append(f"J{jn}")
+                            else:
+                                j_vis.append(f"J{jn}")
+                        j_loc_txt = ", ".join(sorted(j_loc, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_loc else "-"
+                        j_vis_txt = ", ".join(sorted(j_vis, key=lambda x: int(x[1:]) if x[1:].isdigit() else 999)) if j_vis else "-"
+                        linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]"
+                        lista_resumen_fix2.append(linea_res)
+                    except:
+                        pass
                 try:
                     j_loc = []
                     j_vis = []
