@@ -2724,20 +2724,24 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     j_vis = []
                     # Para ordenar por Jornada numérica y tener acceso a score
                     def _score_para_resumen(rr, es_local_team):
-                        # Si el filtro es de 1P, mostramos HT, si no FT
-                        # Detecta si hay filtro 1P activo
                         try:
                             hg = int(float(rr.get('FTHG',0) or 0)); ag = int(float(rr.get('FTAG',0) or 0))
                             hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
                         except:
                             hg=0; ag=0; hthg=0; htag=0
-                        # Si overs contiene 1P, usa HT, si no FT
+                        # CORREGIDO: si hay filtro 1P >0.5 muestra SIEMPRE HT
                         usa_ht = False
                         try:
-                            if 'overs_sel_fix2' in locals() or 'overs_sel_fix2' in globals() or True:
-                                _ov = overs_sel_fix2 if 'overs_sel_fix2' in locals() else []
-                                if any("1P" in str(o) for o in _ov):
+                            _ov = overs_sel_fix2 if 'overs_sel_fix2' in locals() else []
+                            if any("1P" in str(o) for o in _ov):
+                                usa_ht = True
+                            for r in (resultados_pred_sel_fix2 if 'resultados_pred_sel_fix2' in locals() else []):
+                                if "_1ªP" in str(r):
                                     usa_ht = True
+                            if res_1p_tipo_fix2 != "TODOS":
+                                usa_ht = True
+                            if MIN_DESDE_PRED_FIX2 is not None and MIN_DESDE_PRED_FIX2 <= 45:
+                                usa_ht = True
                         except:
                             pass
                         # Si hay filtro MIN <=45, también usa HT
