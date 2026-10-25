@@ -3201,7 +3201,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 f"FILTROS FIX2 | PARTIDOS FUT={_partidos_fut_txt} | Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | "
                 f"GOLES_PARTE={_goles_parte_txt} | Filtro={_cond_loc_txt} | "
                 f"1P_TIPO={_res_1p_tipo_txt} | 1P/2P_RES=[{_res_ht_ft_txt}] | Overs=[{_overs_txt}] | "
-                f"LIVE={_live_txt} | MIN_DESDE={_min_desde_txt} HASTA={_min_hasta_txt} | "
+                f"BTTS=[{ambos_marcan_fix2}] | LIVE={_live_txt} | MIN_DESDE={_min_desde_txt} HASTA={_min_hasta_txt} | "
                 f"MANUAL1={_eq_man1_txt} | MANUAL2={_eq_man2_txt} | EQUIPOS_MOSTRADOS={equipos_a_mostrar_fix2}"
             )
         except Exception as e:
