@@ -3080,14 +3080,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         elif 'Penalty' in tp: base = f"(p) {mm}'"
                                         else: base = f"{mm}'"
                                         emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                        txt_min = f"{base}"
-                                        en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
-                                        if filtro_act_fix2 and en_rango:
-                                            txt_min = f"<span style='background:#444;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
                                         es_fav_min = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
                                         color_min = "#00ff00" if es_fav_min else "#ff4444"
+                                        txt_min = f"{base}"
+                                        en_rango = (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2)
                                         if '(x)' not in base:
-                                            txt_min = f"<span style='font-weight:900; color:{color_min};'>{txt_min}</span>"
+                                            if filtro_act_fix2 and en_rango:
+                                                txt_min = f"<span style='font-weight:900; color:{color_min}; background:#444; border-radius:3px; padding:1px 4px;'>{txt_min}</span>"
+                                            else:
+                                                txt_min = f"<span style='font-weight:900; color:{color_min};'>{txt_min}</span>"
                                         is_missed = 'Missed' in tp
                                         if is_missed: continue
                                         # --- MARCADOR VERDE FAVORABLE / ROJO RIVAL ---
@@ -3126,12 +3127,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         elif 'Penalty' in tp: base = f"(p) {mm}'"
                                         else: base = f"{mm}'"
                                         emoji_gol = EMOJI_SEL if (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2) else EMOJI_RIVAL
-                                        txt_min = f"{base}"
-                                        if filtro_act_fix2 and (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2):
-                                            txt_min = f"<span style='background:#444;border-radius:3px;padding:1px 4px;'>{txt_min}</span>"
                                         es_fav_min2 = (is_home and hn==norm_eq_fix2) or (not is_home and an==norm_eq_fix2)
                                         color_min2 = "#00ff00" if es_fav_min2 else "#ff4444"
-                                        txt_min = f"<span style='font-weight:900; color:{color_min2};'>{txt_min}</span>"
+                                        txt_min = f"{base}"
+                                        if filtro_act_fix2 and (MIN_DESDE_PRED_FIX2 is None or mm >= MIN_DESDE_PRED_FIX2) and (MIN_HASTA_PRED_FIX2 is None or mm <= MIN_HASTA_PRED_FIX2):
+                                            txt_min = f"<span style='font-weight:900; color:{color_min2}; background:#444; border-radius:3px; padding:1px 4px;'>{txt_min}</span>"
+                                        else:
+                                            txt_min = f"<span style='font-weight:900; color:{color_min2};'>{txt_min}</span>"
                                         gol_txt = ""
                                         for evb in eventos_fix2.get(fid, []):
                                             if evb.get('m', -1) == mm:
