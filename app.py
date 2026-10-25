@@ -2658,19 +2658,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             hg=0; ag=0; hthg=0; htag=0
 
-                        # LOGICA CORREGIDA: si es filtro 0.5 1P -> muestra SIEMPRE primera parte
-                        if es_filtro_1p_activo:
-                            # Primera parte
+                        # LOGICA CORREGIDA: 1P>0.5=HT real, 2P>0.5=2P real
+                        _is_1p = any("1P" in str(o) for o in (overs_sel_fix2 if 'overs_sel_fix2' in locals() else [])) or any("_1ªP" in str(r) for r in (resultados_pred_sel_fix2 if 'resultados_pred_sel_fix2' in locals() else []))
+                        _is_2p = any("2P" in str(o) for o in (overs_sel_fix2 if 'overs_sel_fix2' in locals() else [])) or any("_2ªP" in str(r) for r in (resultados_pred_sel_fix2 if 'resultados_pred_sel_fix2' in locals() else []))
+                        if _is_1p:
                             g_home = hthg
                             g_away = htag
-                        elif es_filtro_2p_activo:
-                            # Segunda parte: FT - HT
+                        elif _is_2p:
                             g_home = hg - hthg
                             g_away = ag - htag
-                            if g_home <0: g_home=0
-                            if g_away <0: g_away=0
+                            if g_home < 0: g_home = 0
+                            if g_away < 0: g_away = 0
                         else:
-                            # Sin filtro 1P/2P especifico -> final
                             g_home = hg
                             g_away = ag
 
