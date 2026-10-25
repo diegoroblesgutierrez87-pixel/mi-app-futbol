@@ -3049,11 +3049,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _fecha_str_fix2 = ""
 
                         g1_data = _agrupa_fix2_con_score_sub(evs_1p_fix2, 0, 0)
-                        if g1_data and not any('Missed' in tp for _, tp in g1_data[-1][0]): 
-                            g1_data[-1] = (g1_data[-1][0], hthg, htag, g1_data[-1][3])
                         g2_data = _agrupa_fix2_con_score_sub(evs_2p_fix2, hthg, htag)
-                        if g2_data and not any('Missed' in tp for _, tp in g2_data[-1][0]):
-                            g2_data[-1] = (g2_data[-1][0], hg, ag, g2_data[-1][3])
 
                         def _fmt_mins(min_tipo_list):
                             out=[]
