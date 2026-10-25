@@ -1492,7 +1492,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=Fal
         ligas_europa_set_fix3 = set(df_europa_fix3['League'].dropna().astype(str).tolist())
         ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix3)]
         if not ligas_fut_fix3:
-            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga"]
+            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","A-League","MLS","Brasileirao","Liga MX"]
             ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(k.lower() in l.lower() for k in keywords_eu)]
     else:
         ligas_fut_fix3 = ligas_fut_all_fix3
@@ -2171,7 +2171,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         ligas_europa_set_fix2 = set(df_europa_fix2['League'].dropna().astype(str).tolist())
         ligas_fut_fix2 = [l for l in ligas_fut_all_fix2 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix2)]
         if not ligas_fut_fix2:
-            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga"]
+            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","A-League","MLS","Brasileirao","Liga MX"]
             ligas_fut_fix2 = [l for l in ligas_fut_all_fix2 if any(k.lower() in l.lower() for k in keywords_eu)]
     else:
         ligas_fut_fix2 = ligas_fut_all_fix2
