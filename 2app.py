@@ -6,7 +6,7 @@ import unicodedata
 import numpy as np
 import matplotlib.pyplot as plt
 import io, base64
-
+####20/10/26
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
 # --- FIX SCROLL MOVIL - ANTI-REFRESH ARRIBA SIN BLOQUEAR SCROLL ---
 st.markdown("""
