@@ -2140,26 +2140,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
         # PARTIDOS: europa + resto
         df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet"])
-        # --- MERGE CUOTAS desde base_partidos.csv ---
-        try:
-            import pathlib as _p_csv
-            _csv_path = None
-            for _cand in [_p_csv.Path("/mnt/data/base_partidos.csv"), _p_csv.Path(__file__).parent.resolve()/"base_partidos.csv", _p_csv.Path("base_partidos.csv"), _p_csv.Path("/mnt/data/base_partidos.csv")]:
-                if _cand.exists():
-                    _csv_path = _cand
-                    break
-            if _csv_path:
-                _df_odds = pd.read_csv(_csv_path, on_bad_lines='skip', usecols=lambda c: c in ['fixture_id','odd_home','odd_draw','odd_away','bookmaker','bet_name'])
-                _df_odds['fixture_id'] = _df_odds['fixture_id'].astype(str).str.split('.').str[0]
-                _df_odds = _df_odds.drop_duplicates(subset=['fixture_id'], keep='last')
-                # borra columnas de cuota que vengan del parquet si existen para no duplicar
-                for _col in ['odd_home','odd_draw','odd_away','bookmaker','bet_name']:
-                    if _col in df_e.columns:
-                        df_e = df_e.drop(columns=[_col])
-                df_e['fixture_id'] = df_e['fixture_id'].astype(str).str.split('.').str[0]
-                df_e = df_e.merge(_df_odds, on='fixture_id', how='left')
-        except Exception as _e:
-            print(f"Merge cuotas falló: {_e}")
         if not df_e.empty:
             def _parse_fecha_base_fix2(s):
                 try:
