@@ -3144,9 +3144,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                             if v>1: return v
                                         except: pass
                                 return None
-                            odd_h = _get_odd(r, ['B365H','1','Odd_H','HomeOdd','CuotaH','H'])
-                            odd_d = _get_odd(r, ['B365D','X','Odd_D','DrawOdd','CuotaX','D'])
-                            odd_a = _get_odd(r, ['B365A','2','Odd_A','AwayOdd','CuotaA','A'])
+                            odd_h = _get_odd(r, ['odd_home','B365H','1','Odd_H','HomeOdd','CuotaH','H'])
+                            odd_d = _get_odd(r, ['odd_draw','B365D','X','Odd_D','DrawOdd','CuotaX','D'])
+                            odd_a = _get_odd(r, ['odd_away','B365A','2','Odd_A','AwayOdd','CuotaA','A'])
                             if odd_h or odd_d or odd_a:
                                 ganador = 'H' if hg>ag else 'A' if ag>hg else 'D'
                                 def _fmt(v, is_win):
