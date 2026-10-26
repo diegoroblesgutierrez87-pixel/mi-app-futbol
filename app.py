@@ -2993,9 +2993,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ag_c = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
                             ft_txt = f"[{hg_c}-{ag_c}]"
                         elif norm_eq_fix2 == a_norm_r:
-                            hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
                             ag_c = f"<span style='color:#00c800;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
-                            ft_txt = f"[{hg_c}-{ag_c}]"
+                            hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
+                            ft_txt = f"[{ag_c}-{hg_c}]"
                         else:
                             ft_txt = f"[{hg}-{ag}]"
                         ht_inner = f"{hthg}-{htag}"
