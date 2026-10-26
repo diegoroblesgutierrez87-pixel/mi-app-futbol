@@ -3138,8 +3138,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _cuotas_j = ""
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span>{_cuotas_j}</div>"
-                        html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
-                        # --- CLASIFICACION DEBAJO TITULO: actual y antes ---
+                        # --- CLASIFICACION ENCIMA DE EQUIPO VS EQUIPO ---
                         try:
                             lg_norm = normaliza(r.get('League',''))
                             j_act = int(j_fix2)
@@ -3157,11 +3156,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 txt_actual = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
                             if rh_antes is not None and ra_antes is not None:
                                 txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
-#########
                             if txt_actual:
-                                html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
+                                html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0 4px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
                         except:
                             pass
+                        html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
                         ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
