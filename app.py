@@ -3129,10 +3129,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 txt_actual = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
                             if rh_antes is not None and ra_antes is not None:
                                 txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
-                            if txt_actual:
-                                html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
-                            if txt_antes:
-                                html += f"<div style='font-size:10px; color:#bbb; text-align:right; margin:1px 10px 3px 0;'><span style='background:#222; padding:1px 5px; border-radius:3px;'>{txt_antes}</span></div>"
+#########
                             if txt_actual:
                                 html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
                             if txt_antes:
