@@ -3130,10 +3130,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if rh_antes is not None and ra_antes is not None:
                                 txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
 #########
-                            if txt_actual:
+                            if txt_actual and txt_antes:
+                                html += f"<div style='font-size:10px; text-align:center; margin:2px 0;'><span style='background:#000; color:#fff; padding:1px 5px; border-radius:3px;'>{txt_actual}</span><span style='color:#888; margin:0 3px;'>/</span><span style='background:#222; color:#bbb; padding:1px 5px; border-radius:3px;'>{txt_antes}</span></div>"
+                            elif txt_actual:
                                 html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
-                            if txt_antes:
-                                html += f"<div style='font-size:10px; color:#bbb; text-align:center; margin:1px 0 3px 0;'><span style='background:#222; padding:1px 5px; border-radius:3px;'>{txt_antes}</span></div>"
+                            elif txt_antes:
+                                html += f"<div style='font-size:10px; color:#bbb; text-align:center; margin:2px 0;'><span style='background:#222; padding:1px 5px; border-radius:3px;'>{txt_antes}</span></div>"
                         except:
                             pass
                         if norm_eq_fix2 == h_norm_r:
