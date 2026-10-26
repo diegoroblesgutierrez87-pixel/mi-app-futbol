@@ -3110,6 +3110,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         bg_j = "#131314C4" if es_local_j else "#17152FC2"
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
                         # --- CLASIFICACION DEBAJO TITULO: actual y antes ---
                         try:
                             lg_norm = normaliza(r.get('League',''))
