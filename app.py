@@ -3162,32 +3162,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
                         except:
                             pass
-                                                # --- CUOTAS con ganadora más grande ---
-                        try:
-                            def _get_odd(rw, keys):
-                                for k in keys:
-                                    if k in rw and pd.notna(rw.get(k)):
-                                        try:
-                                            v=float(rw.get(k))
-                                            if v>1: return v
-                                        except: pass
-                                return None
-                            odd_h = _get_odd(r, ['odd_home','B365H','1','Odd_H','HomeOdd','CuotaH','H'])
-                            odd_d = _get_odd(r, ['odd_draw','B365D','X','Odd_D','DrawOdd','CuotaX','D'])
-                            odd_a = _get_odd(r, ['odd_away','B365A','2','Odd_A','AwayOdd','CuotaA','A'])
-                            if odd_h or odd_d or odd_a:
-                                ganador = 'H' if hg>ag else 'A' if ag>hg else 'D'
-                                def _fmt(v, is_win):
-                                    if v is None: return "<span style='color:#666'>-</span>"
-                                    sz = "15px" if is_win else "11px"
-                                    bg = "#fff" if is_win else "transparent"
-                                    col = "#000" if is_win else "#bbb"
-                                    wt = "900" if is_win else "700"
-                                    br = "2px solid #000" if is_win else "none"
-                                    return f"<span style='font-size:{sz}; background:{bg}; color:{col}; font-weight:{wt}; padding:1px 5px; border-radius:3px; border:{br};'>{v:.2f}</span>"
-                                html += f"<div style='font-size:11px; text-align:center; margin:3px 0; color:#bbb;'>Cuotas: {_fmt(odd_h, ganador=='H')} <span style='margin:0 4px'>|</span> {_fmt(odd_d, ganador=='D')} <span style='margin:0 4px'>|</span> {_fmt(odd_a, ganador=='A')}</div>"
-                        except:
-                            pass
+                        ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
                             htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
