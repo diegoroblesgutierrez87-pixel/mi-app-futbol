@@ -2180,6 +2180,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         return df_e, ev
 
     df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2()
+
+    @st.cache_data(show_spinner=False)
+    def cargar_clasificacion_fix2():
+        for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
+            if p.exists():
+                try:
+                    return pd.read_csv(p, on_bad_lines='skip')
+                except:
+                    pass
+        return pd.DataFrame()
+    df_clas_fix2 = cargar_clasificacion_fix2()
+    clas_dict_fix2 = {}
+    clas_max_j_fix2 = {}
+    if not df_clas_fix2.empty:
+        for _, rc in df_clas_fix2.iterrows():
+            try:
+                k = (normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
+                clas_dict_fix2[k] = rc
+                ln = normaliza(rc.get('League',''))
+                clas_max_j_fix2[ln] = max(clas_max_j_fix2.get(ln,0), int(rc.get('jornada_int',0)))
+            except:
+                pass
+
     df_fix2 = df_europa_fix2
     eventos_fix2 = eventos_europa_fix2
 
@@ -3087,7 +3110,30 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         bg_j = "#131314C4" if es_local_j else "#17152FC2"
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
-                        html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
+                        # --- CLASIFICACION DEBAJO TITULO: actual y antes ---
+                        try:
+                            lg_norm = normaliza(r.get('League',''))
+                            j_act = int(j_fix2)
+                            j_antes = j_act - 1
+                            j_max = clas_max_j_fix2.get(lg_norm, j_act)
+                            def _get(j, team_norm):
+                                return clas_dict_fix2.get((lg_norm, j, team_norm))
+                            rh_antes = _get(j_antes, h_norm_r) if j_antes>=1 else None
+                            ra_antes = _get(j_antes, a_norm_r) if j_antes>=1 else None
+                            rh_act = _get(j_max, h_norm_r)
+                            ra_act = _get(j_max, a_norm_r)
+                            txt_actual = ""
+                            txt_antes = ""
+                            if rh_act is not None and ra_act is not None:
+                                txt_actual = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
+                            if rh_antes is not None and ra_antes is not None:
+                                txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
+                            if txt_actual:
+                                html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
+                            if txt_antes:
+                                html += f"<div style='font-size:10px; color:#bbb; text-align:right; margin:1px 10px 3px 0;'><span style='background:#222; padding:1px 5px; border-radius:3px;'>{txt_antes}</span></div>"
+                        except:
+                            pass
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
                             htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
