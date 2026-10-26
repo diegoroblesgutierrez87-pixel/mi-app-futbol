@@ -3108,8 +3108,36 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         es_local_j = (norm_eq_fix2 == h_norm_r)
                         ###########FONDO LOCAL VISITANTE
                         bg_j = "#131314C4" if es_local_j else "#17152FC2"
+                        # --- CUOTAS EN LINEA J | P/P ---
+                        try:
+                            def _get_odd_j(rw, keys):
+                                for k in keys:
+                                    if k in rw and pd.notna(rw.get(k)):
+                                        try:
+                                            v=float(rw.get(k))
+                                            if v>1: return v
+                                        except: pass
+                                return None
+                            _oh = _get_odd_j(r, ['odd_home','B365H','1','Odd_H','HomeOdd'])
+                            _od = _get_odd_j(r, ['odd_draw','B365D','X','Odd_D','DrawOdd'])
+                            _oa = _get_odd_j(r, ['odd_away','B365A','2','Odd_A','AwayOdd'])
+                            if _oh or _od or _oa:
+                                _gan = 'H' if hg>ag else 'A' if ag>hg else 'D'
+                                def _fmt_j(v, is_win):
+                                    if v is None: return "<span style='color:#666'>-</span>"
+                                    sz = "12px" if is_win else "10px"
+                                    bg = "#fff" if is_win else "transparent"
+                                    col = "#000" if is_win else "#aaa"
+                                    wt = "900" if is_win else "700"
+                                    br = "1px solid #000" if is_win else "none"
+                                    return f"<span style='font-size:{sz}; background:{bg}; color:{col}; font-weight:{wt}; padding:1px 4px; border-radius:3px; border:{br};'>{v:.2f}</span>"
+                                _cuotas_j = f" | {_fmt_j(_oh, _gan=='H')} {_fmt_j(_od, _gan=='D')} {_fmt_j(_oa, _gan=='A')}"
+                            else:
+                                _cuotas_j = ""
+                        except:
+                            _cuotas_j = ""
                         html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
-                        html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
+                        html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span>{_cuotas_j}</div>"
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
                         # --- CLASIFICACION DEBAJO TITULO: actual y antes ---
                         try:
