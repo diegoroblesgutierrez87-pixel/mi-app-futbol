@@ -2725,7 +2725,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    # --- RESUMEN NUEVO FORMATO 3 LINEAS ---
+                    # --- RESUMEN NUEVO FORMATO 3 LINEAS + COLORES ---
                     lista_loc_plain = []
                     lista_vis_plain = []
                     for _, rr in df_filtrada_real_fix2.sort_values('Jornada').iterrows():
@@ -2735,9 +2735,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             if es_loc:
-                                lista_loc_plain.append(f"J{jn}({hg}-{ag})")
+                                # local: fav=hg verde, rival=ag rojo
+                                gol_fav = f"<span style='color:#00c800;font-weight:900'>{hg}</span>"
+                                gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                                lista_loc_plain.append(f"J{jn}({gol_fav}-{gol_riv})")
                             else:
-                                lista_vis_plain.append(f"J{jn}({hg}-{ag})")
+                                # visitante: fav=ag verde, rival=hg rojo
+                                gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>"
+                                gol_fav = f"<span style='color:#00c800;font-weight:900'>{ag}</span>"
+                                lista_vis_plain.append(f"J{jn}({gol_riv}-{gol_fav})")
                         except:
                             continue
                     j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
