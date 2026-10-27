@@ -2725,19 +2725,28 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    lista_loc_detalle_sorted = [d for _, d in sorted(lista_loc_detalle, key=lambda x: x[0])]
-                    lista_vis_detalle_sorted = [d for _, d in sorted(lista_vis_detalle, key=lambda x: x[0])]
-
-                    j_loc_txt = ", ".join(lista_loc_detalle_sorted) if lista_loc_detalle_sorted else "-"
-                    j_vis_txt = ", ".join(lista_vis_detalle_sorted) if lista_vis_detalle_sorted else "-"
-                    
-                    # ultima jornada jugada de ese equipo - para RESUMEN FINAL FIX2
+                    # --- RESUMEN NUEVO FORMATO 3 LINEAS ---
+                    lista_loc_plain = []
+                    lista_vis_plain = []
+                    for _, rr in df_filtrada_real_fix2.sort_values('Jornada').iterrows():
+                        try:
+                            jn = int(rr.get('Jornada',0))
+                            hg = int(float(rr.get('FTHG',0) or 0))
+                            ag = int(float(rr.get('FTAG',0) or 0))
+                            es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                            if es_loc:
+                                lista_loc_plain.append(f"J{jn}({hg}-{ag})")
+                            else:
+                                lista_vis_plain.append(f"J{jn}({hg}-{ag})")
+                        except:
+                            continue
+                    j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
+                    j_vis_plain_txt = ", ".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
                         last_j_fix2 = 0
-
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]<span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>"
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span><br> L:{local_filt}/{local_total} [{j_loc_plain_txt}]<br> V:{visitante_filt}/{visitante_total} [{j_vis_plain_txt}]"
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     try:
