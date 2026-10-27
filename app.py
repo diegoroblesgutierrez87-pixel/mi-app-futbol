@@ -3107,7 +3107,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         es_local_j = (norm_eq_fix2 == h_norm_r)
                         ###########FONDO LOCAL VISITANTE
-                        bg_j = "#131314C4" if es_local_j else "#17152FC2"
+                        bg_j = "#131314C4" if es_local_j else "#1e3a5eCC"
                         # --- CUOTAS EN LINEA J | P/P ---
                         try:
                             def _get_odd_j(rw, keys):
