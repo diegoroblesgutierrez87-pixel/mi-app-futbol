@@ -3136,7 +3136,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 _cuotas_j = ""
                         except:
                             _cuotas_j = ""
-                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:8px; border:2.5px solid #FFFFFF;'>"
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:3px 8px;border-radius:4px;font-size:14px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span>{_cuotas_j}</div>"
                         # --- CLASIFICACION ENCIMA DE EQUIPO VS EQUIPO ---
                         try:
