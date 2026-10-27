@@ -443,6 +443,29 @@ if 'show_partidos' not in st.session_state:
 
 
 ##############
+@st.cache_data(show_spinner=False)
+def cargar_clasificacion_main():
+    import pathlib
+    for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
+        if p.exists():
+            try:
+                return pd.read_csv(p, on_bad_lines='skip')
+            except:
+                pass
+    return pd.DataFrame()
+df_clas_main = cargar_clasificacion_main()
+clas_dict_main = {}
+clas_max_j_main = {}
+if not df_clas_main.empty:
+    for _, rc in df_clas_main.iterrows():
+        try:
+            k = (normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
+            clas_dict_main[k] = rc
+            ln = normaliza(rc.get('League',''))
+            clas_max_j_main[ln] = max(clas_max_j_main.get(ln,0), int(rc.get('jornada_int',0)))
+        except:
+            pass
+
 filtros = st.expander("FILTROS", expanded=False)
 with filtros:
     if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
@@ -868,6 +891,21 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         btts_txt = "G/G" if btts else "NG/NG"
 
     col_j = "#0A2342"
+    # --- CLASIFICACION ---
+    clas_html = ""
+    try:
+        lg_norm = normaliza(r.get('League',''))
+        j_act = int(j)
+        j_max = clas_max_j_main.get(lg_norm, j_act)
+        def _get_main(jn, team_norm):
+            return clas_dict_main.get((lg_norm, jn, team_norm))
+        rh_act = _get_main(j_max, normaliza(h))
+        ra_act = _get_main(j_max, normaliza(a))
+        if rh_act is not None and ra_act is not None:
+            txt_actual_main = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
+            clas_html = f"<div style='text-align:center;margin:3px 0;'><span style='background:#000;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:900;'>{txt_actual_main}</span></div>"
+    except:
+        clas_html = ""
     # --- TODA LA LINEA COLOREADA + SUBRAYADO EQUIPO FILTRO ---
     h_norm_chk = normaliza(h)
     a_norm_chk = normaliza(a)
@@ -880,7 +918,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             h_html = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
         elif a_norm_chk == current_eq_norm:
             a_html = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #ccc;line-height:1.2;max-width:380px;margin:0 auto;background:#ffffff;color:#000'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> |Jornada {j}| {h_html} vs {a_html}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #ccc;line-height:1.2;max-width:380px;margin:0 auto;background:#ffffff;color:#000'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> |Jornada {j}| {h_html} vs {a_html}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
