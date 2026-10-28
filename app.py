@@ -2774,11 +2774,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
 
-                            # resultado con verde/rojo
+                            # resultado con verde/rojo + subrayado para diferenciar de minutos
                             if es_loc:
-                                res_txt = f"<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                                res_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'><span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span></span>"
                             else:
-                                res_txt = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>"
+                                res_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'><span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span></span>"
 
                             # minutos con verde/rojo (filtrados por MIN DESDE/HASTA si hay)
                             mins_col = []
