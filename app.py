@@ -2763,14 +2763,24 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    # --- RESUMEN NUEVO FORMATO 3 LINEAS + MINUTOS VERDE/ROJO SIEMPRE ---
+                    # --- RESUMEN 3 LINEAS + RESULTADO + MINUTOS VERDE/ROJO ---
                     lista_loc_plain = []
                     lista_vis_plain = []
                     for _, rr in df_filtrada_real_fix2.sort_values('Jornada').iterrows():
                         try:
                             jn = int(rr.get('Jornada',0))
+                            hg = int(float(rr.get('FTHG',0) or 0))
+                            ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
+
+                            # resultado con verde/rojo
+                            if es_loc:
+                                res_txt = f"<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                            else:
+                                res_txt = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>"
+
+                            # minutos con verde/rojo (filtrados por MIN DESDE/HASTA si hay)
                             mins_col = []
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
                                 if 'Missed' in ev.get('tipo',''): continue
@@ -2780,10 +2790,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
                                 col = "#00c800" if es_mio else "#ff2a2a"
                                 mins_col.append(f"<span style='color:{col};font-weight:900'>{mm}'</span>")
-                            if not mins_col:
-                                inner = "<span style='color:#888'>-</span>"
+                            mins_txt = " ".join(mins_col) if mins_col else ""
+
+                            if mins_txt:
+                                inner = f"{res_txt} {mins_txt}"
                             else:
-                                inner = " ".join(mins_col)
+                                inner = f"{res_txt}"
+
                             if es_loc:
                                 lista_loc_plain.append(f"J{jn}({inner})")
                             else:
