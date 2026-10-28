@@ -2826,9 +2826,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             except:
                                 es_loc_base = True
                             if es_loc_base:
-                                lista_loc_plain.append(f"{j_tag}(_)")
+                                lista_loc_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>CASA _</span>)")
                             else:
-                                lista_vis_plain.append(f"{j_tag}(_)")
+                                lista_vis_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>VIS _</span>)")
                     j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
                     j_vis_plain_txt = ", ".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
