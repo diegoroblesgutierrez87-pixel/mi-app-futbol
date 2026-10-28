@@ -2780,8 +2780,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 res_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px'><span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span></span>"
 
-                            # minutos con verde/rojo (filtrados por MIN DESDE/HASTA si hay)
-                            mins_col = []
+                            # minutos con verde/rojo + palito | entre partes
+                            mins_1p = []
+                            mins_2p = []
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
                                 if 'Missed' in ev.get('tipo',''): continue
                                 mm = ev.get('m',-1)
@@ -2789,8 +2790,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
                                 es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
                                 col = "#00c800" if es_mio else "#ff2a2a"
-                                mins_col.append(f"<span style='color:{col};font-weight:900'>{mm}'</span>")
-                            mins_txt = " ".join(mins_col) if mins_col else ""
+                                tag = f"<span style='color:{col};font-weight:900'>{mm}'</span>"
+                                if mm <= 45:
+                                    mins_1p.append(tag)
+                                else:
+                                    mins_2p.append(tag)
+                            if mins_1p and mins_2p:
+                                mins_txt = " ".join(mins_1p) + " <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
+                            elif mins_1p:
+                                mins_txt = " ".join(mins_1p)
+                            elif mins_2p:
+                                mins_txt = " ".join(mins_2p)
+                            else:
+                                mins_txt = ""
 
                             if mins_txt:
                                 inner = f"{res_txt} {mins_txt}"
