@@ -3020,7 +3020,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _loc_txt = ""
                             _bg_hueco = "#f5f5f5"
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #444;'><div style='color:#fff; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
+                        # HUECO = hubo jornada L/V pero no sucedió el evento -> _ para ver rachas
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| _ {_loc_txt} ({nombre_eq_fix2})")
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>J{int(j_fix2)} | <span style='background:#fff;color:#000;padding:1px 6px;border-radius:3px;'>_</span> <span style='color:#888;font-size:10px'>({_loc_txt})</span></div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
