@@ -2779,6 +2779,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
                             else:
                                 res_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                                    # --- FILTRO GOLES PARTE PARA RESUMEN ---
+                            goles_parte_f = st.session_state.get("goles_parte_fix2", "Todo")
                             mins_1p = []
                             mins_2p = []
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
@@ -2793,14 +2795,28 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_1p.append(tag)
                                 else:
                                     mins_2p.append(tag)
-                            if mins_1p and mins_2p:
-                                mins_txt = " ".join(mins_1p) + " <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
-                            elif mins_1p:
-                                mins_txt = " ".join(mins_1p)
-                            elif mins_2p:
-                                mins_txt = " ".join(mins_2p)
-                            else:
-                                mins_txt = ""
+                            
+                            # aplica desplegable
+                            if goles_parte_f == "1ªParte":
+                                if mins_1p:
+                                    mins_txt = " ".join(mins_1p)
+                                else:
+                                    mins_txt = ""
+                            elif goles_parte_f == "2ªParte":
+                                if mins_2p:
+                                    mins_txt = " ".join(mins_2p)
+                                else:
+                                    mins_txt = ""
+                            else: # Todo
+                                if mins_1p and mins_2p:
+                                    mins_txt = " ".join(mins_1p) + " <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
+                                elif mins_1p:
+                                    mins_txt = " ".join(mins_1p)
+                                elif mins_2p:
+                                    mins_txt = " ".join(mins_2p)
+                                else:
+                                    mins_txt = ""
+                            
                             inner = f"{res_txt} {mins_txt}" if mins_txt else f"{res_txt}"
                             filt_por_j[jn] = (inner, es_loc)
                         except:
