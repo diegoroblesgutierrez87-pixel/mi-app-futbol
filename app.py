@@ -2763,25 +2763,39 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    # --- RESUMEN NUEVO FORMATO 3 LINEAS + COLORES ---
+                    # --- RESUMEN NUEVO FORMATO 3 LINEAS + COLORES + MINUTOS ---
                     lista_loc_plain = []
                     lista_vis_plain = []
+                    filtro_min_activo = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                     for _, rr in df_filtrada_real_fix2.sort_values('Jornada').iterrows():
                         try:
                             jn = int(rr.get('Jornada',0))
                             hg = int(float(rr.get('FTHG',0) or 0))
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
-                            if es_loc:
-                                # local: fav=hg verde, rival=ag rojo
-                                gol_fav = f"<span style='color:#00c800;font-weight:900'>{hg}</span>"
-                                gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
-                                lista_loc_plain.append(f"J{jn}({gol_fav}-{gol_riv})")
+                            fid_r = str(rr.get('fixture_id','')).split('.')[0]
+
+                            if filtro_min_activo:
+                                mins_col = []
+                                for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
+                                    if 'Missed' in ev.get('tipo',''): continue
+                                    mm = ev.get('m',-1)
+                                    if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
+                                    if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
+                                    es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
+                                    col = "#00c800" if es_mio else "#ff2a2a"
+                                    mins_col.append(f"<span style='color:{col};font-weight:900'>{mm}'</span>")
+                                inner = " ".join(mins_col) if mins_col else "-"
+                                lista_loc_plain.append(f"J{jn}({inner})") if es_loc else lista_vis_plain.append(f"J{jn}({inner})")
                             else:
-                                # visitante: fav=ag verde, rival=hg rojo
-                                gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>"
-                                gol_fav = f"<span style='color:#00c800;font-weight:900'>{ag}</span>"
-                                lista_vis_plain.append(f"J{jn}({gol_riv}-{gol_fav})")
+                                if es_loc:
+                                    gol_fav = f"<span style='color:#00c800;font-weight:900'>{hg}</span>"
+                                    gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                                    lista_loc_plain.append(f"J{jn}({gol_fav}-{gol_riv})")
+                                else:
+                                    gol_riv = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>"
+                                    gol_fav = f"<span style='color:#00c800;font-weight:900'>{ag}</span>"
+                                    lista_vis_plain.append(f"J{jn}({gol_riv}-{gol_fav})")
                         except:
                             continue
                     j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
