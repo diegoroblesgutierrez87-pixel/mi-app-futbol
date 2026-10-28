@@ -2811,7 +2811,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     except:
                         jornadas_base = sorted(filt_por_j.keys())
                     for jn in jornadas_base:
-                        j_tag = f"<span style='color:#0A2342;font-weight:900'>J{jn}</span>"
+                        j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
                             inner, es_loc = filt_por_j[jn]
                             if es_loc:
