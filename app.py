@@ -2845,13 +2845,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 lista_loc_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>CASA _</span>)")
                             else:
                                 lista_vis_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>VIS _</span>)")
-                    j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
-                    j_vis_plain_txt = ", ".join(lista_vis_plain) if lista_vis_plain else "-"
+                    j_loc_plain_txt = "<br>".join(lista_loc_plain) if lista_loc_plain else "-"
+                    j_vis_plain_txt = "<br>".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
                         last_j_fix2 = 0
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span><br> L:{local_filt}/{local_total} [{j_loc_plain_txt}]<br> V:{visitante_filt}/{visitante_total} [{j_vis_plain_txt}]"
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span><br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     try:
