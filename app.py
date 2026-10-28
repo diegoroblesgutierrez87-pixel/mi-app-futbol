@@ -2763,24 +2763,22 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    # --- RESUMEN 3 LINEAS + RESULTADO + MINUTOS VERDE/ROJO ---
+                    # --- RESUMEN 3 LINEAS + RESULTADO + MINUTOS VERDE/ROJO + HUECOS _ ---
                     lista_loc_plain = []
                     lista_vis_plain = []
-                    for _, rr in df_filtrada_real_fix2.sort_values('Jornada').iterrows():
+                    # dict filtrados por jornada para lookup rapido
+                    filt_por_j = {}
+                    for _, rr in df_filtrada_real_fix2.iterrows():
                         try:
                             jn = int(rr.get('Jornada',0))
                             hg = int(float(rr.get('FTHG',0) or 0))
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
-
-                            # resultado con verde/rojo + corchetes [1-1]
                             if es_loc:
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
                             else:
                                 res_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
-
-                            # minutos con verde/rojo + palito | entre partes
                             mins_1p = []
                             mins_2p = []
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
@@ -2803,19 +2801,34 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 mins_txt = " ".join(mins_2p)
                             else:
                                 mins_txt = ""
-
-                            if mins_txt:
-                                inner = f"{res_txt} {mins_txt}"
-                            else:
-                                inner = f"{res_txt}"
-
-                            j_tag = f"<span style='color:#0A2342;font-weight:900'>J{jn}</span>"
+                            inner = f"{res_txt} {mins_txt}" if mins_txt else f"{res_txt}"
+                            filt_por_j[jn] = (inner, es_loc)
+                        except:
+                            continue
+                    # recorre TODAS las jornadas base para meter _
+                    try:
+                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').dropna().unique().astype(int).tolist())
+                    except:
+                        jornadas_base = sorted(filt_por_j.keys())
+                    for jn in jornadas_base:
+                        j_tag = f"<span style='color:#0A2342;font-weight:900'>J{jn}</span>"
+                        if jn in filt_por_j:
+                            inner, es_loc = filt_por_j[jn]
                             if es_loc:
                                 lista_loc_plain.append(f"{j_tag}({inner})")
                             else:
                                 lista_vis_plain.append(f"{j_tag}({inner})")
-                        except:
-                            continue
+                        else:
+                            # busca si era local o visitante esa jornada en base
+                            try:
+                                r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
+                                es_loc_base = str(r_base.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                            except:
+                                es_loc_base = True
+                            if es_loc_base:
+                                lista_loc_plain.append(f"{j_tag}(_)")
+                            else:
+                                lista_vis_plain.append(f"{j_tag}(_)")
                     j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
                     j_vis_plain_txt = ", ".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
