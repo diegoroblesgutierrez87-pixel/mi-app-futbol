@@ -2809,10 +2809,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 inner = f"{res_txt}"
 
+                            j_tag = f"<span style='color:#0A2342;font-weight:900'>J{jn}</span>"
                             if es_loc:
-                                lista_loc_plain.append(f"J{jn}({inner})")
+                                lista_loc_plain.append(f"{j_tag}({inner})")
                             else:
-                                lista_vis_plain.append(f"J{jn}({inner})")
+                                lista_vis_plain.append(f"{j_tag}({inner})")
                         except:
                             continue
                     j_loc_plain_txt = ", ".join(lista_loc_plain) if lista_loc_plain else "-"
