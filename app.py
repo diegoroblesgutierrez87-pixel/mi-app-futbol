@@ -2457,10 +2457,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
             # calcula 2/5 y 1/9 para el futuro antes de pintar
             def _cnt_fut_fix2(nom):
-                _norm = normaliza(nom); _up = nom.upper().strip()
+                _up = nom.upper().strip()
                 _df = df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
-                if _df.empty:
-                    _df = df_fix2[(df_fix2['HomeTeam'].apply(lambda x: normaliza(x)==_norm)) | (df_fix2['AwayTeam'].apply(lambda x: normaliza(x)==_norm))]
                 _tot = len(_df)
                 _df_f = _df.copy()
                 if resultados_pred_sel_fix2:
@@ -2513,8 +2511,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 norm_eq_fix2 = normaliza(nombre_eq_fix2)
                 eq_up_fix2 = nombre_eq_fix2.upper().strip()
                 df_team_fix2 = df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2)]
-                if df_team_fix2.empty:
-                    df_team_fix2 = df_fix2[(df_fix2['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq_fix2)) | (df_fix2['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq_fix2))]
 
                 if cond_loc_pred_fix2 == "equipo local solamente partidos de local" and nombre_eq_fix2 == h_fut_fix2:
                     df_team_fix2 = df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
@@ -2717,8 +2713,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _norm = normaliza(nombre_eq_fix2)
                             _up = nombre_eq_fix2.upper().strip()
                             _df_try = _df_csv[(_df_csv['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (_df_csv['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
-                            if _df_try.empty:
-                                _df_try = _df_csv[(_df_csv['HomeTeam'].apply(lambda x: normaliza(str(x))==_norm)) | (_df_csv['AwayTeam'].apply(lambda x: normaliza(str(x))==_norm))]
                             if not _df_try.empty:
                                 _df_try = _df_try.copy()
                                 _df_try['Jornada'] = _df_try.get('jornada_num','').astype(str).str.extract(r'(\d+)').astype(float).fillna(0).astype(int)
