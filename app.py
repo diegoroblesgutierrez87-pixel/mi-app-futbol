@@ -2785,14 +2785,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
-                            # --- rival + clasificacion ---
+                            # --- rival + clasificacion con fallback a Jornada real ---
                             opp_team = str(rr.get('AwayTeam','')).strip() if es_loc else str(rr.get('HomeTeam','')).strip()
                             opp_norm = normaliza(opp_team)
                             lg_norm_r = normaliza(rr.get('League',''))
                             try:
                                 j_int = int(rr.get('J_EQ', rr.get('Jornada', jn)))
-                                r_self = clas_dict_fix2.get((lg_norm_r, j_int, norm_eq_fix2)) or clas_dict_fix2.get((lg_norm_r, j_int-1, norm_eq_fix2))
-                                r_opp = clas_dict_fix2.get((lg_norm_r, j_int, opp_norm)) or clas_dict_fix2.get((lg_norm_r, j_int-1, opp_norm))
+                                j_max_liga = clas_max_j_fix2.get(lg_norm_r, j_int)
+                                # busca jornada exacta, luego j-1, luego ultima disponible de esa liga
+                                r_opp = (clas_dict_fix2.get((lg_norm_r, j_int, opp_norm)) or 
+                                         clas_dict_fix2.get((lg_norm_r, j_int-1, opp_norm)) or
+                                         clas_dict_fix2.get((lg_norm_r, j_max_liga, opp_norm)))
                                 if r_opp is not None:
                                     pos_opp = int(r_opp.get('Pos',0))
                                     pts_opp = int(r_opp.get('Pts',0))
