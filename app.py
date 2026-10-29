@@ -2767,10 +2767,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     lista_loc_plain = []
                     lista_vis_plain = []
                     # dict filtrados por jornada para lookup rapido
+                    # mapa fixture_id -> J_EQ para que filt_por_j use el mismo J_EQ que jornadas_base
+                    fid_a_jeq = {}
+                    try:
+                        for _, rb in df_team_base_total_fix2.iterrows():
+                            fid_a_jeq[str(rb.get('fixture_id','')).split('.')[0]] = int(rb.get('J_EQ',0))
+                    except:
+                        fid_a_jeq = {}
                     filt_por_j = {}
                     for _, rr in df_filtrada_real_fix2.iterrows():
                         try:
-                            jn = int(rr.get('Jornada',0))
+                            fid_tmp = str(rr.get('fixture_id','')).split('.')[0]
+                            jn = fid_a_jeq.get(fid_tmp, int(rr.get('Jornada',0)))
                             hg = int(float(rr.get('FTHG',0) or 0))
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
