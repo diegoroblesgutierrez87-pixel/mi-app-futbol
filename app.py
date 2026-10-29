@@ -2277,6 +2277,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         # PARTIDOS: europa + resto
         df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet"])
         if not df_e.empty:
+            df_e['HomeNorm'] = df_e['HomeTeam'].astype(str).str.upper().str.strip()
+            df_e['AwayNorm'] = df_e['AwayTeam'].astype(str).str.upper().str.strip()
             def _parse_fecha_base_fix2(s):
                 try:
                     d = pd.to_datetime(s, dayfirst=True, errors='coerce')
@@ -2458,7 +2460,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             # calcula 2/5 y 1/9 para el futuro antes de pintar
             def _cnt_fut_fix2(nom):
                 _up = nom.upper().strip()
-                _df = df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
+                _df = df_fix2[(df_fix2['HomeNorm'] == _up) | (df_fix2['AwayNorm'] == _up)] if 'HomeNorm' in df_fix2.columns else df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
                 _tot = len(_df)
                 _df_f = _df.copy()
                 if resultados_pred_sel_fix2:
@@ -2510,10 +2512,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             for nombre_eq_fix2 in equipos_a_mostrar_fix2:
                 norm_eq_fix2 = normaliza(nombre_eq_fix2)
                 eq_up_fix2 = nombre_eq_fix2.upper().strip()
-                df_team_fix2 = df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2)]
+                df_team_fix2 = df_fix2[(df_fix2['HomeNorm'] == eq_up_fix2) | (df_fix2['AwayNorm'] == eq_up_fix2)] if 'HomeNorm' in df_fix2.columns else df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2)]
 
                 if cond_loc_pred_fix2 == "equipo local solamente partidos de local" and nombre_eq_fix2 == h_fut_fix2:
-                    df_team_fix2 = df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
+                    df_team_fix2 = df_team_fix2[df_team_fix2['HomeNorm'] == eq_up_fix2] if 'HomeNorm' in df_team_fix2.columns else df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
                 elif cond_loc_pred_fix2 == "equipo visitante solamente sus partidos de visitante" and nombre_eq_fix2 == a_fut_fix2:
                     df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
                 elif cond_loc_pred_fix2 == "Local en casa / Visitante fuera":
