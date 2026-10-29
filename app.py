@@ -2849,13 +2849,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             # busca si era local o visitante esa jornada en base
                             try:
-                                # busca por J_EQ primero, fallback a Jornada
                                 if 'J_EQ' in df_team_base_total_fix2.columns:
                                     _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
                                     r_base = _df_b.iloc[0] if not _df_b.empty else df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
                                 else:
                                     r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
-                                es_loc_base = str(r_base.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                                es_loc_base = normaliza(str(r_base.get('HomeTeam',''))) == norm_eq_fix2
                             except:
                                 es_loc_base = True
                             if es_loc_base:
