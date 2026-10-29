@@ -3150,28 +3150,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         lista_resumen_fix2.append(linea_res)
                     except:
                         pass
-                # FIX2 ORDEN J10 arriba = ultimo partido
-                def _parse_fecha_fix2_robusto(s):
-                    try:
-                        if pd.isna(s):
-                            return pd.NaT
-                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                        if pd.isna(d):
-                            d = pd.to_datetime(s, errors='coerce')
-                        return d
-                    except:
-                        return pd.NaT
-                df_team_base_pred_fix2['Date_parsed'] = df_team_base_pred_fix2['Date'].apply(_parse_fecha_fix2_robusto)
-                # FIX: sin corte duro, muestra hasta hoy
-                df_team_base_pred_fix2 = df_team_base_pred_fix2[df_team_base_pred_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
-                df_team_base_pred_fix2['fid_num'] = pd.to_numeric(df_team_base_pred_fix2['fixture_id'], errors='coerce')
-                df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
-                df_team_fix2['Date_parsed'] = df_team_fix2['Date'].apply(_parse_fecha_fix2_robusto) if not df_team_fix2.empty else df_team_fix2.get('Date')
-                df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
-                df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
-                df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
+                # FIX2 ORDEN J10 arriba = ultimo partido - SIN RE-PARSEAR FECHA, J_EQ YA ES CRONO
                 # FIX DEFINITIVO - Usa J_EQ no Jornada de liga
                 if not df_team_base_pred_fix2.empty and 'J_EQ' in df_team_base_pred_fix2.columns:
+                    df_team_base_pred_fix2 = df_team_base_pred_fix2.sort_values('J_EQ')
+                    if not df_team_fix2.empty and 'J_EQ' in df_team_fix2.columns:
+                        df_team_fix2 = df_team_fix2.sort_values('J_EQ')
                     max_j = int(pd.to_numeric(df_team_base_pred_fix2['J_EQ'], errors='coerce').max())
                     jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
                 else:
