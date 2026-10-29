@@ -2982,9 +2982,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             continue
                     # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
                     try:
-                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist())
+                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist(), reverse=True)
                     except:
-                        jornadas_base = sorted(filt_por_j.keys())
+                        jornadas_base = sorted(filt_por_j.keys(), reverse=True)
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
