@@ -3020,17 +3020,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
-                # FIX DEFINITIVO - Jornadas continuas 15 últimas para testigo J|— aunque no haya partido en esa J
-                if not df_team_base_pred_fix2.empty and 'Jornada' in df_team_base_pred_fix2.columns:
-                    try:
-                        max_j = int(pd.to_numeric(df_team_base_pred_fix2['Jornada'], errors='coerce').max())
-                    except:
-                        max_j = 0
+                # FIX DEFINITIVO - Usa J_EQ no Jornada de liga
+                if not df_team_base_pred_fix2.empty and 'J_EQ' in df_team_base_pred_fix2.columns:
+                    max_j = int(pd.to_numeric(df_team_base_pred_fix2['J_EQ'], errors='coerce').max())
                     jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
+                    # mapa J_EQ -> fila base para detectar CASA/VIS en huecos
+                    df_team_base_pred_fix2 = df_team_base_pred_fix2.set_index('J_EQ', drop=False)
                 else:
-                    jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15] if 'Jornada' in df_team_base_pred_fix2.columns else []
+                    max_j = int(pd.to_numeric(df_team_base_pred_fix2['Jornada'], errors='coerce').max()) if not df_team_base_pred_fix2.empty else 0
+                    jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
                 for j_fix2 in jornadas_fix2:
-                    d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
+                    if 'J_EQ' in df_team_fix2.columns and 'J_EQ' in df_team_base_pred_fix2.columns:
+                        d_j_ok_fix2 = df_team_fix2[df_team_fix2['J_EQ']==j_fix2]
+                    else:
+                        d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
                     # Para MIN DESDE/HASTA: si la jornada existe pero ningún partido tiene eventos en ese rango, también es hueco
                     if not es_hueco_fix2 and (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None):
