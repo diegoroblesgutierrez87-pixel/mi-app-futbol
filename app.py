@@ -2785,6 +2785,23 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
+                            # --- rival + clasificacion ---
+                            opp_team = str(rr.get('AwayTeam','')).strip() if es_loc else str(rr.get('HomeTeam','')).strip()
+                            opp_norm = normaliza(opp_team)
+                            lg_norm_r = normaliza(rr.get('League',''))
+                            try:
+                                j_int = int(rr.get('J_EQ', rr.get('Jornada', jn)))
+                                r_self = clas_dict_fix2.get((lg_norm_r, j_int, norm_eq_fix2)) or clas_dict_fix2.get((lg_norm_r, j_int-1, norm_eq_fix2))
+                                r_opp = clas_dict_fix2.get((lg_norm_r, j_int, opp_norm)) or clas_dict_fix2.get((lg_norm_r, j_int-1, opp_norm))
+                                if r_opp is not None:
+                                    pos_opp = int(r_opp.get('Pos',0))
+                                    pts_opp = int(r_opp.get('Pts',0))
+                                    rival_txt = f" <span style='color:#000;background:#ffeb3b;padding:0 3px;border-radius:3px;font-size:9px'>vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                else:
+                                    rival_txt = f" vs {opp_team}"
+                            except:
+                                rival_txt = f" vs {opp_team}"
+
                             if es_loc:
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
                             else:
@@ -2827,7 +2844,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = ""
                             
-                            inner = f"{res_txt} {mins_txt}" if mins_txt else f"{res_txt}"
+                            inner = f"{res_txt} {mins_txt}{rival_txt}" if mins_txt else f"{res_txt}{rival_txt}"
                             filt_por_j[jn] = (inner, es_loc)
                         except:
                             continue
