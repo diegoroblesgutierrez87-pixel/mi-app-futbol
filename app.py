@@ -2785,17 +2785,32 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             fid_r = str(rr.get('fixture_id','')).split('.')[0]
-                            # --- rival + clasificacion con fallback a Jornada real ---
+                            # --- rival + clasificacion FUZZY ---
                             opp_team = str(rr.get('AwayTeam','')).strip() if es_loc else str(rr.get('HomeTeam','')).strip()
                             opp_norm = normaliza(opp_team)
                             lg_norm_r = normaliza(rr.get('League',''))
+                            def _get_clas_fuzzy(lg_n, team_n, j_list):
+                                for jc in j_list:
+                                    rec = clas_dict_fix2.get((lg_n, jc, team_n))
+                                    if rec is not None:
+                                        return rec
+                                # contiene
+                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
+                                    if l_ != lg_n: continue
+                                    if j_ not in j_list: continue
+                                    if team_n in n_ or n_ in team_n or team_n.split()[-1] in n_:
+                                        return rec_
+                                # cualquier jornada de esa liga
+                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
+                                    if l_ != lg_n: continue
+                                    if team_n in n_ or n_ in team_n:
+                                        return rec_
+                                return None
                             try:
                                 j_int = int(rr.get('J_EQ', rr.get('Jornada', jn)))
                                 j_max_liga = clas_max_j_fix2.get(lg_norm_r, j_int)
-                                # busca jornada exacta, luego j-1, luego ultima disponible de esa liga
-                                r_opp = (clas_dict_fix2.get((lg_norm_r, j_int, opp_norm)) or 
-                                         clas_dict_fix2.get((lg_norm_r, j_int-1, opp_norm)) or
-                                         clas_dict_fix2.get((lg_norm_r, j_max_liga, opp_norm)))
+                                j_cands = [j_int, j_int-1, j_max_liga]
+                                r_opp = _get_clas_fuzzy(lg_norm_r, opp_norm, j_cands)
                                 if r_opp is not None:
                                     pos_opp = int(r_opp.get('Pos',0))
                                     pts_opp = int(r_opp.get('Pts',0))
