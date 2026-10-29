@@ -2663,12 +2663,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_filtrada_real_fix2 = df_team_fix2
                     filt_fix2 = len(df_team_fix2)
 
-                # DESGLOSE LOCAL/VISITANTE segun Cond manual 1/2 - CORREGIDO
+                # DESGLOSE LOCAL/VISITANTE FIX CON NORMALIZA - 100% = J_EQ
                 try:
-                    _mask_local_total = df_team_base_total_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2
+                    _mask_local_total = df_team_base_total_fix2['HomeTeam'].apply(lambda x: normaliza(str(x))==norm_eq_fix2)
                     local_total = int(_mask_local_total.sum())
                     visitante_total = total_fix2 - local_total
-                    _mask_local_filt = df_filtrada_real_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2 if not df_filtrada_real_fix2.empty else _mask_local_total[:0]
+                    _mask_local_filt = df_filtrada_real_fix2['HomeTeam'].apply(lambda x: normaliza(str(x))==norm_eq_fix2) if not df_filtrada_real_fix2.empty else _mask_local_total[:0]
                     local_filt = int(_mask_local_filt.sum())
                     visitante_filt = filt_fix2 - local_filt
                     desglose = f" [L:{local_filt}/{local_total} V:{visitante_filt}/{visitante_total}]"
