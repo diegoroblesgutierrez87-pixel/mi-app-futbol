@@ -2816,13 +2816,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     pos_opp = int(r_opp.get('Pos',0))
                                     pts_opp = int(r_opp.get('Pts',0))
                                     if r_self is not None:
-                                        rival_txt = f" {self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts) vs {opp_team} {pos_opp}º({pts_opp}pts)"
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts) vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
                                     else:
-                                        rival_txt = f" {self_team} vs {opp_team} {pos_opp}º({pts_opp}pts)"
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
                                 else:
-                                    rival_txt = f" {self_team} vs {opp_team}"
+                                    rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
                             except:
-                                rival_txt = f" {self_team} vs {opp_team}"
+                                rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
 
                             if es_loc:
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
