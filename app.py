@@ -2776,11 +2776,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     # --- RESUMEN 3 LINEAS + RESULTADO + MINUTOS VERDE/ROJO + HUECOS _ ---
                     lista_loc_plain = []
                     lista_vis_plain = []
-                    # dict filtrados por jornada para lookup rapido
+                    # dict filtrados por jornada para lookup rapido - USA J_EQ
                     filt_por_j = {}
                     for _, rr in df_filtrada_real_fix2.iterrows():
                         try:
-                            jn = int(rr.get('Jornada',0))
+                            jn = int(rr.get('J_EQ', rr.get('Jornada',0)))
                             hg = int(float(rr.get('FTHG',0) or 0))
                             ag = int(float(rr.get('FTAG',0) or 0))
                             es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
@@ -2834,10 +2834,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
                     try:
                         jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist())
-                        mapa_j_eq_a_jornada = dict(zip(df_team_base_total_fix2['J_EQ'], df_team_base_total_fix2.get('Jornada', df_team_base_total_fix2['J_EQ'])))
                     except:
                         jornadas_base = sorted(filt_por_j.keys())
-                        mapa_j_eq_a_jornada = {}
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
