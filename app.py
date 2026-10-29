@@ -2434,8 +2434,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_team_base_total_fix2['Date_parsed_tmp'] = pd.to_datetime(df_team_base_total_fix2['Date'], dayfirst=True, errors='coerce')
                     df_team_base_total_fix2 = df_team_base_total_fix2.sort_values('Date_parsed_tmp').reset_index(drop=True)
                     df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                    df_team_fix2['J_EQ'] = df_team_base_total_fix2['J_EQ'].values
+                    df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
                 except:
                     df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                    df_team_fix2['J_EQ'] = df_team_base_total_fix2['J_EQ'].values
+                    df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
 
                 if nombre_eq_fix2 in equipos_manuales_1_fix2:
                     if cond_manual_1_fix2 == "solo local":
