@@ -2823,9 +2823,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             continue
                     # recorre TODAS las jornadas base para meter _
                     try:
-                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').dropna().unique().astype(int).tolist())
+                        df_team_base_total_fix2 = df_team_base_total_fix2.sort_values('Date_parsed').reset_index(drop=True)
+                        df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                        jornadas_base = df_team_base_total_fix2['J_EQ'].tolist()
+                        mapa_casa_vis = {}
+                        for _, rb in df_team_base_total_fix2.iterrows():
+                            mapa_casa_vis[int(rb['J_EQ'])] = str(rb.get('HomeTeam','')).upper().strip() == eq_up_fix2
                     except:
                         jornadas_base = sorted(filt_por_j.keys())
+                        mapa_casa_vis = {}
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
@@ -2836,11 +2842,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 lista_vis_plain.append(f"{j_tag}({inner})")
                         else:
                             # busca si era local o visitante esa jornada en base
-                            try:
-                                r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
-                                es_loc_base = str(r_base.get('HomeTeam','')).upper().strip() == eq_up_fix2
-                            except:
-                                es_loc_base = True
+                            es_loc_base = mapa_casa_vis.get(jn, True)
                             if es_loc_base:
                                 lista_loc_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>CASA _</span>)")
                             else:
