@@ -2807,9 +2807,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         return rec_
                                 return None
                             try:
-                                j_int = int(rr.get('J_EQ', rr.get('Jornada', jn)))
-                                j_max_liga = clas_max_j_fix2.get(lg_norm_r, j_int)
-                                j_cands = [j_int, j_int-1, j_max_liga]
+                                j_max_liga = clas_max_j_fix2.get(lg_norm_r, 0)
+                                j_cands = [j_max_liga] if j_max_liga else [9999]
                                 r_self = _get_clas_fuzzy(lg_norm_r, self_norm, j_cands)
                                 r_opp = _get_clas_fuzzy(lg_norm_r, opp_norm, j_cands)
                                 if r_opp is not None:
