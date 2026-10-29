@@ -2430,6 +2430,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                 # BASE TOTAL SIN FILTROS - Para testigo JX ante cualquier filtro
                 df_team_base_total_fix2 = df_team_fix2.copy()
+                try:
+                    df_team_base_total_fix2['Date_parsed_tmp'] = pd.to_datetime(df_team_base_total_fix2['Date'], dayfirst=True, errors='coerce')
+                    df_team_base_total_fix2 = df_team_base_total_fix2.sort_values('Date_parsed_tmp').reset_index(drop=True)
+                    df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                except:
+                    df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
 
                 if nombre_eq_fix2 in equipos_manuales_1_fix2:
                     if cond_manual_1_fix2 == "solo local":
@@ -2821,11 +2827,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             filt_por_j[jn] = (inner, es_loc)
                         except:
                             continue
-                    # recorre TODAS las jornadas base para meter _
+                    # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
                     try:
-                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').dropna().unique().astype(int).tolist())
+                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist())
+                        mapa_j_eq_a_jornada = dict(zip(df_team_base_total_fix2['J_EQ'], df_team_base_total_fix2.get('Jornada', df_team_base_total_fix2['J_EQ'])))
                     except:
                         jornadas_base = sorted(filt_por_j.keys())
+                        mapa_j_eq_a_jornada = {}
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
@@ -2837,7 +2845,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else:
                             # busca si era local o visitante esa jornada en base
                             try:
-                                r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
+                                # busca por J_EQ primero, fallback a Jornada
+                                if 'J_EQ' in df_team_base_total_fix2.columns:
+                                    _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
+                                    r_base = _df_b.iloc[0] if not _df_b.empty else df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
+                                else:
+                                    r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
                                 es_loc_base = str(r_base.get('HomeTeam','')).upper().strip() == eq_up_fix2
                             except:
                                 es_loc_base = True
