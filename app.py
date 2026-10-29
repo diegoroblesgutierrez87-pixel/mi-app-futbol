@@ -2912,14 +2912,23 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if r_opp is not None:
                                     pos_opp = int(r_opp.get('Pos',0))
                                     pts_opp = int(r_opp.get('Pts',0))
-                                    if r_self is not None:
-                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts) vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                    if es_loc:
+                                        if r_self is not None:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts) vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                        else:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
                                     else:
-                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                        if r_self is not None:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} {pos_opp}º({pts_opp}pts) vs {self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts)</span>"
+                                        else:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} {pos_opp}º({pts_opp}pts) vs {self_team}</span>"
                                 else:
-                                    rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
+                                    if es_loc:
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
+                                    else:
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} vs {self_team}</span>"
                             except:
-                                rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
+                                rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} vs {self_team}</span>" if not es_loc else f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
 
                             if es_loc:
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
