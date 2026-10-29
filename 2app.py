@@ -6,7 +6,7 @@ import unicodedata
 import numpy as np
 import matplotlib.pyplot as plt
 import io, base64
-####20/10/26
+
 st.set_page_config(page_title="Lite Rapido + Local", layout="wide")
 # --- FIX SCROLL MOVIL - ANTI-REFRESH ARRIBA SIN BLOQUEAR SCROLL ---
 st.markdown("""
@@ -443,6 +443,94 @@ if 'show_partidos' not in st.session_state:
 
 
 ##############
+@st.cache_data(show_spinner=False)
+def cargar_clasificacion_main():
+    import pathlib
+    for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
+        if p.exists():
+            try:
+                return pd.read_csv(p, on_bad_lines='skip')
+            except:
+                pass
+    return pd.DataFrame()
+df_clas_main = cargar_clasificacion_main()
+clas_dict_main = {}
+clas_max_j_main = {}
+if not df_clas_main.empty:
+    for _, rc in df_clas_main.iterrows():
+        try:
+            k = (normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
+            clas_dict_main[k] = rc
+            ln = normaliza(rc.get('League',''))
+            clas_max_j_main[ln] = max(clas_max_j_main.get(ln,0), int(rc.get('jornada_int',0)))
+        except:
+            pass
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+##############################################################################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+##############################################################################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+##############################################################################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+
 filtros = st.expander("FILTROS", expanded=False)
 with filtros:
     if st.button("Ocultar partidos" if st.session_state.show_partidos else "Mostrar partidos", key="toggle_partidos", use_container_width=True):
@@ -868,6 +956,21 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         btts_txt = "G/G" if btts else "NG/NG"
 
     col_j = "#0A2342"
+    # --- CLASIFICACION ---
+    clas_html = ""
+    try:
+        lg_norm = normaliza(r.get('League',''))
+        j_act = int(j)
+        j_max = clas_max_j_main.get(lg_norm, j_act)
+        def _get_main(jn, team_norm):
+            return clas_dict_main.get((lg_norm, jn, team_norm))
+        rh_act = _get_main(j_max, normaliza(h))
+        ra_act = _get_main(j_max, normaliza(a))
+        if rh_act is not None and ra_act is not None:
+            txt_actual_main = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
+            clas_html = f"<div style='text-align:center;margin:3px 0;'><span style='background:#000;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:900;'>{txt_actual_main}</span></div>"
+    except:
+        clas_html = ""
     # --- TODA LA LINEA COLOREADA + SUBRAYADO EQUIPO FILTRO ---
     h_norm_chk = normaliza(h)
     a_norm_chk = normaliza(a)
@@ -877,10 +980,10 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     if current_eq_norm:
         col_line = col
         if h_norm_chk == current_eq_norm:
-            h_html = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"
+            h_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{h}</span>"
         elif a_norm_chk == current_eq_norm:
-            a_html = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
-    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #ccc;line-height:1.2;max-width:380px;margin:0 auto;background:#ffffff;color:#000'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> |Jornada {j}| {h_html} vs {a_html}</div><div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+            a_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{a}</span>"
+    return f"<div style='font-family:monospace;font-size:11px;padding:6px 4px;border-bottom:2px solid #ccc;line-height:1.2;max-width:380px;margin:0 auto;background:#ffffff;color:#000'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> |Jornada {j}| {h_html} vs {a_html}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#0A2342;color:#fff;padding:2px 10px;border-radius:3px'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
@@ -1167,6 +1270,39 @@ elif st.session_state.show_partidos:
 if st.button("Ocultar partidos 2" if st.session_state.show_partidos else "Mostrar partidos 2", key="toggle_partidos_2", use_container_width=True):
     st.session_state.show_partidos = not st.session_state.show_partidos
     st.rerun()
+    #######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+##############################################################################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
+#######################################################
 ##########################################
 ##########################################
 ######################################
@@ -2180,6 +2316,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         return df_e, ev
 
     df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2()
+
+    @st.cache_data(show_spinner=False)
+    def cargar_clasificacion_fix2():
+        for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
+            if p.exists():
+                try:
+                    return pd.read_csv(p, on_bad_lines='skip')
+                except:
+                    pass
+        return pd.DataFrame()
+    df_clas_fix2 = cargar_clasificacion_fix2()
+    clas_dict_fix2 = {}
+    clas_max_j_fix2 = {}
+    if not df_clas_fix2.empty:
+        for _, rc in df_clas_fix2.iterrows():
+            try:
+                k = (normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
+                clas_dict_fix2[k] = rc
+                ln = normaliza(rc.get('League',''))
+                clas_max_j_fix2[ln] = max(clas_max_j_fix2.get(ln,0), int(rc.get('jornada_int',0)))
+            except:
+                pass
+
     df_fix2 = df_europa_fix2
     eventos_fix2 = eventos_europa_fix2
 
@@ -2369,6 +2528,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                 # BASE TOTAL SIN FILTROS - Para testigo JX ante cualquier filtro
                 df_team_base_total_fix2 = df_team_fix2.copy()
+                try:
+                    df_team_base_total_fix2['Date_parsed_tmp'] = pd.to_datetime(df_team_base_total_fix2['Date'], dayfirst=True, errors='coerce')
+                    df_team_base_total_fix2 = df_team_base_total_fix2.sort_values('Date_parsed_tmp').reset_index(drop=True)
+                    df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                    df_team_fix2['J_EQ'] = df_team_base_total_fix2['J_EQ'].values
+                    df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
+                except:
+                    df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
+                    df_team_fix2['J_EQ'] = df_team_base_total_fix2['J_EQ'].values
+                    df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
 
                 if nombre_eq_fix2 in equipos_manuales_1_fix2:
                     if cond_manual_1_fix2 == "solo local":
@@ -2596,12 +2765,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_filtrada_real_fix2 = df_team_fix2
                     filt_fix2 = len(df_team_fix2)
 
-                # DESGLOSE LOCAL/VISITANTE segun Cond manual 1/2 - CORREGIDO
+                # DESGLOSE LOCAL/VISITANTE FIX CON NORMALIZA - 100% = J_EQ
                 try:
-                    _mask_local_total = df_team_base_total_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2
+                    _mask_local_total = df_team_base_total_fix2['HomeTeam'].apply(lambda x: normaliza(str(x))==norm_eq_fix2)
                     local_total = int(_mask_local_total.sum())
                     visitante_total = total_fix2 - local_total
-                    _mask_local_filt = df_filtrada_real_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2 if not df_filtrada_real_fix2.empty else _mask_local_total[:0]
+                    _mask_local_filt = df_filtrada_real_fix2['HomeTeam'].apply(lambda x: normaliza(str(x))==norm_eq_fix2) if not df_filtrada_real_fix2.empty else _mask_local_total[:0]
                     local_filt = int(_mask_local_filt.sum())
                     visitante_filt = filt_fix2 - local_filt
                     desglose = f" [L:{local_filt}/{local_total} V:{visitante_filt}/{visitante_total}]"
@@ -2702,19 +2871,154 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             detalle = f"J{jn}({riv_txt}-{fav_txt})"
                             lista_vis_detalle.append((jn, detalle))
 
-                    lista_loc_detalle_sorted = [d for _, d in sorted(lista_loc_detalle, key=lambda x: x[0])]
-                    lista_vis_detalle_sorted = [d for _, d in sorted(lista_vis_detalle, key=lambda x: x[0])]
+                    # --- RESUMEN 3 LINEAS + RESULTADO + MINUTOS VERDE/ROJO + HUECOS _ ---
+                    lista_loc_plain = []
+                    lista_vis_plain = []
+                    # dict filtrados por jornada para lookup rapido - USA J_EQ
+                    filt_por_j = {}
+                    for _, rr in df_filtrada_real_fix2.iterrows():
+                        try:
+                            jn = int(rr.get('J_EQ', rr.get('Jornada',0)))
+                            hg = int(float(rr.get('FTHG',0) or 0))
+                            ag = int(float(rr.get('FTAG',0) or 0))
+                            es_loc = str(rr.get('HomeTeam','')).upper().strip() == eq_up_fix2
+                            fid_r = str(rr.get('fixture_id','')).split('.')[0]
+                            # --- rival + clasificacion FUZZY ---
+                            opp_team = str(rr.get('AwayTeam','')).strip() if es_loc else str(rr.get('HomeTeam','')).strip()
+                            opp_norm = normaliza(opp_team)
+                            self_team = nombre_eq_fix2.strip()
+                            self_norm = norm_eq_fix2
+                            lg_norm_r = normaliza(rr.get('League',''))
+                            def _get_clas_fuzzy(lg_n, team_n, j_list):
+                                for jc in j_list:
+                                    rec = clas_dict_fix2.get((lg_n, jc, team_n))
+                                    if rec is not None:
+                                        return rec
+                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
+                                    if l_ != lg_n: continue
+                                    if j_ not in j_list: continue
+                                    if team_n in n_ or n_ in team_n:
+                                        return rec_
+                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
+                                    if l_ != lg_n: continue
+                                    if team_n in n_ or n_ in team_n:
+                                        return rec_
+                                return None
+                            try:
+                                j_max_liga = clas_max_j_fix2.get(lg_norm_r, 0)
+                                j_cands = [j_max_liga] if j_max_liga else [9999]
+                                r_self = _get_clas_fuzzy(lg_norm_r, self_norm, j_cands)
+                                r_opp = _get_clas_fuzzy(lg_norm_r, opp_norm, j_cands)
+                                if r_opp is not None:
+                                    pos_opp = int(r_opp.get('Pos',0))
+                                    pts_opp = int(r_opp.get('Pts',0))
+                                    if es_loc:
+                                        if r_self is not None:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts) vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                        else:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} {pos_opp}º({pts_opp}pts)</span>"
+                                    else:
+                                        if r_self is not None:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} {pos_opp}º({pts_opp}pts) vs {self_team} {int(r_self.get('Pos',0))}º({int(r_self.get('Pts',0))}pts)</span>"
+                                        else:
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} {pos_opp}º({pts_opp}pts) vs {self_team}</span>"
+                                else:
+                                    if es_loc:
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
+                                    else:
+                                        rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} vs {self_team}</span>"
+                            except:
+                                rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} vs {self_team}</span>" if not es_loc else f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
 
-                    j_loc_txt = ", ".join(lista_loc_detalle_sorted) if lista_loc_detalle_sorted else "-"
-                    j_vis_txt = ", ".join(lista_vis_detalle_sorted) if lista_vis_detalle_sorted else "-"
-                    
-                    # ultima jornada jugada de ese equipo - para RESUMEN FINAL FIX2
+                            if es_loc:
+                                res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                                letra = "G" if hg>ag else "E" if hg==ag else "P"
+                            else:
+                                res_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                                letra = "G" if ag>hg else "E" if ag==hg else "P"
+                            if letra == "G":
+                                badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
+                            elif letra == "E":
+                                badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
+                            else:
+                                badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                                    # --- FILTRO GOLES PARTE PARA RESUMEN ---
+                            goles_parte_f = st.session_state.get("goles_parte_fix2", "Todo")
+                            mins_1p = []
+                            mins_2p = []
+                            for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
+                                if 'Missed' in ev.get('tipo',''): continue
+                                mm = ev.get('m',-1)
+                                if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
+                                if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
+                                es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
+                                col = "#00c800" if es_mio else "#ff2a2a"
+                                tag = f"<span style='color:{col};font-weight:900'>{mm}'</span>"
+                                if mm <= 45:
+                                    mins_1p.append(tag)
+                                else:
+                                    mins_2p.append(tag)
+                            
+                            # aplica desplegable
+                            if goles_parte_f == "1ªParte":
+                                if mins_1p:
+                                    mins_txt = " ".join(mins_1p)
+                                else:
+                                    mins_txt = ""
+                            elif goles_parte_f == "2ªParte":
+                                if mins_2p:
+                                    mins_txt = " ".join(mins_2p)
+                                else:
+                                    mins_txt = ""
+                            else: # Todo
+                                if mins_1p and mins_2p:
+                                    mins_txt = " ".join(mins_1p) + " <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
+                                elif mins_1p:
+                                    mins_txt = " ".join(mins_1p)
+                                elif mins_2p:
+                                    mins_txt = " ".join(mins_2p)
+                                else:
+                                    mins_txt = ""
+                            
+                            inner = f"{res_txt} {mins_txt}{rival_txt} {badge}" if mins_txt else f"{res_txt}{rival_txt} {badge}"
+                            filt_por_j[jn] = (inner, es_loc)
+                        except:
+                            continue
+                    # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
+                    try:
+                        jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist())
+                    except:
+                        jornadas_base = sorted(filt_por_j.keys())
+                    for jn in jornadas_base:
+                        j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
+                        if jn in filt_por_j:
+                            inner, es_loc = filt_por_j[jn]
+                            if es_loc:
+                                lista_loc_plain.append(f"{j_tag}({inner})")
+                            else:
+                                lista_vis_plain.append(f"{j_tag}({inner})")
+                        else:
+                            # busca si era local o visitante esa jornada en base
+                            try:
+                                if 'J_EQ' in df_team_base_total_fix2.columns:
+                                    _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
+                                    r_base = _df_b.iloc[0] if not _df_b.empty else df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
+                                else:
+                                    r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
+                                es_loc_base = normaliza(str(r_base.get('HomeTeam',''))) == norm_eq_fix2
+                            except:
+                                es_loc_base = True
+                            if es_loc_base:
+                                lista_loc_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>CASA _</span>)")
+                            else:
+                                lista_vis_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>VIS _</span>)")
+                    j_loc_plain_txt = "<br>".join(lista_loc_plain) if lista_loc_plain else "-"
+                    j_vis_plain_txt = "<br>".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
                         last_j_fix2 = 0
-
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} | L:{local_filt}/{local_total} [{j_loc_txt}] | V:{visitante_filt}/{visitante_total} [{j_vis_txt}]<span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>"
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span><br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     try:
@@ -2870,17 +3174,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 df_team_fix2 = df_team_fix2[df_team_fix2['Date_parsed'] <= pd.to_datetime("2026-12-31")]
                 df_team_fix2['fid_num'] = pd.to_numeric(df_team_fix2['fixture_id'], errors='coerce') if not df_team_fix2.empty else 0
                 df_team_fix2 = df_team_fix2.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix2.empty else df_team_fix2
-                # FIX DEFINITIVO - Jornadas continuas 15 últimas para testigo J|— aunque no haya partido en esa J
-                if not df_team_base_pred_fix2.empty and 'Jornada' in df_team_base_pred_fix2.columns:
-                    try:
-                        max_j = int(pd.to_numeric(df_team_base_pred_fix2['Jornada'], errors='coerce').max())
-                    except:
-                        max_j = 0
+                # FIX DEFINITIVO - Usa J_EQ no Jornada de liga
+                if not df_team_base_pred_fix2.empty and 'J_EQ' in df_team_base_pred_fix2.columns:
+                    max_j = int(pd.to_numeric(df_team_base_pred_fix2['J_EQ'], errors='coerce').max())
                     jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
                 else:
-                    jornadas_fix2 = sorted(df_team_base_pred_fix2['Jornada'].dropna().unique(), reverse=True)[:15] if 'Jornada' in df_team_base_pred_fix2.columns else []
+                    max_j = int(pd.to_numeric(df_team_base_pred_fix2['Jornada'], errors='coerce').max()) if not df_team_base_pred_fix2.empty else 0
+                    jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
                 for j_fix2 in jornadas_fix2:
-                    d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
+                    if 'J_EQ' in df_team_fix2.columns and 'J_EQ' in df_team_base_pred_fix2.columns:
+                        d_j_ok_fix2 = df_team_fix2[df_team_fix2['J_EQ']==j_fix2]
+                    else:
+                        d_j_ok_fix2 = df_team_fix2[df_team_fix2['Jornada']==j_fix2].sort_values('Date', ascending=False) if not df_team_fix2.empty and 'Jornada' in df_team_fix2.columns else pd.DataFrame()
                     es_hueco_fix2 = d_j_ok_fix2.empty
                     # Para MIN DESDE/HASTA: si la jornada existe pero ningún partido tiene eventos en ese rango, también es hueco
                     if not es_hueco_fix2 and (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None):
@@ -2912,7 +3217,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _loc_txt = ""
                             _bg_hueco = "#f5f5f5"
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px solid #444;'><div style='color:#fff; font-weight:900; font-size:10px;'>J{int(j_fix2)} | — {_loc_txt}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
+                        # HUECO = hubo jornada L/V pero no sucedió el evento -> _ para ver rachas
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| _ {_loc_txt} ({nombre_eq_fix2})")
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>J{int(j_fix2)} | <span style='background:#fff;color:#000;padding:1px 6px;border-radius:3px;'>_</span> <span style='color:#888;font-size:10px'>({_loc_txt})</span></div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
@@ -2968,17 +3275,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else: r1="E"; rF="E"
                         estado = f"{r1}/{rF}"
 
-                        # --- NOMBRES con subrayado + EMOJI FUERA COMO QUIERES ---
+                        # --- NOMBRES con pastilla blanca para seleccionado (mismo siempre) ---
                         EMOJI_SEL = "⚽"
                         EMOJI_RIVAL = "⚽"
                         if norm_eq_fix2 == h_norm_r:
-                            h_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
-                            a_txt = f"<span style='color:#ffffff'>{a}</span>"
+                            h_txt = f"<span style='background:#FFFFFF;color:#000;padding:2px 8px;border-radius:5px;font-weight:900;'>{h}</span>"
+                            a_txt = f"<span style='color:#aaaaaa;font-weight:700'>{a}</span>"
                             emoji_home = EMOJI_SEL
                             emoji_away = EMOJI_RIVAL
                         elif norm_eq_fix2 == a_norm_r:
-                            h_txt = f"<span style='color:#ffffff'>{h}</span>"
-                            a_txt = f"<span style='color:#ffffff;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
+                            h_txt = f"<span style='color:#aaaaaa;font-weight:700'>{h}</span>"
+                            a_txt = f"<span style='background:#FFFFFF;color:#000;padding:2px 8px;border-radius:5px;font-weight:900;'>{a}</span>"
                             emoji_home = EMOJI_RIVAL
                             emoji_away = EMOJI_SEL
                         else:
@@ -3084,10 +3391,61 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         filtro_act_fix2 = (MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None)
                         es_local_j = (norm_eq_fix2 == h_norm_r)
                         ###########FONDO LOCAL VISITANTE
-                        bg_j = "#131314C4" if es_local_j else "#17152FC2"
-                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:6px; border:1px solid #444;'>"
-                        html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:2px 6px;border-radius:4px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span></div>"
+                        bg_j = "#131314C4" if es_local_j else "#133562cc"
+                        # --- CUOTAS EN LINEA J | P/P ---
+                        try:
+                            def _get_odd_j(rw, keys):
+                                for k in keys:
+                                    if k in rw and pd.notna(rw.get(k)):
+                                        try:
+                                            v=float(rw.get(k))
+                                            if v>1: return v
+                                        except: pass
+                                return None
+                            _oh = _get_odd_j(r, ['odd_home','B365H','1','Odd_H','HomeOdd'])
+                            _od = _get_odd_j(r, ['odd_draw','B365D','X','Odd_D','DrawOdd'])
+                            _oa = _get_odd_j(r, ['odd_away','B365A','2','Odd_A','AwayOdd'])
+                            if _oh or _od or _oa:
+                                _gan = 'H' if hg>ag else 'A' if ag>hg else 'D'
+                                def _fmt_j(v, is_win):
+                                    if v is None: return "<span style='color:#666'>-</span>"
+                                    sz = "12px" if is_win else "10px"
+                                    bg = "#fff" if is_win else "transparent"
+                                    col = "#000" if is_win else "#aaa"
+                                    wt = "900" if is_win else "700"
+                                    br = "1px solid #000" if is_win else "none"
+                                    return f"<span style='font-size:{sz}; background:{bg}; color:{col}; font-weight:{wt}; padding:1px 4px; border-radius:3px; border:{br};'>{v:.2f}</span>"
+                                _cuotas_j = f" | {_fmt_j(_oh, _gan=='H')} {_fmt_j(_od, _gan=='D')} {_fmt_j(_oa, _gan=='A')}"
+                            else:
+                                _cuotas_j = ""
+                        except:
+                            _cuotas_j = ""
+                        html = f"<div style='font-family:monospace; text-align:center; padding:6px 4px 4px 4px; max-width:480px; margin:0 auto; line-height:1.2; background:{bg_j}; border-radius:8px; border:2.5px solid #FFFFFF;'>"
+                        html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:3px 8px;border-radius:4px;font-size:14px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span>{_cuotas_j}</div>"
+                        # --- CLASIFICACION ENCIMA DE EQUIPO VS EQUIPO ---
+                        try:
+                            lg_norm = normaliza(r.get('League',''))
+                            j_act = int(j_fix2)
+                            j_antes = j_act - 1
+                            j_max = clas_max_j_fix2.get(lg_norm, j_act)
+                            def _get(j, team_norm):
+                                return clas_dict_fix2.get((lg_norm, j, team_norm))
+                            rh_antes = _get(j_antes, h_norm_r) if j_antes>=1 else None
+                            ra_antes = _get(j_antes, a_norm_r) if j_antes>=1 else None
+                            rh_act = _get(j_max, h_norm_r)
+                            ra_act = _get(j_max, a_norm_r)
+                            txt_actual = ""
+                            txt_antes = ""
+                            if rh_act is not None and ra_act is not None:
+                                txt_actual = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
+                            if rh_antes is not None and ra_antes is not None:
+                                txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
+                            if txt_actual:
+                                html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0 4px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
+                        except:
+                            pass
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
+                        ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
                             htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
@@ -3249,7 +3607,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         try:
             if lista_resumen_fix2:
                 resumen_html = "<br>".join(lista_resumen_fix2)
-                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#000; font-weight:900; background:#FFFFFF; border:2px solid #000; border-radius:8px; padding:10px; margin:12px 0; white-space:pre-wrap; line-height:1.6;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; white-space:pre-wrap; line-height:1.6;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
         except:
             pass
         try:
@@ -3486,762 +3844,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 ################################################################### CLONADO
 ##################
 ################################################################### CLONADO
-##################
-################################################################### CLONADO
-
-
-with st.expander(" PREDICCION RESTO - SUDAMERICA + ASIA + MLS", expanded=False):
-    @st.cache_data(show_spinner=False)
-    def cargar_base_resto():
-        p_par = pathlib.Path("base_partidos_resto.parquet")
-        if not p_par.exists():
-            p_par = pathlib.Path(__file__).parent.resolve() / "base_partidos_resto.parquet"
-        g_par = pathlib.Path("base_goles_resto.parquet")
-        if not g_par.exists():
-            g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_resto.parquet"
-        df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
-        if not df_e.empty:
-            def _parse_fecha_base_resto(s):
-                try:
-                    d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                    if pd.isna(d):
-                        d = pd.to_datetime(s, errors='coerce')
-                    return d
-                except:
-                    return pd.NaT
-            df_e['Date'] = df_e['Date'].apply(_parse_fecha_base_resto)
-            df_e = df_e.sort_values(['League','Season','Date']).copy()
-            df_e['Jornada'] = 0
-            for (l_name, s_name), g_s in df_e.groupby(['League','Season'], sort=False):
-                g_s = g_s.sort_values('Date')
-                idxs = g_s.index.to_numpy()
-                n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
-                ppj = max(n_teams // 2, 1)
-                df_e.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
-        df_g = pd.read_parquet(g_par) if g_par.exists() else pd.DataFrame()
-        ev = {}
-        if not df_g.empty:
-            df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
-            for fid, sub in df_g.groupby('fid_str'):
-                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
-        return df_e, ev
-
-    df_resto, eventos_resto = cargar_base_resto()
-    df_r = df_resto
-    eventos_r = eventos_resto
-
-    if df_r.empty:
-        st.warning("No encuentro base_partidos_resto.parquet")
-        st.stop()
-
-    # --- FILTROS SOLO RESTO - FIX df_futuro NO DEFINIDO ---
-    @st.cache_data(show_spinner=False)
-    def cargar_futuro_resto():
-        p = pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv")
-        if not p.exists():
-            for q in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
-                if (q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv").exists():
-                    p = q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"
-                    break
-        if not p.exists():
-            return pd.DataFrame()
-        df_fut = pd.read_csv(p, on_bad_lines='skip')
-        df_fut['Date'] = pd.to_datetime(df_fut['Date'], errors='coerce')
-        return df_fut
-    df_futuro_r = cargar_futuro_resto()
-
-    ligas_fut_all_r = sorted(df_futuro_r['League_CSV'].dropna().unique().tolist())
-    if not df_r.empty and 'League' in df_r.columns:
-        ligas_resto_set = set(df_r['League'].dropna().astype(str).tolist())
-        ligas_fut_r = [l for l in ligas_fut_all_r if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_resto_set)]
-        if not ligas_fut_r:
-            keywords_resto = ["J1 League","J2 League","K League","CSL","A-League","Liga MX","MLS","Brasileirao","Primera Division Argentina","Primera A Colombia","Primera Division Chile","Liga 1 Peru","Serie A Ecuador","Liga Pro"]
-            ligas_fut_r = [l for l in ligas_fut_all_r if any(k.lower() in l.lower() for k in keywords_resto)]
-    else:
-        ligas_fut_r = ligas_fut_all_r
-
-    c1r,c2r,c3r,c4r = st.columns([2,1,1,1])
-    with c1r:
-        ligas_pred_sel_r = st.multiselect("Ligas futuras RESTO", ligas_fut_r, default=[], key="ligas_pred_resto", placeholder="J1, K1, CSL, MLS, Brasil...")
-    with c2r:
-        df_base_pred_r = df_futuro_r[df_futuro_r['League_CSV'].isin(ligas_fut_r)] if not ligas_pred_sel_r else df_futuro_r[df_futuro_r['League_CSV'].isin(ligas_pred_sel_r)]
-        fechas_pred_r = sorted(df_base_pred_r['Date'].dropna().dt.date.unique())
-        fechas_pred_str_r = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_r]
-        fecha_pred_sel_r = st.selectbox("Fecha desde RESTO", fechas_pred_str_r, key="fecha_pred_resto")
-    with c3r:
-        c_m1r, c_m2r = st.columns(2)
-        with c_m1r:
-            min_desde_pred_raw_r = st.text_input("MIN DESDE R", key="min_desde_pred_resto", placeholder="-")
-        with c_m2r:
-            min_hasta_pred_raw_r = st.text_input("MIN HASTA R", key="min_hasta_pred_resto", placeholder="-")
-    with c4r:
-        goles_parte_r = st.selectbox("GOLES PARTE R", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_resto")
-        cond_loc_pred_r = st.selectbox("Filtro R", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_resto")
-        res_1p_tipo_r = st.selectbox("Resultado 1ªP R", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_resto")
-        opciones_res_r = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
-        resultados_pred_sel_r = st.multiselect("Resultado 1ªP / 2ªP R", opciones_res_r, default=[], key="filtro_ht_ft_resto", placeholder="Ej: 0-0_1ªP")
-        overs_sel_r = st.multiselect("Overs / Unders R", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_resto", placeholder="Ej: 1P >0.5")
-        res_live_tipo_r = st.selectbox("Resultado LIVE R", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_resto")
-        min_live_raw_r = st.text_input("MIN LIVE R", key="min_live_resto", placeholder="Ej: 76")
-
-    # --- EQUIPOS MANUALES RESTO - AÑADIDO (igual que EUROPA) ---
-    lista_hist_equipos_resto = sorted(pd.concat([df_r['HomeTeam'], df_r['AwayTeam']]).dropna().astype(str).unique().tolist())
-    c_man1_r, c_man2_r = st.columns(2)
-    with c_man1_r:
-        equipos_manuales_1_r = st.multiselect("Equipos manuales 1", lista_hist_equipos_resto, default=[], key="eq_manual_1_resto", placeholder="Ej: Bahia, Flamengo...")
-        cond_manual_1_r = st.selectbox("Cond manual 1", ["TODOS","solo local","solo visitante"], key="cond_manual_1_resto")
-    with c_man2_r:
-        equipos_manuales_2_r = st.multiselect("Equipos manuales 2", lista_hist_equipos_resto, default=[], key="eq_manual_2_resto", placeholder="Ej: Mirassol, Palmeiras...")
-        cond_manual_2_r = st.selectbox("Cond manual 2", ["TODOS","solo local","solo visitante"], key="cond_manual_2_resto")
-
-    def _parse_min_pred_r(v):
-        try:
-            if v is None or str(v).strip() in ["", "-", "–", "—"]: return None
-            return int(str(v).strip().replace("'", ""))
-        except: return None
-    MIN_DESDE_PRED_R = _parse_min_pred_r(min_desde_pred_raw_r)
-    MIN_HASTA_PRED_R = _parse_min_pred_r(min_hasta_pred_raw_r)
-    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
-    MIN_LIVE_R = _parse_min_pred_r(min_live_raw_r)
-
-    if fecha_pred_sel_r!= "Todas":
-        try:
-            f_date_r = pd.to_datetime(fecha_pred_sel_r, dayfirst=True).date()
-            df_base_pred_r = df_base_pred_r[df_base_pred_r['Date'].dt.date >= f_date_r]
-        except: pass
-
-    df_base_pred_r = df_base_pred_r.sort_values('Date').head(1000)
-
-    opciones_partidos_r = []
-    for _, r in df_base_pred_r.iterrows():
-        try:
-            fecha_s = r['Date'].strftime("%d/%m")
-            liga_s = str(r['League_CSV'])[:15]
-            h = str(r['HomeTeam']).strip()
-            a = str(r['AwayTeam']).strip()
-            fid = str(r.get('fixture_id',''))
-            opciones_partidos_r.append(f"{fecha_s} | {liga_s} | {h} vs {a} | {fid}")
-        except: continue
-
-    partidos_sel_r = []
-    if not opciones_partidos_r:
-        st.info("No hay partidos futuros RESTO con ese filtro")
-    else:
-        partidos_sel_r = st.multiselect("Elige partido futuro RESTO", opciones_partidos_r, key="partidos_pred_sel_resto", placeholder="Ej: Kashima vs Urawa - J1")
-
-    partidos_pred_copy_r = []
-    # FIX MANUALES AUNQUE NO HAYA FUTURO SELECCIONADO
-    manuales_extra_r = []
-    if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r: manuales_extra_r.extend(equipos_manuales_1_r)
-    if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r: manuales_extra_r.extend(equipos_manuales_2_r)
-
-    if not partidos_sel_r and not manuales_extra_r:
-        st.caption("Selecciona partido futuro RESTO")
-    else:
-        partidos_pred_copy_r = []
-        partidos_a_iterar_r = partidos_sel_r if partidos_sel_r else (["MANUAL_ONLY"] if manuales_extra_r else [])
-
-        for partido_str_r in partidos_a_iterar_r:
-            if "MANUAL_ONLY" in partido_str_r:
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 MANUAL RESTO: {', '.join(manuales_extra_r)}</div>", unsafe_allow_html=True)
-                equipos_a_mostrar_r = manuales_extra_r
-                h_fut_r = ""
-                a_fut_r = ""
-            else:
-                try:
-                    partes_r = partido_str_r.split("|")
-                    teams_part_r = partes_r[2].strip() if len(partes_r)>=3 else ""
-                    if " vs " in teams_part_r:
-                        h_fut_r, a_fut_r = [x.strip() for x in teams_part_r.split(" vs ")]
-                    else:
-                        continue
-                except:
-                    continue
-                # conteo futuro resto CON MIN
-                def _cnt_fut_r(nom):
-                    _norm = normaliza(nom); _up = nom.upper().strip()
-                    _df = df_r[(df_r['HomeTeam'].astype(str).str.upper().str.strip() == _up) | (df_r['AwayTeam'].astype(str).str.upper().str.strip() == _up)]
-                    if _df.empty:
-                        _df = df_r[(df_r['HomeTeam'].apply(lambda x: normaliza(x)==_norm)) | (df_r['AwayTeam'].apply(lambda x: normaliza(x)==_norm))]
-                    _tot = len(_df)
-                    _df_f = _df.copy()
-                    if resultados_pred_sel_r:
-                        set_1p_r = set(); set_2p_r = set()
-                        for s in resultados_pred_sel_r:
-                            if "_1ªP" in s:
-                                try: a,b = s.replace("_1ªP","").split("-"); set_1p_r.add((int(a),int(b)))
-                                except: pass
-                            if "_2ªP" in s:
-                                try: a,b = s.replace("_2ªP","").split("-"); set_2p_r.add((int(a),int(b)))
-                                except: pass
-                        if set_1p_r or set_2p_r:
-                            def _cumple_r(rr):
-                                try:
-                                    hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                                    hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                                except: return False
-                                if set_1p_r and (hthg_, htag_) in set_1p_r: return True
-                                if set_2p_r and (hg_, ag_) in set_2p_r: return True
-                                return False
-                            _df_f = _df_f[_df_f.apply(_cumple_r, axis=1)]
-                    if MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None:
-                        def _tiene_min_fr(rr):
-                            fid = str(rr.get('fixture_id','')).split('.')[0]
-                            for ev in eventos_r.get(fid, []):
-                                if 'Missed' in ev.get('tipo',''): continue
-                                mm = ev.get('m',-1)
-                                if MIN_DESDE_PRED_R is not None and mm < MIN_DESDE_PRED_R: continue
-                                if MIN_HASTA_PRED_R is not None and mm > MIN_HASTA_PRED_R: continue
-                                return True
-                            return False
-                        _df_f = _df_f[_df_f.apply(_tiene_min_fr, axis=1)]
-                    return len(_df_f), _tot
-                f_h_filt_r, f_h_tot_r = _cnt_fut_r(h_fut_r)
-                f_a_filt_r, f_a_tot_r = _cnt_fut_r(a_fut_r)
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO RESTO: {h_fut_r} {f_h_filt_r}/{f_h_tot_r} vs {a_fut_r} {f_a_filt_r}/{f_a_tot_r} | {partes_r[0].strip()}</div>", unsafe_allow_html=True)
-                equipos_a_mostrar_r = [h_fut_r, a_fut_r]
-                if 'equipos_manuales_1_r' in locals() and equipos_manuales_1_r:
-                    equipos_a_mostrar_r.extend(equipos_manuales_1_r)
-                if 'equipos_manuales_2_r' in locals() and equipos_manuales_2_r:
-                    equipos_a_mostrar_r.extend(equipos_manuales_2_r)
-
-            for nombre_eq_r in equipos_a_mostrar_r:
-                norm_eq_r = normaliza(nombre_eq_r)
-                eq_up_r = nombre_eq_r.upper().strip()
-                df_team_r = df_r[(df_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r) | (df_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r)]
-                if df_team_r.empty:
-                    df_team_r = df_r[(df_r['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq_r)) | (df_r['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq_r))]
-
-                df_team_base_total_r = df_team_r.copy()
-                # --- FIX FILTRO LOCAL/VISITANTE RESPETA COND MANUAL 1/2 ---
-                es_manual_1 = 'equipos_manuales_1_r' in locals() and nombre_eq_r in equipos_manuales_1_r
-                es_manual_2 = 'equipos_manuales_2_r' in locals() and nombre_eq_r in equipos_manuales_2_r
-
-                if es_manual_1:
-                    if cond_manual_1_r == "solo local":
-                        df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                    elif cond_manual_1_r == "solo visitante":
-                        df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                elif es_manual_2:
-                    if cond_manual_2_r == "solo local":
-                        df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                    elif cond_manual_2_r == "solo visitante":
-                        df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                else:
-                    # equipos de futuro - respeta Filtro R
-                    if cond_loc_pred_r == "equipo local solamente partidos de local":
-                        df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                    elif cond_loc_pred_r == "equipo visitante solamente sus partidos de visitante":
-                        df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                    elif cond_loc_pred_r == "Local en casa / Visitante fuera":
-                        if 'h_fut_r' in locals() and nombre_eq_r == h_fut_r:
-                            df_team_r = df_team_r[df_team_r['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-                        elif 'a_fut_r' in locals() and nombre_eq_r == a_fut_r:
-                            df_team_r = df_team_r[df_team_r['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_r]
-
-                df_team_base_pred_r = df_team_r.copy()
-                if resultados_pred_sel_r:
-                    set_1p_r = set(); set_2p_r = set()
-                    for s in resultados_pred_sel_r:
-                        if "_1ªP" in s:
-                            try: a,b = s.replace("_1ªP","").split("-"); set_1p_r.add((int(a),int(b)))
-                            except: pass
-                        if "_2ªP" in s:
-                            try: a,b = s.replace("_2ªP","").split("-"); set_2p_r.add((int(a),int(b)))
-                            except: pass
-                    if set_1p_r or set_2p_r:
-                        def _cumple_res_pred_r(rr):
-                            try:
-                                hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                                hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                            except: return False
-                            if set_1p_r and (hthg_, htag_) in set_1p_r: return True
-                            if set_2p_r and (hg_, ag_) in set_2p_r: return True
-                            return False
-                        df_team_r = df_team_r[df_team_r.apply(_cumple_res_pred_r, axis=1)]
-
-                if overs_sel_r:
-                    def _cumple_overs_pred_r(rr):
-                        try:
-                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                        except: return False
-                        g1 = hthg_ + htag_
-                        g2 = (hg_ + ag_) - g1
-                        if g2 < 0: g2 = 0
-                        for o in overs_sel_r:
-                            if o == "1P >0.5" and not (g1 > 0.5): return False
-                            if o == "1P >1.5" and not (g1 > 1.5): return False
-                            if o == "1P >2.5" and not (g1 > 2.5): return False
-                            if o == "2P >0.5" and not (g2 > 0.5): return False
-                            if o == "2P >1.5" and not (g2 > 1.5): return False
-                            if o == "2P >2.5" and not (g2 > 2.5): return False
-                        return True
-                    df_team_r = df_team_r[df_team_r.apply(_cumple_overs_pred_r, axis=1)]
-
-                if res_1p_tipo_r!= "TODOS":
-                    def _cumple_1p_tipo_r(rr):
-                        try:
-                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                        except: return False
-                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
-                        if norm_eq_r == hn_:
-                            r_ = "GANA" if hthg_ > htag_ else "EMPATE" if hthg_ == htag_ else "PIERDE"
-                        elif norm_eq_r == an_:
-                            r_ = "GANA" if htag_ > hthg_ else "EMPATE" if htag_ == hthg_ else "PIERDE"
-                        else:
-                            return False
-                        if res_1p_tipo_r == "EMPATE": return r_ == "EMPATE"
-                        if res_1p_tipo_r == "GANA": return r_ == "GANA"
-                        if res_1p_tipo_r == "PIERDE": return r_ == "PIERDE"
-                        if res_1p_tipo_r == "EMPATEGANA": return r_ in ("EMPATE","GANA")
-                        if res_1p_tipo_r == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
-                        if res_1p_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
-                        return True
-                    df_team_r = df_team_r[df_team_r.apply(_cumple_1p_tipo_r, axis=1)]
-
-                # --- LIVE R: RESULTADO EN MINUTO X ---
-                if res_live_tipo_r != "TODOS" and MIN_LIVE_R is not None:
-                    def _strip_acc_r(s):
-                        try:
-                            return ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-                        except:
-                            return str(s)
-                    def _equipo_es_local_r(team_str, home_norm, away_norm):
-                        try:
-                            t = normaliza(team_str)
-                            h = normaliza(home_norm)
-                            a = normaliza(away_norm)
-                            if t == h: return True
-                            if t == a: return False
-                            if h and (h in t or t in h): return True
-                            if a and (a in t or t in a): return False
-                        except:
-                            pass
-                        tu = str(team_str).upper().strip()
-                        hu = str(home_norm).upper().strip()
-                        au = str(away_norm).upper().strip()
-                        if tu == hu or hu in tu or tu in hu: return True
-                        if tu == au or au in tu or tu in au: return False
-                        return False
-                    def _cumple_live_r(rr):
-                        fid = str(rr.get('fixture_id','')).split('.')[0]
-                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
-                        hn_c = _strip_acc_r(hn_); an_c = _strip_acc_r(an_)
-                        norm_eq_c = _strip_acc_r(norm_eq_r)
-                        try:
-                            hg_ft = int(float(rr.get('FTHG',0) or 0)); ag_ft = int(float(rr.get('FTAG',0) or 0))
-                            hthg = int(float(rr.get('HTHG',0) or 0)); htag = int(float(rr.get('HTAG',0) or 0))
-                        except:
-                            hg_ft=0; ag_ft=0; hthg=0; htag=0
-                        evs = eventos_r.get(fid, [])
-                        sh_total = (hg_ft - hthg) + (ag_ft - htag)
-                        if sh_total <0: sh_total=0
-                        sh_up_to = 0
-                        hg_live = 0; ag_live = 0; cnt_match=0
-                        for ev in evs:
-                            m = ev.get('m',0)
-                            if m <= 45 or m > MIN_LIVE_R:
-                                if m <= MIN_LIVE_R:
-                                    team_ev = _strip_acc_r(ev.get('team',''))
-                                    tipo = ev.get('tipo','')
-                                    if 'Missed' in tipo: continue
-                                    if 'Own Goal' in tipo:
-                                        if team_ev == hn_c: ag_live+=1; cnt_match+=1
-                                        elif team_ev == an_c: hg_live+=1; cnt_match+=1
-                                    else:
-                                        if team_ev == hn_c: hg_live+=1; cnt_match+=1
-                                        elif team_ev == an_c: ag_live+=1; cnt_match+=1
-                                continue
-                            sh_up_to += 1
-                            team_ev = _strip_acc_r(ev.get('team',''))
-                            tipo = ev.get('tipo','')
-                            if 'Missed' in tipo: continue
-                            es_local_raw_live = _equipo_es_local_r(team_ev, hn_, an_)
-                            is_home_live = (not es_local_raw_live) if 'Own Goal' in tipo else es_local_raw_live
-                            if is_home_live: hg_live+=1; cnt_match+=1
-                            else: ag_live+=1; cnt_match+=1
-                        if MIN_LIVE_R <= 45:
-                            if cnt_match==0:
-                                hg_live = hthg if hthg+htag>0 else 0
-                                ag_live = htag if hthg+htag>0 else 0
-                        else:
-                            if sh_up_to == 0:
-                                hg_live = hthg; ag_live = htag
-                            elif sh_up_to == sh_total and sh_total>0:
-                                hg_live = hg_ft; ag_live = ag_ft
-                            else:
-                                if cnt_match==0 and sh_up_to>0:
-                                    hg_live = hg_ft if sh_up_to==sh_total else hthg
-                                    ag_live = ag_ft if sh_up_to==sh_total else htag
-                        if norm_eq_c == hn_c:
-                            r_ = "GANA" if hg_live > ag_live else "EMPATE" if hg_live == ag_live else "PIERDE"
-                        elif norm_eq_c == an_c:
-                            r_ = "GANA" if ag_live > hg_live else "EMPATE" if ag_live == hg_live else "PIERDE"
-                        else:
-                            return False
-                        if res_live_tipo_r == "EMPATE": return r_ == "EMPATE"
-                        if res_live_tipo_r == "GANA": return r_ == "GANA"
-                        if res_live_tipo_r == "PIERDE": return r_ == "PIERDE"
-                        if res_live_tipo_r == "EMPATEGANA": return r_ in ("EMPATE","GANA")
-                        if res_live_tipo_r == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
-                        if res_live_tipo_r == "GANAPIERDE": return r_ in ("GANA","PIERDE")
-                        return True
-                    df_team_r = df_team_r[df_team_r.apply(_cumple_live_r, axis=1)]
-
-                if df_team_r.empty:
-                    st.caption(f"{nombre_eq_r} - sin historial en base RESTO")
-                    continue
-
-                total_r = len(df_team_base_total_r) if 'df_team_base_total_r' in locals() else len(df_team_r)
-                if MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None:
-                    def _tiene_min_eq_r(rr):
-                        fid = str(rr.get('fixture_id','')).split('.')[0]
-                        for ev in eventos_r.get(fid, []):
-                            if 'Missed' in ev.get('tipo',''): continue
-                            mm = ev.get('m',-1)
-                            if MIN_DESDE_PRED_R is not None and mm < MIN_DESDE_PRED_R: continue
-                            if MIN_HASTA_PRED_R is not None and mm > MIN_HASTA_PRED_R: continue
-                            return True
-                        return False
-                    filt_r = len(df_team_r[df_team_r.apply(_tiene_min_eq_r, axis=1)])
-                else:
-                    filt_r = len(df_team_r)
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_r.upper()} {filt_r}/{total_r} RESTO</div>", unsafe_allow_html=True)
-                # FIX RESTO ORDEN J10 arriba = ultimo - FIX ISO 03/12 -> 12/03 - FIX REMO ULTIMO BRAGANTINO 18/10 ARRIBA
-                def _parse_fecha_resto_robusto(s):
-                    try:
-                        if pd.isna(s):
-                            return pd.NaT
-                        d = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')
-                        if pd.isna(d):
-                            d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                        if pd.isna(d):
-                            d = pd.to_datetime(s, errors='coerce')
-                        return d
-                    except:
-                        return pd.NaT
-                df_team_base_pred_r = df_team_base_total_r.copy()
-                df_team_base_pred_r['Date_parsed'] = df_team_base_pred_r['Date'].apply(_parse_fecha_resto_robusto)
-                df_team_base_pred_r['fid_num'] = pd.to_numeric(df_team_base_pred_r['fixture_id'], errors='coerce')
-                df_team_base_pred_r = df_team_base_pred_r.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
-                df_team_r['Date_parsed'] = df_team_r['Date'].apply(_parse_fecha_resto_robusto) if not df_team_r.empty else df_team_r.get('Date')
-                df_team_r['fid_num'] = pd.to_numeric(df_team_r['fixture_id'], errors='coerce') if not df_team_r.empty else 0
-                df_team_r = df_team_r.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_r.empty else df_team_r
-                df_team_r = df_team_r.sort_values('Date_parsed', ascending=False)
-                df_team_base_pred_r = df_team_base_pred_r.sort_values('Date_parsed', ascending=False)
-                if not df_team_base_pred_r.empty and 'Jornada' in df_team_base_pred_r.columns:
-                    fecha_por_j = df_team_base_pred_r.groupby('Jornada')['Date_parsed'].max()
-                    jornadas_r = fecha_por_j.sort_values(ascending=False).head(15).index.tolist()
-                else:
-                    jornadas_r = sorted(df_team_base_pred_r['Jornada'].dropna().unique(), reverse=True)[:15]
-                for j in jornadas_r:
-                    d_j_ok_r = df_team_r[df_team_r['Jornada']==j].sort_values('Date_parsed', ascending=False) if not df_team_r.empty and 'Jornada' in df_team_r.columns else pd.DataFrame()
-                    if d_j_ok_r.empty:
-                        try:
-                            _base_j_r = df_team_base_pred_r[df_team_base_pred_r['Jornada']==j] if 'df_team_base_pred_r' in locals() else df_team_base_total_r[df_team_base_total_r['Jornada']==j]
-                            if not _base_j_r.empty:
-                                _r0_r = _base_j_r.iloc[0]
-                                _h0_r = str(_r0_r.get('HomeTeam','')).strip()
-                                _es_local_hueco_r = (normaliza(nombre_eq_r) == normaliza(_h0_r))
-                                _loc_txt_r = "CASA" if _es_local_hueco_r else "VISITANTE"
-                                _bg_hueco_r = "#ffffff" if _es_local_hueco_r else "#fffde7"
-                            else:
-                                _loc_txt_r = ""
-                                _bg_hueco_r = "#f5f5f5"
-                        except:
-                            _loc_txt_r = ""
-                            _bg_hueco_r = "#f5f5f5"
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco_r}; border-radius:6px; border:1px solid #ececec;'><div style='color:#000; font-weight:900; font-size:10px;'>J{int(j)} | — {_loc_txt_r}</div></div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
-                        continue
-                    d_j_r = d_j_ok_r
-                    html_lineas_r = ""
-                    for _, r in d_j_r.iterrows():
-                        fid = str(r.get('fixture_id','')).split('.')[0]
-                        if MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None:
-                            _tiene = False
-                            for _ev in eventos_r.get(fid, []):
-                                if 'Missed' in _ev.get('tipo',''): continue
-                                _mm = _ev.get('m', -1)
-                                if MIN_DESDE_PRED_R is not None and _mm < MIN_DESDE_PRED_R: continue
-                                if MIN_HASTA_PRED_R is not None and _mm > MIN_HASTA_PRED_R: continue
-                                _tiene = True
-                                break
-                            if not _tiene:
-                                continue
-                        h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
-                        try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
-                        except: hg=0; ag=0
-                        h_norm_r = normaliza(h); a_norm_r = normaliza(a)
-                        if norm_eq_r == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
-                        elif norm_eq_r == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
-                        else: col_main = "#000"
-                        try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
-                        except: hthg=0; htag=0
-                        ht_str = f"[{hthg}-{htag}]"
-                        # [RESTO-FIX2-VISUAL] - MISMA LOGICA QUE FIX2
-                        try:
-                            _nf_clean = str(norm_eq_r).upper().strip()
-                            _h_clean = str(h_norm_r).upper().strip()
-                            _a_clean = str(a_norm_r).upper().strip()
-                            _is_home = _nf_clean == _h_clean
-                            _is_away = _nf_clean == _a_clean
-                        except:
-                            _is_home = (norm_eq_r == h_norm_r)
-                            _is_away = (norm_eq_r == a_norm_r)
-                        if _is_home:
-                            if hthg > htag: col_ht = "#000"
-                            elif hthg < htag: col_ht = "#000"
-                            else: col_ht = "#000"
-                        elif _is_away:
-                            if htag > hthg: col_ht = "#000"
-                            elif htag < hthg: col_ht = "#000"
-                            else: col_ht = "#000"
-                        else:
-                            col_ht = "#000"
-                        # 0-0 lo ponemos
-                        if hthg == 0 and htag == 0:
-                            estado_1p_r = "0-0 EMPATE"
-                        elif _is_home:
-                            if hthg > htag: estado_1p_r = "GANA"
-                            elif hthg < htag: estado_1p_r = "PIERDE"
-                            else: estado_1p_r = "EMPATE"
-                        elif _is_away:
-                            if htag > hthg: estado_1p_r = "GANA"
-                            elif htag < hthg: estado_1p_r = "PIERDE"
-                            else: estado_1p_r = "EMPATE"
-                        else:
-                            estado_1p_r = "EMPATE"
-                        if "GANA" in estado_1p_r: col_estado_r = "#0f8105"
-                        elif "PIERDE" in estado_1p_r: col_estado_r = "#f31818"
-                        else: col_estado_r = "#8B4513"
-                        ht_html = f"<span style='color:{col_estado_r};font-weight:900;font-size:10px;margin-left:6px'>{estado_1p_r}</span>"
-
-                        filtro_act = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
-                        # [RESTO-FIX2-AGRUPADO] - GOLES DIVIDIDOS IZQ/DER IGUAL QUE FIX2
-                        import re
-                        def _es_home_r(team_str):
-                            def _clean(s):
-                                s = str(s).upper().strip()
-                                s = re.sub(r'^(VFL|1 FC|1\. FC|FC|CF|SC|SV|TSG|BORUSSIA|BAYER|SPVGG|SG|VfB|FSV|BSC)\s+', '', s)
-                                return s.strip()
-                            t = _clean(team_str)
-                            hn_c = _clean(h_norm_r)
-                            an_c = _clean(a_norm_r)
-                            if t == hn_c: return True
-                            if t == an_c: return False
-                            if hn_c in t or t in hn_c: return True
-                            if an_c in t or t in an_c: return False
-                            if t.split()[-1] == hn_c.split()[-1]: return True
-                            if t.split()[-1] == an_c.split()[-1]: return False
-                            return False
-                        def _agrupa_r_con_score(evs, sh=0, sa=0):
-                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa
-                            for ev in evs:
-                                if 'Missed' in ev.get('tipo',''): continue
-                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip()
-                                is_home = not _es_home_r(team_ev) if 'Own Goal' in ev.get('tipo','') else _es_home_r(team_ev)
-                                if is_home: h+=1
-                                else: a+=1
-                                benef = h_norm_r if is_home else a_norm_r
-                                es_mio = norm_eq_r in benef
-                                col_min = col_main if es_mio else "#000"
-                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                                sub_min_r = ""
-                                en_rango = (MIN_DESDE_PRED_R is None or m >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or m <= MIN_HASTA_PRED_R)
-                                if filtro_act and en_rango:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:1px;font-size:10px'>{m}'</span>"
-                                else:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min_r}margin-right:1px;font-size:10px'>{m}'</span>"
-                                if last is not None and is_home != last and cur:
-                                    grupos.append(("".join(cur), lh, la, last)); cur=[]
-                                cur.append(span); last=is_home; lh=h; la=a
-                            if cur: grupos.append(("".join(cur), lh, la, last))
-                            return grupos, h, a
-                        # --- FIX2 STYLE PARA RESTO ---
-                        hn = h_norm_r; an = a_norm_r
-                        def res_eq_pred_r(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
-                        if norm_eq_r == hn: r1 = res_eq_pred_r(hthg, htag); rF = res_eq_pred_r(hg, ag)
-                        elif norm_eq_r == an: r1 = res_eq_pred_r(htag, hthg); rF = res_eq_pred_r(ag, hg)
-                        else: r1="E"; rF="E"
-                        estado = f"{r1}/{rF}"
-                        EMOJI_SEL_R = "⚪"
-                        EMOJI_RIVAL_R = "⚫"
-                        if norm_eq_r == hn:
-                            h_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{h}</span>"
-                            a_txt = f"<span style='color:#000'>{a}</span>"
-                            emoji_home_r = EMOJI_SEL_R; emoji_away_r = EMOJI_RIVAL_R
-                        elif norm_eq_r == an:
-                            h_txt = f"<span style='color:#000'>{h}</span>"
-                            a_txt = f"<span style='color:{col_main};text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:900'>{a}</span>"
-                            emoji_home_r = EMOJI_RIVAL_R; emoji_away_r = EMOJI_SEL_R
-                        else:
-                            h_txt = f"<span style='color:#000'>{h}</span>"; a_txt = f"<span style='color:#000'>{a}</span>"
-                            emoji_home_r = EMOJI_RIVAL_R; emoji_away_r = EMOJI_SEL_R
-                        u_black_r = "border-bottom:3.5px solid #000;padding-bottom:0px;"
-                        u_black_w_r = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;"
-                        if norm_eq_r == hn:
-                            hg_disp = f"{hg}" if hg==0 and ag>0 else f"<span style='{u_black_r}'>{hg}</span>"
-                            ag_disp = f"{ag}"
-                            hthg_disp = f"{hthg}" if hthg==0 and htag>0 else f"<span style='{u_black_w_r}'>{hthg}</span>"
-                            htag_disp = f"{htag}"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        elif norm_eq_r == an:
-                            hg_disp = f"{hg}"
-                            ag_disp = f"{ag}" if ag==0 and hg>0 else f"<span style='{u_black_r}'>{ag}</span>"
-                            hthg_disp = f"{hthg}"
-                            htag_disp = f"{htag}" if htag==0 and hthg>0 else f"<span style='{u_black_w_r}'>{htag}</span>"
-                            ft_txt = f"[{hg_disp}-{ag_disp}]"
-                            ht_inner = f"{hthg_disp}-{htag_disp}"
-                        else:
-                            ft_txt = f"[{hg}-{ag}]"; ht_inner = f"{hthg}-{htag}"
-                        ht_str = f"[{ht_inner}]"
-                        try:
-                            _fecha_dt_r = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
-                            _fecha_str_r = _fecha_dt_r.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_r) else ""
-                        except:
-                            _fecha_str_r = ""
-                        def _es_home_r2(team_str):
-                            t = str(team_str).upper().strip(); hn_u = str(hn).upper().strip(); an_u = str(an).upper().strip()
-                            if t == hn_u or hn_u in t or t in hn_u: return True
-                            if t == an_u or an_u in t or t in an_u: return False
-                            return False
-                        def _agrupa_r_con_score_sub(evs, sh=0, sa=0):
-                            grupos=[]; last=None; cur=[]; h=sh; a=sa; lh=sh; la=sa; last_is_home=None
-                            for ev in evs:
-                                m=ev.get('m',-1); team_ev=str(ev.get('team','')).strip(); tipo=str(ev.get('tipo',''))
-                                is_home_raw = _es_home_r2(team_ev)
-                                is_own = 'Own Goal' in tipo
-                                is_home_scoring = (not is_home_raw) if is_own else is_home_raw
-                                if 'Missed Penalty' in tipo:
-                                    if cur: grupos.append((cur, lh, la, last_is_home)); cur=[]; last=None
-                                    grupos.append(([(m, tipo)], lh, la, is_home_scoring)); continue
-                                if is_home_scoring: h+=1
-                                else: a+=1
-                                if last is not None and is_home_scoring != last and cur:
-                                    grupos.append((cur, lh, la, last_is_home)); cur=[]
-                                cur.append((m, tipo)); last=is_home_scoring; last_is_home=is_home_scoring; lh=h; la=a
-                            if cur: grupos.append((cur, lh, la, last_is_home))
-                            return grupos
-                        evs_sorted_r = sorted(eventos_r.get(fid, []), key=lambda x: x['m'])
-                        evs_1p_r = [e for e in evs_sorted_r if e.get('m',0) <= 45]
-                        evs_2p_r = [e for e in evs_sorted_r if e.get('m',0) > 45]
-                        def _fmt_mins_r(min_tipo_list):
-                            out=[]
-                            for mm, tp in min_tipo_list:
-                                if 'Own Goal' in tp: out.append(f"(pp) {mm}'")
-                                elif 'Missed Penalty' in tp: out.append(f"(x) {mm}'")
-                                elif 'Penalty' in tp: out.append(f"(p) {mm}'")
-                                else: out.append(f"{mm}'")
-                            return "  ".join(out)
-                        g1_data = _agrupa_r_con_score_sub(evs_1p_r, 0, 0)
-                        if g1_data and not any('Missed' in tp for _, tp in g1_data[-1][0]): g1_data[-1] = (g1_data[-1][0], hthg, htag, g1_data[-1][3])
-                        g2_data = _agrupa_r_con_score_sub(evs_2p_r, hthg, htag)
-                        if g2_data and not any('Missed' in tp for _, tp in g2_data[-1][0]): g2_data[-1] = (g2_data[-1][0], hg, ag, g2_data[-1][3])
-                        goles_parte_r = st.session_state.get("goles_parte_resto", "Todo")
-                        mostrar_1p_r = goles_parte_r in ("Todo","1ªParte")
-                        mostrar_2p_r = goles_parte_r in ("Todo","2ªParte")
-                        filtro_act_r = (MIN_DESDE_PRED_R is not None or MIN_HASTA_PRED_R is not None)
-                        es_local_j_r = (norm_eq_r == h_norm_r)
-                        bg_j_r = "#ffffff" if es_local_j_r else "#fffde7"
-                        html = f"<div style='font-family:monospace; text-align:center; padding:4px 4px 3px 4px; max-width:480px; margin:0 auto; line-height:1.1; background:{bg_j_r}; border-radius:6px; border:1px solid #ececec;'>"
-                        html += f"<div style='font-weight:900; color:{col_main}; font-size:11px;'>J{int(j)} | {emoji_home_r} {h_txt}  {ft_txt}  {a_txt}{emoji_away_r}  <span style='background:{col_main};color:#fff;padding:1px 5px;border-radius:3px;'>{estado}</span> <span style='color:#000;'>({_fecha_str_r})</span></div>"
-                        html += f"<div style='margin-top:6px; font-size:10px; color:#000;'>(1ª parte {hthg}-{htag})</div>"
-                        if mostrar_1p_r:
-                            if not g1_data:
-                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
-                            else:
-                                for mins_tipo, sh, sa, is_home in g1_data:
-                                    emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
-                                    parts = []
-                                    for mm, tp in mins_tipo:
-                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
-                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
-                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
-                                        else: base = f"{mm}'"
-                                        txt = f"{base}{emoji_gol}"
-                                        en_rango = (MIN_DESDE_PRED_R is None or mm >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or mm <= MIN_HASTA_PRED_R)
-                                        if filtro_act_r and en_rango:
-                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
-                                        parts.append(txt)
-                                    mins_txt = "  ".join(parts)
-                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                    score_txt = "" if is_missed else f"{sh}-{sa}"
-                                    if is_missed:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
-                                    else:
-                                        if is_home:
-                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:2px; font-size:10px; line-height:1.1; margin:0; padding:0;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
-                                        else:
-                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        if mostrar_2p_r:
-                            html += f"<div style='margin:8px auto; font-size:9px; letter-spacing:2px; color:#000;'>___________________2ª________________</div>"
-                            if not g2_data:
-                                html += f"<div style='font-size:10px; color:#888;'>—</div>"
-                            else:
-                                for mins_tipo, sh, sa, is_home in g2_data:
-                                    emoji_gol = EMOJI_SEL_R if (is_home and hn==norm_eq_r) or (not is_home and an==norm_eq_r) else EMOJI_RIVAL_R
-                                    parts = []
-                                    for mm, tp in mins_tipo:
-                                        if 'Own Goal' in tp: base = f"(pp) {mm}'"
-                                        elif 'Missed Penalty' in tp: base = f"(x) {mm}'"
-                                        elif 'Penalty' in tp: base = f"(p) {mm}'"
-                                        else: base = f"{mm}'"
-                                        txt = f"{base}{emoji_gol}"
-                                        en_rango = (MIN_DESDE_PRED_R is None or mm >= MIN_DESDE_PRED_R) and (MIN_HASTA_PRED_R is None or mm <= MIN_HASTA_PRED_R)
-                                        if filtro_act_r and en_rango:
-                                            txt = f"<span style='background:#D3D3D3;border-radius:3px;padding:1px 4px;'>{txt}</span>"
-                                        parts.append(txt)
-                                    mins_txt = "  ".join(parts)
-                                    is_missed = any('Missed' in tp for _, tp in mins_tipo)
-                                    score_txt = "" if is_missed else f"{sh}-{sa}"
-                                    if is_missed:
-                                        html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div style='text-align:right;'>{mins_txt if is_home else ''}</div><div style='text-align:center;'></div><div style='text-align:left;'>{'' if is_home else mins_txt}</div></div>"
-                                    else:
-                                        if is_home:
-                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:2px; font-size:10px; line-height:1.1; margin:0; padding:0;'><div style='text-align:right;'>{mins_txt}</div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div></div></div>"
-                                        else:
-                                            html += f"<div style='display:grid; grid-template-columns: 1fr 50px 1fr; gap:8px; font-size:10px;'><div></div><div style='text-align:center; font-weight:700;'>{score_txt}</div><div style='text-align:left;'>{mins_txt}</div></div>"
-                        html += f"</div><div style='height:2.5px;background:#0A2342;margin:4px auto 10px auto; max-width:480px;'></div>"
-                        html_lineas_r += html
-                        m1 = []; m2 = []
-                        for evc in sorted(eventos_r.get(fid, []), key=lambda x: x['m']):
-                            if MIN_DESDE_PRED_R is not None and evc.get('m',-1) < MIN_DESDE_PRED_R: continue
-                            if MIN_HASTA_PRED_R is not None and evc.get('m',-1) > MIN_HASTA_PRED_R: continue
-                            if 'Missed' in evc.get('tipo',''): continue
-                            mm = evc.get('m',0)
-                            if mm <= 45: m1.append(f"{mm}'")
-                            else: m2.append(f"{mm}'")
-                        if m1 and m2: mins_txt = " ".join(m1) + f"{ht_str} " + " ".join(m2)
-                        elif m1: mins_txt = " ".join(m1) + f"{ht_str}"
-                        elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
-                        else: mins_txt = f"{ht_str}"
-                        partidos_pred_copy_r.append(f"J{int(j)}|{h} {hg}-{ag} {a} | {mins_txt}{estado}")
-                    st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_r}</div>", unsafe_allow_html=True)
-
-    if partidos_pred_copy_r:
-        import html as _html
-        texto_final_r = "\n".join(partidos_pred_copy_r[:200])
-        safe_txt_r = _html.escape(texto_final_r)
-        import streamlit.components.v1 as components
-        components.html(f"""
-        <textarea id="txt_pred_r" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt_r}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pred_r').value).then(()=>{{let b=document.getElementById('btn_pred_copy_r'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText=' COPIAR PREDICCION RESTO'; b.style.background='#0A2342'}},1200)}})"
-        id="btn_pred_copy_r"
-        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
-         COPIAR PREDICCION RESTO ({len(partidos_sel_r)} partidos)
-        </button>
-        """, height=55, scrolling=False)
-
-##############################clonado
-
-
-############################################################
-###############
-###############
-###############
+#
 ###############
 ###############
 ###############
@@ -4803,3 +4406,203 @@ with st.expander("GOLES HT / GOLES 75-90", expanded=False):
             components.html(bloque, height=h_g, scrolling=True)
             
  # ================= BLOQUE PRE V2 - FIX PATH CLOUD - 100% INDEPENDIENTE - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
+ ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+  ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+   ##################################################### ##################################################### ##################################################### #####################################################
+    ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+     ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+      ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+       ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+        ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+         ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### ##################################################### #####################################################
+          
+          # ================= BLOQUE JUGADORES V1 - GOLES Y ASISTENCIAS - [TAG-PRE-V2-FIX-PATH-NO-TOCAR-FIX2-FIX3-RESTO] =================
+with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
+    import pathlib, json
+
+    @st.cache_data(show_spinner=False)
+    def cargar_base_jugadores_fix():
+        def _find_parquet(names):
+            for n in names:
+                for b in [pathlib.Path(n), pathlib.Path(__file__).parent.resolve()/n, pathlib.Path("/mnt/data")/n]:
+                    if b.exists():
+                        return b
+            return None
+        def _load_concat(namelist):
+            dfs=[]
+            for nm in namelist:
+                p=_find_parquet([nm])
+                if p:
+                    try:
+                        dfs.append(pd.read_parquet(p))
+                    except:
+                        pass
+            if not dfs:
+                return pd.DataFrame()
+            df_all=pd.concat(dfs, ignore_index=True)
+            if 'fixture_id' in df_all.columns:
+                df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last')
+            return df_all
+
+        df_p = _load_concat(["base_partidos_europa.parquet","base_partidos_resto.parquet"])
+        df_g = _load_concat(["base_goles_europa.parquet","base_goles_resto.parquet"])
+
+        if not df_p.empty:
+            df_p['Date'] = pd.to_datetime(df_p['Date'], dayfirst=True, errors='coerce')
+            df_p = df_p.sort_values(['League','Season','Date']).copy()
+            df_p['Jornada'] = 0
+            for (l,s), g in df_p.groupby(['League','Season'], sort=False):
+                g=g.sort_values('Date')
+                idxs=g.index.to_numpy()
+                n=len(pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna()))
+                ppj=max(n//2,1)
+                df_p.loc[idxs,'Jornada']=(np.arange(len(idxs))//ppj)+1
+
+        # goles dict por fixture
+        ev = {}
+        if not df_g.empty:
+            df_g['fid'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
+            df_g['min_n'] = pd.to_numeric(df_g.get('minuto',0), errors='coerce').fillna(0).astype(int)
+            for fid, sub in df_g.groupby('fid'):
+                lst=[]
+                for _, r in sub.iterrows():
+                    gol=str(r.get('goleador','')).strip()
+                    asi=str(r.get('asistente','')).strip()
+                    if gol.lower() in ['','nan','none']: gol=""
+                    if asi.lower() in ['','nan','none']: asi=""
+                    lst.append({
+                        'm': int(r.get('min_n',0)),
+                        'team': normaliza(r.get('equipo','')),
+                        'gol': gol,
+                        'asi': asi,
+                        'tipo': str(r.get('tipo',''))
+                    })
+                ev[fid]=lst
+        return df_p, ev, df_g
+
+    df_p_jug, ev_jug, df_g_jug = cargar_base_jugadores_fix()
+
+    if df_p_jug.empty:
+        st.warning("No hay base_partidos_europa/resto")
+    else:
+        # --- DESPLEGABLE EQUIPOS ---
+        ligas_jug = ["TODAS"] + sorted(df_p_jug['League'].dropna().unique().tolist())
+        c_liga_j, c_eq_j = st.columns([1,2])
+        with c_liga_j:
+            liga_sel_jug = st.selectbox("LIGA JUGADORES", ligas_jug, key="liga_jug_v1")
+        df_liga_jug = df_p_jug if liga_sel_jug=="TODAS" else df_p_jug[df_p_jug['League']==liga_sel_jug]
+
+        equipos_jug = sorted(pd.concat([df_liga_jug['HomeTeam'], df_liga_jug['AwayTeam']]).dropna().astype(str).unique().tolist())
+        with c_eq_j:
+            equipo_sel_jug = st.selectbox("EQUIPO", ["-"]+equipos_jug, key="equipo_jug_v1")
+
+        if equipo_sel_jug != "-":
+            norm_eq_jug = normaliza(equipo_sel_jug)
+            up_eq_jug = equipo_sel_jug.upper().strip()
+
+            df_team_jug = df_liga_jug[(df_liga_jug['HomeTeam'].astype(str).str.upper().str.strip()==up_eq_jug) | (df_liga_jug['AwayTeam'].astype(str).str.upper().str.strip()==up_eq_jug)]
+            if df_team_jug.empty:
+                df_team_jug = df_liga_jug[(df_liga_jug['HomeTeam'].apply(lambda x: normaliza(x)==norm_eq_jug)) | (df_liga_jug['AwayTeam'].apply(lambda x: normaliza(x)==norm_eq_jug))]
+
+            df_team_jug = df_team_jug.sort_values('Date')
+            df_team_jug['Jornada'] = range(1, len(df_team_jug)+1)
+
+            # mapa jornada -> fixture_id + rivales
+            jornada_map = {}
+            for _, r in df_team_jug.iterrows():
+                j=int(r.get('Jornada',0))
+                fid=str(r.get('fixture_id','')).split('.')[0]
+                jornada_map[j] = fid
+
+            max_j = len(df_team_jug)
+
+            # recolecta jugadores del equipo
+            jugadores = {}
+            for fid in jornada_map.values():
+                for ev in ev_jug.get(fid, []):
+                    if ev['team'] != norm_eq_jug: 
+                        continue
+                    if 'Missed' in ev.get('tipo',''): continue
+                    if ev['gol']:
+                        jugadores.setdefault(ev['gol'], {})
+                    if ev['asi']:
+                        jugadores.setdefault(ev['asi'], {})
+
+            if not jugadores:
+                st.info(f"{equipo_sel_jug} sin goleadores/asistentes registrados")
+            else:
+                # para cada jugador construye J1..Jmax
+                for nombre_jug in sorted(jugadores.keys()):
+                    # por jornada busca eventos
+                    tokens = []
+                    tokens_copy = []  # para copiar limpio
+                    for j in range(1, max_j+1):
+                        fid = jornada_map.get(j)
+                        if not fid:
+                            tokens.append(f"<span style='background:#eee;color:#888;padding:1px 4px;border-radius:3px'>J{j}_</span>")
+                            tokens_copy.append(f"J{j}_")
+                            continue
+                        evs = ev_jug.get(fid, [])
+                        hits=[]
+                        for ev in evs:
+                            if ev['team'] != norm_eq_jug: continue
+                            if 'Missed' in ev.get('tipo',''): continue
+                            m=ev['m']
+                            if ev['gol'] == nombre_jug:
+                                hits.append(f"GOL_{m}'")
+                            if ev['asi'] == nombre_jug:
+                                hits.append(f"ASIST_{m}'")
+                        if not hits:
+                            tokens.append(f"<span style='background:#eee;color:#888;padding:1px 4px;border-radius:3px;margin-right:2px'>J{j}_</span>")
+                            tokens_copy.append(f"J{j}_")
+                        else:
+                            inner = "_".join(hits)
+                            # verde gol, azul asist
+                            if "GOL" in inner:
+                                col="#0f8105"
+                            else:
+                                col="#1E90FF"
+                            tokens.append(f"<span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;margin-right:2px;font-weight:900'>J{j}_{inner}</span>")
+                            tokens_copy.append(f"J{j}_{inner}")
+
+                    # resumen X/Y para cabecera
+                    goles_tot = sum(1 for t in tokens_copy if "GOL" in t)
+                    asis_tot = sum(1 for t in tokens_copy if "ASIST" in t)
+                    jugadas = sum(1 for t in tokens_copy if "_" in t and t != f"J" and "_" not in t or "GOL" in t or "ASIST" in t)
+                    # conteo jornadas con algo
+                    nj_con = sum(1 for t in tokens_copy if "GOL" in t or "ASIST" in t)
+
+                    html_jug = f"<div style='font-family:monospace;background:#fff;border:1px solid #000;border-radius:8px;padding:8px;margin:8px 0'><div style='font-weight:900;font-size:12px;background:#000;color:#fff;padding:3px 6px;border-radius:4px;display:inline-block'>{nombre_jug.upper()} | G:{goles_tot} A:{asis_tot} | {nj_con}/{max_j}</div><div style='margin-top:6px;line-height:1.9;white-space:normal;word-break:break-word'>{' '.join(tokens)}</div></div>"
+                    st.markdown(html_jug, unsafe_allow_html=True)
+
+                # --- BLOQUE COPIAR ---
+                import html as _html
+                txt_copy = ""
+                for nombre_jug in sorted(jugadores.keys()):
+                    line=[]
+                    for j in range(1, max_j+1):
+                        fid=jornada_map.get(j)
+                        if not fid:
+                            line.append(f"J{j}_")
+                            continue
+                        hits=[]
+                        for ev in ev_jug.get(fid, []):
+                            if ev['team'] != norm_eq_jug: continue
+                            if ev['gol']==nombre_jug: hits.append(f"GOL_{ev['m']}'")
+                            if ev['asi']==nombre_jug: hits.append(f"ASIST_{ev['m']}'")
+                        if not hits:
+                            line.append(f"J{j}_")
+                        else:
+                            line.append(f"J{j}_{'_'.join(hits)}")
+                    txt_copy += f"{nombre_jug.upper()}: {', '.join(line)}\n"
+
+                safe = _html.escape(txt_copy)
+                import streamlit.components.v1 as components
+                components.html(f"""
+                <textarea id="txt_jug" style="position:absolute;left:-9999px">{safe}</textarea>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('txt_jug').value).then(()=>{{let b=document.getElementById('btn_jug'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'}})"
+                id="btn_jug" style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900">📋 COPIAR JUGADORES {equipo_sel_jug} ({len(jugadores)})</button>
+                """, height=55)
+          
+          
+          ##################################################### ##################################################### ##################################################### #####################################################
