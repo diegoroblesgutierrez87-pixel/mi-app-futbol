@@ -2873,7 +2873,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = ""
                             
-                            inner = f"{badge} {res_txt} {mins_txt}{rival_txt}" if mins_txt else f"{badge} {res_txt}{rival_txt}"
+                            inner = f"{res_txt} {mins_txt}{rival_txt} {badge}" if mins_txt else f"{res_txt}{rival_txt} {badge}"
                             filt_por_j[jn] = (inner, es_loc)
                         except:
                             continue
