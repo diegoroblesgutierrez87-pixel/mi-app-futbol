@@ -2825,8 +2825,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                             if es_loc:
                                 res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                                letra = "G" if hg>ag else "E" if hg==ag else "P"
                             else:
                                 res_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                                letra = "G" if ag>hg else "E" if ag==hg else "P"
+                            if letra == "G":
+                                badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
+                            elif letra == "E":
+                                badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
+                            else:
+                                badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                                     # --- FILTRO GOLES PARTE PARA RESUMEN ---
                             goles_parte_f = st.session_state.get("goles_parte_fix2", "Todo")
                             mins_1p = []
@@ -2865,7 +2873,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = ""
                             
-                            inner = f"{res_txt} {mins_txt}{rival_txt}" if mins_txt else f"{res_txt}{rival_txt}"
+                            inner = f"{badge} {res_txt} {mins_txt}{rival_txt}" if mins_txt else f"{badge} {res_txt}{rival_txt}"
                             filt_por_j[jn] = (inner, es_loc)
                         except:
                             continue
