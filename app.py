@@ -3028,8 +3028,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 if not df_team_base_pred_fix2.empty and 'J_EQ' in df_team_base_pred_fix2.columns:
                     max_j = int(pd.to_numeric(df_team_base_pred_fix2['J_EQ'], errors='coerce').max())
                     jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
-                    # mapa J_EQ -> fila base para detectar CASA/VIS en huecos
-                    df_team_base_pred_fix2 = df_team_base_pred_fix2.set_index('J_EQ', drop=False)
                 else:
                     max_j = int(pd.to_numeric(df_team_base_pred_fix2['Jornada'], errors='coerce').max()) if not df_team_base_pred_fix2.empty else 0
                     jornadas_fix2 = list(range(max_j, max(0, max_j-15), -1))
