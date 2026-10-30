@@ -4382,7 +4382,11 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
             # recolecta jugadores del equipo
             jugadores = {}
             for fid in jornada_map.values():
-                for ev in ev_jug.get(fid, []):
+                for e in ev_jug.get(fid, []):
+                    if 'Missed' in e.get('tipo',''): continue
+                    if 'Own Goal' in e.get('tipo',''): continue
+                    if e['team'] != norm_eq_jug:
+                        continue
                     if ev['team'] != norm_eq_jug: 
                         continue
                     if 'Missed' in ev.get('tipo',''): continue
@@ -4407,8 +4411,10 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                             continue
                         evs = ev_jug.get(fid, [])
                         hits=[]
-                        for ev in evs:
-                            if ev['team'] != norm_eq_jug: continue
+                        for e in evs:
+                            if e['team'] != norm_eq_jug: continue
+                            if 'Missed' in e.get('tipo',''): continue
+                            if 'Own Goal' in e.get('tipo',''): continue
                             if 'Missed' in ev.get('tipo',''): continue
                             m=ev['m']
                             if ev['gol'] == nombre_jug:
