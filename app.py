@@ -3504,6 +3504,88 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 ##################
 ################################################################### CLONADO
 ##################
+with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
+    @st.cache_data(show_spinner=False)
+    def cargar_base_jornadas():
+        dfs=[]
+        for name in ["base_partidos_europa.parquet", "base_partidos_resto.parquet"]:
+            for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                if base.exists():
+                    try: dfs.append(pd.read_parquet(base))
+                    except: pass
+                    break
+        df_p = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+        dfs_g=[]
+        for name in ["base_goles_europa.parquet", "base_goles_resto.parquet"]:
+            for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                if base.exists():
+                    try: dfs_g.append(pd.read_parquet(base))
+                    except: pass
+                    break
+        df_g = pd.concat(dfs_g, ignore_index=True) if dfs_g else pd.DataFrame()
+        ev={}
+        if not df_g.empty:
+            df_g['fid_str']=df_g['fixture_id'].astype(str).str.split('.').str[0]
+            df_g['m']=pd.to_numeric(df_g.get('minuto',0), errors='coerce').fillna(0).astype(int)
+            for fid, sub in df_g.groupby('fid_str'):
+                ev[fid]=[{'m':int(r.get('m',0)), 'team':normaliza(r.get('equipo','')), 'tipo':str(r.get('tipo',''))} for _, r in sub.iterrows()]
+        return df_p, ev
+
+    df_jorn, ev_jorn = cargar_base_jornadas()
+    if df_jorn.empty:
+        st.caption("Sin base")
+    else:
+        ligas_j = ["TODAS"] + sorted(df_jorn['League'].dropna().astype(str).unique().tolist())
+        liga_j_sel = st.selectbox("LIGA JORNADAS", ligas_j, key="liga_jornadas_sel")
+        df_l = df_jorn if liga_j_sel=="TODAS" else df_jorn[df_jorn['League'].astype(str)==liga_j_sel]
+        equipos_j = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().astype(str).unique().tolist())
+        eq_j = st.selectbox("EQUIPO JORNADAS", equipos_j, key="eq_jornadas")
+
+        norm_j = normaliza(eq_j); up_j = eq_j.upper().strip()
+        df_team = df_l[(df_l['HomeTeam'].astype(str).str.upper().str.strip()==up_j) | (df_l['AwayTeam'].astype(str).str.upper().str.strip()==up_j)].copy()
+        df_team['Date']=pd.to_datetime(df_team['Date'], dayfirst=True, errors='coerce')
+        df_team=df_team.sort_values('Date').reset_index(drop=True)
+        df_team['J_EQ']=range(1, len(df_team)+1)
+
+        total=len(df_team)
+        loc_total=int((df_team['HomeTeam'].astype(str).str.upper().str.strip()==up_j).sum())
+        vis_total=total-loc_total
+
+        total_por_j={}
+        for _, rr in df_team.iterrows():
+            try:
+                jn=int(rr.get('J_EQ',0)); hg=int(float(rr.get('FTHG',0) or 0)); ag=int(float(rr.get('FTAG',0) or 0))
+                es_loc=str(rr.get('HomeTeam','')).upper().strip()==up_j
+                fid=str(rr.get('fixture_id','')).split('.')[0]
+                if es_loc:
+                    res_txt=f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                    letra="G" if hg>ag else "E" if hg==ag else "P"
+                else:
+                    res_txt=f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                    letra="G" if ag>hg else "E" if ag==hg else "P"
+                badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                mins=[]
+                for ev in sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0)):
+                    if 'Missed' in ev.get('tipo',''): continue
+                    mm=ev.get('m',-1); es_mio=(ev.get('team','')==norm_j); col="#00c800" if es_mio else "#ff2a2a"
+                    mins.append(f"<span style='color:{col};font-weight:900'>{mm}'</span>")
+                mins_txt=" ".join(mins) if mins else ""
+                inner=f"{res_txt} {mins_txt} {badge}" if mins_txt else f"{res_txt} {badge}"
+                total_por_j[jn]=(inner, es_loc)
+            except: continue
+
+        jornadas_ord=sorted(total_por_j.keys(), reverse=True)
+        loc_list=[]; vis_list=[]
+        for jn in jornadas_ord:
+            j_tag=f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
+            inner, es_loc = total_por_j[jn]
+            if es_loc: loc_list.append(f"{j_tag}({inner})")
+            else: vis_list.append(f"{j_tag}({inner})")
+
+        j_loc_txt="<br>".join(loc_list) if loc_list else "-"
+        j_vis_txt="<br>".join(vis_list) if vis_list else "-"
+        linea_res2=f"{eq_j.upper()}: {total}/{total}<br><br>L:{loc_total}/{loc_total}<br>[{j_loc_txt}]<br><br>V:{vis_total}/{vis_total}<br>[{j_vis_txt}]"
+        st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{linea_res2}</div>", unsafe_allow_html=True)
 ################################################################### CLONADO
 ##################
 ################################################################### CLONADO
