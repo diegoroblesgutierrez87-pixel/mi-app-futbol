@@ -4319,8 +4319,17 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
         if df_p.empty:
             df_p = _load_csv("base_partidos.csv")
         df_g = _load_parquet_concat(["base_goles_europa.parquet","base_goles_resto.parquet"])
-        if df_g.empty:
-            df_g = _load_csv("base_goles.csv")
+        # fusiona CSV para recuperar filas que faltan en parquet (ej: J3 【entity-Felix¦canonical_name=FELIX NMECHA】 80')
+        _df_g_csv = _load_csv("base_goles.csv")
+        if not _df_g_csv.empty:
+            if df_g.empty:
+                df_g = _df_g_csv
+            else:
+                _cols = list(dict.fromkeys(list(df_g.columns) + list(_df_g_csv.columns)))
+                df_g = pd.concat([df_g.reindex(columns=_cols), _df_g_csv.reindex(columns=_cols)], ignore_index=True)
+                _dedup = [c for c in ['fixture_id','goleador','minuto','tipo'] if c in df_g.columns]
+                if _dedup:
+                    df_g = df_g.drop_duplicates(subset=_dedup, keep='first')
         if not df_p.empty and 'fixture_id' in df_p.columns:
             df_p = df_p.drop_duplicates(subset=['fixture_id'], keep='last')
 
