@@ -3556,8 +3556,12 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         liga_j_sel = st.selectbox("LIGA JORNADAS", ligas_j, key="liga_jornadas_sel")
         df_l = df_jorn if liga_j_sel=="TODAS" else df_jorn[df_jorn['League'].astype(str)==liga_j_sel]
         equipos_j = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().astype(str).unique().tolist())
-        eq_j = st.selectbox("EQUIPO JORNADAS", equipos_j, key="eq_jornadas")
+        eqs_j = st.multiselect("EQUIPOS JORNADAS", equipos_j, default=[], key="eq_jornadas", placeholder="Elige 1 o varios")
         goles_parte2 = st.selectbox("GOLES PARTE2", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte2")
+        if not eqs_j:
+            st.caption("Selecciona equipo(s)")
+            st.stop()
+        eq_j = eqs_j[0]
 
         norm_j = normaliza(eq_j); up_j = eq_j.upper().strip()
         df_team = df_l[(df_l['HomeTeam'].astype(str).str.upper().str.strip()==up_j) | (df_l['AwayTeam'].astype(str).str.upper().str.strip()==up_j)].copy()
