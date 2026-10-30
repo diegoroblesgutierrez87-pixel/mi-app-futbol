@@ -4302,8 +4302,6 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
             if not dfs:
                 return pd.DataFrame()
             df_all=pd.concat(dfs, ignore_index=True)
-            if 'fixture_id' in df_all.columns:
-                df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last')
             return df_all
         def _load_csv(name):
             p=_find_file(name)
