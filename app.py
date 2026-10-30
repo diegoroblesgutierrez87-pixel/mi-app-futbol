@@ -3565,12 +3565,20 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     res_txt=f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
                     letra="G" if ag>hg else "E" if ag==hg else "P"
                 badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                mins=[]
+                mins_1p=[]; mins_2p=[]
                 for ev in sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0)):
                     if 'Missed' in ev.get('tipo',''): continue
                     mm=ev.get('m',-1); es_mio=(ev.get('team','')==norm_j); col="#00c800" if es_mio else "#ff2a2a"
-                    mins.append(f"<span style='color:{col};font-weight:900'>{mm}'</span>")
-                mins_txt=" ".join(mins) if mins else ""
+                    tag=f"<span style='color:{col};font-weight:900'>{mm}'</span>"
+                    if mm<=45: mins_1p.append(tag)
+                    else: mins_2p.append(tag)
+                if goles_parte2=="1ªParte": mins_txt=" ".join(mins_1p) if mins_1p else ""
+                elif goles_parte2=="2ªParte": mins_txt=" ".join(mins_2p) if mins_2p else ""
+                else: 
+                    if mins_1p and mins_2p: mins_txt=" ".join(mins_1p)+" <span style='color:#888;font-weight:900'>|</span> "+" ".join(mins_2p)
+                    elif mins_1p: mins_txt=" ".join(mins_1p)
+                    elif mins_2p: mins_txt=" ".join(mins_2p)
+                    else: mins_txt=""
                 inner=f"{res_txt} {mins_txt} {badge}" if mins_txt else f"{res_txt} {badge}"
                 total_por_j[jn]=(inner, es_loc)
             except: continue
