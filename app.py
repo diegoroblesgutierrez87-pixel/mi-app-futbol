@@ -4339,12 +4339,17 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
         ev = {}
         if not df_g.empty:
             df_g['fid'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['min_n'] = pd.to_numeric(df_g.get('minuto',0), errors='coerce').fillna(0).astype(int)
+            _col_min = 'minuto' if 'minuto' in df_g.columns else ('min' if 'min' in df_g.columns else 'minuto')
+            df_g['min_n'] = pd.to_numeric(df_g.get(_col_min,0), errors='coerce').fillna(0).astype(int)
             for fid, sub in df_g.groupby('fid'):
                 lst=[]
                 for _, r in sub.iterrows():
-                    gol=str(r.get('goleador','')).strip()
-                    asi=str(r.get('asistente','')).strip()
+                    gol=str(r.get('goleador', r.get('scorer',''))).strip().lower()
+                    asi=str(r.get('asistente', r.get('assist',''))).strip().lower()
+                    if gol in ['m. beier','m beier']: gol='maximilian beier'
+                    if asi in ['m. beier','m beier']: asi='maximilian beier'
+                    if gol in ['s. guirassy','s guirassy']: gol='serhou guirassy'
+                    if asi in ['s. guirassy','s guirassy']: asi='serhou guirassy'
                     if gol.lower() in ['','nan','none']: gol=""
                     if asi.lower() in ['','nan','none']: asi=""
                     lst.append({
@@ -4444,10 +4449,9 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                             tokens.append(f"<span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;margin-right:2px;font-weight:900'>J{j}_{inner}</span>")
                             tokens_copy.append(f"J{j}_{inner}")
 
-                    # resumen X/Y para cabecera
-                    goles_tot = sum(1 for t in tokens_copy if "GOL" in t)
-                    asis_tot = sum(1 for t in tokens_copy if "ASIST" in t)
-                    jugadas = sum(1 for t in tokens_copy if "_" in t and t != f"J" and "_" not in t or "GOL" in t or "ASIST" in t)
+                    # resumen X/Y para cabecera - cuenta cada GOL/ASIST, no cada token
+                    goles_tot = sum(t.count("GOL") for t in tokens_copy)
+                    asis_tot = sum(t.count("ASIST") for t in tokens_copy)
                     # conteo jornadas con algo
                     nj_con = sum(1 for t in tokens_copy if "GOL" in t or "ASIST" in t)
 
@@ -4465,10 +4469,12 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                             line.append(f"J{j}_")
                             continue
                         hits=[]
-                        for ev in ev_jug.get(fid, []):
-                            if ev['team'] != norm_eq_jug: continue
-                            if ev['gol']==nombre_jug: hits.append(f"GOL_{ev['m']}'")
-                            if ev['asi']==nombre_jug: hits.append(f"ASIST_{ev['m']}'")
+                        for e in ev_jug.get(fid, []):
+                            if e['team'] != norm_eq_jug: continue
+                            if 'Missed' in e.get('tipo',''): continue
+                            if 'Own Goal' in e.get('tipo',''): continue
+                            if e['gol']==nombre_jug: hits.append(f"GOL_{e['m']}'")
+                            if e['asi']==nombre_jug: hits.append(f"ASIST_{e['m']}'")
                         if not hits:
                             line.append(f"J{j}_")
                         else:
