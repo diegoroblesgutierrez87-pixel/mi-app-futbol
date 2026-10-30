@@ -4285,16 +4285,15 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
 
     @st.cache_data(show_spinner=False)
     def cargar_base_jugadores_fix():
-        def _find_parquet(names):
-            for n in names:
-                for b in [pathlib.Path(n), pathlib.Path(__file__).parent.resolve()/n, pathlib.Path("/mnt/data")/n]:
-                    if b.exists():
-                        return b
+        def _find_file(name):
+            for b in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                if b.exists():
+                    return b
             return None
-        def _load_concat(namelist):
+        def _load_parquet_concat(namelist):
             dfs=[]
             for nm in namelist:
-                p=_find_parquet([nm])
+                p=_find_file(nm)
                 if p:
                     try:
                         dfs.append(pd.read_parquet(p))
@@ -4306,9 +4305,24 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
             if 'fixture_id' in df_all.columns:
                 df_all=df_all.drop_duplicates(subset=['fixture_id'], keep='last')
             return df_all
+        def _load_csv(name):
+            p=_find_file(name)
+            if not p:
+                return pd.DataFrame()
+            try:
+                return pd.read_csv(p, on_bad_lines='skip')
+            except:
+                return pd.DataFrame()
 
-        df_p = _load_concat(["base_partidos_europa.parquet","base_partidos_resto.parquet"])
-        df_g = _load_concat(["base_goles_europa.parquet","base_goles_resto.parquet"])
+        # PRIMERO PARQUET, SI NO HAY PARQUET ENTONCES CSV
+        df_p = _load_parquet_concat(["base_partidos_europa.parquet","base_partidos_resto.parquet"])
+        if df_p.empty:
+            df_p = _load_csv("base_partidos.csv")
+        df_g = _load_parquet_concat(["base_goles_europa.parquet","base_goles_resto.parquet"])
+        if df_g.empty:
+            df_g = _load_csv("base_goles.csv")
+        if not df_p.empty and 'fixture_id' in df_p.columns:
+            df_p = df_p.drop_duplicates(subset=['fixture_id'], keep='last')
 
         if not df_p.empty:
             df_p['Date'] = pd.to_datetime(df_p['Date'], dayfirst=True, errors='coerce')
