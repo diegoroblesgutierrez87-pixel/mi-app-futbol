@@ -3577,18 +3577,29 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                 fid=str(rr.get('fixture_id','')).split('.')[0]
                 h_team=str(rr.get('HomeTeam','')).strip(); a_team=str(rr.get('AwayTeam','')).strip()
                 lg_norm=normaliza(rr.get('League',''))
-                # posicion actual
+                # posicion actual - FUZZY
                 try:
                     j_max=clas_max_j.get(lg_norm, 0); j_cand=[j_max] if j_max else [9999]
-                    def _get_clas(j, tn):
-                        return clas_dict_j.get((lg_norm, j, tn))
-                    r_h=None; r_a=None
-                    for jc in j_cand:
-                        r_h=_get_clas(jc, normaliza(h_team))
-                        r_a=_get_clas(jc, normaliza(a_team))
-                        if r_h or r_a: break
+                    def _get_clas_fuzzy(team_norm, lg_norm):
+                        for jc in j_cand:
+                            rec=clas_dict_j.get((lg_norm, jc, team_norm))
+                            if rec is not None: return rec
+                        for (l_, j_, n_), rec_ in clas_dict_j.items():
+                            if l_!=lg_norm: continue
+                            if j_ not in j_cand: continue
+                            if team_norm in n_ or n_ in team_norm: return rec_
+                        for (l_, j_, n_), rec_ in clas_dict_j.items():
+                            if l_!=lg_norm: continue
+                            if team_norm in n_ or n_ in team_norm: return rec_
+                        return None
+                    r_h=_get_clas_fuzzy(normaliza(h_team), lg_norm)
+                    r_a=_get_clas_fuzzy(normaliza(a_team), lg_norm)
                     if r_h is not None and r_a is not None:
                         pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
+                    elif r_h is not None:
+                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs ?</span>"
+                    elif r_a is not None:
+                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>? vs {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
                     else:
                         pos_txt=""
                 except:
