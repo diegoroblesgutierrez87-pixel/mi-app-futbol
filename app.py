@@ -3475,7 +3475,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         # --- CABECERA FINAL VISUAL ORDENADA ---
         try:
             if lista_resumen_fix2:
-                resumen_html = "<br>".join(lista_resumen_fix2)
+                resumen_html = "".join([f"<div style='border:2px solid #FFFFFF; border-radius:10px; padding:10px; margin:14px 0; background:#222; box-shadow:0 0 6px #000;'>{r}</div>" for r in lista_resumen_fix2])
                 st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; white-space:pre-wrap; line-height:1.6;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
         except:
             pass
