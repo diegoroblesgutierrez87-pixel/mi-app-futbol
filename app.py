@@ -3588,11 +3588,11 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         r_a=_get_clas(jc, normaliza(a_team))
                         if r_h or r_a: break
                     if r_h is not None and r_a is not None:
-                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} {int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs {a_team} {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
+                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
                     else:
-                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} vs {a_team}</span>"
+                        pos_txt=""
                 except:
-                    pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} vs {a_team}</span>"
+                    pos_txt=""
 
                 if es_loc:
                     res_txt=f"{h_team} <span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span> {a_team}"
