@@ -4349,7 +4349,7 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     if asi.lower() in ['','nan','none']: asi=""
                     lst.append({
                         'm': int(r.get('min_n',0)),
-                        'team': normaliza(r.get('equipo','')),
+                        'team': normaliza(r.get('equipo', r.get('team', r.get('Team','')))),
                         'gol': gol,
                         'asi': asi,
                         'tipo': str(r.get('tipo',''))
@@ -4401,13 +4401,10 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     if 'Own Goal' in e.get('tipo',''): continue
                     if e['team'] != norm_eq_jug:
                         continue
-                    if ev['team'] != norm_eq_jug: 
-                        continue
-                    if 'Missed' in ev.get('tipo',''): continue
-                    if ev['gol']:
-                        jugadores.setdefault(ev['gol'], {})
-                    if ev['asi']:
-                        jugadores.setdefault(ev['asi'], {})
+                    if e['gol']:
+                        jugadores.setdefault(e['gol'], {})
+                    if e['asi']:
+                        jugadores.setdefault(e['asi'], {})
 
             if not jugadores:
                 st.info(f"{equipo_sel_jug} sin goleadores/asistentes registrados")
@@ -4429,11 +4426,10 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                             if e['team'] != norm_eq_jug: continue
                             if 'Missed' in e.get('tipo',''): continue
                             if 'Own Goal' in e.get('tipo',''): continue
-                            if 'Missed' in ev.get('tipo',''): continue
-                            m=ev['m']
-                            if ev['gol'] == nombre_jug:
+                            m=e['m']
+                            if e['gol'] == nombre_jug:
                                 hits.append(f"GOL_{m}'")
-                            if ev['asi'] == nombre_jug:
+                            if e['asi'] == nombre_jug:
                                 hits.append(f"ASIST_{m}'")
                         if not hits:
                             tokens.append(f"<span style='background:#eee;color:#888;padding:1px 4px;border-radius:3px;margin-right:2px'>J{j}_</span>")
