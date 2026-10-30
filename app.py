@@ -4361,6 +4361,10 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     if asi in ['d. mokwa ntusu','d mokwa ntusu','d. mokwa','d mokwa']: asi='david mokwa'
                     if gol in ['l. petkov','l petkov']: gol='lukas petkov'
                     if asi in ['l. petkov','l petkov']: asi='lukas petkov'
+                    if gol in ['f. nino','f nino']: gol='fernando nino rodriguez'
+                    if asi in ['f. nino','f nino']: asi='fernando nino rodriguez'
+                    if gol in ['l. cepeda','l cepeda']: gol='lucas cepeda'
+                    if asi in ['l. cepeda','l cepeda']: asi='lucas cepeda'
                     if gol.lower() in ['','nan','none']: gol=""
                     if asi.lower() in ['','nan','none']: asi=""
                     lst.append({
