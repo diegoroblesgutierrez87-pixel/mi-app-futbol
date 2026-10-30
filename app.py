@@ -4365,6 +4365,12 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     if asi in ['f. nino','f nino']: asi='fernando nino rodriguez'
                     if gol in ['l. cepeda','l cepeda']: gol='lucas cepeda'
                     if asi in ['l. cepeda','l cepeda']: asi='lucas cepeda'
+                    if gol in ['h. mochizuki','h mochizuki']: gol='henry heroki mochizuki'
+                    if asi in ['h. mochizuki','h mochizuki']: asi='henry heroki mochizuki'
+                    if gol in ['t. akimoto','t akimoto']: gol='takahiro akimoto'
+                    if asi in ['t. akimoto','t akimoto']: asi='takahiro akimoto'
+                    if gol in ['t. yengi','t yengi']: gol='tete yengi'
+                    if asi in ['t. yengi','t yengi']: asi='tete yengi'
                     if gol.lower() in ['','nan','none']: gol=""
                     if asi.lower() in ['','nan','none']: asi=""
                     lst.append({
