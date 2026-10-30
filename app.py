@@ -3606,10 +3606,14 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     pos_txt=""
 
                 if es_loc:
-                    res_txt=f"{h_team} <span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span> {a_team}"
+                    h_txt=f"<span style='background:#FFFFFF;color:#000;padding:2px 8px;border-radius:5px;font-weight:900;'>{h_team}</span>"
+                    a_txt=f"<span style='color:#aaaaaa;font-weight:700'>{a_team}</span>"
+                    res_txt=f"{h_txt} <span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span> {a_txt}"
                     letra="G" if hg>ag else "E" if hg==ag else "P"
                 else:
-                    res_txt=f"{h_team} <span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span> {a_team}"
+                    h_txt=f"<span style='color:#aaaaaa;font-weight:700'>{h_team}</span>"
+                    a_txt=f"<span style='background:#FFFFFF;color:#000;padding:2px 8px;border-radius:5px;font-weight:900;'>{a_team}</span>"
+                    res_txt=f"{h_txt} <span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span> {a_txt}"
                     letra="G" if ag>hg else "E" if ag==hg else "P"
                 badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                 mins_1p=[]; mins_2p=[]
