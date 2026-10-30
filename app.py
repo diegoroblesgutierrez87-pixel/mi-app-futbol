@@ -2344,6 +2344,11 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     df_fix2 = df_europa_fix2
     eventos_fix2 = eventos_europa_fix2
 
+    if "show_partidos_fix2" not in st.session_state:
+        st.session_state.show_partidos_fix2 = False
+    if st.button("👁️ MOSTRAR / OCULTAR PARTIDOS FIX2", key="btn_toggle_partidos_fix2", use_container_width=True):
+        st.session_state.show_partidos_fix2 = not st.session_state.show_partidos_fix2
+
     ligas_fut_all_fix2 = sorted(df_futuro_fix2['League_CSV'].dropna().unique().tolist())
     keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","Chinese Super League","A-League","MLS","Brasileirao","Liga MX"]
     if not df_europa_fix2.empty and 'League' in df_europa_fix2.columns:
@@ -3436,7 +3441,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         else: mins_txt_clean = f"{ht_clean}"
                         partidos_pred_copy_fix2.append(f"J{int(j_fix2)}|{h} {ft_clean} {a} {mins_txt_clean} {estado}")
 
-                    st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix2}</div>", unsafe_allow_html=True)
+                    if st.session_state.get("show_partidos_fix2", False):
+                        st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix2}</div>", unsafe_allow_html=True)
 
     if partidos_pred_copy_fix2:
         import html as _html
