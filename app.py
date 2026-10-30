@@ -3575,16 +3575,14 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             except: continue
 
         jornadas_ord=sorted(total_por_j.keys(), reverse=True)
-        loc_list=[]; vis_list=[]
+        todo_list=[]
         for jn in jornadas_ord:
             j_tag=f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
             inner, es_loc = total_por_j[jn]
-            if es_loc: loc_list.append(f"{j_tag}({inner})")
-            else: vis_list.append(f"{j_tag}({inner})")
+            todo_list.append(f"{j_tag}({inner})")
 
-        j_loc_txt="<br>".join(loc_list) if loc_list else "-"
-        j_vis_txt="<br>".join(vis_list) if vis_list else "-"
-        linea_res2=f"{eq_j.upper()}: {total}/{total}<br><br>L:{loc_total}/{loc_total}<br>[{j_loc_txt}]<br><br>V:{vis_total}/{vis_total}<br>[{j_vis_txt}]"
+        todo_txt="<br>".join(todo_list) if todo_list else "-"
+        linea_res2=f"{eq_j.upper()}: {total}/{total}<br><br>[{todo_txt}]"
         st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{linea_res2}</div>", unsafe_allow_html=True)
 ################################################################### CLONADO
 ##################
