@@ -3532,6 +3532,23 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         return df_p, ev
 
     df_jorn, ev_jorn = cargar_base_jornadas()
+    @st.cache_data(show_spinner=False)
+    def cargar_clas_jorn():
+        for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
+            if p.exists():
+                try: return pd.read_csv(p, on_bad_lines='skip')
+                except: pass
+        return pd.DataFrame()
+    df_clas_j = cargar_clas_jorn()
+    clas_dict_j={}; clas_max_j={}
+    if not df_clas_j.empty:
+        for _, rc in df_clas_j.iterrows():
+            try:
+                k=(normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
+                clas_dict_j[k]=rc
+                ln=normaliza(rc.get('League',''))
+                clas_max_j[ln]=max(clas_max_j.get(ln,0), int(rc.get('jornada_int',0)))
+            except: pass
     if df_jorn.empty:
         st.caption("Sin base")
     else:
@@ -3558,11 +3575,30 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                 jn=int(rr.get('J_EQ',0)); hg=int(float(rr.get('FTHG',0) or 0)); ag=int(float(rr.get('FTAG',0) or 0))
                 es_loc=str(rr.get('HomeTeam','')).upper().strip()==up_j
                 fid=str(rr.get('fixture_id','')).split('.')[0]
+                h_team=str(rr.get('HomeTeam','')).strip(); a_team=str(rr.get('AwayTeam','')).strip()
+                lg_norm=normaliza(rr.get('League',''))
+                # posicion actual
+                try:
+                    j_max=clas_max_j.get(lg_norm, 0); j_cand=[j_max] if j_max else [9999]
+                    def _get_clas(j, tn):
+                        return clas_dict_j.get((lg_norm, j, tn))
+                    r_h=None; r_a=None
+                    for jc in j_cand:
+                        r_h=_get_clas(jc, normaliza(h_team))
+                        r_a=_get_clas(jc, normaliza(a_team))
+                        if r_h or r_a: break
+                    if r_h is not None and r_a is not None:
+                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} {int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs {a_team} {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
+                    else:
+                        pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} vs {a_team}</span>"
+                except:
+                    pos_txt=f" <span style='color:#888;font-size:9px;font-weight:400'>{h_team} vs {a_team}</span>"
+
                 if es_loc:
-                    res_txt=f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                    res_txt=f"{h_team} <span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span> {a_team}"
                     letra="G" if hg>ag else "E" if hg==ag else "P"
                 else:
-                    res_txt=f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                    res_txt=f"{h_team} <span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span> {a_team}"
                     letra="G" if ag>hg else "E" if ag==hg else "P"
                 badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                 mins_1p=[]; mins_2p=[]
@@ -3579,7 +3615,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     elif mins_1p: mins_txt=" ".join(mins_1p)
                     elif mins_2p: mins_txt=" ".join(mins_2p)
                     else: mins_txt=""
-                inner=f"{res_txt} {mins_txt} {badge}" if mins_txt else f"{res_txt} {badge}"
+                inner=f"{res_txt} {mins_txt}{pos_txt} {badge}" if mins_txt else f"{res_txt}{pos_txt} {badge}"
                 total_por_j[jn]=(inner, es_loc)
             except: continue
 
