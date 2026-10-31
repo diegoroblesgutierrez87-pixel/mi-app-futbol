@@ -2364,7 +2364,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     c_lp1_fix2, c_lp2_fix2, c_lp3_fix2, c_lp4_fix2 = st.columns([2,1,1,1])
     with c_lp4_fix2:
         ver_goleadores_fix2 = st.selectbox("GOLEADOR+ASIST", ["ON","OFF"], index=0 if st.session_state.get("ver_goleadores_fix2","ON")=="ON" else 1, key="ver_goleadores_fix2")
-        goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
         cond_loc_pred_fix2 = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix2")
         res_1p_tipo_fix2 = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix2")
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
@@ -2386,6 +2385,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
         equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
+        goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
     with c_man2_fix2:
         equipos_manuales_2_fix2 = st.multiselect("Equipos manuales 2 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_2_fix2", placeholder="Ej: Antequera, Marbella...")
 
