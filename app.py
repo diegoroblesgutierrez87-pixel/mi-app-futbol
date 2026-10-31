@@ -2381,29 +2381,43 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     else:
         lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
-    # MIN DESDE/HASTA MISMA LINEA EN MOVIL - AISLADO SIN SCROLL
-    st.markdown('<div id="row-min-fix2"></div>', unsafe_allow_html=True)
-    st.markdown("""
-    <style>
-    /* solo la fila que viene justo despues de row-min-fix2 */
-    #row-min-fix2 + div div[data-testid="stHorizontalBlock"]{
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 8px !important;
-        max-width: 100% !important;
-    }
-    #row-min-fix2 + div div[data-testid="stHorizontalBlock"] > div[data-testid="column"]{
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
-        max-width: 50% !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    c_min_a_fix2, c_min_b_fix2 = st.columns(2, gap="small")
+    # MIN DESDE/HASTA - MISMA LINEA IZQ/DCHA PEQUEÑO CENTRADO - FIX MOVIL REAL
+    c_min_a_fix2, c_min_b_fix2 = st.columns([1,1], gap="small")
     with c_min_a_fix2:
         min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
     with c_min_b_fix2:
         min_hasta_pred_raw_fix2 = st.text_input("MIN HASTA FIX2", key="min_hasta_pred_fix2", placeholder="-")
+
+    import streamlit.components.v1 as components
+    components.html("""
+    <script>
+    (function(){
+      const doc = window.parent.document;
+      function fixMin(){
+        const a = doc.querySelector('input[aria-label="MIN DESDE FIX2"]');
+        if(!a) return;
+        const hb = a.closest('div[data-testid="stHorizontalBlock"]');
+        if(!hb) return;
+        hb.style.setProperty('flex-direction','row','important');
+        hb.style.setProperty('flex-wrap','nowrap','important');
+        hb.style.setProperty('justify-content','center','important');
+        hb.style.setProperty('gap','12px','important');
+        hb.style.setProperty('max-width','320px','important');
+        hb.style.setProperty('margin','0 auto','important');
+        hb.style.setProperty('width','100%','important');
+        hb.querySelectorAll(':scope > div[data-testid="column"]').forEach(col=>{
+          col.style.setProperty('flex','0 0 140px','important');
+          col.style.setProperty('min-width','0','important');
+          col.style.setProperty('max-width','140px','important');
+          col.style.setProperty('width','140px','important');
+        });
+      }
+      setTimeout(fixMin, 300);
+      setTimeout(fixMin, 1000);
+      setInterval(fixMin, 1500);
+    })();
+    </script>
+    """, height=0)
 
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
