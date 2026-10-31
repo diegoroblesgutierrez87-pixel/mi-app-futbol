@@ -2398,23 +2398,36 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         if(!a) return;
         const hb = a.closest('div[data-testid="stHorizontalBlock"]');
         if(!hb) return;
+        hb.style.setProperty('display','flex','important');
         hb.style.setProperty('flex-direction','row','important');
         hb.style.setProperty('flex-wrap','nowrap','important');
         hb.style.setProperty('justify-content','center','important');
-        hb.style.setProperty('gap','12px','important');
-        hb.style.setProperty('max-width','320px','important');
+        hb.style.setProperty('align-items','center','important');
+        hb.style.setProperty('gap','10px','important');
+        hb.style.setProperty('max-width','230px','important');
+        hb.style.setProperty('width','230px','important');
         hb.style.setProperty('margin','0 auto','important');
-        hb.style.setProperty('width','100%','important');
         hb.querySelectorAll(':scope > div[data-testid="column"]').forEach(col=>{
-          col.style.setProperty('flex','0 0 140px','important');
-          col.style.setProperty('min-width','0','important');
-          col.style.setProperty('max-width','140px','important');
-          col.style.setProperty('width','140px','important');
+          col.style.setProperty('flex','0 0 105px','important');
+          col.style.setProperty('min-width','105px','important');
+          col.style.setProperty('max-width','105px','important');
+          col.style.setProperty('width','105px','important');
+        });
+        // aprieta el input interno para que no ocupe 100vw
+        hb.querySelectorAll('input[aria-label="MIN DESDE FIX2"], input[aria-label="MIN HASTA FIX2"]').forEach(inp=>{
+          inp.style.setProperty('max-width','105px','important');
+          inp.style.setProperty('width','105px','important');
+          const wrap = inp.closest('div[data-testid="stTextInput"]');
+          if(wrap){
+            wrap.style.setProperty('max-width','105px','important');
+            wrap.style.setProperty('width','105px','important');
+            wrap.style.setProperty('margin','0 auto','important');
+          }
         });
       }
-      setTimeout(fixMin, 300);
-      setTimeout(fixMin, 1000);
-      setInterval(fixMin, 1500);
+      setTimeout(fixMin, 200);
+      setTimeout(fixMin, 800);
+      setInterval(fixMin, 1200);
     })();
     </script>
     """, height=0)
