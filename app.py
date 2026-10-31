@@ -2381,6 +2381,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     else:
         lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
+    # MIN DESDE/HASTA ENCIMA DE MANUALES FIX2
+    c_min_a_fix2, c_min_b_fix2 = st.columns(2)
+    with c_min_a_fix2:
+        min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
+    with c_min_b_fix2:
+        min_hasta_pred_raw_fix2 = st.text_input("MIN HASTA FIX2", key="min_hasta_pred_fix2", placeholder="-")
+
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
         equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
@@ -2397,11 +2404,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         fechas_pred_str_fix2 = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_fix2]
         fecha_pred_sel_fix2 = st.selectbox("Fecha desde FIX2", fechas_pred_str_fix2, index=fechas_pred_str_fix2.index(st.session_state.fecha_pred_fix2) if st.session_state.fecha_pred_fix2 in fechas_pred_str_fix2 else 0, key="fecha_pred_fix2")
     with c_lp3_fix2:
-        c_m1_fix2, c_m2_fix2 = st.columns(2)
-        with c_m1_fix2:
-            min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
-        with c_m2_fix2:
-            min_hasta_pred_raw_fix2 = st.text_input("MIN HASTA FIX2", key="min_hasta_pred_fix2", placeholder="-")
+        st.caption("")
 
     def _parse_min_pred_fix2(v):
         try:
