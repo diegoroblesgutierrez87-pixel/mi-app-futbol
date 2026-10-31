@@ -2945,8 +2945,22 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_2p.append(tag)
                             
-                            # aplica desplegable
+                            # aplica desplegable + HT gris en medio - FIX else huerfano
+                            try:
+                                _hthg_fix = int(float(rr.get('HTHG',0) or 0))
+                                _htag_fix = int(float(rr.get('HTAG',0) or 0))
+                                _ht_txt_fix = f"<span style='color:#888;font-weight:900'>[{_hthg_fix}-{_htag_fix}]</span>"
+                            except:
+                                _ht_txt_fix = "<span style='color:#888;font-weight:900'>[0-0]</span>"
+                            
+                            if goles_parte_f == "1ªParte":
+                                mins_txt = " ".join(mins_1p) if mins_1p else _ht_txt_fix
+                            elif goles_parte_f == "2ªParte":
+                                mins_txt = " ".join(mins_2p) if mins_2p else ""
                             else: # Todo - con [HT] gris en medio
+                                _hthg = _hthg_fix
+                                _htag = _htag_fix
+                                _ht_txt = _ht_txt_fix
                                 try:
                                     _hthg = int(float(rr.get('HTHG',0) or 0))
                                     _htag = int(float(rr.get('HTAG',0) or 0))
