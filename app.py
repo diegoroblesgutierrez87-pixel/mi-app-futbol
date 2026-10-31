@@ -3019,7 +3019,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
                         last_j_fix2 = 0
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span><br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
+                    # --- CLASIFICACION PROPIA 8º/20(14pts) ---
+                    try:
+                        _lg_norm_self = normaliza(df_team_base_total_fix2['League'].iloc[0]) if 'League' in df_team_base_total_fix2.columns and not df_team_base_total_fix2.empty else normaliza("")
+                        _j_max_self = clas_max_j_fix2.get(_lg_norm_self, last_j_fix2)
+                        _rec_self = clas_dict_fix2.get((_lg_norm_self, _j_max_self, norm_eq_fix2))
+                        if _rec_self is None:
+                            for (l_, j_, n_), rec_ in clas_dict_fix2.items():
+                                if l_ != _lg_norm_self: continue
+                                if j_ != _j_max_self: continue
+                                if norm_eq_fix2 in n_ or n_ in norm_eq_fix2:
+                                    _rec_self = rec_; break
+                        if _rec_self is not None:
+                            _pos_self = int(_rec_self.get('Pos',0)); _pts_self = int(_rec_self.get('Pts',0))
+                            _tot_teams = len([k for k in clas_dict_fix2.keys() if k[0]==_lg_norm_self and k[1]==_j_max_self])
+                            _clas_txt = f" <span style='color:#888;font-size:10px;font-weight:400'>{_pos_self}º/{_tot_teams}({_pts_self}pts)</span>"
+                        else:
+                            _clas_txt = ""
+                    except:
+                        _clas_txt = ""
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>{_clas_txt}<br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     try:
