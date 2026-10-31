@@ -2381,8 +2381,25 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     else:
         lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
-    # MIN DESDE/HASTA ENCIMA DE MANUALES FIX2
-    c_min_a_fix2, c_min_b_fix2 = st.columns(2)
+    # MIN DESDE/HASTA MISMA LINEA EN MOVIL - AISLADO SIN SCROLL
+    st.markdown('<div id="row-min-fix2"></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    /* solo la fila que viene justo despues de row-min-fix2 */
+    #row-min-fix2 + div div[data-testid="stHorizontalBlock"]{
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        max-width: 100% !important;
+    }
+    #row-min-fix2 + div div[data-testid="stHorizontalBlock"] > div[data-testid="column"]{
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: 50% !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    c_min_a_fix2, c_min_b_fix2 = st.columns(2, gap="small")
     with c_min_a_fix2:
         min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
     with c_min_b_fix2:
