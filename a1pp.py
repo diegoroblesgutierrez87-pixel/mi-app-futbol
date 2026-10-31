@@ -2181,8 +2181,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 "partidos_pred_sel_fix2": st.session_state.get("partidos_pred_sel_fix2", []),
                 "eq_manual_1_fix2": st.session_state.get("eq_manual_1_fix2", []),
                 "eq_manual_2_fix2": st.session_state.get("eq_manual_2_fix2", []),
-                "cond_manual_1_fix2": st.session_state.get("cond_manual_1_fix2", "TODOS"),
-                "cond_manual_2_fix2": st.session_state.get("cond_manual_2_fix2", "TODOS"),
                 "cond_loc_pred_fix2": st.session_state.get("cond_loc_pred_fix2", "Local en casa / Visitante fuera"),
                 "filtro_ht_ft_unico_2026_v9_fix2": st.session_state.get("filtro_ht_ft_unico_2026_v9_fix2", []),
                 "ver_goleadores_fix2": st.session_state.get("ver_goleadores_fix2", "OFF"),
@@ -2208,10 +2206,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         st.session_state.eq_manual_1_fix2 = _persist_fix2.get("eq_manual_1_fix2") or st.query_params.get_all("eq_manual_1_fix2")
     if "eq_manual_2_fix2" not in st.session_state:
         st.session_state.eq_manual_2_fix2 = _persist_fix2.get("eq_manual_2_fix2") or st.query_params.get_all("eq_manual_2_fix2")
-    if "cond_manual_1_fix2" not in st.session_state:
-        st.session_state.cond_manual_1_fix2 = _persist_fix2.get("cond_manual_1_fix2") or st.query_params.get("cond_manual_1_fix2", "TODOS")
-    if "cond_manual_2_fix2" not in st.session_state:
-        st.session_state.cond_manual_2_fix2 = _persist_fix2.get("cond_manual_2_fix2") or st.query_params.get("cond_manual_2_fix2", "TODOS")
     if "cond_loc_pred_fix2" not in st.session_state:
         st.session_state.cond_loc_pred_fix2 = _persist_fix2.get("cond_loc_pred_fix2") or st.query_params.get("cond_loc_pred_fix2", "Local en casa / Visitante fuera")
     if "filtro_ht_ft_unico_2026_v9_fix2" not in st.session_state:
@@ -2220,7 +2214,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         st.session_state.ambos_marcan_fix2 = _persist_fix2.get("ambos_marcan_fix2") or st.query_params.get("ambos_marcan_fix2", "-")
 
     if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION FIX2", key="btn_limpiar_pred_fix2", use_container_width=True):
-        for k in ["ligas_pred_fix2","fecha_pred_fix2","min_desde_pred_fix2","min_hasta_pred_fix2","partidos_pred_sel_fix2","eq_manual_1_fix2","eq_manual_2_fix2","cond_manual_1_fix2","cond_manual_2_fix2","filtro_ht_ft_unico_2026_v9_fix2","cond_loc_pred_fix2"]:
+        for k in ["ligas_pred_fix2","fecha_pred_fix2","min_desde_pred_fix2","min_hasta_pred_fix2","partidos_pred_sel_fix2","eq_manual_1_fix2","eq_manual_2_fix2","filtro_ht_ft_unico_2026_v9_fix2","cond_loc_pred_fix2"]:
             if k in st.session_state:
                 del st.session_state[k]
         for k in ["ligas_pred_fix2","fecha_pred_fix2","min_desde_pred_fix2","min_hasta_pred_fix2"]:
@@ -2370,12 +2364,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     c_lp1_fix2, c_lp2_fix2, c_lp3_fix2, c_lp4_fix2 = st.columns([2,1,1,1])
     with c_lp4_fix2:
         ver_goleadores_fix2 = st.selectbox("GOLEADOR+ASIST", ["ON","OFF"], index=0 if st.session_state.get("ver_goleadores_fix2","ON")=="ON" else 1, key="ver_goleadores_fix2")
-        goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
         cond_loc_pred_fix2 = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix2")
         res_1p_tipo_fix2 = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix2")
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_fix2 = st.multiselect("Resultado 1ªP / 2ªP", opciones_res_fix2, default=[], key="filtro_ht_ft_unico_2026_v9_fix2", placeholder="Ej: 0-0_1ªP")
-        overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
         ambos_marcan_fix2 = st.selectbox("AMBOS MARCAN", ["-","SI","NO"], index=["-","SI","NO"].index(st.session_state.get("ambos_marcan_fix2","-")), key="ambos_marcan_fix2")
         res_live_tipo_fix2 = st.selectbox("Resultado LIVE", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_fix2")
         min_live_raw_fix2 = st.text_input("MIN LIVE", key="min_live_fix2", placeholder="Ej: 76")
@@ -2389,13 +2381,64 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     else:
         lista_hist_equipos_fix2 = sorted(pd.concat([df_fix2['HomeTeam'], df_fix2['AwayTeam']]).dropna().astype(str).unique().tolist())
 
+    # MIN DESDE/HASTA - MISMA LINEA IZQ/DCHA PEQUEÑO CENTRADO - FIX MOVIL REAL
+    c_min_a_fix2, c_min_b_fix2 = st.columns([1,1], gap="small")
+    with c_min_a_fix2:
+        min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
+    with c_min_b_fix2:
+        min_hasta_pred_raw_fix2 = st.text_input("MIN HASTA FIX2", key="min_hasta_pred_fix2", placeholder="-")
+
+    import streamlit.components.v1 as components
+    components.html("""
+    <script>
+    (function(){
+      const doc = window.parent.document;
+      function fixMin(){
+        const a = doc.querySelector('input[aria-label="MIN DESDE FIX2"]');
+        if(!a) return;
+        const hb = a.closest('div[data-testid="stHorizontalBlock"]');
+        if(!hb) return;
+        hb.style.setProperty('display','flex','important');
+        hb.style.setProperty('flex-direction','row','important');
+        hb.style.setProperty('flex-wrap','nowrap','important');
+        hb.style.setProperty('justify-content','center','important');
+        hb.style.setProperty('align-items','center','important');
+        hb.style.setProperty('gap','10px','important');
+        hb.style.setProperty('max-width','230px','important');
+        hb.style.setProperty('width','230px','important');
+        hb.style.setProperty('margin','0 auto','important');
+        hb.querySelectorAll(':scope > div[data-testid="column"]').forEach(col=>{
+          col.style.setProperty('flex','0 0 105px','important');
+          col.style.setProperty('min-width','105px','important');
+          col.style.setProperty('max-width','105px','important');
+          col.style.setProperty('width','105px','important');
+        });
+        // aprieta el input interno para que no ocupe 100vw
+        hb.querySelectorAll('input[aria-label="MIN DESDE FIX2"], input[aria-label="MIN HASTA FIX2"]').forEach(inp=>{
+          inp.style.setProperty('max-width','105px','important');
+          inp.style.setProperty('width','105px','important');
+          const wrap = inp.closest('div[data-testid="stTextInput"]');
+          if(wrap){
+            wrap.style.setProperty('max-width','105px','important');
+            wrap.style.setProperty('width','105px','important');
+            wrap.style.setProperty('margin','0 auto','important');
+          }
+        });
+      }
+      setTimeout(fixMin, 200);
+      setTimeout(fixMin, 800);
+      setInterval(fixMin, 1200);
+    })();
+    </script>
+    """, height=0)
+
     c_man1_fix2, c_man2_fix2 = st.columns(2)
     with c_man1_fix2:
         equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
-        cond_manual_1_fix2 = st.selectbox("Cond manual 1 FIX2", ["TODOS","solo local","solo visitante"], key="cond_manual_1_fix2")
+        goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
+        overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
     with c_man2_fix2:
         equipos_manuales_2_fix2 = st.multiselect("Equipos manuales 2 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_2_fix2", placeholder="Ej: Antequera, Marbella...")
-        cond_manual_2_fix2 = st.selectbox("Cond manual 2 FIX2", ["TODOS","solo local","solo visitante"], key="cond_manual_2_fix2")
 
     with c_lp1_fix2:
         ligas_pred_sel_fix2 = st.multiselect("Ligas futuras FIX2", ligas_fut_fix2, default=st.session_state.ligas_pred_fix2, key="ligas_pred_fix2", placeholder="Todas las ligas")
@@ -2405,11 +2448,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         fechas_pred_str_fix2 = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_fix2]
         fecha_pred_sel_fix2 = st.selectbox("Fecha desde FIX2", fechas_pred_str_fix2, index=fechas_pred_str_fix2.index(st.session_state.fecha_pred_fix2) if st.session_state.fecha_pred_fix2 in fechas_pred_str_fix2 else 0, key="fecha_pred_fix2")
     with c_lp3_fix2:
-        c_m1_fix2, c_m2_fix2 = st.columns(2)
-        with c_m1_fix2:
-            min_desde_pred_raw_fix2 = st.text_input("MIN DESDE FIX2", key="min_desde_pred_fix2", placeholder="-")
-        with c_m2_fix2:
-            min_hasta_pred_raw_fix2 = st.text_input("MIN HASTA FIX2", key="min_hasta_pred_fix2", placeholder="-")
+        st.caption("")
 
     def _parse_min_pred_fix2(v):
         try:
@@ -2545,17 +2584,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_team_base_total_fix2['J_EQ'] = range(1, len(df_team_base_total_fix2)+1)
                     df_team_fix2['J_EQ'] = df_team_base_total_fix2['J_EQ'].values
                     df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
-
-                if nombre_eq_fix2 in equipos_manuales_1_fix2:
-                    if cond_manual_1_fix2 == "solo local":
-                        df_team_fix2 = df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
-                    elif cond_manual_1_fix2 == "solo visitante":
-                        df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
-                if nombre_eq_fix2 in equipos_manuales_2_fix2:
-                    if cond_manual_2_fix2 == "solo local":
-                        df_team_fix2 = df_team_fix2[df_team_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
-                    elif cond_manual_2_fix2 == "solo visitante":
-                        df_team_fix2 = df_team_fix2[df_team_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2]
 
                 # Esta es la base que usaremos para sacar las 15 jornadas - SIN filtros de desplegables
                 df_team_base_pred_fix2 = df_team_base_total_fix2.copy()
@@ -2947,13 +2975,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
                             else:
                                 badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                                    # --- FILTRO GOLES PARTE PARA RESUMEN ---
+                                    # --- FILTRO GOLES PARTE PARA RESUMEN + HT REAL FIX ---
                             goles_parte_f = st.session_state.get("goles_parte_fix2", "Todo")
                             mins_1p = []
                             mins_2p = []
+                            hthg_calc = 0
+                            htag_calc = 0
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
                                 if 'Missed' in ev.get('tipo',''): continue
                                 mm = ev.get('m',-1)
+                                # para HT calc cuenta todo <=45 sin filtro MIN
+                                if mm <= 45:
+                                    try:
+                                        t = normaliza(ev.get('team',''))
+                                        hn_tmp = normaliza(str(rr.get('HomeTeam','')))
+                                        if t == hn_tmp:
+                                            hthg_calc += 1
+                                        else:
+                                            htag_calc += 1
+                                    except:
+                                        pass
                                 if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
                                 if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
                                 es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
@@ -2963,30 +3004,37 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_1p.append(tag)
                                 else:
                                     mins_2p.append(tag)
-                            
-                            # aplica desplegable
+                            # HT real - si parquet trae 0-0 lo recalcula de goles
+                            try:
+                                _hthg_parq = int(float(rr.get('HTHG',0) or 0))
+                                _htag_parq = int(float(rr.get('HTAG',0) or 0))
+                            except:
+                                _hthg_parq = 0; _htag_parq = 0
+                            if _hthg_parq == 0 and _htag_parq == 0 and (hthg_calc+htag_calc)>0:
+                                _hthg_fix = hthg_calc
+                                _htag_fix = htag_calc
+                            else:
+                                _hthg_fix = _hthg_parq
+                                _htag_fix = _htag_parq
+                            _ht_txt = f"<span style='color:#888;font-weight:900'>|[{_hthg_fix}-{_htag_fix}]|</span>"
                             if goles_parte_f == "1ªParte":
-                                if mins_1p:
-                                    mins_txt = " ".join(mins_1p)
-                                else:
-                                    mins_txt = ""
+                                mins_txt = " ".join(mins_1p) if mins_1p else _ht_txt
                             elif goles_parte_f == "2ªParte":
-                                if mins_2p:
-                                    mins_txt = " ".join(mins_2p)
-                                else:
-                                    mins_txt = ""
-                            else: # Todo
+                                mins_txt = " ".join(mins_2p) if mins_2p else ""
+                            else:
                                 if mins_1p and mins_2p:
-                                    mins_txt = " ".join(mins_1p) + " <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
-                                elif mins_1p:
-                                    mins_txt = " ".join(mins_1p)
-                                elif mins_2p:
-                                    mins_txt = " ".join(mins_2p)
+                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt} " + " ".join(mins_2p)
+                                elif mins_1p and not mins_2p:
+                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt}"
+                                elif mins_2p and not mins_1p:
+                                    mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
                                 else:
-                                    mins_txt = ""
-                            
+                                    mins_txt = _ht_txt
                             inner = f"{res_txt} {mins_txt}{rival_txt} {badge}" if mins_txt else f"{res_txt}{rival_txt} {badge}"
                             filt_por_j[jn] = (inner, es_loc)
+                            continue
+                            
+##########
                         except:
                             continue
                     # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
@@ -3481,8 +3529,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             _live_txt = f"{res_live_tipo_fix2} MIN:{min_live_raw_fix2 or '-'}"
             _min_desde_txt = min_desde_pred_raw_fix2 or "-"
             _min_hasta_txt = min_hasta_pred_raw_fix2 or "-"
-            _eq_man1_txt = f"{equipos_manuales_1_fix2} [{cond_manual_1_fix2}]" if equipos_manuales_1_fix2 else "-"
-            _eq_man2_txt = f"{equipos_manuales_2_fix2} [{cond_manual_2_fix2}]" if equipos_manuales_2_fix2 else "-"
+            _eq_man1_txt = f"{equipos_manuales_1_fix2}" if equipos_manuales_1_fix2 else "-"
+            _eq_man2_txt = f"{equipos_manuales_2_fix2}" if equipos_manuales_2_fix2 else "-"
             _partidos_fut_txt = f"{len(partidos_sel_fix2)}: {partidos_sel_fix2[:2]}" if partidos_sel_fix2 else "MANUAL"
             filtros_txt_fix2 = (
                 f"FILTROS FIX2 | PARTIDOS FUT={_partidos_fut_txt} | Ligas=[{_ligas_txt}] | Fecha={_fecha_txt} | "
