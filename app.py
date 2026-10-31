@@ -2928,13 +2928,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
                             else:
                                 badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                                    # --- FILTRO GOLES PARTE PARA RESUMEN ---
+                                    # --- FILTRO GOLES PARTE PARA RESUMEN + HT REAL FIX ---
                             goles_parte_f = st.session_state.get("goles_parte_fix2", "Todo")
                             mins_1p = []
                             mins_2p = []
+                            hthg_calc = 0
+                            htag_calc = 0
                             for ev in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
                                 if 'Missed' in ev.get('tipo',''): continue
                                 mm = ev.get('m',-1)
+                                # para HT calc cuenta todo <=45 sin filtro MIN
+                                if mm <= 45:
+                                    try:
+                                        t = normaliza(ev.get('team',''))
+                                        hn_tmp = normaliza(str(rr.get('HomeTeam','')))
+                                        if t == hn_tmp:
+                                            hthg_calc += 1
+                                        else:
+                                            htag_calc += 1
+                                    except:
+                                        pass
                                 if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
                                 if MIN_HASTA_PRED_FIX2 is not None and mm > MIN_HASTA_PRED_FIX2: continue
                                 es_mio = (normaliza(ev.get('team','')) == norm_eq_fix2)
@@ -2944,44 +2957,37 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_1p.append(tag)
                                 else:
                                     mins_2p.append(tag)
-                            
-                            # aplica desplegable + HT gris en medio - FIX else huerfano
+                            # HT real - si parquet trae 0-0 lo recalcula de goles
                             try:
-                                _hthg_fix = int(float(rr.get('HTHG',0) or 0))
-                                _htag_fix = int(float(rr.get('HTAG',0) or 0))
-                                _ht_txt_fix = f"<span style='color:#888;font-weight:900'>[{_hthg_fix}-{_htag_fix}]</span>"
+                                _hthg_parq = int(float(rr.get('HTHG',0) or 0))
+                                _htag_parq = int(float(rr.get('HTAG',0) or 0))
                             except:
-                                _ht_txt_fix = "<span style='color:#888;font-weight:900'>[0-0]</span>"
-                            
+                                _hthg_parq = 0; _htag_parq = 0
+                            if _hthg_parq == 0 and _htag_parq == 0 and (hthg_calc+htag_calc)>0:
+                                _hthg_fix = hthg_calc
+                                _htag_fix = htag_calc
+                            else:
+                                _hthg_fix = _hthg_parq
+                                _htag_fix = _htag_parq
+                            _ht_txt = f"<span style='color:#888;font-weight:900'>|[{_hthg_fix}-{_htag_fix}]|</span>"
                             if goles_parte_f == "1ªParte":
-                                mins_txt = " ".join(mins_1p) if mins_1p else _ht_txt_fix
+                                mins_txt = " ".join(mins_1p) if mins_1p else _ht_txt
                             elif goles_parte_f == "2ªParte":
                                 mins_txt = " ".join(mins_2p) if mins_2p else ""
-                            else: # Todo - con [HT] gris en medio
-                                _hthg = _hthg_fix
-                                _htag = _htag_fix
-                                _ht_txt = _ht_txt_fix
-                                try:
-                                    _hthg = int(float(rr.get('HTHG',0) or 0))
-                                    _htag = int(float(rr.get('HTAG',0) or 0))
-                                    _ht_txt = f"<span style='color:#888;font-weight:900'>[{_hthg}-{_htag}]</span>"
-                                except:
-                                    _ht_txt = ""
+                            else:
                                 if mins_1p and mins_2p:
-                                    mins_txt = " ".join(mins_1p) + f" <span style='color:#888;font-weight:900'>|</span> {_ht_txt} <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
+                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt} " + " ".join(mins_2p)
                                 elif mins_1p and not mins_2p:
-                                    mins_txt = " ".join(mins_1p) + f" <span style='color:#888;font-weight:900'>|</span> {_ht_txt}"
+                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt}"
                                 elif mins_2p and not mins_1p:
-                                    mins_txt = f"{_ht_txt} <span style='color:#888;font-weight:900'>|</span> " + " ".join(mins_2p)
-                                elif mins_1p:
-                                    mins_txt = " ".join(mins_1p)
-                                elif mins_2p:
-                                    mins_txt = " ".join(mins_2p)
+                                    mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
                                 else:
                                     mins_txt = _ht_txt
-                            
                             inner = f"{res_txt} {mins_txt}{rival_txt} {badge}" if mins_txt else f"{res_txt}{rival_txt} {badge}"
                             filt_por_j[jn] = (inner, es_loc)
+                            continue
+                            
+##########
                         except:
                             continue
                     # recorre TODAS las jornadas base para meter _ - FIX CON J_EQ
