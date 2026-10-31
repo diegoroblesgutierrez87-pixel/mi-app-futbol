@@ -3051,7 +3051,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 lista_vis_plain.append(f"{j_tag}({inner})")
                         else:
-                            # busca si era local o visitante esa jornada en base
+                            # HUECO - no cumple filtro: muestra resultado en gris + G/E/P
                             try:
                                 if 'J_EQ' in df_team_base_total_fix2.columns:
                                     _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
@@ -3059,12 +3059,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     r_base = df_team_base_total_fix2[df_team_base_total_fix2['Jornada']==jn].iloc[0]
                                 es_loc_base = normaliza(str(r_base.get('HomeTeam',''))) == norm_eq_fix2
+                                try:
+                                    _hg = int(float(r_base.get('FTHG',0) or 0)); _ag = int(float(r_base.get('FTAG',0) or 0))
+                                except:
+                                    _hg=0; _ag=0
+                                if es_loc_base:
+                                    _letra = "G" if _hg>_ag else "E" if _hg==_ag else "P"
+                                else:
+                                    _letra = "G" if _ag>_hg else "E" if _ag==_hg else "P"
+                                if _letra=="G":
+                                    _badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
+                                elif _letra=="E":
+                                    _badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
+                                else:
+                                    _badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                                _res_gris = f"<span style='color:#888;font-weight:900'>[{_hg}-{_ag}]</span>"
+                                _txt = f"{j_tag}({_res_gris} {_badge})"
                             except:
                                 es_loc_base = True
+                                _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
                             if es_loc_base:
-                                lista_loc_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>CASA _</span>)")
+                                lista_loc_plain.append(_txt)
                             else:
-                                lista_vis_plain.append(f"{j_tag}(<span style='color:#888;font-weight:900'>VIS _</span>)")
+                                lista_vis_plain.append(_txt)
                     j_loc_plain_txt = "<br>".join(lista_loc_plain) if lista_loc_plain else "-"
                     j_vis_plain_txt = "<br>".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
