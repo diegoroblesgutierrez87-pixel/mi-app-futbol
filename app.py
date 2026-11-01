@@ -2271,37 +2271,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         break
             if not dfs:
                 return pd.DataFrame()
-            return pd.concat(dfs, ignore_index=True)
-            dfs=[]
-            for name in file_list:
-                for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
-                    if base.exists():
-                        try:
-                            dfs.append(pd.read_parquet(base))
-                        except:
-                            pass
-                        break
-            if not dfs:
-                return pd.DataFrame()
             df_all = pd.concat(dfs, ignore_index=True)
-            # drop duplicados por fixture_id si existe
             if 'fixture_id' in df_all.columns:
                 df_all = df_all.drop_duplicates(subset=['fixture_id'], keep='last')
             return df_all
-
-        def _load_concat_goles(file_list):
-            dfs=[]
-            for name in file_list:
-                for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
-                    if base.exists():
-                        try:
-                            dfs.append(pd.read_parquet(base))
-                        except:
-                            pass
-                        break
-            if not dfs:
-                return pd.DataFrame()
-            return pd.concat(dfs, ignore_index=True)
 
         # PARTIDOS: europa + resto
         df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet", "base_partidos_resto_CORREGIDO.csv"])
