@@ -3934,6 +3934,18 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         MIN_DESDE_FIX3 = _parse_min_fix3(min_desde_raw_fix3)
         MIN_HASTA_FIX3 = _parse_min_fix3(min_hasta_raw_fix3)
 
+        # --- RESUMEN FILTROS FIX3 VISIBLE ---
+        try:
+            _f3_liga = liga_j_sel
+            _f3_eq = ", ".join(eqs_j) if eqs_j else "-"
+            _f3_goles = goles_parte2
+            _f3_md = min_desde_raw_fix3 or "-"
+            _f3_mh = min_hasta_raw_fix3 or "-"
+            _resumen_fix3 = f"FILTROS FIX3 | LIGA=[{_f3_liga}] | EQUIPOS=[{_f3_eq}] | GOLES_PARTE={_f3_goles} | MIN_DESDE={_f3_md} HASTA={_f3_mh}"
+            st.markdown(f"<div style='font-family:monospace;font-size:9px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #A020F0;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word;'>{_resumen_fix3}</div>", unsafe_allow_html=True)
+        except:
+            pass
+
         if not eqs_j:
             st.caption("Selecciona equipo(s)")
             st.stop()
