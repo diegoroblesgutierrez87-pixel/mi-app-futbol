@@ -2366,6 +2366,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         ver_goleadores_fix2 = st.selectbox("GOLEADOR+ASIST", ["ON","OFF"], index=0 if st.session_state.get("ver_goleadores_fix2","ON")=="ON" else 1, key="ver_goleadores_fix2")
         cond_loc_pred_fix2 = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix2")
         res_1p_tipo_fix2 = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix2")
+        res_ft_tipo_fix2 = st.selectbox("Resultado FINAL FIX2", ["TODOS","GANA","EMPATA","PIERDE","GANAEMPATA","GANAPIERDE","EMPATAPIERDE"], index=0, key="res_ft_tipo_fix2")
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_fix2 = st.multiselect("Resultado 1ªP / 2ªP", opciones_res_fix2, default=[], key="filtro_ht_ft_unico_2026_v9_fix2", placeholder="Ej: 0-0_1ªP")
         ambos_marcan_fix2 = st.selectbox("AMBOS MARCAN", ["-","SI","NO"], index=["-","SI","NO"].index(st.session_state.get("ambos_marcan_fix2","-")), key="ambos_marcan_fix2")
@@ -2658,6 +2659,27 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         if res_1p_tipo_fix2 == "GANAPIERDE": return r_ in ("GANA","PIERDE")
                         return True
                     df_team_fix2 = df_team_fix2[df_team_fix2.apply(_cumple_1p_tipo_fix2, axis=1)]
+
+                if res_ft_tipo_fix2 != "TODOS":
+                    def _cumple_ft_tipo_fix2(rr):
+                        try:
+                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
+                        except: return False
+                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
+                        if norm_eq_fix2 == hn_:
+                            r_ = "GANA" if hg_ > ag_ else "EMPATA" if hg_ == ag_ else "PIERDE"
+                        elif norm_eq_fix2 == an_:
+                            r_ = "GANA" if ag_ > hg_ else "EMPATA" if ag_ == hg_ else "PIERDE"
+                        else:
+                            return False
+                        if res_ft_tipo_fix2 == "GANA": return r_ == "GANA"
+                        if res_ft_tipo_fix2 == "EMPATA": return r_ == "EMPATA"
+                        if res_ft_tipo_fix2 == "PIERDE": return r_ == "PIERDE"
+                        if res_ft_tipo_fix2 == "GANAEMPATA": return r_ in ("GANA","EMPATA")
+                        if res_ft_tipo_fix2 == "GANAPIERDE": return r_ in ("GANA","PIERDE")
+                        if res_ft_tipo_fix2 == "EMPATAPIERDE": return r_ in ("EMPATA","PIERDE")
+                        return True
+                    df_team_fix2 = df_team_fix2[df_team_fix2.apply(_cumple_ft_tipo_fix2, axis=1)]
 
                 # --- EDGE LIVE: RESULTADO EN MINUTO X - FIX HT + 2ª PARTE ---
                 if res_live_tipo_fix2!= "TODOS" and MIN_LIVE_FIX2 is not None:
