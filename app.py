@@ -3948,8 +3948,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None) else total
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>[{todo_txt}]"
             bloques_html.append(linea_res2)
-        final_html="<br><br>".join(bloques_html)
-        st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{final_html}</div>", unsafe_allow_html=True)
+        for bloque in bloques_html:
+            st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{bloque}</div>", unsafe_allow_html=True)
 #
 ################################################################### CLONADO
 ##################
