@@ -3213,7 +3213,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     _badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                                 _ht_gris = f"<span style='color:#888;font-weight:900'>[{_hthg}-{_htag}]</span>"
-                                _txt = f"{_badge}){j_tag}({_res_final} {_ht_gris})"
+                                _txt = f"{_badge}){j_tag}({_res_final} {_ht_gris}) <span style='color:#FFFFFF;font-weight:900'>NO</span>"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
