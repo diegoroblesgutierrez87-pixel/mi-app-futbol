@@ -2544,7 +2544,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 if MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None:
                     def _tiene_min_f(rr):
                         fid = str(rr.get('fixture_id','')).split('.')[0]
-                        for ev in eventos_fix2.get(fid, []):
+                        evs = eventos_fix2.get(fid, [])
+                        if not evs:
+                            try:
+                                import pathlib as _pb2
+                                _gb2 = _pb2.Path("/mnt/data/base_goles.csv")
+                                if _gb2.exists():
+                                    _dfgb2 = pd.read_csv(_gb2, on_bad_lines='skip')
+                                    _dfgb2['fid_str'] = _dfgb2['fixture_id'].astype(str).str.split('.').str[0]
+                                    _sub2 = _dfgb2[_dfgb2['fid_str']==fid]
+                                    for _, _rg2 in _sub2.iterrows():
+                                        try:
+                                            _ms2 = str(_rg2.get('minuto','0')).replace("'", "")
+                                            _mm2 = int(_ms2.split('+')[0].split('.')[0]) if _ms2 else 0
+                                        except:
+                                            _mm2 = 0
+                                        if 'Missed' in str(_rg2.get('tipo','')): continue
+                                        if MIN_DESDE_PRED_FIX2 is not None and _mm2 < MIN_DESDE_PRED_FIX2: continue
+                                        if MIN_HASTA_PRED_FIX2 is not None and _mm2 > MIN_HASTA_PRED_FIX2: continue
+                                        return True
+                                    return False
+                            except:
+                                pass
+                        for ev in evs:
                             if 'Missed' in ev.get('tipo',''): continue
                             mm = ev.get('m',-1)
                             if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
