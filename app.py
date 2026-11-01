@@ -4017,18 +4017,28 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         except:
                             pass
                     if es_loc:
-                        ht_gris = f"<span style='color:#888'>[</span><span style='color:#D0D0D0;font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:#888;font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
+                        _col_hthg = "#D0D0D0" if hthg>0 else "#888"
+                        _col_htag = "#888"
+                        if htag==0:
+                            _col_htag = "#888"
+                        ht_gris = f"<span style='color:#888'>[</span><span style='color:{_col_hthg};font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:{_col_htag};font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
                     else:
-                        ht_gris = f"<span style='color:#888'>[</span><span style='color:#888;font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:#D0D0D0;font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
+                        _col_hthg = "#888"
+                        _col_htag = "#D0D0D0" if htag>0 else "#888"
+                        ht_gris = f"<span style='color:#888'>[</span><span style='color:{_col_hthg};font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:{_col_htag};font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
                     if es_loc:
                         h_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{h_team}</span>"
                         a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>"
-                        res_txt=f"{h_txt} <span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
+                        _c_h = "#00c800" if hg>0 else "#888"
+                        _c_a = "#ff2a2a" if ag>0 else "#888"
+                        res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if hg>ag else "E" if hg==ag else "P"
                     else:
                         h_txt=f"<span style='color:#888888;font-weight:700'>{h_team}</span>"
                         a_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{a_team}</span>"
-                        res_txt=f"{h_txt} <span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
+                        _c_h = "#ff2a2a" if hg>0 else "#888"
+                        _c_a = "#00c800" if ag>0 else "#888"
+                        res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if ag>hg else "E" if ag==hg else "P"
                     badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                     tiene_en_rango = True
