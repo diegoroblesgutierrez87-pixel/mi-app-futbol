@@ -4089,6 +4089,29 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             bloques_html.append(linea_res2)
         for bloque in bloques_html:
             st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{bloque}</div>", unsafe_allow_html=True)
+
+        # --- BOTON COPIAR FIX3: resumen + resultados ---
+        if True:
+            import html as _html_fix3, re as _re_fix3
+            try:
+                _resumen_copy = _resumen_fix3
+            except:
+                _resumen_copy = f"FILTROS FIX3 | LIGA={liga_j_sel} | EQUIPOS={eqs_j} | GOLES_PARTE={goles_parte2} | MIN {min_desde_raw_fix3}-{min_hasta_raw_fix3}"
+            def _strip_fix3(s):
+                s = s.replace('<br>', '\n').replace('<br/>','\n').replace('<br />','\n')
+                return _re_fix3.sub(r'<[^>]+>', '', s).replace('&nbsp;',' ').strip()
+            _bloques_clean = "\n\n".join([_strip_fix3(b) for b in bloques_html]) if bloques_html else "SIN DATOS FIX3"
+            _texto_final_fix3 = _resumen_copy + "\n\n" + _bloques_clean
+            _safe_fix3 = _html_fix3.escape(_texto_final_fix3)
+            import streamlit.components.v1 as components
+            components.html(f"""
+            <textarea id="txt_fix3" style="position:absolute;left:-9999px;top:-9999px;">{_safe_fix3}</textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('txt_fix3').value).then(()=>{{let b=document.getElementById('btn_fix3_copy'); b.innerText='✓ COPIADO FIX3'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText=' COPIAR JORNADAS FIX3'; b.style.background='#A020F0'}},1200)}})"
+            id="btn_fix3_copy"
+            style="width:100%;background:#A020F0;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;margin-top:10px;">
+             COPIAR JORNADAS FIX3
+            </button>
+            """, height=55, scrolling=False)
 #
 ################################################################### CLONADO
 ##################
