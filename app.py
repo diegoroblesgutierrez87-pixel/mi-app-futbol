@@ -2229,7 +2229,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     _save_persist_48h_fix2()
 
     @st.cache_data(show_spinner=False)
-    def cargar_base_europa_fix2():
+    def cargar_base_europa_fix2_v2():
         def _find_first(names):
             for name in names:
                 for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
@@ -2323,7 +2323,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
         return df_e, ev
 
-    df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2()
+    df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2_v2()
 
     @st.cache_data(show_spinner=False)
     def cargar_clasificacion_fix2():
@@ -2829,7 +2829,29 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 if MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None:
                     def _tiene_min_eq(rr):
                         fid = str(rr.get('fixture_id','')).split('.')[0]
-                        for ev in eventos_fix2.get(fid, []):
+                        evs = eventos_fix2.get(fid, [])
+                        if not evs:
+                            try:
+                                import pathlib as _pb
+                                _gb = _pb.Path("/mnt/data/base_goles.csv")
+                                if _gb.exists():
+                                    _dfgb = pd.read_csv(_gb, on_bad_lines='skip')
+                                    _dfgb['fid_str'] = _dfgb['fixture_id'].astype(str).str.split('.').str[0]
+                                    _sub = _dfgb[_dfgb['fid_str']==fid]
+                                    for _, _rg in _sub.iterrows():
+                                        try:
+                                            _ms = str(_rg.get('minuto','0')).replace("'", "")
+                                            _mm = int(_ms.split('+')[0].split('.')[0]) if _ms else 0
+                                        except:
+                                            _mm = 0
+                                        if 'Missed' in str(_rg.get('tipo','')): continue
+                                        if MIN_DESDE_PRED_FIX2 is not None and _mm < MIN_DESDE_PRED_FIX2: continue
+                                        if MIN_HASTA_PRED_FIX2 is not None and _mm > MIN_HASTA_PRED_FIX2: continue
+                                        return True
+                                    return False
+                            except:
+                                pass
+                        for ev in evs:
                             if 'Missed' in ev.get('tipo',''): continue
                             mm = ev.get('m',-1)
                             if MIN_DESDE_PRED_FIX2 is not None and mm < MIN_DESDE_PRED_FIX2: continue
