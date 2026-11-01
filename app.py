@@ -2242,6 +2242,41 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
                     if base.exists():
                         try:
+                            if str(base).endswith('.parquet'):
+                                dfs.append(pd.read_parquet(base))
+                            else:
+                                dfs.append(pd.read_csv(base, on_bad_lines='skip'))
+                        except:
+                            pass
+                        break
+            if not dfs:
+                return pd.DataFrame()
+            df_all = pd.concat(dfs, ignore_index=True)
+            if 'fixture_id' in df_all.columns:
+                df_all = df_all.drop_duplicates(subset=['fixture_id'], keep='last')
+            return df_all
+
+        def _load_concat_goles(file_list):
+            dfs=[]
+            for name in file_list:
+                for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                    if base.exists():
+                        try:
+                            if str(base).endswith('.parquet'):
+                                dfs.append(pd.read_parquet(base))
+                            else:
+                                dfs.append(pd.read_csv(base, on_bad_lines='skip'))
+                        except:
+                            pass
+                        break
+            if not dfs:
+                return pd.DataFrame()
+            return pd.concat(dfs, ignore_index=True)
+            dfs=[]
+            for name in file_list:
+                for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                    if base.exists():
+                        try:
                             dfs.append(pd.read_parquet(base))
                         except:
                             pass
@@ -2269,7 +2304,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             return pd.concat(dfs, ignore_index=True)
 
         # PARTIDOS: europa + resto
-        df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet"])
+        df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet", "base_partidos_resto_CORREGIDO.csv", "base_partidos_resto_CORREGIDO_HT.csv"])
         if not df_e.empty:
             df_e['HomeNorm'] = df_e['HomeTeam'].astype(str).str.upper().str.strip()
             df_e['AwayNorm'] = df_e['AwayTeam'].astype(str).str.upper().str.strip()
@@ -2296,7 +2331,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_e.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
 
         # GOLES: europa + resto
-        df_g = _load_concat_goles(["base_goles_europa.parquet", "base_goles_resto.parquet"])
+        df_g = _load_concat_goles(["base_goles_europa.parquet", "base_goles_resto.parquet", "base_goles_resto_CORREGIDO.csv"])
         ev = {}
         ###########BLOQUE GOLES FIX 2 GOLEADOR ASISTENTE
         if not df_g.empty:
