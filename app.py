@@ -3927,8 +3927,16 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         else: mins_txt=""
                 if tiene_en_rango and mins_txt:
                     inner=f"{res_txt} {mins_txt}{pos_txt}"
-                else:
+                elif tiene_en_rango:
                     inner=f"{res_txt}{pos_txt}"
+                else:
+                    # HUECO - solo G/E/P + [HT] [FT] sin nombres
+                    if es_loc:
+                        ft_solo=f"<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                    else:
+                        ft_solo=f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>"
+                    # ht_gris ya es gris [hthg-htag]
+                    inner=f"{ht_gris} {ft_solo}"
                 total_por_j[jn]=(inner, es_loc, badge)
             except: continue
 
