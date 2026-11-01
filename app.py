@@ -3588,12 +3588,15 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             mm = evc.get('m',0)
                             if mm <= 45: m1.append(f"{mm}'")
                             else: m2.append(f"{mm}'")
-                        # visual con HTML (sigue igual)
+                        goles_parte_copy = st.session_state.get("goles_parte_fix2", "Todo")
+                        if goles_parte_copy == "1ªParte":
+                            m2 = []
+                        elif goles_parte_copy == "2ªParte":
+                            m1 = []
                         if m1 and m2: mins_txt = " ".join(m1) + f"{ht_str} " + " ".join(m2)
                         elif m1: mins_txt = " ".join(m1) + f"{ht_str}"
                         elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
                         else: mins_txt = f"{ht_str}"
-                        # limpio para copiar - sin <span>
                         ht_clean = f"[{hthg}-{htag}]"
                         ft_clean = f"{hg}-{ag}"
                         if m1 and m2: mins_txt_clean = " ".join(m1) + f"{ht_clean} " + " ".join(m2)
