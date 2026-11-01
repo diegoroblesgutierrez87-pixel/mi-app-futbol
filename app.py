@@ -3057,10 +3057,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} vs {self_team}</span>" if not es_loc else f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
 
                             if es_loc:
-                                res_txt = f"[<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>]"
+                                _ch = "#00c800" if hg>0 else "#888"
+                                _ca = "#ff2a2a" if ag>0 else "#888"
+                                res_txt = f"[<span style='color:{_ch};font-weight:900'>{hg}</span>-<span style='color:{_ca};font-weight:900'>{ag}</span>]"
                                 letra = "G" if hg>ag else "E" if hg==ag else "P"
                             else:
-                                res_txt = f"[<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>]"
+                                _ch = "#ff2a2a" if hg>0 else "#888"
+                                _ca = "#00c800" if ag>0 else "#888"
+                                res_txt = f"[<span style='color:{_ch};font-weight:900'>{hg}</span>-<span style='color:{_ca};font-weight:900'>{ag}</span>]"
                                 letra = "G" if ag>hg else "E" if ag==hg else "P"
                             if letra == "G":
                                 badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
@@ -3194,10 +3198,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     pass
                                 if es_loc_base:
                                     _letra = "G" if _hg>_ag else "E" if _hg==_ag else "P"
-                                    _res_final = f"[<span style='color:#00c800;font-weight:900'>{_hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{_ag}</span>]"
+                                    _ch = "#00c800" if _hg>0 else "#888"
+                                    _ca = "#ff2a2a" if _ag>0 else "#888"
+                                    _res_final = f"[<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>]"
                                 else:
                                     _letra = "G" if _ag>_hg else "E" if _ag==_hg else "P"
-                                    _res_final = f"[<span style='color:#ff2a2a;font-weight:900'>{_hg}</span>-<span style='color:#00c800;font-weight:900'>{_ag}</span>]"
+                                    _ch = "#ff2a2a" if _hg>0 else "#888"
+                                    _ca = "#00c800" if _ag>0 else "#888"
+                                    _res_final = f"[<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>]"
                                 if _letra=="G":
                                     _badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
                                 elif _letra=="E":
@@ -3337,10 +3345,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                         _hthg=_c1; _htag=_c2
                                 _ht_gris = f"<span style='color:#888;font-weight:900'>[{_hthg}-{_htag}]</span>"
                                 if _es_local_hueco:
-                                    _ft_solo=f"<span style='color:#00c800;font-weight:900'>{_hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{_ag}</span>"
+                                    _ch = "#00c800" if _hg>0 else "#888"
+                                    _ca = "#ff2a2a" if _ag>0 else "#888"
+                                    _ft_solo=f"<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>"
                                     _letra = "G" if _hg>_ag else "E" if _hg==_ag else "P"
                                 else:
-                                    _ft_solo=f"<span style='color:#ff2a2a;font-weight:900'>{_hg}</span>-<span style='color:#00c800;font-weight:900'>{_ag}</span>"
+                                    _ch = "#ff2a2a" if _hg>0 else "#888"
+                                    _ca = "#00c800" if _ag>0 else "#888"
+                                    _ft_solo=f"<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>"
                                     _letra = "G" if _ag>_hg else "E" if _ag==_hg else "P"
                                 _badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if _letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if _letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                             else:
@@ -3578,12 +3590,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
                         ####
                         if norm_eq_fix2 == h_norm_r:
-                            hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
-                            htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
+                            hthg_c = f"<span style='color:#00c800;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
+                            htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#888;font-weight:900'>{htag}</span>"
                             ht_colored = f"{hthg_c}-{htag_c}"
                         elif norm_eq_fix2 == a_norm_r:
-                            hthg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#fff;font-weight:900'>{hthg}</span>"
-                            htag_c = f"<span style='color:#00c800;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#fff;font-weight:900'>{htag}</span>"
+                            hthg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
+                            htag_c = f"<span style='color:#00c800;font-weight:900'>{htag}</span>" if htag>0 else f"<span style='color:#888;font-weight:900'>{htag}</span>"
                             ht_colored = f"{hthg_c}-{htag_c}"
                         else:
                             ht_colored = f"{hthg}-{htag}"
