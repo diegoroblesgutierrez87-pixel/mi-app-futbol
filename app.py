@@ -4016,7 +4016,10 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                                 hthg=c1; htag=c2
                         except:
                             pass
-                    ht_gris = f"<span style='color:#888;font-weight:900'>[{hthg}-{htag}]</span>"
+                    if es_loc:
+                        ht_gris = f"<span style='color:#888'>[</span><span style='color:#D0D0D0;font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:#888;font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
+                    else:
+                        ht_gris = f"<span style='color:#888'>[</span><span style='color:#888;font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:#D0D0D0;font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
                     if es_loc:
                         h_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{h_team}</span>"
                         a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>"
