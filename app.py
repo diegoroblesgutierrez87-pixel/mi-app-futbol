@@ -3829,16 +3829,20 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     elif mins_1p: mins_txt=" ".join(mins_1p)
                     elif mins_2p: mins_txt=" ".join(mins_2p)
                     else: mins_txt=""
-                inner=f"{res_txt} {mins_txt}{pos_txt} {badge}" if mins_txt else f"{res_txt}{pos_txt} {badge}"
-                total_por_j[jn]=(inner, es_loc)
+                inner=f"{res_txt} {mins_txt}{pos_txt}" if mins_txt else f"{res_txt}{pos_txt}"
+                total_por_j[jn]=(inner, es_loc, badge)
             except: continue
 
         jornadas_ord=sorted(total_por_j.keys(), reverse=True)
         todo_list=[]
         for jn in jornadas_ord:
             j_tag=f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
-            inner, es_loc = total_por_j[jn]
-            todo_list.append(f"{j_tag}({inner})")
+            try:
+                inner, es_loc, badge = total_por_j[jn]
+            except:
+                inner, es_loc = total_por_j[jn]
+                badge = ""
+            todo_list.append(f"{badge}){j_tag}({inner})")
 
         todo_txt="<br>".join(todo_list) if todo_list else "-"
         linea_res2=f"{eq_j.upper()}: {total}/{total}<br><br>[{todo_txt}]"
