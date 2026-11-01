@@ -3643,6 +3643,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         try:
             import re as _re_fix2
             def _strip_html_fix2(s):
+                s = s.replace('<br>', '\n').replace('<br/>','\n').replace('<br />','\n')
                 return _re_fix2.sub(r'<[^>]+>', '', s).replace('&nbsp;',' ').strip()
             resumen_copy_html = "\n".join(lista_resumen_fix2) if lista_resumen_fix2 else ""
             resumen_copy_clean = _strip_html_fix2(resumen_copy_html)
