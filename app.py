@@ -4123,7 +4123,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     badge = ""
                 todo_list.append(f"{badge}){j_tag}({inner})")
             todo_txt="<br>".join(todo_list) if todo_list else "-"
-            filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None) else total
+            filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None or ambos_marcan_fix3 != "-") else total
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>[{todo_txt}]"
             bloques_html.append(linea_res2)
         for bloque in bloques_html:
