@@ -3753,6 +3753,60 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         equipos_j = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().astype(str).unique().tolist())
         eqs_j = st.multiselect("EQUIPOS JORNADAS", equipos_j, default=[], key="eq_jornadas", placeholder="Elige 1 o varios")
         goles_parte2 = st.selectbox("GOLES PARTE2", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte2")
+
+        # MIN DESDE/HASTA FIX3 - PEQUEÑO CENTRADO MOVIL
+        c_min_a_fix3, c_min_b_fix3 = st.columns([1,1], gap="small")
+        with c_min_a_fix3:
+            min_desde_raw_fix3 = st.text_input("MIN DESDE FIX3", key="min_desde_fix3", placeholder="-")
+        with c_min_b_fix3:
+            min_hasta_raw_fix3 = st.text_input("MIN HASTA FIX3", key="min_hasta_fix3", placeholder="-")
+
+        import streamlit.components.v1 as components
+        components.html("""
+        <script>
+        (function(){
+          const doc = window.parent.document;
+          function fixMin3(){
+            const a = doc.querySelector('input[aria-label="MIN DESDE FIX3"]');
+            if(!a) return;
+            const hb = a.closest('div[data-testid="stHorizontalBlock"]');
+            if(!hb) return;
+            hb.style.setProperty('display','flex','important');
+            hb.style.setProperty('flex-direction','row','important');
+            hb.style.setProperty('flex-wrap','nowrap','important');
+            hb.style.setProperty('justify-content','center','important');
+            hb.style.setProperty('gap','10px','important');
+            hb.style.setProperty('max-width','230px','important');
+            hb.style.setProperty('width','230px','important');
+            hb.style.setProperty('margin','0 auto','important');
+            hb.querySelectorAll(':scope > div[data-testid="column"]').forEach(col=>{
+              col.style.setProperty('flex','0 0 105px','important');
+              col.style.setProperty('max-width','105px','important');
+              col.style.setProperty('width','105px','important');
+            });
+            hb.querySelectorAll('input[aria-label="MIN DESDE FIX3"], input[aria-label="MIN HASTA FIX3"]').forEach(inp=>{
+              const wrap = inp.closest('div[data-testid="stTextInput"]');
+              if(wrap){
+                wrap.style.setProperty('max-width','105px','important');
+                wrap.style.setProperty('width','105px','important');
+              }
+            });
+          }
+          setTimeout(fixMin3, 200);
+          setTimeout(fixMin3, 800);
+          setInterval(fixMin3, 1200);
+        })();
+        </script>
+        """, height=0)
+
+        def _parse_min_fix3(v):
+            try:
+                if v is None or str(v).strip() in ["", "-", "–", "—"]: return None
+                return int(str(v).strip().replace("'", ""))
+            except: return None
+        MIN_DESDE_FIX3 = _parse_min_fix3(min_desde_raw_fix3)
+        MIN_HASTA_FIX3 = _parse_min_fix3(min_hasta_raw_fix3)
+
         if not eqs_j:
             st.caption("Selecciona equipo(s)")
             st.stop()
@@ -3815,10 +3869,27 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     res_txt=f"{h_txt} <span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span> {a_txt}"
                     letra="G" if ag>hg else "E" if ag==hg else "P"
                 badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                # filtro MIN FIX3
+                tiene_en_rango = True
+                if MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None:
+                    tiene_en_rango = False
+                    for ev in ev_jorn.get(fid, []):
+                        if 'Missed' in ev.get('tipo',''): continue
+                        mm=ev.get('m',-1)
+                        if MIN_DESDE_FIX3 is not None and mm < MIN_DESDE_FIX3: continue
+                        if MIN_HASTA_FIX3 is not None and mm > MIN_HASTA_FIX3: continue
+                        tiene_en_rango = True
+                        break
+                if not tiene_en_rango:
+                    continue
+
                 mins_1p=[]; mins_2p=[]
                 for ev in sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0)):
                     if 'Missed' in ev.get('tipo',''): continue
-                    mm=ev.get('m',-1); es_mio=(ev.get('team','')==norm_j); col="#00c800" if es_mio else "#ff2a2a"
+                    mm=ev.get('m',-1)
+                    if MIN_DESDE_FIX3 is not None and mm < MIN_DESDE_FIX3: continue
+                    if MIN_HASTA_FIX3 is not None and mm > MIN_HASTA_FIX3: continue
+                    es_mio=(ev.get('team','')==norm_j); col="#00c800" if es_mio else "#ff2a2a"
                     tag=f"<span style='color:{col};font-weight:900'>{mm}'</span>"
                     if mm<=45: mins_1p.append(tag)
                     else: mins_2p.append(tag)
