@@ -3608,7 +3608,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     if st.session_state.get("show_partidos_fix2", False):
                         st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix2}</div>", unsafe_allow_html=True)
 
-    if partidos_pred_copy_fix2:
+    if True: # FIX BOTON SIEMPRE VISIBLE AUNQUE NO CONCUERDE
         import html as _html
         # cabecera filtros - TODO lo de los desplegables
         try:
@@ -3650,7 +3650,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 return _re_fix2.sub(r'<[^>]+>', '', s).replace('&nbsp;',' ').strip()
             resumen_copy_html = "\n".join(lista_resumen_fix2) if lista_resumen_fix2 else ""
             resumen_copy_clean = _strip_html_fix2(resumen_copy_html)
-            partidos_clean = [_strip_html_fix2(x) for x in partidos_pred_copy_fix2[:300]]
+            partidos_clean = [_strip_html_fix2(x) for x in (partidos_pred_copy_fix2 or ["SIN DATOS FIX2 - filtros no coinciden"])[:300]]
             if resumen_copy_clean:
                 texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_clean) + "\n\n--- RESUMEN FINAL ---\n" + resumen_copy_clean
             else:
