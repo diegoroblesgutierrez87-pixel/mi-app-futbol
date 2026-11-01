@@ -3823,6 +3823,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         vis_total=total-loc_total
 
         total_por_j={}
+        filt_cnt=0
         for _, rr in df_team.iterrows():
             try:
                 jn=int(rr.get('J_EQ',0)); hg=int(float(rr.get('FTHG',0) or 0)); ag=int(float(rr.get('FTAG',0) or 0))
@@ -3901,8 +3902,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         if MIN_HASTA_FIX3 is not None and mm > MIN_HASTA_FIX3: continue
                         tiene_en_rango = True
                         break
-                if not tiene_en_rango:
-                    continue
+                if tiene_en_rango:
+                    filt_cnt+=1
 
                 mins_1p=[]; mins_2p=[]
                 for ev in sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0)):
@@ -3914,14 +3915,20 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     tag=f"<span style='color:{col};font-weight:900'>{mm}'</span>"
                     if mm<=45: mins_1p.append(tag)
                     else: mins_2p.append(tag)
-                if goles_parte2=="1ªParte": mins_txt=" ".join(mins_1p) if mins_1p else ""
-                elif goles_parte2=="2ªParte": mins_txt=" ".join(mins_2p) if mins_2p else ""
-                else: 
-                    if mins_1p and mins_2p: mins_txt=" ".join(mins_1p)+" <span style='color:#888;font-weight:900'>|</span> "+" ".join(mins_2p)
-                    elif mins_1p: mins_txt=" ".join(mins_1p)
-                    elif mins_2p: mins_txt=" ".join(mins_2p)
-                    else: mins_txt=""
-                inner=f"{res_txt} {mins_txt}{pos_txt}" if mins_txt else f"{res_txt}{pos_txt}"
+                if not tiene_en_rango:
+                    mins_txt=""
+                else:
+                    if goles_parte2=="1ªParte": mins_txt=" ".join(mins_1p) if mins_1p else ""
+                    elif goles_parte2=="2ªParte": mins_txt=" ".join(mins_2p) if mins_2p else ""
+                    else: 
+                        if mins_1p and mins_2p: mins_txt=" ".join(mins_1p)+" <span style='color:#888;font-weight:900'>|</span> "+" ".join(mins_2p)
+                        elif mins_1p: mins_txt=" ".join(mins_1p)
+                        elif mins_2p: mins_txt=" ".join(mins_2p)
+                        else: mins_txt=""
+                if tiene_en_rango and mins_txt:
+                    inner=f"{res_txt} {mins_txt}{pos_txt}"
+                else:
+                    inner=f"{res_txt}{pos_txt}"
                 total_por_j[jn]=(inner, es_loc, badge)
             except: continue
 
@@ -3937,7 +3944,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             todo_list.append(f"{badge}){j_tag}({inner})")
 
         todo_txt="<br>".join(todo_list) if todo_list else "-"
-        linea_res2=f"{eq_j.upper()}: {total}/{total}<br><br>[{todo_txt}]"
+        linea_res2=f"{eq_j.upper()}: {filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None) else total}/{total}<br><br>[{todo_txt}]"
         st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{linea_res2}</div>", unsafe_allow_html=True)
 ################################################################### CLONADO
 ##################
