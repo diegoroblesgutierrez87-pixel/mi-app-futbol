@@ -4106,9 +4106,13 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         inner=f"{res_txt}{pos_txt}"
                     else:
                         if es_loc:
-                            ft_solo=f"<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
+                            _c_h_f = "#00c800" if hg>0 else "#888"
+                            _c_a_f = "#ff2a2a" if ag>0 else "#888"
+                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
                         else:
-                            ft_solo=f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>"
+                            _c_h_f = "#ff2a2a" if hg>0 else "#888"
+                            _c_a_f = "#00c800" if ag>0 else "#888"
+                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
                         inner=f"{ht_gris} {ft_solo}"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
