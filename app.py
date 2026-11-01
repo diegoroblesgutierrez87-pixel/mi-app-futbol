@@ -3942,7 +3942,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             _f3_md = min_desde_raw_fix3 or "-"
             _f3_mh = min_hasta_raw_fix3 or "-"
             _resumen_fix3 = f"FILTROS FIX3 | LIGA=[{_f3_liga}] | EQUIPOS=[{_f3_eq}] | GOLES_PARTE={_f3_goles} | MIN_DESDE={_f3_md} HASTA={_f3_mh}"
-            st.markdown(f"<div style='font-family:monospace;font-size:9px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #A020F0;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word;'>{_resumen_fix3}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family:monospace;font-size:9px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #0A2342;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word;'>{_resumen_fix3}</div>", unsafe_allow_html=True)
         except:
             pass
 
@@ -4088,7 +4088,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>[{todo_txt}]"
             bloques_html.append(linea_res2)
         for bloque in bloques_html:
-            st.markdown(f"<div style='border:2px solid #A020F0; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #A020F0; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{bloque}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='border:2px solid #0A2342; border-radius:10px; padding:10px; margin:14px 0; background:#1e1e2e; box-shadow:0 0 6px #000; font-family:monospace; font-size:10px; color:#e8e8e8; line-height:1.6;'>{bloque}</div>", unsafe_allow_html=True)
 
         # --- BOTON COPIAR FIX3: resumen + resultados ---
         if True:
