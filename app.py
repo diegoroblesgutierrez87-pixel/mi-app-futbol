@@ -3267,7 +3267,31 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         _tiene_algun_evento_jornada = False
                         for _, _rr_tmp in d_j_ok_fix2.iterrows():
                             _fid_tmp = str(_rr_tmp.get('fixture_id','')).split('.')[0]
-                            for _ev_tmp in eventos_fix2.get(_fid_tmp, []):
+                            _evs_tmp = eventos_fix2.get(_fid_tmp, [])
+                            if not _evs_tmp:
+                                try:
+                                    import pathlib as _pb3
+                                    _gb3 = _pb3.Path("/mnt/data/base_goles.csv")
+                                    if _gb3.exists():
+                                        _dfgb3 = pd.read_csv(_gb3, on_bad_lines='skip')
+                                        _dfgb3['fid_str'] = _dfgb3['fixture_id'].astype(str).str.split('.').str[0]
+                                        _sub3 = _dfgb3[_dfgb3['fid_str']==_fid_tmp]
+                                        for _, _rg3 in _sub3.iterrows():
+                                            try:
+                                                _ms3 = str(_rg3.get('minuto','0')).replace("'", "")
+                                                _mm3 = int(_ms3.split('+')[0].split('.')[0]) if _ms3 else 0
+                                            except:
+                                                _mm3 = 0
+                                            if 'Missed' in str(_rg3.get('tipo','')): continue
+                                            if MIN_DESDE_PRED_FIX2 is not None and _mm3 < MIN_DESDE_PRED_FIX2: continue
+                                            if MIN_HASTA_PRED_FIX2 is not None and _mm3 > MIN_HASTA_PRED_FIX2: continue
+                                            _tiene_algun_evento_jornada = True
+                                            break
+                                        if _tiene_algun_evento_jornada: break
+                                        continue
+                                except:
+                                    pass
+                            for _ev_tmp in _evs_tmp:
                                 if 'Missed' in _ev_tmp.get('tipo',''): continue
                                 _mm_tmp = _ev_tmp.get('m', -1)
                                 if MIN_DESDE_PRED_FIX2 is not None and _mm_tmp < MIN_DESDE_PRED_FIX2: continue
