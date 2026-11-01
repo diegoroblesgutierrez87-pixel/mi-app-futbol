@@ -2649,6 +2649,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         try:
                             hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
                             hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
+                            if hthg_==0 and htag_==0:
+                                try:
+                                    fid = str(rr.get('fixture_id','')).split('.')[0]
+                                    c1=0; c2=0
+                                    for ev in eventos_fix2.get(fid, []):
+                                        if ev.get('m',999)<=45 and 'Missed' not in ev.get('tipo',''):
+                                            if normaliza(ev.get('team','')) == normaliza(str(rr.get('HomeTeam',''))):
+                                                c1+=1
+                                            else:
+                                                c2+=1
+                                    if c1+c2>0:
+                                        hthg_=c1; htag_=c2
+                                except:
+                                    pass
                         except:
                             return False
                         g1 = hthg_ + htag_
