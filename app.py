@@ -3109,7 +3109,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 _hthg_fix = _hthg_parq
                                 _htag_fix = _htag_parq
-                            _ht_txt = f"<span style='color:#888;font-weight:900'>[{_hthg_fix}-{_htag_fix}]</span>"
+                            if es_loc:
+                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:#D0D0D0;font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:#888;font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
+                            else:
+                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:#888;font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:#D0D0D0;font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
                             # HT GRIS SIEMPRE VISIBLE + FINAL COLOREADO SIEMPRE
                             if goles_parte_f == "1ªParte":
                                 if mins_1p:
