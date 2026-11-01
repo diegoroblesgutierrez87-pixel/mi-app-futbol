@@ -3361,8 +3361,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _bg_hueco = "#0a0a0a"
                             _ht_gris=""; _ft_solo=""; _badge=""
-                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| [{_hthg}-{_htag}] {_hg}-{_ag} ({nombre_eq_fix2})")
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>{_badge} J{int(j_fix2)} | {_ht_gris} {_ft_solo}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| [{_hthg}-{_htag}] {_hg}-{_ag} ({nombre_eq_fix2}) NO")
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>{_badge} J{int(j_fix2)} | {_ht_gris} {_ft_solo} <span style='color:#FF0000;font-weight:900'>NO</span></div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
