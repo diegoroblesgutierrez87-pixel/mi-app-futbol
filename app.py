@@ -3896,6 +3896,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         equipos_j = sorted(pd.concat([df_l['HomeTeam'], df_l['AwayTeam']]).dropna().astype(str).unique().tolist())
         eqs_j = st.multiselect("EQUIPOS JORNADAS", equipos_j, default=[], key="eq_jornadas", placeholder="Elige 1 o varios")
         goles_parte2 = st.selectbox("GOLES PARTE2", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte2")
+        ambos_marcan_fix3 = st.selectbox("AMBOS MARCAN FIX3", ["-","SI","NO"], index=0, key="ambos_marcan_fix3")
 
         # MIN DESDE/HASTA FIX3 - PEQUEÑO CENTRADO MOVIL
         c_min_a_fix3, c_min_b_fix3 = st.columns([1,1], gap="small")
@@ -3957,7 +3958,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             _f3_goles = goles_parte2
             _f3_md = min_desde_raw_fix3 or "-"
             _f3_mh = min_hasta_raw_fix3 or "-"
-            _resumen_fix3 = f"FILTROS FIX3 | LIGA=[{_f3_liga}] | EQUIPOS=[{_f3_eq}] | GOLES_PARTE={_f3_goles} | MIN_DESDE={_f3_md} HASTA={_f3_mh}"
+            _resumen_fix3 = f"FILTROS FIX3 | LIGA=[{_f3_liga}] | EQUIPOS=[{_f3_eq}] | GOLES_PARTE={_f3_goles} | BTTS={ambos_marcan_fix3} | MIN_DESDE={_f3_md} HASTA={_f3_mh}"
             st.markdown(f"<div style='font-family:monospace;font-size:9px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #0A2342;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word;'>{_resumen_fix3}</div>", unsafe_allow_html=True)
         except:
             pass
@@ -4057,8 +4058,17 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if ag>hg else "E" if ag==hg else "P"
                     badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                    tiene_en_rango = True
-                    if MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None:
+                    # --- FILTRO BTTS SI/NO ---
+                    btts = (hg > 0 and ag > 0)
+                    if ambos_marcan_fix3 == "SI":
+                        btts_pasa = btts
+                    elif ambos_marcan_fix3 == "NO":
+                        btts_pasa = not btts
+                    else:
+                        btts_pasa = True
+
+                    tiene_en_rango = btts_pasa
+                    if btts_pasa and (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None):
                         tiene_en_rango = False
                         for ev in ev_jorn.get(fid, []):
                             if 'Missed' in ev.get('tipo',''): continue
@@ -4099,7 +4109,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             ft_solo=f"<span style='color:#00c800;font-weight:900'>{hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{ag}</span>"
                         else:
                             ft_solo=f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>-<span style='color:#00c800;font-weight:900'>{ag}</span>"
-                        inner=f"{ht_gris} {ft_solo}"
+                        inner=f"{ht_gris} {ft_solo} <span style='color:#FFFFFF;font-weight:900'>NO</span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
