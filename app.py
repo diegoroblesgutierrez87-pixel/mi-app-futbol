@@ -3038,11 +3038,18 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 _hthg_fix = _hthg_parq
                                 _htag_fix = _htag_parq
-                            _ht_txt = f"<span style='color:#888;font-weight:900'>|[{_hthg_fix}-{_htag_fix}]|</span>"
+                            _ht_txt = f"<span style='color:#888;font-weight:900'>[{_hthg_fix}-{_htag_fix}]</span>"
+                            # HT GRIS SIEMPRE VISIBLE + FINAL COLOREADO SIEMPRE
                             if goles_parte_f == "1ªParte":
-                                mins_txt = " ".join(mins_1p) if mins_1p else _ht_txt
+                                if mins_1p:
+                                    mins_txt = f"{_ht_txt} " + " ".join(mins_1p)
+                                else:
+                                    mins_txt = f"{_ht_txt}"
                             elif goles_parte_f == "2ªParte":
-                                mins_txt = " ".join(mins_2p) if mins_2p else ""
+                                if mins_2p:
+                                    mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
+                                else:
+                                    mins_txt = f"{_ht_txt}"
                             else:
                                 if mins_1p and mins_2p:
                                     mins_txt = " ".join(mins_1p) + f" {_ht_txt} " + " ".join(mins_2p)
@@ -3051,8 +3058,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif mins_2p and not mins_1p:
                                     mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
                                 else:
-                                    mins_txt = _ht_txt
-                            inner = f"{res_txt} {mins_txt}{rival_txt} {badge}" if mins_txt else f"{res_txt}{rival_txt} {badge}"
+                                    mins_txt = f"{_ht_txt}"
+                            # res_txt ya es el FINAL coloreado, siempre se muestra
+                            inner = f"{res_txt} {mins_txt}{rival_txt} {badge}"
                             filt_por_j[jn] = (inner, es_loc)
                             continue
                             
