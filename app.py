@@ -3110,9 +3110,13 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 _hthg_fix = _hthg_parq
                                 _htag_fix = _htag_parq
                             if es_loc:
-                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:#D0D0D0;font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:#888;font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
+                                _c1 = "#D0D0D0" if _hthg_fix>0 else "#888"
+                                _c2 = "#888"
+                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:{_c1};font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:{_c2};font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
                             else:
-                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:#888;font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:#D0D0D0;font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
+                                _c1 = "#888"
+                                _c2 = "#D0D0D0" if _htag_fix>0 else "#888"
+                                _ht_txt = f"<span style='color:#888'>[</span><span style='color:{_c1};font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:{_c2};font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
                             # HT GRIS SIEMPRE VISIBLE + FINAL COLOREADO SIEMPRE
                             if goles_parte_f == "1ªParte":
                                 if mins_1p:
@@ -3423,12 +3427,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                         # --- FT / HT con colores verde fav / rojo rival ---
                         if norm_eq_fix2 == h_norm_r:
-                            hg_c = f"<span style='color:#00c800;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
-                            ag_c = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
+                            hg_c = f"<span style='color:#00c800;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#888;font-weight:900'>{hg}</span>"
+                            ag_c = f"<span style='color:#ff2a2a;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#888;font-weight:900'>{ag}</span>"
                             ft_txt = f"[{hg_c}-{ag_c}]"
                         elif norm_eq_fix2 == a_norm_r:
-                            hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#fff;font-weight:900'>{hg}</span>"
-                            ag_c = f"<span style='color:#00c800;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#fff;font-weight:900'>{ag}</span>"
+                            hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{hg}</span>" if hg>0 else f"<span style='color:#888;font-weight:900'>{hg}</span>"
+                            ag_c = f"<span style='color:#00c800;font-weight:900'>{ag}</span>" if ag>0 else f"<span style='color:#888;font-weight:900'>{ag}</span>"
                             ft_txt = f"[{hg_c}-{ag_c}]"
                         else:
                             ft_txt = f"[{hg}-{ag}]"
