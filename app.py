@@ -3247,7 +3247,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             _bg_hueco = "#0a0a0a"
                             _ht_gris=""; _ft_solo=""; _badge=""
-                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| {_ht_gris} {_ft_solo} ({nombre_eq_fix2})")
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| [{_hthg}-{_htag}] {_hg}-{_ag} ({nombre_eq_fix2})")
                         st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>{_badge} J{int(j_fix2)} | {_ht_gris} {_ft_solo}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
@@ -3641,11 +3641,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         except:
             pass
         try:
-            resumen_copy = "\n".join(lista_resumen_fix2) if lista_resumen_fix2 else ""
-            if resumen_copy:
-                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300]) + "\n\n--- RESUMEN FINAL ---\n" + resumen_copy
+            import re as _re_fix2
+            def _strip_html_fix2(s):
+                return _re_fix2.sub(r'<[^>]+>', '', s).replace('&nbsp;',' ').strip()
+            resumen_copy_html = "\n".join(lista_resumen_fix2) if lista_resumen_fix2 else ""
+            resumen_copy_clean = _strip_html_fix2(resumen_copy_html)
+            partidos_clean = [_strip_html_fix2(x) for x in partidos_pred_copy_fix2[:300]]
+            if resumen_copy_clean:
+                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_clean) + "\n\n--- RESUMEN FINAL ---\n" + resumen_copy_clean
             else:
-                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300])
+                texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_clean)
         except:
             texto_final_fix2 = filtros_txt_fix2 + "\n" + "\n".join(partidos_pred_copy_fix2[:300])
         safe_txt_fix2 = _html.escape(texto_final_fix2)
