@@ -3081,7 +3081,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 lista_vis_plain.append(f"{j_tag}({inner})")
                         else:
-                            # HUECO - no cumple filtro: muestra resultado en gris + G/E/P
+                            # HUECO - no cumple filtro: final coloreado + 1ª parte gris + G/E/P
                             try:
                                 if 'J_EQ' in df_team_base_total_fix2.columns:
                                     _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
@@ -3091,20 +3091,39 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 es_loc_base = normaliza(str(r_base.get('HomeTeam',''))) == norm_eq_fix2
                                 try:
                                     _hg = int(float(r_base.get('FTHG',0) or 0)); _ag = int(float(r_base.get('FTAG',0) or 0))
+                                    _hthg = int(float(r_base.get('HTHG',0) or 0)); _htag = int(float(r_base.get('HTAG',0) or 0))
                                 except:
-                                    _hg=0; _ag=0
+                                    _hg=0; _ag=0; _hthg=0; _htag=0
+                                # recalcula HT si parquet trae 0-0 pero hay goles
+                                try:
+                                    if _hthg==0 and _htag==0:
+                                        _fid_tmp = str(r_base.get('fixture_id','')).split('.')[0]
+                                        _c1=0; _c2=0
+                                        for _ev in eventos_fix2.get(_fid_tmp, []):
+                                            if _ev.get('m',999) <=45 and 'Missed' not in _ev.get('tipo',''):
+                                                _t = normaliza(_ev.get('team',''))
+                                                if _t == normaliza(str(r_base.get('HomeTeam',''))):
+                                                    _c1+=1
+                                                else:
+                                                    _c2+=1
+                                        if _c1+_c2>0:
+                                            _hthg=_c1; _htag=_c2
+                                except:
+                                    pass
                                 if es_loc_base:
                                     _letra = "G" if _hg>_ag else "E" if _hg==_ag else "P"
+                                    _res_final = f"[<span style='color:#00c800;font-weight:900'>{_hg}</span>-<span style='color:#ff2a2a;font-weight:900'>{_ag}</span>]"
                                 else:
                                     _letra = "G" if _ag>_hg else "E" if _ag==_hg else "P"
+                                    _res_final = f"[<span style='color:#ff2a2a;font-weight:900'>{_hg}</span>-<span style='color:#00c800;font-weight:900'>{_ag}</span>]"
                                 if _letra=="G":
                                     _badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
                                 elif _letra=="E":
                                     _badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
                                 else:
                                     _badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                                _res_gris = f"<span style='color:#888;font-weight:900'>[{_hg}-{_ag}]</span>"
-                                _txt = f"{j_tag}({_res_gris} {_badge})"
+                                _ht_gris = f"<span style='color:#888;font-weight:900'>[{_hthg}-{_htag}]</span>"
+                                _txt = f"{j_tag}({_res_final} {_ht_gris} {_badge})"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
