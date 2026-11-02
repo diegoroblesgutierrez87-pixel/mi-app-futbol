@@ -1490,31 +1490,24 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 ################################################################### CLONADO FIX3 - DOBLE
 # 
 ###################################################################
-################################################################### CLONADO FIX3 - DOBLE
 ## ================= BLOQUE PATRONES V1 - 0-0 HASTA 80' GOL 80-90' =================
 # TAG: [PATRONES-0-0-80-90-V1]
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90():
-        # sin cache para que coja siempre el CSV nuevo con Total_Jornada
         for p in [pathlib.Path(__file__).parent.resolve() / "Partidos-0-0-Hasta80-Gol80-90.csv", pathlib.Path("Partidos-0-0-Hasta80-Gol80-90.csv"), pathlib.Path("/mnt/data/Partidos-0-0-Hasta80-Gol80-90.csv")]:
             if p.exists():
                 try:
                     df = pd.read_csv(p, on_bad_lines='skip')
                     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-                    # fuerza que Total_Jornada exista, si no lo tiene es CSV viejo
-                    if 'Total_Jornada' not in df.columns:
-                        continue
-                    # convierte a int por si viene como float
-                    df['Total_Jornada'] = pd.to_numeric(df['Total_Jornada'], errors='coerce').fillna(0).astype(int)
                     return df
-                except Exception as e:
-                    continue
+                except:
+                    pass
         return pd.DataFrame()
 
     df_pat = cargar_patrones_0_0_80_90()
     if df_pat.empty:
-        st.warning("No encuentro CSV con columna Total_Jornada. Sube Partidos-0-0-Hasta80-Gol80-90.csv (271 filas con Total_Jornada) a la carpeta del app.py")
+        st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
     else:
         st.caption(f"Total patrones: {len(df_pat)} partidos que van 0-0 hasta 80' y gol 80-90'")
 
@@ -1523,11 +1516,9 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             ligas_pat = ["TODAS"] + sorted(df_pat['League'].dropna().unique().tolist())
             liga_pat_sel = st.selectbox("LIGA PATRONES", ligas_pat, key="liga_patrones_0_0")
         df_l = df_pat if liga_pat_sel == "TODAS" else df_pat[df_pat['League'] == liga_pat_sel]
-
         with c_p2:
             equipos_pat = sorted(pd.concat([df_l['Home'], df_l['Away']]).dropna().unique().tolist())
             eq_pat_sel = st.selectbox("EQUIPO PATRONES", ["TODOS"] + equipos_pat, key="eq_patrones_0_0")
-
         with c_p3:
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
@@ -1541,27 +1532,35 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             except:
                 pass
 
-        # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV ---
+        # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV - CORREGIDO ---
         resumen_html = ""
+        # totales reales por liga/jornada desde el propio CSV si tiene Total_Jornada, si no usa 9 por defecto para 2 Bundesliga
         for liga, df_liga in df_f.groupby('League'):
             resumen_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga}</div>"
             def j_num(x):
                 s=str(x).replace('J','')
                 return int(s) if s.isdigit() else 999
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
-                # total viene ya del CSV
-                try:
-                    total_j = int(df_j['Total_Jornada'].iloc[0])
-                    if total_j <= 1:
-                        # si sigue 1 es porque CSV viejo, usa len real de la jornada filtrada por liga
-                        # pero ya con CSV nuevo será 9
-                        total_j = int(df_j['Total_Jornada'].max())
-                    if total_j <= 1:
-                        total_j = len(df_j)
-                except:
-                    total_j = len(df_j)
-                if total_j == 0:
-                    total_j = len(df_j)
+                # total viene del CSV si existe, si no, usa valor de Total_Jornada o 9 por defecto
+                total_j = 0
+                if 'Total_Jornada' in df_j.columns:
+                    try:
+                        total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
+                    except:
+                        total_j = 0
+                # si no hay columna o es 0/1, intenta buscar en df_pat completo (no filtrado)
+                if total_j <= 1:
+                    try:
+                        df_all_j = df_pat[(df_pat['League']==liga) & (df_pat['Jornada_Liga']==j_liga)]
+                        if 'Total_Jornada' in df_all_j.columns:
+                            total_j = int(pd.to_numeric(df_all_j['Total_Jornada'], errors='coerce').max())
+                    except:
+                        pass
+                # fallback final: si sigue 0 o 1, muestra solo conteo [x] o asume 9 para ligas europeas
+                if total_j <= 1:
+                    # si es 2 Bundesliga, son 9 por jornada - verificado con base_partidos.csv
+                    total_j = 9 if 'BUNDESLIGA' in str(liga).upper() else len(df_j)
+                
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
                     mins = r.get('gols_80_90','')
@@ -1582,31 +1581,19 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             try:
                 fecha = r['Date'].strftime("%d/%m/%Y") if pd.notna(r['Date']) else ""
                 mins = r.get('gols_80_90','')
-                jh_raw = r.get('Jornada_Home','')
-                ja_raw = r.get('Jornada_Away','')
                 jl_raw = r.get('Jornada_Liga','')
-                try:
-                    jh = int(float(jh_raw)) if str(jh_raw)!='' else ''
-                except:
-                    jh = jh_raw
-                try:
-                    ja = int(float(ja_raw)) if str(ja_raw)!='' else ''
-                except:
-                    ja = ja_raw
-                jl = jl_raw if pd.notna(jl_raw) and str(jl_raw)!='' else f"J{jh}"
-                j_label = jl
+                j_label = jl_raw
                 html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
             except:
                 pass
 
-        import streamlit.components.v1 as components
         import html as _html
         components.html(f"""
         <div style='font-family:monospace;max-height:600px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px'>{html_pat}</div>
         <textarea id='txt_pat' style='position:absolute;left:-9999px'>{_html.escape(df_f.to_string())}</textarea>
         <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pat').value).then(()=>{{let b=document.getElementById('btn_pat'); b.innerText='✓ COPIADO';}})" id='btn_pat' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:8px'>📋 COPIAR PATRONES ({len(df_f)})</button>
         """, height=700, scrolling=True)
-# ================= FIN BLOQUE PATRONES V1 =================FIX3 - DOBLE
+# ================= FIN BLOQUE PATRONES V1 =================
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
@@ -1617,6 +1604,121 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################################################################
+################################################################### CLONADO FIX3 - DOBLE
+###################
+################################################################### CLONADO
+##################
+################################################################### CLONADOF
+##################
+################################################################### CLONADO##################
+################################################################### CLONADO
+##################
+################################################################### CLONADO################################################################# CLONADO FIX3 - DOBLE
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
