@@ -1633,7 +1633,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         import streamlit.components.v1 as components
         import html as _html2
         # texto plano del resumen para copiar - multi
-        resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={','.join(liga_pat_sel)} | EQUIPO={','.join(eq_pat_sel)} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos"
+        resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={','.join(liga_pat_sel)} | EQUIPO={','.join(eq_pat_sel)} | DESDE={fecha_pat} | VA={res_pat} -> {len(df_f)}/{len(df_pat)} partidos"
         resumen_txt = resumen_bar + "\n\n"
         for liga, df_liga in df_f.groupby('League'):
             resumen_txt += f"LIGA: {liga}\n"
