@@ -1491,8 +1491,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 # 
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
-# 
-# ================= BLOQUE PATRONES V1 - 0-0 HASTA 80' GOL 80-90' =================
+## ================= BLOQUE PATRONES V1 - 0-0 HASTA 80' GOL 80-90' =================
 # TAG: [PATRONES-0-0-80-90-V1]
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
@@ -1537,28 +1536,30 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             except:
                 pass
 
-        # resumen por liga
-        st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos | {df_f['League'].value_counts().head(5).to_dict()}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
 
         html_pat = ""
         for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
             try:
-                fecha = r['Date'].strftime("%d/%m/%Y")
+                fecha = r['Date'].strftime("%d/%m/%Y") if pd.notna(r['Date']) else ""
                 mins = r.get('gols_80_90','')
-                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins} | mins {r['mins']}</div>"
+                jh = r.get('Jornada_Home','')
+                ja = r.get('Jornada_Away','')
+                jl = r.get('Jornada_Liga','')
+                # si tienes J2 deja J2, si no construye
+                j_label = jl if pd.notna(jl) and str(jl)!='' else f"J{jh}"
+                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label} | JH{jh}-JA{ja}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins} | mins {r['mins']}</div>"
             except:
                 pass
 
         import streamlit.components.v1 as components
         import html as _html
-        safe = _html.escape(html_pat)
         components.html(f"""
         <div style='font-family:monospace;max-height:600px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px'>{html_pat}</div>
         <textarea id='txt_pat' style='position:absolute;left:-9999px'>{_html.escape(df_f.to_string())}</textarea>
         <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pat').value).then(()=>{{let b=document.getElementById('btn_pat'); b.innerText='✓ COPIADO';}})" id='btn_pat' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:8px'>📋 COPIAR PATRONES ({len(df_f)})</button>
         """, height=700, scrolling=True)
-# ================= FIN BLOQUE PATRONES V1 =================
-################################################################### CLONADO FIX3 - DOBLE
+# ================= FIN BLOQUE PATRONES V1 =================FIX3 - DOBLE
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
