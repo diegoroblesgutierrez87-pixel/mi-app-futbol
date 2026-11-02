@@ -1512,7 +1512,8 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
     if df_pat.empty:
         st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
     else:
-        st.caption(f"Total patrones: {len(df_pat)} partidos que van 0-0 hasta 80' y gol 80-90'")
+        txt_tipo = "0-0 FINALES" if tipo_pat == "0-0 FINALES" else "0-0 hasta 80' + gol 80-90'"
+        st.caption(f"Total patrones: {len(df_pat)} partidos {txt_tipo}")
 
         c_p1, c_p2, c_p3 = st.columns([1,1,1])
         with c_p1:
@@ -1526,10 +1527,8 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         df_f = df_l.copy()
-        # filtro MOSTRAR 0-0 - aplicado aqui
-        if mostrar_00 == "SI":
-            df_f = df_f[(df_f['FTHG'] == 0) & (df_f['FTAG'] == 0)]
-        else:
+        # MOSTRAR 0-0: SI=muestra todo, NO=excluye los 0-0
+        if mostrar_00 == "NO":
             df_f = df_f[~((df_f['FTHG'] == 0) & (df_f['FTAG'] == 0))]
         if eq_pat_sel != "TODOS":
             df_f = df_f[(df_f['Home'] == eq_pat_sel) | (df_f['Away'] == eq_pat_sel)]
