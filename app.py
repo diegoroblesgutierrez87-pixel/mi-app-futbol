@@ -1514,7 +1514,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
 
     df_pat = cargar_patrones_0_0_80_90()
     if df_pat.empty:
-        st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en /mnt/data")
+        st.warning("No encuentro CSV con columna Total_Jornada. Sube Partidos-0-0-Hasta80-Gol80-90.csv (271 filas con Total_Jornada) a la carpeta del app.py")
     else:
         st.caption(f"Total patrones: {len(df_pat)} partidos que van 0-0 hasta 80' y gol 80-90'")
 
