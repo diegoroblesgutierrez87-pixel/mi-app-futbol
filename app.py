@@ -1548,7 +1548,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 jl = r.get('Jornada_Liga','')
                 # si tienes J2 deja J2, si no construye
                 j_label = jl if pd.notna(jl) and str(jl)!='' else f"J{jh}"
-                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label} JH{jh}-JA{ja}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
+                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
             except:
                 pass
 
