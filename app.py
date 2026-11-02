@@ -1581,7 +1581,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
-                    mins = r.get('gols_80_90','')
+                    # elige columna de minutos según TIPO
+                    if tipo_pat == "HT 0-0 + OVER":
+                        mins = r.get('gols_2t', r.get('gols_todos',''))
+                    else:
+                        mins = r.get('gols_80_90','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
@@ -1602,7 +1606,10 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
                 resumen_txt += f"Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]\n"
                 for _, r in df_j.sort_values('Date').iterrows():
-                    mins = r.get('gols_80_90','')
+                    if tipo_pat == "HT 0-0 + OVER":
+                        mins = r.get('gols_2t', r.get('gols_todos',''))
+                    else:
+                        mins = r.get('gols_80_90','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
