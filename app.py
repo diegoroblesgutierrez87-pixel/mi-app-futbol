@@ -1495,16 +1495,21 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 # TAG: [PATRONES-0-0-80-90-V1]
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
-    @st.cache_data(show_spinner=False)
     def cargar_patrones_0_0_80_90():
-        for p in [pathlib.Path("/mnt/data/Partidos-0-0-Hasta80-Gol80-90.csv"), pathlib.Path(__file__).parent.resolve() / "Partidos-0-0-Hasta80-Gol80-90.csv", pathlib.Path("Partidos-0-0-Hasta80-Gol80-90.csv")]:
+        # sin cache para que coja siempre el CSV nuevo con Total_Jornada
+        for p in [pathlib.Path(__file__).parent.resolve() / "Partidos-0-0-Hasta80-Gol80-90.csv", pathlib.Path("Partidos-0-0-Hasta80-Gol80-90.csv"), pathlib.Path("/mnt/data/Partidos-0-0-Hasta80-Gol80-90.csv")]:
             if p.exists():
                 try:
                     df = pd.read_csv(p, on_bad_lines='skip')
                     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                    # fuerza que Total_Jornada exista, si no lo tiene es CSV viejo
+                    if 'Total_Jornada' not in df.columns:
+                        continue
+                    # convierte a int por si viene como float
+                    df['Total_Jornada'] = pd.to_numeric(df['Total_Jornada'], errors='coerce').fillna(0).astype(int)
                     return df
-                except:
-                    pass
+                except Exception as e:
+                    continue
         return pd.DataFrame()
 
     df_pat = cargar_patrones_0_0_80_90()
@@ -1546,7 +1551,13 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
                 # total viene ya del CSV
                 try:
-                    total_j = int(df_j['Total_Jornada'].iloc[0]) if 'Total_Jornada' in df_j.columns else len(df_j)
+                    total_j = int(df_j['Total_Jornada'].iloc[0])
+                    if total_j <= 1:
+                        # si sigue 1 es porque CSV viejo, usa len real de la jornada filtrada por liga
+                        # pero ya con CSV nuevo será 9
+                        total_j = int(df_j['Total_Jornada'].max())
+                    if total_j <= 1:
+                        total_j = len(df_j)
                 except:
                     total_j = len(df_j)
                 if total_j == 0:
