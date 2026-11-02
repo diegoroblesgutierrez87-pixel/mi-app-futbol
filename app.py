@@ -1543,11 +1543,19 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             try:
                 fecha = r['Date'].strftime("%d/%m/%Y") if pd.notna(r['Date']) else ""
                 mins = r.get('gols_80_90','')
-                jh = r.get('Jornada_Home','')
-                ja = r.get('Jornada_Away','')
-                jl = r.get('Jornada_Liga','')
-                # si tienes J2 deja J2, si no construye
-                j_label = jl if pd.notna(jl) and str(jl)!='' else f"J{jh}"
+                jh_raw = r.get('Jornada_Home','')
+                ja_raw = r.get('Jornada_Away','')
+                jl_raw = r.get('Jornada_Liga','')
+                try:
+                    jh = int(float(jh_raw)) if str(jh_raw)!='' else ''
+                except:
+                    jh = jh_raw
+                try:
+                    ja = int(float(ja_raw)) if str(ja_raw)!='' else ''
+                except:
+                    ja = ja_raw
+                jl = jl_raw if pd.notna(jl_raw) and str(jl_raw)!='' else f"J{jh}"
+                j_label = jl
                 html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
             except:
                 pass
