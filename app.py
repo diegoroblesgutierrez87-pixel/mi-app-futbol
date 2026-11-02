@@ -1540,9 +1540,18 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         df_f = df_l.copy()
-        # filtro OVER para HT 0-0
+        # filtro OVER para HT 0-0 - FIX HT real 0-0
         if tipo_pat == "HT 0-0 + OVER":
             df_f['Total_Goles'] = pd.to_numeric(df_f['FTHG'], errors='coerce') + pd.to_numeric(df_f['FTAG'], errors='coerce')
+            def _es_ht00(row):
+                try:
+                    import ast
+                    g2 = ast.literal_eval(str(row.get('gols_2t','[]')))
+                    gt = ast.literal_eval(str(row.get('gols_todos','[]')))
+                    return len(g2)==len(gt) and not any(isinstance(m,int) and m<=45 for m in gt)
+                except:
+                    return True
+            df_f = df_f[df_f.apply(_es_ht00, axis=1)]
             if over_pat == "OVER 1.5":
                 df_f = df_f[df_f['Total_Goles'] > 1.5]
             elif over_pat == "OVER 2.5":
