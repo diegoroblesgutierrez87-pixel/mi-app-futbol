@@ -1492,612 +1492,72 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
 # 
-###################################################################
-################################################################### CLONADO FIX3 - DOBLE100% INDEPENDIENTE
-with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 3", expanded=False):
-    import pathlib, unicodedata
-
+# ================= BLOQUE PATRONES V1 - 0-0 HASTA 80' GOL 80-90' =================
+# TAG: [PATRONES-0-0-80-90-V1]
+with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
+    import pathlib
     @st.cache_data(show_spinner=False)
-    def cargar_futuro_fix3():
-        p = pathlib.Path("/mnt/data/Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv")
-        if not p.exists():
-            for q in [pathlib.Path(__file__).parent.resolve(), pathlib.Path(".").resolve()]:
-                if (q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv").exists():
-                    p = q / "Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv"
-                    break
-        if not p.exists():
-            return pd.DataFrame()
-        df_fut = pd.read_csv(p, on_bad_lines='skip')
-        df_fut['Date'] = pd.to_datetime(df_fut['Date'], errors='coerce')
-        return df_fut
+    def cargar_patrones_0_0_80_90():
+        for p in [pathlib.Path("/mnt/data/partidos_0-0_hasta80_gol80-90.csv"), pathlib.Path(__file__).parent.resolve() / "partidos_0-0_hasta80_gol80-90.csv", pathlib.Path("partidos_0-0_hasta80_gol80-90.csv")]:
+            if p.exists():
+                try:
+                    df = pd.read_csv(p, on_bad_lines='skip')
+                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                    return df
+                except:
+                    pass
+        return pd.DataFrame()
 
-    df_futuro_fix3 = cargar_futuro_fix3()
-    if df_futuro_fix3.empty:
-        st.warning("No encuentro Calendario-Futuro-Ligas-Tu-Csv-LIMPIO.csv en /mnt/data")
-        st.stop()
-
-    import json, time
-    FILE_PERSIST_PRED_FIX3 = pathlib.Path(__file__).parent.resolve() / ".persist_pred_48h_fix3.json"
-    TTL_48H = 48 * 3600
-    def _load_persist_48h_fix3():
-        if not FILE_PERSIST_PRED_FIX3.exists():
-            return {}
-        try:
-            if time.time() - FILE_PERSIST_PRED_FIX3.stat().st_mtime > TTL_48H:
-                FILE_PERSIST_PRED_FIX3.unlink(missing_ok=True)
-                return {}
-            with open(FILE_PERSIST_PRED_FIX3, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return {}
-    def _save_persist_48h_fix3():
-        try:
-            data = {
-                "ligas_pred_fix3": st.session_state.get("ligas_pred_fix3", []),
-                "fecha_pred_fix3": st.session_state.get("fecha_pred_fix3", "Todas"),
-                "min_desde_pred_fix3": st.session_state.get("min_desde_pred_fix3", ""),
-                "min_hasta_pred_fix3": st.session_state.get("min_hasta_pred_fix3", ""),
-                "partidos_pred_sel_fix3": st.session_state.get("partidos_pred_sel_fix3", []),
-                "eq_manual_1_fix3": st.session_state.get("eq_manual_1_fix3", []),
-                "eq_manual_2_fix3": st.session_state.get("eq_manual_2_fix3", []),
-                "cond_manual_1_fix3": st.session_state.get("cond_manual_1_fix3", "TODOS"),
-                "cond_manual_2_fix3": st.session_state.get("cond_manual_2_fix3", "TODOS"),
-                "cond_loc_pred_fix3": st.session_state.get("cond_loc_pred_fix3", "Local en casa / Visitante fuera"),
-                "filtro_ht_ft_unico_2026_v9_fix3": st.session_state.get("filtro_ht_ft_unico_2026_v9_fix3", []),
-            }
-            with open(FILE_PERSIST_PRED_FIX3, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except:
-            pass
-
-    _persist_fix3 = _load_persist_48h_fix3()
-    if "ligas_pred_fix3" not in st.session_state:
-        st.session_state.ligas_pred_fix3 = _persist_fix3.get("ligas_pred_fix3") or st.query_params.get_all("ligas_pred_fix3")
-    if "fecha_pred_fix3" not in st.session_state:
-        st.session_state.fecha_pred_fix3 = _persist_fix3.get("fecha_pred_fix3") or st.query_params.get("fecha_pred_fix3", "Todas")
-    if "min_desde_pred_fix3" not in st.session_state:
-        st.session_state.min_desde_pred_fix3 = _persist_fix3.get("min_desde_pred_fix3") or st.query_params.get("min_desde_pred_fix3", "")
-    if "min_hasta_pred_fix3" not in st.session_state:
-        st.session_state.min_hasta_pred_fix3 = _persist_fix3.get("min_hasta_pred_fix3") or st.query_params.get("min_hasta_pred_fix3", "")
-    if "partidos_pred_sel_fix3" not in st.session_state:
-        st.session_state.partidos_pred_sel_fix3 = _persist_fix3.get("partidos_pred_sel_fix3") or st.query_params.get_all("partidos_pred_sel_fix3")
-    if "eq_manual_1_fix3" not in st.session_state:
-        st.session_state.eq_manual_1_fix3 = _persist_fix3.get("eq_manual_1_fix3") or st.query_params.get_all("eq_manual_1_fix3")
-    if "eq_manual_2_fix3" not in st.session_state:
-        st.session_state.eq_manual_2_fix3 = _persist_fix3.get("eq_manual_2_fix3") or st.query_params.get_all("eq_manual_2_fix3")
-    if "cond_manual_1_fix3" not in st.session_state:
-        st.session_state.cond_manual_1_fix3 = _persist_fix3.get("cond_manual_1_fix3") or st.query_params.get("cond_manual_1_fix3", "TODOS")
-    if "cond_manual_2_fix3" not in st.session_state:
-        st.session_state.cond_manual_2_fix3 = _persist_fix3.get("cond_manual_2_fix3") or st.query_params.get("cond_manual_2_fix3", "TODOS")
-    if "cond_loc_pred_fix3" not in st.session_state:
-        st.session_state.cond_loc_pred_fix3 = _persist_fix3.get("cond_loc_pred_fix3") or st.query_params.get("cond_loc_pred_fix3", "Local en casa / Visitante fuera")
-    if "filtro_ht_ft_unico_2026_v9_fix3" not in st.session_state:
-        st.session_state.filtro_ht_ft_unico_2026_v9_fix3 = _persist_fix3.get("filtro_ht_ft_unico_2026_v9_fix3") or st.query_params.get_all("filtro_ht_ft_unico_2026_v9_fix3")
-
-    if st.button(" LIMPIAR TODO EL BLOQUE PREDICCION FIX3", key="btn_limpiar_pred_fix3", use_container_width=True):
-        for k in ["ligas_pred_fix3","fecha_pred_fix3","min_desde_pred_fix3","min_hasta_pred_fix3","partidos_pred_sel_fix3","eq_manual_1_fix3","eq_manual_2_fix3","cond_manual_1_fix3","cond_manual_2_fix3","filtro_ht_ft_unico_2026_v9_fix3","cond_loc_pred_fix3"]:
-            if k in st.session_state:
-                del st.session_state[k]
-        try:
-            FILE_PERSIST_PRED_FIX3.unlink(missing_ok=True)
-        except:
-            pass
-        st.rerun()
-
-    _save_persist_48h_fix3()
-
-    @st.cache_data(show_spinner=False)
-    def cargar_base_europa_fix3():
-        p_par = pathlib.Path("base_partidos_europa.parquet")
-        if not p_par.exists():
-            p_par = pathlib.Path(__file__).parent.resolve() / "base_partidos_europa.parquet"
-        g_par = pathlib.Path("base_goles_europa.parquet")
-        if not g_par.exists():
-            g_par = pathlib.Path(__file__).parent.resolve() / "base_goles_europa.parquet"
-        df_e = pd.read_parquet(p_par) if p_par.exists() else pd.DataFrame()
-        if not df_e.empty:
-            def _parse_fecha_base(s):
-                d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                if pd.isna(d):
-                    d = pd.to_datetime(s, errors='coerce')
-                return d
-            df_e['Date'] = df_e['Date'].apply(_parse_fecha_base)
-            df_e = df_e.sort_values(['League','Season','Date']).copy()
-            df_e['Jornada'] = 0
-            for (l_name, s_name), g_s in df_e.groupby(['League','Season'], sort=False):
-                g_s = g_s.sort_values('Date')
-                idxs = g_s.index.to_numpy()
-                n_teams = len(pd.unique(pd.concat([g_s['HomeTeam'], g_s['AwayTeam']]).dropna()))
-                ppj = max(n_teams // 2, 1)
-                df_e.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
-        df_g = pd.read_parquet(g_par) if g_par.exists() else pd.DataFrame()
-        ev = {}
-        if not df_g.empty:
-            df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['m'] = pd.to_numeric(df_g.get('minuto', 0), errors='coerce').fillna(0).astype(int)
-            for fid, sub in df_g.groupby('fid_str'):
-                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo',''))} for _, r in sub.iterrows()]
-        return df_e, ev
-
-    df_europa_fix3, eventos_europa_fix3 = cargar_base_europa_fix3()
-    df_fix3 = df_europa_fix3
-    eventos_fix3 = eventos_europa_fix3
-
-    ligas_fut_all_fix3 = sorted(df_futuro_fix3['League_CSV'].dropna().unique().tolist())
-    if not df_europa_fix3.empty and 'League' in df_europa_fix3.columns:
-        ligas_europa_set_fix3 = set(df_europa_fix3['League'].dropna().astype(str).tolist())
-        ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(normaliza(l) == normaliza(le) or normaliza(l) in normaliza(le) or normaliza(le) in normaliza(l) for le in ligas_europa_set_fix3)]
-        if not ligas_fut_fix3:
-            keywords_eu = ["Eliteserien","Eredivisie","Bundesliga","LaLiga","Premier","Serie A","Ligue","Pro League","First League Bulgaria","Super Lig","Ekstraklasa","Primeira Liga","K League","K LEAGUE","J1 League","J2 League","CSL","A-League","MLS","Brasileirao","Liga MX"]
-            ligas_fut_fix3 = [l for l in ligas_fut_all_fix3 if any(k.lower() in l.lower() for k in keywords_eu)]
+    df_pat = cargar_patrones_0_0_80_90()
+    if df_pat.empty:
+        st.warning("No encuentro partidos_0-0_hasta80_gol80-90.csv en /mnt/data")
     else:
-        ligas_fut_fix3 = ligas_fut_all_fix3
+        st.caption(f"Total patrones: {len(df_pat)} partidos que van 0-0 hasta 80' y gol 80-90'")
 
-    c_lp1_fix3, c_lp2_fix3, c_lp3_fix3, c_lp4_fix3 = st.columns([2,1,1,1])
-    with c_lp4_fix3:
-        cond_loc_pred_fix3 = st.selectbox("Filtro FIX3", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix3")
-        res_1p_tipo_fix3 = st.selectbox("Resultado 1ªP FIX3", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix3")
-        opciones_res_fix3 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
-        resultados_pred_sel_fix3 = st.multiselect("Resultado 1ªP / 2ªP FIX3", opciones_res_fix3, default=[], key="filtro_ht_ft_unico_2026_v9_fix3", placeholder="Ej: 0-0_1ªP")
-        overs_sel_fix3 = st.multiselect("Overs / Unders por parte FIX3", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix3", placeholder="Ej: 1P >0.5")
+        c_p1, c_p2, c_p3 = st.columns([1,1,1])
+        with c_p1:
+            ligas_pat = ["TODAS"] + sorted(df_pat['League'].dropna().unique().tolist())
+            liga_pat_sel = st.selectbox("LIGA PATRONES", ligas_pat, key="liga_patrones_0_0")
+        df_l = df_pat if liga_pat_sel == "TODAS" else df_pat[df_pat['League'] == liga_pat_sel]
 
-    lista_hist_equipos_fix3 = sorted(pd.concat([df_fix3['HomeTeam'], df_fix3['AwayTeam']]).dropna().astype(str).unique().tolist())
+        with c_p2:
+            equipos_pat = sorted(pd.concat([df_l['Home'], df_l['Away']]).dropna().unique().tolist())
+            eq_pat_sel = st.selectbox("EQUIPO PATRONES", ["TODOS"] + equipos_pat, key="eq_patrones_0_0")
 
-    pass
+        with c_p3:
+            fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
-    c_man1_fix3, c_man2_fix3 = st.columns(2)
-    with c_man1_fix3:
-        equipos_manuales_1_fix3 = st.multiselect("Equipos manuales 1 FIX3", lista_hist_equipos_fix3, default=[], key="eq_manual_1_fix3", placeholder="Ej: Cartagena, Burgos...")
-        cond_manual_1_fix3 = st.selectbox("Cond manual 1 FIX3", ["TODOS","solo local","solo visitante"], key="cond_manual_1_fix3")
-    with c_man2_fix3:
-        equipos_manuales_2_fix3 = st.multiselect("Equipos manuales 2 FIX3", lista_hist_equipos_fix3, default=[], key="eq_manual_2_fix3", placeholder="Ej: Antequera, Marbella...")
-        cond_manual_2_fix3 = st.selectbox("Cond manual 2 FIX3", ["TODOS","solo local","solo visitante"], key="cond_manual_2_fix3")
-
-    with c_lp1_fix3:
-        ligas_pred_sel_fix3 = st.multiselect("Ligas futuras FIX3", ligas_fut_fix3, default=st.session_state.ligas_pred_fix3, key="ligas_pred_fix3", placeholder="Todas las ligas")
-    with c_lp2_fix3:
-        df_base_pred_fix3 = df_futuro_fix3 if not ligas_pred_sel_fix3 else df_futuro_fix3[df_futuro_fix3['League_CSV'].isin(ligas_pred_sel_fix3)]
-        fechas_pred_fix3 = sorted(df_base_pred_fix3['Date'].dropna().dt.date.unique())
-        fechas_pred_str_fix3 = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_fix3]
-        fecha_pred_sel_fix3 = st.selectbox("Fecha desde FIX3", fechas_pred_str_fix3, index=fechas_pred_str_fix3.index(st.session_state.fecha_pred_fix3) if st.session_state.fecha_pred_fix3 in fechas_pred_str_fix3 else 0, key="fecha_pred_fix3")
-    with c_lp3_fix3:
-        c_m1_fix3, c_m2_fix3 = st.columns(2)
-        with c_m1_fix3:
-            min_desde_pred_raw_fix3 = st.text_input("MIN DESDE FIX3", key="min_desde_pred_fix3", placeholder="-")
-        with c_m2_fix3:
-            min_hasta_pred_raw_fix3 = st.text_input("MIN HASTA FIX3", key="min_hasta_pred_fix3", placeholder="-")
-
-    def _parse_min_pred_fix3(v):
-        try:
-            if v is None or str(v).strip() in ["", "-", "–", "—"]: return None
-            return int(str(v).strip().replace("'", ""))
-        except: return None
-    MIN_DESDE_PRED_FIX3 = _parse_min_pred_fix3(min_desde_pred_raw_fix3)
-    MIN_HASTA_PRED_FIX3 = _parse_min_pred_fix3(min_hasta_pred_raw_fix3)
-
-    if fecha_pred_sel_fix3!= "Todas":
-        try:
-            f_date_fix3 = pd.to_datetime(fecha_pred_sel_fix3, dayfirst=True).date()
-            df_base_pred_fix3 = df_base_pred_fix3[df_base_pred_fix3['Date'].dt.date >= f_date_fix3]
-        except: pass
-
-    df_base_pred_fix3 = df_base_pred_fix3.sort_values('Date').head(1000)
-    opciones_partidos_fix3 = []
-    for _, r in df_base_pred_fix3.iterrows():
-        try:
-            fecha_s = r['Date'].strftime("%d/%m")
-            liga_s = str(r['League_CSV'])[:15]
-            h = str(r['HomeTeam']).strip()
-            a = str(r['AwayTeam']).strip()
-            fid = str(r.get('fixture_id',''))
-            opciones_partidos_fix3.append(f"{fecha_s} | {liga_s} | {h} vs {a} | {fid}")
-        except: continue
-
-    partidos_sel_fix3 = []
-    if not opciones_partidos_fix3:
-        st.info("No hay partidos futuros con ese filtro FIX3")
-    else:
-        partidos_sel_fix3 = st.multiselect("Elige partido futuro FIX3 (auto-carga equipos)", opciones_partidos_fix3, key="partidos_pred_sel_fix3", placeholder="Ej: Magdeburg vs Hannover")
-
-    partidos_pred_copy_fix3 = []
-    tiene_manuales_fix3 = (len(equipos_manuales_1_fix3) > 0 or len(equipos_manuales_2_fix3) > 0)
-
-    if not partidos_sel_fix3 and not tiene_manuales_fix3:
-        st.caption("Selecciona partido futuro o equipo manual FIX3")
-    else:
-        partidos_pred_copy_fix3 = []
-        partidos_a_iterar_fix3 = partidos_sel_fix3 if partidos_sel_fix3 else ["MANUAL | Manual | Manual vs Manual | 0"]
-        for partido_str_fix3 in partidos_a_iterar_fix3:
+        df_f = df_l.copy()
+        if eq_pat_sel != "TODOS":
+            df_f = df_f[(df_f['Home'] == eq_pat_sel) | (df_f['Away'] == eq_pat_sel)]
+        if fecha_pat != "Todas":
             try:
-                partes_fix3 = partido_str_fix3.split("|")
-                teams_part_fix3 = partes_fix3[2].strip() if len(partes_fix3)>=3 else ""
-                if " vs " in teams_part_fix3:
-                    h_fut_fix3, a_fut_fix3 = [x.strip() for x in teams_part_fix3.split(" vs ")]
-                else:
-                    continue
+                fd = pd.to_datetime(fecha_pat).date()
+                df_f = df_f[df_f['Date'].dt.date >= fd]
             except:
-                continue
-            st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#0A2342;color:#fff;padding:6px 8px;margin:12px 0 4px 0;font-size:12px'>🔮 FUTURO FIX3: {h_fut_fix3} vs {a_fut_fix3} | {partes_fix3[0].strip()}</div>", unsafe_allow_html=True)
-            if "MANUAL" in partido_str_fix3:
-                equipos_a_mostrar_fix3 = []
-                if equipos_manuales_1_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_1_fix3)
-                if equipos_manuales_2_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_2_fix3)
-            else:
-                equipos_a_mostrar_fix3 = [h_fut_fix3, a_fut_fix3]
-                if equipos_manuales_1_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_1_fix3)
-                if equipos_manuales_2_fix3: equipos_a_mostrar_fix3.extend(equipos_manuales_2_fix3)
-            for nombre_eq_fix3 in equipos_a_mostrar_fix3:
-                norm_eq_fix3 = normaliza(nombre_eq_fix3)
-                eq_up_fix3 = nombre_eq_fix3.upper().strip()
-                eq_up_fix3 = nombre_eq_fix3.upper().strip()
-                def _is_match_fix3(team_raw):
-                    return str(team_raw).upper().strip() == eq_up_fix3
-                df_team_fix3 = df_fix3[(df_fix3['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix3) | (df_fix3['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix3)]
-                if cond_loc_pred_fix3 == "equipo local solamente partidos de local" and nombre_eq_fix3 == h_fut_fix3:
-                    df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
-                elif cond_loc_pred_fix3 == "equipo visitante solamente sus partidos de visitante" and nombre_eq_fix3 == a_fut_fix3:
-                    df_team_fix3 = df_team_fix3[df_team_fix3['AwayTeam'].apply(_is_match_fix3)]
-                elif cond_loc_pred_fix3 == "Local en casa / Visitante fuera":
-                    if nombre_eq_fix3 == h_fut_fix3:
-                        df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
-                    elif nombre_eq_fix3 == a_fut_fix3:
-                        df_team_fix3 = df_team_fix3[df_team_fix3['AwayTeam'].apply(_is_match_fix3)]
-                if nombre_eq_fix3 in equipos_manuales_1_fix3:
-                    if cond_manual_1_fix3 == "solo local":
-                        df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
-                    elif cond_manual_1_fix3 == "solo visitante":
-                        df_team_fix3 = df_team_fix3[df_team_fix3['AwayTeam'].apply(_is_match_fix3)]
-                if nombre_eq_fix3 in equipos_manuales_2_fix3:
-                    if cond_manual_2_fix3 == "solo local":
-                        df_team_fix3 = df_team_fix3[df_team_fix3['HomeTeam'].apply(_is_match_fix3)]
-                    elif cond_manual_2_fix3 == "solo visitante":
-                        df_team_fix3 = df_team_fix3[df_team_fix3['AwayTeam'].apply(_is_match_fix3)]
-                df_team_base_pred_fix3 = df_team_fix3.copy()
-                if resultados_pred_sel_fix3: # [TAG-FIX3-SET-FINAL-UNICO-NO-TOCAR-FIX2]
-                    sel_fix3 = resultados_pred_sel_fix3
-                    set_1p_fix3 = set(); set_2p_fix3 = set()
-                    for s in sel_fix3:
-                        if "_1ªP" in s:
-                            try: _x,_y = s.replace("_1ªP","").split("-"); set_1p_fix3.add((int(_x),int(_y))) # 
-                            except: pass
-                        if "_2ªP" in s:
-                            try: _x,_y = s.replace("_2ªP","").split("-"); set_2p_fix3.add((int(_x),int(_y))) # 
-                            except: pass
-                    if set_1p_fix3 or set_2p_fix3:
-                        def _cumple_res_pred_fix3(rr):
-                            try:
-                                hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                                hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                            except: return False
-                            if set_1p_fix3 and (hthg_, htag_) in set_1p_fix3: return True
-                            if set_2p_fix3 and (hg_, ag_) in set_2p_fix3: return True
-                            return False
-                        df_team_fix3 = df_team_fix3[df_team_fix3.apply(_cumple_res_pred_fix3, axis=1)]
-                if overs_sel_fix3:
-                    def _cumple_overs_pred_fix3(rr):
-                        try:
-                            hg_ = int(float(rr.get('FTHG',0) or 0)); ag_ = int(float(rr.get('FTAG',0) or 0))
-                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                        except: return False
-                        g1 = hthg_ + htag_
-                        g2 = (hg_ + ag_) - g1
-                        if g2 < 0: g2 = 0
-                        for o in overs_sel_fix3:
-                            if o == "1P >0.5" and not (g1 > 0.5): return False
-                            if o == "1P >1.5" and not (g1 > 1.5): return False
-                            if o == "1P >2.5" and not (g1 > 2.5): return False
-                            if o == "2P >0.5" and not (g2 > 0.5): return False
-                            if o == "2P >1.5" and not (g2 > 1.5): return False
-                            if o == "2P >2.5" and not (g2 > 2.5): return False
-                        return True
-                    df_team_fix3 = df_team_fix3[df_team_fix3.apply(_cumple_overs_pred_fix3, axis=1)]
-                if res_1p_tipo_fix3!= "TODOS":
-                    def _cumple_1p_tipo_fix3(rr):
-                        try:
-                            hthg_ = int(float(rr.get('HTHG',0) or 0)); htag_ = int(float(rr.get('HTAG',0) or 0))
-                        except: return False
-                        hn_ = normaliza(rr.get('HomeTeam','')); an_ = normaliza(rr.get('AwayTeam',''))
-                        if norm_eq_fix3 == hn_:
-                            r_ = "GANA" if hthg_ > htag_ else "EMPATE" if hthg_ == htag_ else "PIERDE"
-                        elif norm_eq_fix3 == an_:
-                            r_ = "GANA" if htag_ > hthg_ else "EMPATE" if htag_ == hthg_ else "PIERDE"
-                        else:
-                            return False
-                        if res_1p_tipo_fix3 == "EMPATE": return r_ == "EMPATE"
-                        if res_1p_tipo_fix3 == "GANA": return r_ == "GANA"
-                        if res_1p_tipo_fix3 == "PIERDE": return r_ == "PIERDE"
-                        if res_1p_tipo_fix3 == "EMPATEGANA": return r_ in ("EMPATE","GANA")
-                        if res_1p_tipo_fix3 == "EMPATEPIERDE": return r_ in ("EMPATE","PIERDE")
-                        if res_1p_tipo_fix3 == "GANAPIERDE": return r_ in ("GANA","PIERDE")
-                        return True
-                    df_team_fix3 = df_team_fix3[df_team_fix3.apply(_cumple_1p_tipo_fix3, axis=1)]
-                if df_team_fix3.empty:
-                    st.caption(f"{nombre_eq_fix3} - sin historial en base actual FIX3")
-                    continue
-                st.markdown(f"<div style='font-family:monospace;font-weight:900;background:#000;color:#fff;padding:2px 6px;margin:6px 0 2px 0;font-size:10px'>{nombre_eq_fix3.upper()} FIX3</div>", unsafe_allow_html=True)
-                # FIX3 ORDEN POR FECHAS - FIX REAL - J1=SEVILLA 15/08, J8=GETAFE 19/10 ULTIMA - FIX FECHAS FUTURAS 09/12
-                def _parse_fecha_fix3_robusto(s):
-                    try:
-                        d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                        if pd.isna(d):
-                            d = pd.to_datetime(s, errors='coerce')
-                        return d
-                    except:
-                        return pd.NaT
-                df_team_base_pred_fix3['Date_parsed'] = df_team_base_pred_fix3['Date'].apply(_parse_fecha_fix3_robusto)
-                df_team_base_pred_fix3 = df_team_base_pred_fix3[df_team_base_pred_fix3['Date_parsed'] <= pd.to_datetime("2026-10-20")]
-                df_team_base_pred_fix3['fid_num'] = pd.to_numeric(df_team_base_pred_fix3['fixture_id'], errors='coerce')
-                df_team_base_pred_fix3 = df_team_base_pred_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True])
-                df_team_fix3['Date_parsed'] = df_team_fix3['Date'].apply(_parse_fecha_fix3_robusto) if not df_team_fix3.empty else df_team_fix3.get('Date')
-                df_team_fix3 = df_team_fix3[df_team_fix3['Date_parsed'] <= pd.to_datetime("2026-10-20")]
-                df_team_fix3['fid_num'] = pd.to_numeric(df_team_fix3['fixture_id'], errors='coerce') if not df_team_fix3.empty else 0
-                df_team_fix3 = df_team_fix3.sort_values(['Date_parsed','fid_num'], ascending=[True, True]) if not df_team_fix3.empty else df_team_fix3
-                # J1 = mas antigua, J8 = mas reciente GETAFE 1-1 RAYO
-                df_team_base_pred_fix3['Jornada'] = range(1, len(df_team_base_pred_fix3)+1)
-                if not df_team_fix3.empty:
-                    df_team_fix3['Jornada'] = range(1, len(df_team_fix3)+1)
-                # FIX ORDEN REAL POR FECHA DESCENDENTE - NO RECALCULAR JORNADA
-                df_team_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False)
-                jornadas_fix3 = sorted(df_team_fix3['Jornada'].dropna().unique(), reverse=True)[:15] if not df_team_fix3.empty else []
-                for j_fix3 in jornadas_fix3:
-                    d_j_ok_fix3 = df_team_fix3[df_team_fix3['Jornada']==j_fix3].sort_values('Date_parsed', ascending=False) if not df_team_fix3.empty and 'Jornada' in df_team_fix3.columns else pd.DataFrame()
-                    if d_j_ok_fix3.empty and len(jornadas_fix3) == 1:
-                        d_j_ok_fix3 = df_team_fix3.sort_values('Date_parsed', ascending=False).head(15)
-                    es_hueco_fix3 = d_j_ok_fix3.empty
-                    if es_hueco_fix3:
-                        continue
-                    d_j_fix3 = d_j_ok_fix3
-                    html_lineas_fix3 = ""
-                    for _, r in d_j_fix3.iterrows():
-                        fid = str(r.get('fixture_id','')).split('.')[0]
-                        if MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None:
-                            _tiene = False
-                            for _ev in eventos_fix3.get(fid, []):
-                                if 'Missed' in _ev.get('tipo',''): continue
-                                _mm = _ev.get('m', -1)
-                                if MIN_DESDE_PRED_FIX3 is not None and _mm < MIN_DESDE_PRED_FIX3: continue
-                                if MIN_HASTA_PRED_FIX3 is not None and _mm > MIN_HASTA_PRED_FIX3: continue
-                                _tiene = True
-                                break
-                            if not _tiene:
-                                continue
-                        h = str(r.get('HomeTeam','')).strip(); a = str(r.get('AwayTeam','')).strip()
-                        try: hg = int(float(r.get('FTHG',0))); ag = int(float(r.get('FTAG',0)))
-                        except: hg=0; ag=0
-                        h_norm_r = normaliza(h); a_norm_r = normaliza(a)
-                        if norm_eq_fix3 == h_norm_r: col_main = "#0f8105" if hg>ag else "#f31818" if hg<ag else "#8B4513"
-                        elif norm_eq_fix3 == a_norm_r: col_main = "#0f8105" if ag>hg else "#f31818" if ag<hg else "#8B4513"
-                        else: col_main = "#000"
-                        hn = h_norm_r; an = a_norm_r
-                        try: hthg = int(float(r.get('HTHG',0) or 0)); htag = int(float(r.get('HTAG',0) or 0))
-                        except: hthg=0; htag=0
-                        ht_str = f"[{hthg}-{htag}]"
-                        # --- COLOR HT SEGUN 1ªP DEL EQUIPO FILTRADO + SUBRAYADO GOLES FIX3 - [TAG-FIX3-HT-SUBRAYADO-FINAL-NO-TOCAR-FIX2] ---
-                        try:
-                            _nf_clean_fix3 = str(norm_eq_fix3).upper().strip()
-                            _h_clean_fix3 = str(h_norm_r).upper().strip()
-                            _a_clean_fix3 = str(a_norm_r).upper().strip()
-                            _is_home_fix3 = _nf_clean_fix3 == _h_clean_fix3
-                            _is_away_fix3 = _nf_clean_fix3 == _a_clean_fix3
-                        except:
-                            _is_home_fix3 = (norm_eq_fix3 == hn)
-                            _is_away_fix3 = (norm_eq_fix3 == an)
-                        if _is_home_fix3:
-                            if hthg > htag: col_ht = "#0f8105"
-                            elif hthg < htag: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
-                        elif _is_away_fix3:
-                            if htag > hthg: col_ht = "#0f8105"
-                            elif htag < hthg: col_ht = "#f31818"
-                            else: col_ht = "#8B4513"
-                        else:
-                            col_ht = "#0A2342"
-                        #  SUBRAYADO HT DENTRO DEL CUADRO DE COLOR
-                        u_ht = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:3px;" # 
-                        if norm_eq_fix3 == hn: #  equipo es local -> subraya hthg
-                            ht_inner = f"<span style='{u_ht}'>{hthg}</span>-{htag}"
-                        elif norm_eq_fix3 == an: #  equipo es visitante -> subraya htag
-                            ht_inner = f"{hthg}-<span style='{u_ht}'>{htag}</span>"
-                        else:
-                            ht_inner = f"{hthg}-{htag}"
-                        ht_str = f"[{ht_inner}]"
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px;margin:0 3px'>{ht_str}</span>"
-                        # [TAG-FIX3-GOLES-V4-FIX-4-1-OK] - FIX3 ONLY - CALCULO CORREGIDO - NO TOCA FIX2
-                        filtro_act = (MIN_DESDE_PRED_FIX3 is not None or MIN_HASTA_PRED_FIX3 is not None)
-                        evs_sorted_fix3 = sorted(eventos_fix3.get(fid, []), key=lambda x: x['m'])
-                        def _es_home_fix3(team_str):
-                            t = str(team_str).upper().strip()
-                            hn_u = str(hn).upper().strip()
-                            an_u = str(an).upper().strip()
-                            if t == hn_u or hn_u in t or t in hn_u:
-                                return True
-                            if t == an_u or an_u in t or t in an_u:
-                                return False
-                            if "BARCELONA" in t:
-                                return True
-                            return False
-                        def _agrupa_fix3_con_score(evs, score_start_h=0, score_start_a=0):
-                            grupos = []
-                            last_is_home = None
-                            cur_spans = []
-                            h_goals = score_start_h
-                            a_goals = score_start_a
-                            last_h = h_goals
-                            last_a = a_goals
-                            for ev in evs:
-                                if 'Missed' in ev.get('tipo',''): continue
-                                m = ev.get('m',-1)
-                                team_ev = str(ev.get('team','')).strip()
-                                if 'Own Goal' in ev.get('tipo',''):
-                                    is_home_goal = not _es_home_fix3(team_ev)
-                                else:
-                                    is_home_goal = _es_home_fix3(team_ev)
-                                if is_home_goal:
-                                    h_goals += 1
-                                else:
-                                    a_goals += 1
-                                benef = hn if is_home_goal else an
-                                es_mio = norm_eq_fix3 in benef
-                                col_min = col_main if es_mio else "#000"
-                                peso = "font-weight:900;" if es_mio else "font-weight:700;"
-                                sub_min = "text-decoration:underline;text-decoration-thickness:2.5px;text-underline-offset:2px;" if es_mio else ""
-                                en_rango = (MIN_DESDE_PRED_FIX3 is None or m >= MIN_DESDE_PRED_FIX3) and (MIN_HASTA_PRED_FIX3 is None or m <= MIN_HASTA_PRED_FIX3)
-                                if filtro_act and en_rango:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min}background:#D3D3D3;border-radius:3px;padding:1px 4px;margin-right:4px'>{m}'</span>"
-                                else:
-                                    span = f"<span style='color:{col_min};{peso};{sub_min}margin-right:4px'>{m}'</span>"
-                                if last_is_home is not None and is_home_goal != last_is_home and cur_spans:
-                                    grupos.append(("".join(cur_spans), last_h, last_a, last_is_home))
-                                    cur_spans = []
-                                cur_spans.append(span)
-                                last_is_home = is_home_goal
-                                last_h = h_goals
-                                last_a = a_goals
-                            if cur_spans:
-                                grupos.append(("".join(cur_spans), last_h, last_a, last_is_home))
-                            return grupos, h_goals, a_goals
-                        evs_1p = [e for e in evs_sorted_fix3 if e.get('m',0) <= 45]
-                        evs_2p = [e for e in evs_sorted_fix3 if e.get('m',0) > 45]
-                        g1_data, h_fin_1p_calc, a_fin_1p_calc = _agrupa_fix3_con_score(evs_1p, 0, 0)
-                        g2_data, _, _ = _agrupa_fix3_con_score(evs_2p, h_fin_1p_calc, a_fin_1p_calc)
-                        if g1_data:
-                            last_html, _, _, last_is_home = g1_data[-1]
-                            g1_data[-1] = (last_html, hthg, htag, last_is_home)
-                        if g2_data:
-                            last_html, _, _, last_is_home = g2_data[-1]
-                            g2_data[-1] = (last_html, hg, ag, last_is_home)
-                        def fmt_grupo(tupla):
-                            html_spans, sh, sa, _ = tupla
-                            score_txt = f"<span style='color:#333;font-weight:400;font-size:10px;margin-left:6px;opacity:0.9'>{sh}-{sa}</span>"
-                            return html_spans + score_txt
-                        g1 = [fmt_grupo(t) for t in g1_data]
-                        g2 = [fmt_grupo(t) for t in g2_data]
-                        max_rows = max(len(g1), len(g2), 1)
-                        filas = ""
-                        for ii in range(max_rows):
-                            left = g1[ii] if ii < len(g1) else ""
-                            right = g2[ii] if ii < len(g2) else ""
-                            if ii == len(g1)-1 and g1:
-                                left = f"{left} {ht_html}" if left else ht_html
-                            if not g1 and ii == 0:
-                                left = ht_html
-                            filas += f"<div style='display:grid;grid-template-columns:1fr 14px 1fr;align-items:center;line-height:1.6'><div style='text-align:left'>{left}</div><div style='text-align:center;color:#000;font-weight:900'>|</div><div style='text-align:left'>{right}</div></div>"
-                        mins_html = f"<div style='margin-top:2px'>{filas}</div>"
-                        mins_1t = g1
-                        mins_2t = g2
-                        mins_1t_html = mins_html
-                        mins_2t_html = ""
-                        def res_eq_pred_fix3(gf, gc): return "G" if gf>gc else "E" if gf==gc else "P"
-                        if norm_eq_fix3 == hn: r1 = res_eq_pred_fix3(hthg, htag); rF = res_eq_pred_fix3(hg, ag)
-                        elif norm_eq_fix3 == an: r1 = res_eq_pred_fix3(htag, hthg); rF = res_eq_pred_fix3(ag, hg)
-                        else: r1="E"; rF="E"
-                        estado = f"{r1}/{rF}"
-                        if norm_eq_fix3 == h_norm_r:
-                            h_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{h}</span>"; a_txt = a
-                        elif norm_eq_fix3 == a_norm_r:
-                            h_txt = h; a_txt = f"<span style='text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px'>{a}</span>"
-                        else:
-                            h_txt = h; a_txt = a
-                        # --- SUBRAYADO GOLES FT Y HT EN NEGRO CON LOGICA 0 FIX3 - [TAG-FIX3-NEGRO-LOGICA-0-V5-NO-TOCAR-FIX2] ---
-                        u_black = "border-bottom:3.5px solid #000;padding-bottom:0px;" # 
-                        u_black_w = "border-bottom:3.5px solid #000;padding-bottom:0px;color:#fff;" # 
-                        # LOGICA: si marca 0 y rival >0 no subraya, si 0-0 si subraya
-                        if norm_eq_fix3 == hn: #  local
-                            if hg == 0 and ag > 0: hg_disp = f"{hg}" #  0-1 FT no subraya
-                            else: hg_disp = f"<span style='{u_black}'>{hg}</span>" # 
-                            ag_disp = f"{ag}" # 
-                            if hthg == 0 and htag > 0: hthg_disp = f"{hthg}" #  tu ejemplo 30'[0-1] no subraya
-                            else: hthg_disp = f"<span style='{u_black_w}'>{hthg}</span>" # 
-                            htag_disp = f"{htag}" # 
-                            ft_txt = f"{hg_disp}-{ag_disp}" # 
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
-                        elif norm_eq_fix3 == an: #  visitante
-                            hg_disp = f"{hg}" # 
-                            if ag == 0 and hg > 0: ag_disp = f"{ag}" # 
-                            else: ag_disp = f"<span style='{u_black}'>{ag}</span>" # 
-                            hthg_disp = f"{hthg}" # 
-                            if htag == 0 and hthg > 0: htag_disp = f"{htag}" # 
-                            else: htag_disp = f"<span style='{u_black_w}'>{htag}</span>" # 
-                            ft_txt = f"{hg_disp}-{ag_disp}" # 
-                            ht_inner = f"{hthg_disp}-{htag_disp}" # 
-                        else:
-                            ft_txt = f"{hg}-{ag}" # 
-                            ht_inner = f"{hthg}-{htag}" # 
-                        ht_str = f"[{ht_inner}]" # 
-                        ht_html = f"<span style='color:#fff;font-weight:900;background:{col_ht};border-radius:3px;padding:0 4px 2px 4px;margin:0 3px'>{ht_str}</span>" # 
-                        # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
-                        # [TAG-FIX3-COMPAT-MINS_1T-FIX] - evita NameError linea 1787 - NO TOCAR VISUALIZACION
-                        mins_1t = []  # compat
-                        mins_2t = []  # compat
-                        mins_1t_html = mins_html  # nuevo layout ya lleva todo
-                        mins_2t_html = ""
-                        try:
-                            _fecha_dt_fix3 = pd.to_datetime(r.get('Date'), errors='coerce')
-                            _fecha_str_fix3 = _fecha_dt_fix3.strftime("%d/%m/%Y") if pd.notna(_fecha_dt_fix3) else ""
-                        except:
-                            _fecha_str_fix3 = ""
-                        # 1 SOLO CROMO G/E/P DERECHA - FIX DEFINITIVO SIN PARENTESIS
-                        if hg > ag:
-                            h_win = "font-weight:900;font-size:12.5px;color:#000"
-                            a_win = "font-weight:400;opacity:0.85;font-size:11px;color:#000"
-                            b_res = "G" if _is_home_fix3 else "P" if _is_away_fix3 else "G"
-                            b_col = "#0f8105" if b_res == "G" else "#f31818"
-                        elif ag > hg:
-                            h_win = "font-weight:400;opacity:0.85;font-size:11px;color:#000"
-                            a_win = "font-weight:900;font-size:12.5px;color:#000"
-                            b_res = "P" if _is_home_fix3 else "G" if _is_away_fix3 else "P"
-                            b_col = "#0f8105" if b_res == "G" else "#f31818"
-                        else:
-                            h_win = "font-weight:700;font-size:11px;color:#000"
-                            a_win = "font-weight:700;font-size:11px;color:#000"
-                            b_res = "E"
-                            b_col = "#8B4513"
-                        html_lineas_fix3 += f"<div style='border-left:3.5px solid {col_main};padding-left:6px;margin:2px 0 0 2px;max-width:320px;line-height:1.0'>"
-                        html_lineas_fix3 += f"<div style='text-align:center;font-family:monospace;font-weight:900;font-size:11px;margin:0 0 2px 0'><span style='color:{col_main}'>{estado}</span> <span style='color:#000'>({_fecha_str_fix3})</span></div>"
-                        html_lineas_fix3 += f"<div style='display:flex;justify-content:space-between;align-items:center'>"
-                        html_lineas_fix3 += f"<div style='display:grid;grid-template-columns:38px 1fr 22px;align-items:center;font-family:monospace;font-size:11px;line-height:1.1;gap:4px;max-width:100%'>"
-                        html_lineas_fix3 += f"<span style='color:#000;flex-shrink:0'>J{int(j_fix3)} |</span><span style='white-space:normal;word-break:break-word;overflow:hidden;{h_win}'>{h}</span><span style='padding-left:2px;flex-shrink:0;text-align:right;{h_win}'>{hg_disp}</span>"
-                        html_lineas_fix3 += f"<span></span><span style='white-space:normal;word-break:break-word;overflow:hidden;{a_win}'>{a}</span><span style='padding-left:2px;flex-shrink:0;text-align:right;{a_win}'>{ag_disp}</span>"
-                        html_lineas_fix3 += f"</div>"
-                        html_lineas_fix3 += f"<div style='background:{b_col};color:#fff;font-weight:900;font-size:10px;text-align:center;border-radius:3px;padding:2px 0;width:18px;margin-left:8px'>{b_res}</div>"
-                        html_lineas_fix3 += f"</div>"
-                        html_lineas_fix3 += f"<div style='text-align:left;font-size:10px;line-height:1.2;margin:8px 0 0 0'><div style='margin:0 0 2px 0'>{mins_1t_html}</div><div>{mins_2t_html}</div></div>"
-                        html_lineas_fix3 += f"</div>"
-                        html_lineas_fix3 += f"<div style='height:1px;background:#e6e6e6;margin:6px 0 2px 12px;max-width:320px'></div> " # [TAG-FIX3-J-COLOR-RESULT-V14-FIX3-ONLY]
-                        m1 = []; m2 = []
-                        for evc in sorted(eventos_fix3.get(fid, []), key=lambda x: x['m']):
-                            if MIN_DESDE_PRED_FIX3 is not None and evc.get('m',-1) < MIN_DESDE_PRED_FIX3: continue
-                            if MIN_HASTA_PRED_FIX3 is not None and evc.get('m',-1) > MIN_HASTA_PRED_FIX3: continue
-                            if 'Missed' in evc.get('tipo',''): continue
-                            mm = evc.get('m',0)
-                            if mm <= 45: m1.append(f"{mm}'")
-                            else: m2.append(f"{mm}'")
-                        if m1 and m2: mins_txt = " ".join(m1) + f" {ht_str} " + " ".join(m2)
-                        elif m1: mins_txt = " ".join(m1) + f" {ht_str}"
-                        elif m2: mins_txt = f"{ht_str} " + " ".join(m2)
-                        else: mins_txt = f"{ht_str}"
-                        partidos_pred_copy_fix3.append(f"J{int(j_fix3)}|{h} {hg}-{ag} {a} | {mins_txt}{estado}")
-                    st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix3}</div>", unsafe_allow_html=True)
+                pass
 
-    if partidos_pred_copy_fix3:
-        import html as _html
-        texto_final_fix3 = "\n".join(partidos_pred_copy_fix3[:200])
-        safe_txt_fix3 = _html.escape(texto_final_fix3)
+        # resumen por liga
+        st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos | {df_f['League'].value_counts().head(5).to_dict()}</div>", unsafe_allow_html=True)
+
+        html_pat = ""
+        for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
+            try:
+                fecha = r['Date'].strftime("%d/%m/%Y")
+                mins = r.get('gols_80_90','')
+                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins} | mins {r['mins']}</div>"
+            except:
+                pass
+
         import streamlit.components.v1 as components
+        import html as _html
+        safe = _html.escape(html_pat)
         components.html(f"""
-        <textarea id="txt_pred_fix3" style="position:absolute;left:-9999px;top:-9999px;">{safe_txt_fix3}</textarea>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pred_fix3').value).then(()=>{{let b=document.getElementById('btn_pred_copy_fix3'); b.innerText='✓ COPIADO'; b.style.background='#0f8105'; setTimeout(()=>{{b.innerText=' COPIAR PREDICCION FIX3'; b.style.background='#0A2342'}},1200)}})"
-        id="btn_pred_copy_fix3"
-        style="width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:12px;font-weight:900;cursor:pointer;">
-         COPIAR PREDICCION FIX3 ({len(partidos_sel_fix3)} partidos futuros)
-        </button>
-        """, height=55, scrolling=False)
-
-###################################################################
-################################################################### CLONADO FIX3 - DOBLE
-###################################################################
-################################################################### CLONADO FIX3 - DOBLE
-###################################################################
+        <div style='font-family:monospace;max-height:600px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px'>{html_pat}</div>
+        <textarea id='txt_pat' style='position:absolute;left:-9999px'>{_html.escape(df_f.to_string())}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pat').value).then(()=>{{let b=document.getElementById('btn_pat'); b.innerText='✓ COPIADO';}})" id='btn_pat' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:8px'>📋 COPIAR PATRONES ({len(df_f)})</button>
+        """, height=700, scrolling=True)
+# ================= FIN BLOQUE PATRONES V1 =================
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
