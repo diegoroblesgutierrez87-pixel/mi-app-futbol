@@ -1494,8 +1494,9 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 # TAG: [PATRONES-0-0-80-90-V1]
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
-    def cargar_patrones_0_0_80_90():
-        for p in [pathlib.Path(__file__).parent.resolve() / "Partidos-0-0-Hasta80-Gol80-90.csv", pathlib.Path("Partidos-0-0-Hasta80-Gol80-90.csv"), pathlib.Path("/mnt/data/Partidos-0-0-Hasta80-Gol80-90.csv")]:
+    def cargar_patrones_0_0_80_90(tipo):
+        nombre = "Partidos-0-0-Finales.csv" if tipo == "0-0 FINALES" else "Partidos-0-0-Hasta80-Gol80-90.csv"
+        for p in [pathlib.Path(__file__).parent.resolve() / nombre, pathlib.Path(nombre), pathlib.Path(f"/mnt/data/{nombre}")]:
             if p.exists():
                 try:
                     df = pd.read_csv(p, on_bad_lines='skip')
@@ -1505,7 +1506,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     pass
         return pd.DataFrame()
 
-    df_pat = cargar_patrones_0_0_80_90()
+    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES"], key="tipo_pat_0_0")
+    mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
+    df_pat = cargar_patrones_0_0_80_90(tipo_pat)
+    # filtro SI/NO para 0-0
+    if mostrar_00 == "SI":
+        df_pat = df_pat[(df_pat['FTHG'] == 0) & (df_pat['FTAG'] == 0)]
+    else:
+        df_pat = df_pat[~((df_pat['FTHG'] == 0) & (df_pat['FTAG'] == 0))]
     if df_pat.empty:
         st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
     else:
