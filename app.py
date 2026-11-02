@@ -1571,8 +1571,9 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
         import html as _html2
-        # texto plano del resumen para copiar
-        resumen_txt = ""
+        # texto plano del resumen para copiar - INCLUYE RESUMEN DE DESPLEGABLES
+        resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos"
+        resumen_txt = resumen_bar + "\n\n"
         for liga, df_liga in df_f.groupby('League'):
             resumen_txt += f"LIGA: {liga}\n"
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
