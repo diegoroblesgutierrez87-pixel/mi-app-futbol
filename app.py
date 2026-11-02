@@ -1514,8 +1514,6 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
     else:
         txt_tipo = "0-0 FINALES" if tipo_pat == "0-0 FINALES" else "0-0 hasta 80' + gol 80-90'"
         st.caption(f"Total patrones: {len(df_pat)} partidos {txt_tipo}")
-        # RESUMEN DE FILTROS SELECCIONADOS
-        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px 8px;border-radius:4px;margin-top:4px'>RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
 
         c_p1, c_p2, c_p3 = st.columns([1,1,1])
         with c_p1:
@@ -1540,6 +1538,9 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 df_f = df_f[df_f['Date'].dt.date >= fd]
             except:
                 pass
+
+        # RESUMEN DE FILTROS SELECCIONADOS - aqui ya existen todas las variables
+        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px 8px;border-radius:4px;margin-top:4px'>RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
 
         # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV - CORREGIDO ---
         resumen_html = ""
