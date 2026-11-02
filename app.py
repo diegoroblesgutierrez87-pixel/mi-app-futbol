@@ -1536,50 +1536,24 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             except:
                 pass
 
-        # --- RESUMEN POR LIGA Y JORNADA [x/total] ---
-        @st.cache_data(show_spinner=False)
-        def cargar_totales_jornada():
-            import pathlib
-            for p in [pathlib.Path("base_partidos.csv"), pathlib.Path(__file__).parent.resolve() / "base_partidos.csv", pathlib.Path("/mnt/data/base_partidos.csv")]:
-                if p.exists():
-                    try:
-                        dfb = pd.read_csv(p, on_bad_lines='skip')
-                        dfb['League'] = dfb['League'].astype(str).str.strip()
-                        dfb['jornada_num'] = dfb['jornada_num'].astype(str).str.strip().str.upper()
-                        # total por liga+jornada
-                        tot = dfb.groupby(['League','jornada_num']).size().to_dict()
-                        # tambien guarda sin J para fallback
-                        tot2 = {}
-                        for (l,j),v in tot.items():
-                            tot2[(l,j)] = v
-                            tot2[(l,j.replace('J',''))] = v
-                            tot2[(l,f"J{j.replace('J','')}")] = v
-                        return tot2
-                    except:
-                        pass
-            return {}
-
-        totales = cargar_totales_jornada()
-
+        # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV ---
         resumen_html = ""
-        # agrupa por liga
         for liga, df_liga in df_f.groupby('League'):
             resumen_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga}</div>"
-            # agrupa por jornada dentro de esa liga
-            # ordena J1,J2...
             def j_num(x):
                 s=str(x).replace('J','')
                 return int(s) if s.isdigit() else 999
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
-                total_j = totales.get((liga, str(j_liga)), len(df_j))  # total real si existe base, si no usa len
-                # si no hay en base, intenta sin J
-                if (liga, str(j_liga)) not in totales:
-                    total_j = totales.get((liga, str(j_liga).replace('J','')), len(df_j))
+                # total viene ya del CSV
+                try:
+                    total_j = int(df_j['Total_Jornada'].iloc[0]) if 'Total_Jornada' in df_j.columns else len(df_j)
+                except:
+                    total_j = len(df_j)
+                if total_j == 0:
+                    total_j = len(df_j)
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
-                    # minuto
                     mins = r.get('gols_80_90','')
-                    # limpia [87] -> 87'
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
