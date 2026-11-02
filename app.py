@@ -1495,7 +1495,12 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        nombre = "Partidos-0-0-Finales.csv" if tipo == "0-0 FINALES" else "Partidos-0-0-Hasta80-Gol80-90.csv"
+        if tipo == "0-0 FINALES":
+            nombre = "Partidos-0-0-Finales.csv"
+        elif tipo == "HT 0-0 + OVER":
+            nombre = "Partidos-HT0-0-FT-Over.csv"
+        else:
+            nombre = "Partidos-0-0-Hasta80-Gol80-90.csv"
         for p in [pathlib.Path(__file__).parent.resolve() / nombre, pathlib.Path(nombre), pathlib.Path(f"/mnt/data/{nombre}")]:
             if p.exists():
                 try:
@@ -1506,8 +1511,12 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     pass
         return pd.DataFrame()
 
-    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES"], key="tipo_pat_0_0")
+    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER"], key="tipo_pat_0_0")
     mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
+    # nuevo desplegable solo para HT 0-0
+    over_pat = "TODOS"
+    if tipo_pat == "HT 0-0 + OVER":
+        over_pat = st.selectbox("OVER 2DA PARTE", ["OVER 1.5", "OVER 2.5"], key="over_ht_pat")
     df_pat = cargar_patrones_0_0_80_90(tipo_pat)
     if df_pat.empty:
         st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
@@ -1531,6 +1540,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         df_f = df_l.copy()
+        # filtro OVER para HT 0-0
+        if tipo_pat == "HT 0-0 + OVER":
+            df_f['Total_Goles'] = pd.to_numeric(df_f['FTHG'], errors='coerce') + pd.to_numeric(df_f['FTAG'], errors='coerce')
+            if over_pat == "OVER 1.5":
+                df_f = df_f[df_f['Total_Goles'] > 1.5]
+            elif over_pat == "OVER 2.5":
+                df_f = df_f[df_f['Total_Goles'] > 2.5]
+        # MOSTRAR 0-0
         if mostrar_00 == "NO":
             df_f = df_f[~((df_f['FTHG'] == 0) & (df_f['FTAG'] == 0))]
         if "TODOS" not in eq_pat_sel:
