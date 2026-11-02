@@ -1506,6 +1506,9 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 try:
                     df = pd.read_csv(p, on_bad_lines='skip')
                     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                    # FIX LIGAS TUNEZ mal etiquetadas como Austria 2DA
+                    mask_tn = df['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE', na=False)
+                    df.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
                     return df
                 except:
                     pass
