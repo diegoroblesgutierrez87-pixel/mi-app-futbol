@@ -1509,11 +1509,6 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
     tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES"], key="tipo_pat_0_0")
     mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
     df_pat = cargar_patrones_0_0_80_90(tipo_pat)
-    # filtro SI/NO para 0-0
-    if mostrar_00 == "SI":
-        df_pat = df_pat[(df_pat['FTHG'] == 0) & (df_pat['FTAG'] == 0)]
-    else:
-        df_pat = df_pat[~((df_pat['FTHG'] == 0) & (df_pat['FTAG'] == 0))]
     if df_pat.empty:
         st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
     else:
@@ -1531,6 +1526,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         df_f = df_l.copy()
+        # filtro MOSTRAR 0-0 - aplicado aqui
+        if mostrar_00 == "SI":
+            df_f = df_f[(df_f['FTHG'] == 0) & (df_f['FTAG'] == 0)]
+        else:
+            df_f = df_f[~((df_f['FTHG'] == 0) & (df_f['FTAG'] == 0))]
         if eq_pat_sel != "TODOS":
             df_f = df_f[(df_f['Home'] == eq_pat_sel) | (df_f['Away'] == eq_pat_sel)]
         if fecha_pat != "Todas":
