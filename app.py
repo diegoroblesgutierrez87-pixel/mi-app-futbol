@@ -1498,7 +1498,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
     import pathlib
     @st.cache_data(show_spinner=False)
     def cargar_patrones_0_0_80_90():
-        for p in [pathlib.Path("/mnt/data/partidos_0-0_hasta80_gol80-90.csv"), pathlib.Path(__file__).parent.resolve() / "partidos_0-0_hasta80_gol80-90.csv", pathlib.Path("partidos_0-0_hasta80_gol80-90.csv")]:
+        for p in [pathlib.Path("/mnt/data/Partidos-0-0-Hasta80-Gol80-90.csv"), pathlib.Path(__file__).parent.resolve() / "Partidos-0-0-Hasta80-Gol80-90.csv", pathlib.Path("Partidos-0-0-Hasta80-Gol80-90.csv")]:
             if p.exists():
                 try:
                     df = pd.read_csv(p, on_bad_lines='skip')
@@ -1510,7 +1510,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
 
     df_pat = cargar_patrones_0_0_80_90()
     if df_pat.empty:
-        st.warning("No encuentro partidos_0-0_hasta80_gol80-90.csv en /mnt/data")
+        st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en /mnt/data")
     else:
         st.caption(f"Total patrones: {len(df_pat)} partidos que van 0-0 hasta 80' y gol 80-90'")
 
@@ -1558,8 +1558,6 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pat').value).then(()=>{{let b=document.getElementById('btn_pat'); b.innerText='✓ COPIADO';}})" id='btn_pat' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:8px'>📋 COPIAR PATRONES ({len(df_f)})</button>
         """, height=700, scrolling=True)
 # ================= FIN BLOQUE PATRONES V1 =================
-################################################################### CLONADO FIX3 - DOBLE
-###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
 ###################################################################
 ################################################################### CLONADO FIX3 - DOBLE
