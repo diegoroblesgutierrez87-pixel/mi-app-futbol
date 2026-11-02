@@ -1631,7 +1631,12 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
-                        mtxt = ",".join([f"{int(float(str(m).replace('[','').replace(']','')))}'" for m in mlist if str(m).strip()!=''])
+                        mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
+                        mlist_int = [m for m in mlist_int if m>45]
+                        total_real = int(r.get('FTHG',0)) + int(r.get('FTAG',0))
+                        if len(mlist_int) != total_real:
+                            mlist_int = mlist_int[:total_real]
+                        mtxt = ",".join([f"{m}'" for m in mlist_int])
                     except:
                         mtxt = str(mins)
                     resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]\n"
