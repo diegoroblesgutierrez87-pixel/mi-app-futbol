@@ -2872,7 +2872,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             else:
                                 lista_vis_plain.append(f"{badge}){j_tag}({inner})")
                         else:
-                            # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - SIN MINUTOS
+                            # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - VERDE FILTRADO ROJO RIVAL 0 GRIS
                             try:
                                 if 'J_EQ' in df_team_base_total_fix2.columns:
                                     _df_b = df_team_base_total_fix2[df_team_base_total_fix2['J_EQ']==jn]
@@ -2914,6 +2914,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     _badge = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
                                 else:
                                     _badge = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                                # COLORES FT - verde filtrado / rojo rival / 0 gris
+                                if es_loc_base:
+                                    _hg_c = f"<span style='color:#00c800;font-weight:900'>{_hg}</span>" if _hg>0 else f"<span style='color:#888;font-weight:900'>{_hg}</span>"
+                                    _ag_c = f"<span style='color:#ff2a2a;font-weight:900'>{_ag}</span>" if _ag>0 else f"<span style='color:#888;font-weight:900'>{_ag}</span>"
+                                    _hthg_c = f"<span style='color:#00c800;font-weight:900'>{_hthg}</span>" if _hthg>0 else f"<span style='color:#888;font-weight:900'>{_hthg}</span>"
+                                    _htag_c = f"<span style='color:#ff2a2a;font-weight:900'>{_htag}</span>" if _htag>0 else f"<span style='color:#888;font-weight:900'>{_htag}</span>"
+                                else:
+                                    _hg_c = f"<span style='color:#ff2a2a;font-weight:900'>{_hg}</span>" if _hg>0 else f"<span style='color:#888;font-weight:900'>{_hg}</span>"
+                                    _ag_c = f"<span style='color:#00c800;font-weight:900'>{_ag}</span>" if _ag>0 else f"<span style='color:#888;font-weight:900'>{_ag}</span>"
+                                    _hthg_c = f"<span style='color:#ff2a2a;font-weight:900'>{_hthg}</span>" if _hthg>0 else f"<span style='color:#888;font-weight:900'>{_hthg}</span>"
+                                    _htag_c = f"<span style='color:#00c800;font-weight:900'>{_htag}</span>" if _htag>0 else f"<span style='color:#888;font-weight:900'>{_htag}</span>"
                                 def _get_res_hueco(j_, team_n):
                                     rec = clas_dict_fix2.get((_lg0, j_, team_n))
                                     if rec is not None:
@@ -2934,7 +2945,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)</span>"
                                 else:
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} vs {_a0}</span>"
-                                _txt = f"{_badge}){j_tag}([{_hg}-{_ag}] [{_hthg}-{_htag}]){vs_txt}"
+                                _txt = f"{_badge}){j_tag}([{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]){vs_txt}"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
@@ -3074,8 +3085,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 _es_loc_hueco = (normaliza(_h0) == norm_eq_fix2)
                                 if _es_loc_hueco:
                                     _letra0 = "G" if _hg0>_ag0 else "E" if _hg0==_ag0 else "P"
+                                    _hg0_c = f"<span style='color:#00c800;font-weight:900'>{_hg0}</span>" if _hg0>0 else f"<span style='color:#888;font-weight:900'>{_hg0}</span>"
+                                    _ag0_c = f"<span style='color:#ff2a2a;font-weight:900'>{_ag0}</span>" if _ag0>0 else f"<span style='color:#888;font-weight:900'>{_ag0}</span>"
+                                    _hthg0_c = f"<span style='color:#00c800;font-weight:900'>{_hthg0}</span>" if _hthg0>0 else f"<span style='color:#888;font-weight:900'>{_hthg0}</span>"
+                                    _htag0_c = f"<span style='color:#ff2a2a;font-weight:900'>{_htag0}</span>" if _htag0>0 else f"<span style='color:#888;font-weight:900'>{_htag0}</span>"
                                 else:
                                     _letra0 = "G" if _ag0>_hg0 else "E" if _ag0==_hg0 else "P"
+                                    _hg0_c = f"<span style='color:#ff2a2a;font-weight:900'>{_hg0}</span>" if _hg0>0 else f"<span style='color:#888;font-weight:900'>{_hg0}</span>"
+                                    _ag0_c = f"<span style='color:#00c800;font-weight:900'>{_ag0}</span>" if _ag0>0 else f"<span style='color:#888;font-weight:900'>{_ag0}</span>"
+                                    _hthg0_c = f"<span style='color:#ff2a2a;font-weight:900'>{_hthg0}</span>" if _hthg0>0 else f"<span style='color:#888;font-weight:900'>{_hthg0}</span>"
+                                    _htag0_c = f"<span style='color:#00c800;font-weight:900'>{_htag0}</span>" if _htag0>0 else f"<span style='color:#888;font-weight:900'>{_htag0}</span>"
                                 if _letra0=="G":
                                     _badge0 = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>"
                                 elif _letra0=="E":
@@ -3099,9 +3118,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if ra is None:
                                     ra = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_a0))
                                 if rh is not None and ra is not None:
-                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0}-{_ag0}] [{_hthg0}-{_htag0}]) {_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)"
+                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) {_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)"
                                 else:
-                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0}-{_ag0}] [{_hthg0}-{_htag0}]) {_h0} vs {_a0}"
+                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) {_h0} vs {_a0}"
                             else:
                                 txt_hueco = f"J{int(j_fix2)} sin datos"
                         except:
