@@ -1517,21 +1517,24 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
 
         c_p1, c_p2, c_p3 = st.columns([1,1,1])
         with c_p1:
-            ligas_pat = ["TODAS"] + sorted(df_pat['League'].dropna().unique().tolist())
-            liga_pat_sel = st.selectbox("LIGA PATRONES", ligas_pat, key="liga_patrones_0_0")
-        df_l = df_pat if liga_pat_sel == "TODAS" else df_pat[df_pat['League'] == liga_pat_sel]
+            ligas_all = sorted(df_pat['League'].dropna().unique().tolist())
+            liga_pat_sel = st.multiselect("LIGA PATRONES", ["TODAS"] + ligas_all, default=["TODAS"], key="liga_patrones_0_0")
+            if not liga_pat_sel:
+                liga_pat_sel = ["TODAS"]
+        df_l = df_pat if "TODAS" in liga_pat_sel else df_pat[df_pat['League'].isin(liga_pat_sel)]
         with c_p2:
-            equipos_pat = sorted(pd.concat([df_l['Home'], df_l['Away']]).dropna().unique().tolist())
-            eq_pat_sel = st.selectbox("EQUIPO PATRONES", ["TODOS"] + equipos_pat, key="eq_patrones_0_0")
+            equipos_all = sorted(pd.concat([df_l['Home'], df_l['Away']]).dropna().unique().tolist())
+            eq_pat_sel = st.multiselect("EQUIPO PATRONES", ["TODOS"] + equipos_all, default=["TODOS"], key="eq_patrones_0_0")
+            if not eq_pat_sel:
+                eq_pat_sel = ["TODOS"]
         with c_p3:
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         df_f = df_l.copy()
-        # MOSTRAR 0-0: SI=muestra todo, NO=excluye los 0-0
         if mostrar_00 == "NO":
             df_f = df_f[~((df_f['FTHG'] == 0) & (df_f['FTAG'] == 0))]
-        if eq_pat_sel != "TODOS":
-            df_f = df_f[(df_f['Home'] == eq_pat_sel) | (df_f['Away'] == eq_pat_sel)]
+        if "TODOS" not in eq_pat_sel:
+            df_f = df_f[(df_f['Home'].isin(eq_pat_sel)) | (df_f['Away'].isin(eq_pat_sel))]
         if fecha_pat != "Todas":
             try:
                 fd = pd.to_datetime(fecha_pat).date()
@@ -1539,8 +1542,10 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             except:
                 pass
 
-        # RESUMEN DE FILTROS SELECCIONADOS - aqui ya existen todas las variables
-        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px 8px;border-radius:4px;margin-top:4px'>RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
+        # RESUMEN DE FILTROS SELECCIONADOS - multi
+        liga_txt = ",".join(liga_pat_sel[:3]) + (f"+{len(liga_pat_sel)-3}" if len(liga_pat_sel)>3 else "") if "TODAS" not in liga_pat_sel else "TODAS"
+        eq_txt = ",".join(eq_pat_sel[:3]) + (f"+{len(eq_pat_sel)-3}" if len(eq_pat_sel)>3 else "") if "TODOS" not in eq_pat_sel else "TODOS"
+        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px 8px;border-radius:4px;margin-top:4px'>RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_txt} | EQUIPO={eq_txt} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
 
         # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV - CORREGIDO ---
         resumen_html = ""
@@ -1568,11 +1573,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mtxt = str(mins)
                     resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]</div>"
 
-        st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_txt} EQUIPO={eq_txt} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
         import html as _html2
-        # texto plano del resumen para copiar - INCLUYE RESUMEN DE DESPLEGABLES + MINUTOS
-        resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos"
+        # texto plano del resumen para copiar - multi
+        resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={','.join(liga_pat_sel)} | EQUIPO={','.join(eq_pat_sel)} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos"
         resumen_txt = resumen_bar + "\n\n"
         for liga, df_liga in df_f.groupby('League'):
             resumen_txt += f"LIGA: {liga}\n"
