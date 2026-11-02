@@ -1541,25 +1541,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 s=str(x).replace('J','')
                 return int(s) if s.isdigit() else 999
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
-                # total viene del CSV si existe, si no, usa valor de Total_Jornada o 9 por defecto
-                total_j = 0
+                # total real desde CSV columna Total_Jornada - vale para TODAS las ligas
                 if 'Total_Jornada' in df_j.columns:
-                    try:
-                        total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
-                    except:
-                        total_j = 0
-                # si no hay columna o es 0/1, intenta buscar en df_pat completo (no filtrado)
-                if total_j <= 1:
-                    try:
-                        df_all_j = df_pat[(df_pat['League']==liga) & (df_pat['Jornada_Liga']==j_liga)]
-                        if 'Total_Jornada' in df_all_j.columns:
-                            total_j = int(pd.to_numeric(df_all_j['Total_Jornada'], errors='coerce').max())
-                    except:
-                        pass
-                # fallback final: si sigue 0 o 1, muestra solo conteo [x] o asume 9 para ligas europeas
-                if total_j <= 1:
-                    # si es 2 Bundesliga, son 9 por jornada - verificado con base_partidos.csv
-                    total_j = 9 if 'BUNDESLIGA' in str(liga).upper() else len(df_j)
+                    total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
+                else:
+                    total_j = len(df_j)
                 
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
