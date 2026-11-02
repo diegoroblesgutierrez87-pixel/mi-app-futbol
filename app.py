@@ -1567,7 +1567,21 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
 
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
-        components.html(f"<div style='max-height:500px;overflow-y:auto;background:#fff;border:1px solid #000'>{resumen_html}</div>", height=400, scrolling=True)
+        import html as _html2
+        # texto plano del resumen para copiar
+        resumen_txt = ""
+        for liga, df_liga in df_f.groupby('League'):
+            resumen_txt += f"LIGA: {liga}\n"
+            for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
+                total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
+                resumen_txt += f"Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]\n"
+                for _, r in df_j.sort_values('Date').iterrows():
+                    resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}\n"
+        components.html(f"""
+        <div style='max-height:500px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px;font-family:monospace;font-size:11px'>{resumen_html}</div>
+        <textarea id='txt_resumen' style='position:absolute;left:-9999px'>{_html2.escape(resumen_txt)}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('txt_resumen').value).then(()=>{{let b=document.getElementById('btn_resumen'); b.innerText='✓ COPIADO RESUMEN';}})" id='btn_resumen' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:6px'>📋 COPIAR RESUMEN ({len(df_f)})</button>
+        """, height=500, scrolling=True)
 
         html_pat = ""
         for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
