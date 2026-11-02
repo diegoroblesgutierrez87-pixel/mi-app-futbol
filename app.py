@@ -1542,24 +1542,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         with c_p3:
             fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
-        res_pat = "TODO"
-        if tipo_pat == "0-0 HASTA 80+ GOL 80-90" and "TODOS" not in eq_pat_sel:
-            res_pat = st.selectbox("RESULTADO EQUIPO", ["TODO","GANA","PIERDE","EMPATA"], key="res_pat_0_0")
-
         df_f = df_l.copy()
-        if tipo_pat == "0-0 HASTA 80+ GOL 80-90" and "TODOS" not in eq_pat_sel and res_pat != "TODO":
-            def _cumple_res(r):
-                for eq in eq_pat_sel:
-                    if r['Home']==eq:
-                        if res_pat=="GANA" and r['FTHG']>r['FTAG']: return True
-                        if res_pat=="PIERDE" and r['FTHG']<r['FTAG']: return True
-                        if res_pat=="EMPATA" and r['FTHG']==r['FTAG']: return True
-                    if r['Away']==eq:
-                        if res_pat=="GANA" and r['FTAG']>r['FTHG']: return True
-                        if res_pat=="PIERDE" and r['FTAG']<r['FTHG']: return True
-                        if res_pat=="EMPATA" and r['FTHG']==r['FTAG']: return True
-                return False
-            df_f = df_f[df_f.apply(_cumple_res, axis=1)]
         # filtro OVER para HT 0-0 - FIX HT real 0-0
         if tipo_pat == "HT 0-0 + OVER":
             df_f['Total_Goles'] = pd.to_numeric(df_f['FTHG'], errors='coerce') + pd.to_numeric(df_f['FTAG'], errors='coerce')
