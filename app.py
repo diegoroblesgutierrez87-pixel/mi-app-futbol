@@ -1592,7 +1592,6 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
-                    # elige columna de minutos según TIPO
                     if tipo_pat == "HT 0-0 + OVER":
                         mins = r.get('gols_2t', r.get('gols_todos',''))
                     else:
@@ -1600,7 +1599,12 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
-                        mtxt = ",".join([f"{int(float(str(m).replace('[','').replace(']','')))}'" for m in mlist if str(m).strip()!=''])
+                        mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
+                        mlist_int = [m for m in mlist_int if m>45]
+                        total_real = int(r.get('FTHG',0)) + int(r.get('FTAG',0))
+                        if len(mlist_int) != total_real:
+                            mlist_int = mlist_int[:total_real]
+                        mtxt = ",".join([f"{m}'" for m in mlist_int])
                     except:
                         mtxt = str(mins)
                     resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]</div>"
