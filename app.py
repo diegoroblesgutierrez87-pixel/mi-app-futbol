@@ -3032,42 +3032,35 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             if not _base_j.empty:
                                 _r0 = _base_j.iloc[0]
                                 _h0 = str(_r0.get('HomeTeam','')).strip()
-                                _es_local_hueco = (normaliza(nombre_eq_fix2) == normaliza(_h0))
-                                _bg_hueco = "#111111" if _es_local_hueco else "#1a1a1a"
-                                _hg = int(float(_r0.get('FTHG',0) or 0)); _ag = int(float(_r0.get('FTAG',0) or 0))
-                                _hthg = int(float(_r0.get('HTHG',0) or 0)); _htag = int(float(_r0.get('HTAG',0) or 0))
-                                if _hthg==0 and _htag==0:
-                                    _fid_tmp = str(_r0.get('fixture_id','')).split('.')[0]
-                                    _c1=0; _c2=0
-                                    for _ev in eventos_fix2.get(_fid_tmp, []):
-                                        if _ev.get('m',999) <=45 and 'Missed' not in _ev.get('tipo',''):
-                                            _t = normaliza(_ev.get('team',''))
-                                            if _t == normaliza(str(_r0.get('HomeTeam',''))):
-                                                _c1+=1
-                                            else:
-                                                _c2+=1
-                                    if _c1+_c2>0:
-                                        _hthg=_c1; _htag=_c2
-                                _ht_gris = f"<span style='color:#888;font-weight:900'>[{_hthg}-{_htag}]</span>"
-                                if _es_local_hueco:
-                                    _ch = "#00c800" if _hg>0 else "#888"
-                                    _ca = "#ff2a2a" if _ag>0 else "#888"
-                                    _ft_solo=f"<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>"
-                                    _letra = "G" if _hg>_ag else "E" if _hg==_ag else "P"
+                                _a0 = str(_r0.get('AwayTeam','')).strip()
+                                _lg0 = normaliza(_r0.get('League',''))
+                                _j0_antes = int(j_fix2) - 1
+                                def _get_hueco(j_, team_n):
+                                    rec = clas_dict_fix2.get((_lg0, j_, team_n))
+                                    if rec is not None:
+                                        return rec
+                                    for (l_, jj_, n_), rc_ in clas_dict_fix2.items():
+                                        if l_ != _lg0: continue
+                                        if jj_ != j_: continue
+                                        if team_n in n_ or n_ in team_n:
+                                            return rc_
+                                    return None
+                                rh = _get_hueco(_j0_antes, normaliza(_h0)) if _j0_antes>=1 else None
+                                ra = _get_hueco(_j0_antes, normaliza(_a0)) if _j0_antes>=1 else None
+                                if rh is None:
+                                    rh = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_h0))
+                                if ra is None:
+                                    ra = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_a0))
+                                if rh is not None and ra is not None:
+                                    txt_hueco = f"{_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)"
                                 else:
-                                    _ch = "#ff2a2a" if _hg>0 else "#888"
-                                    _ca = "#00c800" if _ag>0 else "#888"
-                                    _ft_solo=f"<span style='color:{_ch};font-weight:900'>{_hg}</span>-<span style='color:{_ca};font-weight:900'>{_ag}</span>"
-                                    _letra = "G" if _ag>_hg else "E" if _ag==_hg else "P"
-                                _badge = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if _letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if _letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
+                                    txt_hueco = f"{_h0} vs {_a0}"
                             else:
-                                _bg_hueco = "#0a0a0a"
-                                _ht_gris=""; _ft_solo=""; _badge=""
+                                txt_hueco = f"J{int(j_fix2)} sin datos"
                         except:
-                            _bg_hueco = "#0a0a0a"
-                            _ht_gris=""; _ft_solo=""; _badge=""
-                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| [{_hthg}-{_htag}] {_hg}-{_ag} ({nombre_eq_fix2})")
-                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:4px; max-width:480px; margin:2px auto; background:{_bg_hueco}; border-radius:6px; border:1px dashed #666;'><div style='color:#fff; font-weight:900; font-size:12px;'>{_badge} J{int(j_fix2)} | {_ht_gris} {_ft_solo}</div></div><div style='height:2.5px;background:#444;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
+                            txt_hueco = f"J{int(j_fix2)} sin datos"
+                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}| {txt_hueco} (NO CUMPLE)")
+                        st.markdown(f"<div style='font-family:monospace; text-align:center; padding:5px; max-width:480px; margin:2px auto; background:#0a0a0a; border-radius:6px; border:1px dashed #555;'><div style='color:#888; font-weight:700; font-size:11px;'>J{int(j_fix2)} | {txt_hueco}</div></div><div style='height:2.5px;background:#333;margin:4px auto 10px auto; max-width:480px;'></div>", unsafe_allow_html=True)
                         continue
                     d_j_fix2 = d_j_ok_fix2
                     html_lineas_fix2 = ""
