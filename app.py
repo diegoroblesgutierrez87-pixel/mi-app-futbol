@@ -1536,7 +1536,54 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             except:
                 pass
 
+        # --- RESUMEN POR LIGA Y JORNADA [x/total] ---
+        @st.cache_data(show_spinner=False)
+        def cargar_totales_jornada():
+            import pathlib
+            for p in [pathlib.Path("base_partidos.csv"), pathlib.Path("/mnt/data/base_partidos.csv")]:
+                if p.exists():
+                    try:
+                        dfb = pd.read_csv(p, on_bad_lines='skip')
+                        # cuenta total por Liga + jornada_num
+                        dfb['League'] = dfb['League'].astype(str)
+                        dfb['jornada_num'] = dfb['jornada_num'].astype(str)
+                        return dfb.groupby(['League','jornada_num']).size().to_dict()
+                    except:
+                        pass
+            return {}
+
+        totales = cargar_totales_jornada()
+
+        resumen_html = ""
+        # agrupa por liga
+        for liga, df_liga in df_f.groupby('League'):
+            resumen_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga}</div>"
+            # agrupa por jornada dentro de esa liga
+            # ordena J1,J2...
+            def j_num(x):
+                s=str(x).replace('J','')
+                return int(s) if s.isdigit() else 999
+            for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
+                total_j = totales.get((liga, str(j_liga)), len(df_j))  # total real si existe base, si no usa len
+                # si no hay en base, intenta sin J
+                if (liga, str(j_liga)) not in totales:
+                    total_j = totales.get((liga, str(j_liga).replace('J','')), len(df_j))
+                resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
+                for _, r in df_j.sort_values('Date').iterrows():
+                    # minuto
+                    mins = r.get('gols_80_90','')
+                    # limpia [87] -> 87'
+                    try:
+                        import ast
+                        mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
+                        mtxt = ",".join([f"{int(float(str(m).replace('[','').replace(']','')))}'" for m in mlist if str(m).strip()!=''])
+                    except:
+                        mtxt = str(mins)
+                    resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]</div>"
+
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
+        import streamlit.components.v1 as components
+        components.html(f"<div style='max-height:500px;overflow-y:auto;background:#fff;border:1px solid #000'>{resumen_html}</div>", height=400, scrolling=True)
 
         html_pat = ""
         for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
