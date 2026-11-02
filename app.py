@@ -1571,7 +1571,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_pat_sel} EQUIPO={eq_pat_sel} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
         import html as _html2
-        # texto plano del resumen para copiar - INCLUYE RESUMEN DE DESPLEGABLES
+        # texto plano del resumen para copiar - INCLUYE RESUMEN DE DESPLEGABLES + MINUTOS
         resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_pat_sel} | EQUIPO={eq_pat_sel} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos"
         resumen_txt = resumen_bar + "\n\n"
         for liga, df_liga in df_f.groupby('League'):
@@ -1580,7 +1580,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
                 resumen_txt += f"Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]\n"
                 for _, r in df_j.sort_values('Date').iterrows():
-                    resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}\n"
+                    mins = r.get('gols_80_90','')
+                    try:
+                        import ast
+                        mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
+                        mtxt = ",".join([f"{int(float(str(m).replace('[','').replace(']','')))}'" for m in mlist if str(m).strip()!=''])
+                    except:
+                        mtxt = str(mins)
+                    resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]\n"
         components.html(f"""
         <div style='max-height:500px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px;font-family:monospace;font-size:11px'>{resumen_html}</div>
         <textarea id='txt_resumen' style='position:absolute;left:-9999px'>{_html2.escape(resumen_txt)}</textarea>
