@@ -1548,9 +1548,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     import ast
                     g2 = ast.literal_eval(str(row.get('gols_2t','[]')))
                     gt = ast.literal_eval(str(row.get('gols_todos','[]')))
-                    return len(g2)==len(gt) and not any(isinstance(m,int) and m<=45 for m in gt)
+                    gt_int = [int(str(x).strip().replace("'", "")) for x in gt]
+                    g2_int = [int(str(x).strip().replace("'", "")) for x in g2]
+                    return len(g2_int)==len(gt_int) and len(gt_int)>0 and not any(m<=45 for m in gt_int)
                 except:
-                    return True
+                    return False
             df_f = df_f[df_f.apply(_es_ht00, axis=1)]
             if over_pat == "OVER 1.5":
                 df_f = df_f[df_f['Total_Goles'] > 1.5]
