@@ -1587,18 +1587,28 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         <button onclick="navigator.clipboard.writeText(document.getElementById('txt_resumen').value).then(()=>{{let b=document.getElementById('btn_resumen'); b.innerText='✓ COPIADO RESUMEN';}})" id='btn_resumen' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:6px'>📋 COPIAR RESUMEN ({len(df_f)})</button>
         """, height=500, scrolling=True)
 
+        if 'ver_lista_pat' not in st.session_state:
+            st.session_state.ver_lista_pat = True
+        if st.button("👁️ OCULTAR/MOSTRAR LISTA DETALLADA", key="toggle_lista_pat"):
+            st.session_state.ver_lista_pat = not st.session_state.ver_lista_pat
+
         html_pat = ""
-        for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
-            try:
-                fecha = r['Date'].strftime("%d/%m/%Y") if pd.notna(r['Date']) else ""
-                mins = r.get('gols_80_90','')
-                jl_raw = r.get('Jornada_Liga','')
-                j_label = jl_raw
-                html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
-            except:
-                pass
+        if not st.session_state.ver_lista_pat:
+            st.caption("Lista detallada oculta")
+        else:
+            for _, r in df_f.sort_values('Date', ascending=False).head(200).iterrows():
+                try:
+                    fecha = r['Date'].strftime("%d/%m/%Y") if pd.notna(r['Date']) else ""
+                    mins = r.get('gols_80_90','')
+                    jl_raw = r.get('Jornada_Liga','')
+                    j_label = jl_raw
+                    html_pat += f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><span style='background:#0A2342;color:#fff;padding:1px 6px;border-radius:3px;font-weight:900;margin-right:6px'>{j_label}</span><b>{fecha}</b> | {r['League'][:18]} | {r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} | GOL {mins}</div>"
+                except:
+                    pass
 
         import html as _html
+        if not st.session_state.ver_lista_pat:
+            html_pat = ""
         components.html(f"""
         <div style='font-family:monospace;max-height:600px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px'>{html_pat}</div>
         <textarea id='txt_pat' style='position:absolute;left:-9999px'>{_html.escape(df_f.to_string())}</textarea>
