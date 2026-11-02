@@ -1540,14 +1540,21 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         @st.cache_data(show_spinner=False)
         def cargar_totales_jornada():
             import pathlib
-            for p in [pathlib.Path("base_partidos.csv"), pathlib.Path("/mnt/data/base_partidos.csv")]:
+            for p in [pathlib.Path("base_partidos.csv"), pathlib.Path(__file__).parent.resolve() / "base_partidos.csv", pathlib.Path("/mnt/data/base_partidos.csv")]:
                 if p.exists():
                     try:
                         dfb = pd.read_csv(p, on_bad_lines='skip')
-                        # cuenta total por Liga + jornada_num
-                        dfb['League'] = dfb['League'].astype(str)
-                        dfb['jornada_num'] = dfb['jornada_num'].astype(str)
-                        return dfb.groupby(['League','jornada_num']).size().to_dict()
+                        dfb['League'] = dfb['League'].astype(str).str.strip()
+                        dfb['jornada_num'] = dfb['jornada_num'].astype(str).str.strip().str.upper()
+                        # total por liga+jornada
+                        tot = dfb.groupby(['League','jornada_num']).size().to_dict()
+                        # tambien guarda sin J para fallback
+                        tot2 = {}
+                        for (l,j),v in tot.items():
+                            tot2[(l,j)] = v
+                            tot2[(l,j.replace('J',''))] = v
+                            tot2[(l,f"J{j.replace('J','')}")] = v
+                        return tot2
                     except:
                         pass
             return {}
