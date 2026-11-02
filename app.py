@@ -2745,14 +2745,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     pts_opp = int(r_opp.get('Pts',0))
                                     if es_loc:
                                         if r_self is not None:
-                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} <span style='color:#0A2342;font-weight:900'>{int(r_self.get('Pos',0))}º</span>({int(r_self.get('Pts',0))}pts) vs {opp_team} <span style='color:#0A2342;font-weight:900'>{pos_opp}º</span>({pts_opp}pts)</span>"
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} <span style='color:#00BFFF;font-weight:900'>{int(r_self.get('Pos',0))}º</span>({int(r_self.get('Pts',0))}pts) vs {opp_team} <span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span>({pts_opp}pts)</span>"
                                         else:
-                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} <span style='color:#0A2342;font-weight:900'>{pos_opp}º</span>({pts_opp}pts)</span>"
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team} <span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span>({pts_opp}pts)</span>"
                                     else:
                                         if r_self is not None:
-                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} <span style='color:#0A2342;font-weight:900'>{pos_opp}º</span>({pts_opp}pts) vs {self_team} <span style='color:#0A2342;font-weight:900'>{int(r_self.get('Pos',0))}º</span>({int(r_self.get('Pts',0))}pts)</span>"
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} <span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span>({pts_opp}pts) vs {self_team} <span style='color:#00BFFF;font-weight:900'>{int(r_self.get('Pos',0))}º</span>({int(r_self.get('Pts',0))}pts)</span>"
                                         else:
-                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} <span style='color:#0A2342;font-weight:900'>{pos_opp}º</span>({pts_opp}pts) vs {self_team}</span>"
+                                            rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{opp_team} <span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span>({pts_opp}pts) vs {self_team}</span>"
                                 else:
                                     if es_loc:
                                         rival_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{self_team} vs {opp_team}</span>"
