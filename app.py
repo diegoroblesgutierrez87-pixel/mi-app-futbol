@@ -3774,7 +3774,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         r_h=_get_clas_fuzzy(normaliza(h_team), lg_norm)
                         r_a=_get_clas_fuzzy(normaliza(a_team), lg_norm)
                         if r_h is not None and r_a is not None:
-                            pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º vs {int(r_a.get('Pos',0))}º</span>"
+                            pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span><span style='color:#888;font-size:9px;font-weight:400'> vs </span><span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_a.get('Pos',0))}º</span>"
                         elif r_h is not None:
                             pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span>"
                         elif r_a is not None:
