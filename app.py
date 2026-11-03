@@ -3873,15 +3873,20 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     elif tiene_en_rango:
                         inner=f"{res_txt}{pos_txt}"
                     else:
-                        if es_loc:
-                            _c_h_f = "#00c800" if hg>0 else "#888"
-                            _c_a_f = "#ff2a2a" if ag>0 else "#888"
-                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
+                        h_txt_g=f"<span style='color:#AAAAAA;font-weight:700;'>{h_team}</span>"
+                        a_txt_g=f"<span style='color:#AAAAAA;font-weight:700;'>{a_team}</span>"
+                        ft_g=f"<span style='color:#AAAAAA;font-weight:900'>{hg}-{ag}</span>"
+                        ht_g=f"<span style='color:#AAAAAA'>[{hthg}-{htag}]</span>"
+                        # pos_txt en gris clarito para hueco
+                        if r_h is not None and r_a is not None:
+                            pos_g=f" <span style='color:#AAAAAA;font-size:9px'>{int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts) vs {int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
+                        elif r_h is not None:
+                            pos_g=f" <span style='color:#AAAAAA;font-size:9px'>{int(r_h.get('Pos',0))}º({int(r_h.get('Pts',0))}pts)</span>"
+                        elif r_a is not None:
+                            pos_g=f" <span style='color:#AAAAAA;font-size:9px'>{int(r_a.get('Pos',0))}º({int(r_a.get('Pts',0))}pts)</span>"
                         else:
-                            _c_h_f = "#ff2a2a" if hg>0 else "#888"
-                            _c_a_f = "#00c800" if ag>0 else "#888"
-                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
-                        inner=f"{ht_gris} {ft_solo}"
+                            pos_g=""
+                        inner=f"{h_txt_g} {ft_g} {a_txt_g} {ht_g}{pos_g}"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
