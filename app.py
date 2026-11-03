@@ -3881,7 +3881,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             _c_h_f = "#ff2a2a" if hg>0 else "#888"
                             _c_a_f = "#00c800" if ag>0 else "#888"
                             ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
-                        inner=f"{res_txt}{pos_txt}"
+                        inner=f"{ht_gris} {ft_solo}"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
