@@ -1495,20 +1495,24 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        if tipo == "0-0 FINALES":
-            nombre = "Partidos-0-0-Finales.csv"
-        elif tipo == "HT 0-0 + OVER":
-            nombre = "Partidos-HT0-0-FT-Over.csv"
-        else:
-            nombre = "Partidos-0-0-Hasta80-Gol80-90.csv"
-        for p in [pathlib.Path(__file__).parent.resolve() / nombre, pathlib.Path(nombre), pathlib.Path(f"/mnt/data/{nombre}")]:
+        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90"}
+        patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
+        for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
             if p.exists():
                 try:
-                    df = pd.read_csv(p, on_bad_lines='skip')
-                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-                    # FIX LIGAS TUNEZ mal etiquetadas como Austria 2DA
-                    mask_tn = df['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE', na=False)
-                    df.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
+                    if p.suffix == ".parquet":
+                        df_all = pd.read_parquet(p)
+                    elif p.suffix == ".pkl":
+                        df_all = pd.read_pickle(p)
+                    else:
+                        df_all = pd.read_csv(p, on_bad_lines='skip')
+                    df_all['Date'] = pd.to_datetime(df_all['Date'], errors='coerce')
+                    mask_tn = df_all['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE', na=False)
+                    df_all.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
+                    if 'PATRON' in df_all.columns:
+                        df = df_all[df_all['PATRON'] == patron_buscado].copy()
+                    else:
+                        df = df_all.copy()
                     return df
                 except:
                     pass
