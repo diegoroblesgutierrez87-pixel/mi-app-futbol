@@ -1691,7 +1691,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mtxt = ",".join([f"{m}'" for m in mlist_int])
                     except:
                         mtxt = str(mins)
-                    resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]</div>"
+                    if tipo_pat == "0-0 FINALES":
+                        linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                    else:
+                        linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]" if mtxt else f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]"
+                        # para 0-0 HASTA 80+ si mtxt vacio no mostrar []
+                        if not mtxt:
+                            linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                    resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{linea_res}</div>"
 
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_txt} EQUIPO={eq_txt} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
@@ -1723,7 +1730,10 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mtxt = ",".join([f"{m}'" for m in mlist_int])
                     except:
                         mtxt = str(mins)
-                    resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]\n"
+                    if tipo_pat == "0-0 FINALES" or not mtxt:
+                        resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}\n"
+                    else:
+                        resumen_txt += f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]\n"
         components.html(f"""
         <div style='max-height:500px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px;font-family:monospace;font-size:11px'>{resumen_html}</div>
         <textarea id='txt_resumen' style='position:absolute;left:-9999px'>{_html2.escape(resumen_txt)}</textarea>
