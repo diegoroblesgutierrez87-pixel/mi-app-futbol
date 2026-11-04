@@ -1551,35 +1551,6 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        # NUEVO PATRON 1 GOL HT + OVER 1.5 FT - carga de base_partidos directa
-        if tipo == "1 GOL HT + OVER 1.5 FT":
-            dfs=[]
-            for name in ["base_partidos_europa.parquet","base_partidos_resto.parquet","base_partidos.csv"]:
-                for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
-                    if base.exists():
-                        try:
-                            if str(base).endswith(".parquet"): dfs.append(pd.read_parquet(base))
-                            else: dfs.append(pd.read_csv(base, on_bad_lines='skip'))
-                        except: pass
-                        break
-            if not dfs:
-                return pd.DataFrame()
-            df_all = pd.concat(dfs, ignore_index=True)
-            df_all['Date']=pd.to_datetime(df_all['Date'], errors='coerce', dayfirst=True)
-            # rename para compatibilidad con bloque PATRONES
-            df_all = df_all.rename(columns={'HomeTeam':'Home','AwayTeam':'Away','League':'League'})
-            for c in ['FTHG','FTAG','HTHG','HTAG']:
-                df_all[c]=pd.to_numeric(df_all[c], errors='coerce').fillna(0).astype(int)
-            df_all['Total_HT']=df_all['HTHG']+df_all['HTAG']
-            df_all['Total_FT']=df_all['FTHG']+df_all['FTAG']
-            df = df_all[(df_all['Total_HT']==1) & (df_all['Total_FT']>1.5)].copy()
-            df['PATRON']='1GOL_HT_OVER15'
-            df['Jornada_Liga']=df.get('Jornada', df.get('jornada_num','1'))
-            df['gols_todos']=df.get('gols_todos','')
-            df['gols_2t']=df.get('gols_2t','')
-            df['Total_Jornada']=9
-            return df
-
         mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15"}
         patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
         for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
