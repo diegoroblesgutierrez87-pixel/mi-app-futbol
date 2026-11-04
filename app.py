@@ -1694,10 +1694,12 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 # total real - FIX: si Total_Jornada viene inflado por Túnez, corrige por tamaño real de liga
                 if 'Total_Jornada' in df_j.columns:
                     total_j_raw = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
-                    if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 10:
+                    if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ']:
                         total_j = 8
                     else:
-                        total_j = total_j_raw
+                        total_j = total_j_raw if total_j_raw >= len(df_j) else len(df_j)
+                        if total_j < 10:
+                            total_j = 10
                 else:
                     total_j = len(df_j)
                 
