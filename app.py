@@ -1728,7 +1728,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         for liga, df_liga in df_f.groupby('League'):
             resumen_txt += f"LIGA: {liga}\n"
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
-                total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
+                total_j_raw = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
+                if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 8:
+                    total_j = 8
+                else:
+                    total_j = total_j_raw
                 resumen_txt += f"Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]\n"
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
