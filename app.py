@@ -1760,20 +1760,28 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                             mtxt = ",".join([fmt(x) for x in mlist_int])
                     except:
                         mtxt = str(mins)
+                    # CELESTE CLASIFICACION - no rompe logica ni colores
+                    def _pos(v):
+                        try:
+                            s=str(v).replace('J','').replace('º','').strip()
+                            return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> " if s.isdigit() else ""
+                        except:
+                            return ""
+                    ph = _pos(r.get('Jornada_Home',''))
+                    pa = _pos(r.get('Jornada_Away',''))
                     if tipo_pat == "0-0 FINALES":
-                        linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                        linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}"
                     else:
                         if tipo_pat == "1 GOL HT + OVER 1.5 FT" and not mtxt:
-                            # si no hay minutos en base_goles, muestra HT
                             try:
                                 ht_h = int(r.get('HTHG',1)); ht_a = int(r.get('HTAG',0))
-                                linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [HT {ht_h}-{ht_a}]"
+                                linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}[HT {ht_h}-{ht_a}]"
                             except:
-                                linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                                linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}"
                         else:
-                            linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} [{mtxt}]" if mtxt else f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                            linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}[{mtxt}]" if mtxt else f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}"
                             if not mtxt:
-                                linea_res = f"{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']}"
+                                linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}"
                     resumen_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;border-bottom:1px solid #ddd'>{linea_res}</div>"
 
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_txt} EQUIPO={eq_txt} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
