@@ -1783,7 +1783,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         if pd.isna(v) or v=='' or str(v).upper()=='NAN':
                             return ""
                         s=str(v).replace('º','').strip()
-                        return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> " if s.isdigit() else ""
+                        return f"<span style='color:#9C27B0;font-weight:900'>{s}º</span> " if s.isdigit() else ""
                     ph = _pos_real(r.get('Pos_Home','')) if 'Pos_Home' in r else ""
                     pa = _pos_real(r.get('Pos_Away','')) if 'Pos_Away' in r else ""
                     if tipo_pat == "0-0 FINALES":
