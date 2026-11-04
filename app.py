@@ -1667,9 +1667,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 s=str(x).replace('J','')
                 return int(s) if s.isdigit() else 999
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
-                # total real desde CSV columna Total_Jornada - vale para TODAS las ligas
+                # total real - FIX: si Total_Jornada viene inflado por Túnez, corrige por tamaño real de liga
                 if 'Total_Jornada' in df_j.columns:
-                    total_j = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
+                    total_j_raw = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
+                    # 2ª Austria y Túnez son 16 equipos = 8 partidos por jornada, no 16
+                    if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 10:
+                        total_j = 8
+                    else:
+                        total_j = total_j_raw
                 else:
                     total_j = len(df_j)
                 
