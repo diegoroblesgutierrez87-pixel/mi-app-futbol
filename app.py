@@ -1772,9 +1772,30 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#f0f0f0;border:1px solid #000;padding:6px'>LIGA={liga_txt} EQUIPO={eq_txt} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
         import streamlit.components.v1 as components
         import html as _html2
-        # texto plano del resumen para copiar - multi
+        # texto plano del resumen para copiar - multi + equipos repiten
         resumen_bar = f"RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={','.join(liga_pat_sel)} | EQUIPO={','.join(eq_pat_sel)} | DESDE={fecha_pat} | VA={res_pat} -> {len(df_f)}/{len(df_pat)} partidos"
-        resumen_txt = resumen_bar + "\n\n"
+        # genera texto de equipos que repiten para copiar
+        resumen_eq_txt = ""
+        for liga2, df_liga2 in df_f.groupby('League'):
+            if "TODAS" not in liga_pat_sel and liga2 not in liga_pat_sel:
+                continue
+            conteo2 = {}
+            for _, rr in df_liga2.iterrows():
+                j = str(rr.get('Jornada_Liga','')).replace('J','')
+                for eq in [rr['Home'], rr['Away']]:
+                    if "TODOS" not in eq_pat_sel and eq not in eq_pat_sel:
+                        continue
+                    if eq not in conteo2:
+                        conteo2[eq] = []
+                    if j not in conteo2[eq]:
+                        conteo2[eq].append(j)
+            if conteo2:
+                resumen_eq_txt += f"LIGA: {liga2}\n"
+                for eq, jornadas in sorted(conteo2.items(), key=lambda x: (-len(x[1]), x[0])):
+                    js = " ".join([f"J{j}" for j in sorted(jornadas, key=lambda x: int(x) if x.isdigit() else 999)])
+                    resumen_eq_txt += f"{eq}: {js} ({len(jornadas)})\n"
+                resumen_eq_txt += "\n"
+        resumen_txt = resumen_bar + "\n\n" + resumen_eq_txt + "\n"
         for liga, df_liga in df_f.groupby('League'):
             resumen_txt += f"LIGA: {liga}\n"
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
