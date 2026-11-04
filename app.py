@@ -1760,8 +1760,10 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
                         if tipo_pat == "0-0 HASTA 80+ GOL 80-90":
                             mlist_int = [m for m in mlist_int if m>=80]
-                        else:
+                        elif tipo_pat == "HT 0-0 + OVER":
                             mlist_int = [m for m in mlist_int if m>45]
+                        else:
+                            mlist_int = mlist_int
                         total_real = int(r.get('FTHG',0)) + int(r.get('FTAG',0))
                         if len(mlist_int) != total_real:
                             mlist_int = mlist_int[:total_real]
