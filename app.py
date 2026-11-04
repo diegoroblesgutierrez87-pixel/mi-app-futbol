@@ -1658,9 +1658,29 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         eq_txt = ",".join(eq_pat_sel[:3]) + (f"+{len(eq_pat_sel)-3}" if len(eq_pat_sel)>3 else "") if "TODOS" not in eq_pat_sel else "TODOS"
         st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px 8px;border-radius:4px;margin-top:4px'>RESUMEN: TIPO={tipo_pat} | MOSTRAR 0-0={mostrar_00} | LIGA={liga_txt} | EQUIPO={eq_txt} | DESDE={fecha_pat} -> {len(df_f)}/{len(df_pat)} partidos</div>", unsafe_allow_html=True)
 
-        # --- RESUMEN POR LIGA Y JORNADA [x/total] - SOLO 1 CSV - CORREGIDO ---
-        resumen_html = ""
-        # totales reales por liga/jornada desde el propio CSV si tiene Total_Jornada, si no usa 9 por defecto para 2 Bundesliga
+        # --- RESUMEN EQUIPOS POR LIGA + RESUMEN POR LIGA Y JORNADA ---
+        resumen_eq_html = ""
+        for liga2, df_liga2 in df_f.groupby('League'):
+            if "TODAS" not in liga_pat_sel and liga2 not in liga_pat_sel:
+                continue
+            conteo = {}
+            for _, rr in df_liga2.iterrows():
+                j = str(rr.get('Jornada_Liga','')).replace('J','')
+                for eq in [rr['Home'], rr['Away']]:
+                    if "TODOS" not in eq_pat_sel and eq not in eq_pat_sel:
+                        continue
+                    if eq not in conteo:
+                        conteo[eq] = []
+                    if j not in conteo[eq]:
+                        conteo[eq].append(j)
+            if conteo:
+                resumen_eq_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga2}</div>"
+                for eq, jornadas in sorted(conteo.items(), key=lambda x: (-len(x[1]), x[0])):
+                    js = " ".join([f"J{j}" for j in sorted(jornadas, key=lambda x: int(x) if x.isdigit() else 999)])
+                    resumen_eq_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;background:#e8ffe8;border-bottom:1px solid #ccc'><b>{eq}</b>: {js} ({len(jornadas)})</div>"
+
+        resumen_html = resumen_eq_html
+        # totales reales por liga/jornada desde el propio CSV si tiene Total_Jornada
         for liga, df_liga in df_f.groupby('League'):
             resumen_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga}</div>"
             def j_num(x):
