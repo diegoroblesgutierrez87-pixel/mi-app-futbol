@@ -2817,24 +2817,25 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 j_cands = [j_max_liga] if j_max_liga else [9999]
                                 r_self = _get_clas_fuzzy(lg_norm_r, self_norm, j_cands)
                                 r_opp = _get_clas_fuzzy(lg_norm_r, opp_norm, j_cands)
+                                # POS AL LADO DEL NOMBRE: 13ºTEAM
+                                def _pos_celeste(rec):
+                                    return f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(rec.get('Pos',0))}º</span>" if rec is not None else ""
+                                def _pts_gris(rec):
+                                    return f"<span style='color:#888;font-size:9px;font-weight:400'>({int(rec.get('Pts',0))}pts)</span>" if rec is not None else ""
+                                pos_self_html = _pos_celeste(r_self)
+                                pos_opp_html = _pos_celeste(r_opp)
+                                pts_self_html = _pts_gris(r_self)
+                                pts_opp_html = _pts_gris(r_opp)
                                 if r_opp is not None:
-                                    pos_opp = int(r_opp.get('Pos',0))
-                                    pts_opp = int(r_opp.get('Pts',0))
                                     if es_loc:
-                                        if r_self is not None:
-                                            rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#fff;font-weight:900'>{self_team}</span> <span style='color:#00BFFF;font-weight:900'>{int(r_self.get('Pos',0))}º</span><span style='color:#888'>({int(r_self.get('Pts',0))}pts) vs {opp_team} </span><span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span><span style='color:#888'>({pts_opp}pts)</span></span>"
-                                        else:
-                                            rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#fff;font-weight:900'>{self_team}</span><span style='color:#888'> vs {opp_team} </span><span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span><span style='color:#888'>({pts_opp}pts)</span></span>"
+                                        rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span>{pts_self_html} <span style='color:#888'>vs</span> {pos_opp_html}{opp_team}{pts_opp_html}</span>"
                                     else:
-                                        if r_self is not None:
-                                            rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#888'>{opp_team} </span><span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span><span style='color:#888'>({pts_opp}pts) vs </span><span style='color:#fff;font-weight:900'>{self_team}</span> <span style='color:#00BFFF;font-weight:900'>{int(r_self.get('Pos',0))}º</span><span style='color:#888'>({int(r_self.get('Pts',0))}pts)</span></span>"
-                                        else:
-                                            rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#888'>{opp_team} </span><span style='color:#00BFFF;font-weight:900'>{pos_opp}º</span><span style='color:#888'>({pts_opp}pts) vs </span><span style='color:#fff;font-weight:900'>{self_team}</span></span>"
+                                        rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_opp_html}<span style='color:#888'>{opp_team}</span>{pts_opp_html} <span style='color:#888'>vs</span> {pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span>{pts_self_html}</span>"
                                 else:
                                     if es_loc:
-                                        rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#fff;font-weight:900'>{self_team}</span><span style='color:#888'> vs {opp_team}</span></span>"
+                                        rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span> <span style='color:#888'>vs {opp_team}</span></span>"
                                     else:
-                                        rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#888'>{opp_team} vs </span><span style='color:#fff;font-weight:900'>{self_team}</span></span>"
+                                        rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#888'>{opp_team} vs </span>{pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span></span>"
                             except:
                                 rival_txt = f" <span style='font-size:9px;font-weight:400'><span style='color:#888'>{opp_team} vs </span><span style='color:#fff;font-weight:900'>{self_team}</span></span>" if not es_loc else f" <span style='font-size:9px;font-weight:400'><span style='color:#fff;font-weight:900'>{self_team}</span><span style='color:#888'> vs {opp_team}</span></span>"
 
@@ -3195,7 +3196,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 if ra is None:
                                     ra = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_a0))
                                 if rh is not None and ra is not None:
-                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) {_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)"
+                                    txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) <span style='color:#00BFFF;font-weight:900'>{int(rh.get('Pos',0))}º</span>{_h0} <span style='color:#888'>({int(rh.get('Pts',0))}pts)</span> vs <span style='color:#00BFFF;font-weight:900'>{int(ra.get('Pos',0))}º</span>{_a0} <span style='color:#888'>({int(ra.get('Pts',0))}pts)</span>"
                                 else:
                                     txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) {_h0} vs {_a0}"
                             else:
@@ -3846,16 +3847,27 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             return None
                         r_h=_get_clas_fuzzy(normaliza(h_team), lg_norm)
                         r_a=_get_clas_fuzzy(normaliza(a_team), lg_norm)
-                        if r_h is not None and r_a is not None:
-                            pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span><span style='color:#888;font-size:9px;font-weight:400'>({int(r_h.get('Pts',0))}pts) vs </span><span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_a.get('Pos',0))}º</span><span style='color:#888;font-size:9px;font-weight:400'>({int(r_a.get('Pts',0))}pts)</span>"
-                        elif r_h is not None:
-                            pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span><span style='color:#888;font-size:9px;font-weight:400'>({int(r_h.get('Pts',0))}pts)</span>"
-                        elif r_a is not None:
-                            pos_txt=f" <span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_a.get('Pos',0))}º</span><span style='color:#888;font-size:9px;font-weight:400'>({int(r_a.get('Pts',0))}pts)</span>"
+                        if r_h is not None:
+                            pos_h_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span>"
+                            pts_h_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({int(r_h.get('Pts',0))}pts)</span>"
                         else:
-                            pos_txt=""
+                            pos_h_html=""; pts_h_html=""
+                        if r_a is not None:
+                            pos_a_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_a.get('Pos',0))}º</span>"
+                            pts_a_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({int(r_a.get('Pts',0))}pts)</span>"
+                        else:
+                            pos_a_html=""; pts_a_html=""
+                        if r_h is not None and r_a is not None:
+                            pts_txt=f" {pts_h_html} <span style='color:#888;font-size:9px'>vs</span> {pts_a_html}"
+                        elif r_h is not None:
+                            pts_txt=f" {pts_h_html}"
+                        elif r_a is not None:
+                            pts_txt=f" {pts_a_html}"
+                        else:
+                            pts_txt=""
+                        pos_txt=pts_txt
                     except:
-                        pos_txt=""
+                        pos_h_html=""; pos_a_html=""; pts_txt=""; pos_txt=""
                     try:
                         hthg=int(float(rr.get('HTHG',0) or 0)); htag=int(float(rr.get('HTAG',0) or 0))
                     except:
@@ -3885,15 +3897,15 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         _col_htag = "#D0D0D0" if htag>0 else "#888"
                         ht_gris = f"<span style='color:#888'>[</span><span style='color:{_col_hthg};font-weight:900'>{hthg}</span><span style='color:#888'>-</span><span style='color:{_col_htag};font-weight:900'>{htag}</span><span style='color:#888'>]</span>"
                     if es_loc:
-                        h_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{h_team}</span>"
-                        a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>"
+                        h_txt=f"{pos_h_html}<span style='color:#FFFFFF;font-weight:900;'>{h_team}</span>"
+                        a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>{pos_a_html}"
                         _c_h = "#00c800" if hg>0 else "#888"
                         _c_a = "#ff2a2a" if ag>0 else "#888"
                         res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if hg>ag else "E" if hg==ag else "P"
                     else:
-                        h_txt=f"<span style='color:#888888;font-weight:700'>{h_team}</span>"
-                        a_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{a_team}</span>"
+                        h_txt=f"{pos_h_html}<span style='color:#888888;font-weight:700'>{h_team}</span>"
+                        a_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{a_team}</span>{pos_a_html}"
                         _c_h = "#ff2a2a" if hg>0 else "#888"
                         _c_a = "#00c800" if ag>0 else "#888"
                         res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
