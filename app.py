@@ -1680,11 +1680,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 resumen_html += f"<div style='background:#e8e8e8;padding:4px 8px;font-family:monospace;font-weight:900;border:1px solid #000'>Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]</div>"
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
-                        mins = r.get('gols_2t', r.get('gols_todos',''))
+                        mins = r.get('gols_2t','') or r.get('gols_todos','')
                     elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"]:
-                        mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','')
+                        mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','') or r.get('gols_80_90','')
                     else:
-                        mins = r.get('gols_80_90','')
+                        mins = r.get('gols_80_90','') or r.get('gols_todos','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
@@ -1734,11 +1734,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 resumen_txt += f"Jornada {str(j_liga).replace('J','')}: [{len(df_j)}/{total_j}]\n"
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
-                        mins = r.get('gols_2t', r.get('gols_todos',''))
-                    elif tipo_pat == "1 GOL HT + OVER 1.5 FT":
-                        mins = r.get('gols_todos','') or r.get('gols_2t','')
+                        mins = r.get('gols_2t','') or r.get('gols_todos','')
+                    elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"]:
+                        mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','') or r.get('gols_80_90','')
                     else:
-                        mins = r.get('gols_80_90','')
+                        mins = r.get('gols_80_90','') or r.get('gols_todos','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
