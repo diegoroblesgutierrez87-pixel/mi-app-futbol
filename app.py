@@ -1722,7 +1722,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                                     else:
                                         return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                             if es_home:
-                                return f"<span style='background:#000;color:#fff;font-weight:900;padding:0 3px;border-radius:2px'>{m}'</span>"
+                                return f"<span style='color:#000;font-weight:900;'>{m}'</span>"
                             else:
                                 return f"<span style='color:#666'>{m}'</span>"
                         ht = [m for m in mlist_int if m <= 45]
