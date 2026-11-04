@@ -1760,15 +1760,20 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                             mtxt = ",".join([fmt(x) for x in mlist_int])
                     except:
                         mtxt = str(mins)
-                    # CELESTE CLASIFICACION - no rompe logica ni colores
-                    def _pos(v):
-                        try:
-                            s=str(v).replace('J','').replace('º','').strip()
-                            return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> " if s.isdigit() else ""
-                        except:
+                    # FIX: no inventar clasificacion - solo si existe columna real Pos_*
+                    def _pos_real(v):
+                        if v is None or str(v).strip()=='' or str(v).upper()=='NAN':
                             return ""
-                    ph = _pos(r.get('Jornada_Home',''))
-                    pa = _pos(r.get('Jornada_Away',''))
+                        try:
+                            s=str(v).replace('º','').strip()
+                            if s.isdigit():
+                                return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> "
+                        except:
+                            pass
+                        return ""
+                    # solo usa Pos_Home / Pos_Away si existen en el parquet, si no deja vacio
+                    ph = _pos_real(r.get('Pos_Home','')) if 'Pos_Home' in r else ""
+                    pa = _pos_real(r.get('Pos_Away','')) if 'Pos_Away' in r else ""
                     if tipo_pat == "0-0 FINALES":
                         linea_res = f"{ph}{r['Home']} {r['FTHG']}-{r['FTAG']} {r['Away']} {pa}"
                     else:
