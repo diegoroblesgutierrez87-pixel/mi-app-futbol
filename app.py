@@ -1551,7 +1551,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15","1.5 HT + OVER 2.5 FT":"15HT_OVER25FT"}
+        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15","1.5 HT + OVER 2.5 FT":"15HT_OVER25FT","0-0 HT + 1 GOL FT":"HT00_FT1"}
         patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
         for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
             if p.exists():
@@ -1574,7 +1574,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     pass
         return pd.DataFrame()
 
-    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"], key="tipo_pat_0_0")
+    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT", "0-0 HT + 1 GOL FT"], key="tipo_pat_0_0")
     mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
     # nuevo desplegable solo para HT 0-0
     over_pat = "TODOS"
@@ -1621,23 +1621,27 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 return False
             df_f = df_f[df_f.apply(_cumple_res, axis=1)]
         # filtro OVER para HT 0-0 - FIX HT real 0-0
+        def _es_ht00(row):
+            try:
+                import ast
+                g2 = ast.literal_eval(str(row.get('gols_2t','[]')))
+                gt = ast.literal_eval(str(row.get('gols_todos','[]')))
+                gt_int = [int(str(x).strip().replace("'", "")) for x in gt]
+                g2_int = [int(str(x).strip().replace("'", "")) for x in g2]
+                return len(g2_int)==len(gt_int) and len(gt_int)>0 and not any(m<=45 for m in gt_int)
+            except:
+                return False
         if tipo_pat == "HT 0-0 + OVER":
             df_f['Total_Goles'] = pd.to_numeric(df_f['FTHG'], errors='coerce') + pd.to_numeric(df_f['FTAG'], errors='coerce')
-            def _es_ht00(row):
-                try:
-                    import ast
-                    g2 = ast.literal_eval(str(row.get('gols_2t','[]')))
-                    gt = ast.literal_eval(str(row.get('gols_todos','[]')))
-                    gt_int = [int(str(x).strip().replace("'", "")) for x in gt]
-                    g2_int = [int(str(x).strip().replace("'", "")) for x in g2]
-                    return len(g2_int)==len(gt_int) and len(gt_int)>0 and not any(m<=45 for m in gt_int)
-                except:
-                    return False
             df_f = df_f[df_f.apply(_es_ht00, axis=1)]
             if over_pat == "OVER 1.5":
                 df_f = df_f[df_f['Total_Goles'] > 1.5]
             elif over_pat == "OVER 2.5":
                 df_f = df_f[df_f['Total_Goles'] > 2.5]
+        if tipo_pat == "0-0 HT + 1 GOL FT":
+            df_f['Total_Goles'] = pd.to_numeric(df_f['FTHG'], errors='coerce') + pd.to_numeric(df_f['FTAG'], errors='coerce')
+            df_f = df_f[df_f.apply(_es_ht00, axis=1)]
+            df_f = df_f[df_f['Total_Goles'] == 1]
         if tipo_pat == "1 GOL HT + OVER 1.5 FT":
             # ya filtrado arriba, asegura 1 HT y >1.5 FT
             pass
