@@ -1580,7 +1580,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             df['Total_Jornada']=9
             return df
 
-        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90"}
+        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15"}
         patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
         for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
             if p.exists():
@@ -1706,6 +1706,8 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
                         mins = r.get('gols_2t', r.get('gols_todos',''))
+                    elif tipo_pat == "1 GOL HT + OVER 1.5 FT":
+                        mins = r.get('gols_todos','') or r.get('gols_2t','')
                     else:
                         mins = r.get('gols_80_90','')
                     try:
@@ -1746,6 +1748,8 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
                         mins = r.get('gols_2t', r.get('gols_todos',''))
+                    elif tipo_pat == "1 GOL HT + OVER 1.5 FT":
+                        mins = r.get('gols_todos','') or r.get('gols_2t','')
                     else:
                         mins = r.get('gols_80_90','')
                     try:
