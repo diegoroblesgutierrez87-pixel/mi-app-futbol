@@ -1670,7 +1670,6 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 # total real - FIX: si Total_Jornada viene inflado por Túnez, corrige por tamaño real de liga
                 if 'Total_Jornada' in df_j.columns:
                     total_j_raw = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max())
-                    # 2ª Austria y Túnez son 16 equipos = 8 partidos por jornada, no 16
                     if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 10:
                         total_j = 8
                     else:
@@ -1682,21 +1681,20 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
                         mins = r.get('gols_2t', r.get('gols_todos',''))
-                    elif tipo_pat == "1 GOL HT + OVER 1.5 FT":
-                        mins = r.get('gols_todos','') or r.get('gols_2t','')
+                    elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"]:
+                        mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','')
                     else:
                         mins = r.get('gols_80_90','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
                         mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
-                        # FIX: para 0-0 HASTA 80+ solo 80-90, para HT 0-0 todo 2T >45, para 1GOL HT todos
                         if tipo_pat == "0-0 HASTA 80+ GOL 80-90":
                             mlist_int = [m for m in mlist_int if m>=80]
                         elif tipo_pat == "HT 0-0 + OVER":
                             mlist_int = [m for m in mlist_int if m>45]
                         else:
-                            mlist_int = mlist_int  # 1 GOL HT muestra todos
+                            mlist_int = mlist_int
                         total_real = int(r.get('FTHG',0)) + int(r.get('FTAG',0))
                         if len(mlist_int) != total_real:
                             mlist_int = mlist_int[:total_real]
@@ -1729,7 +1727,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             resumen_txt += f"LIGA: {liga}\n"
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
                 total_j_raw = int(pd.to_numeric(df_j['Total_Jornada'], errors='coerce').max()) if 'Total_Jornada' in df_j.columns else len(df_j)
-                if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 8:
+                if liga in ['2 LIGA AUSTRIA 2DA','LIGA 1 TUNEZ'] and total_j_raw > 10:
                     total_j = 8
                 else:
                     total_j = total_j_raw
