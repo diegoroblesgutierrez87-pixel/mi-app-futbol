@@ -1565,6 +1565,30 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     df_all['Date'] = pd.to_datetime(df_all['Date'], errors='coerce')
                     mask_tn = df_all['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False) | df_all['Away'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False)
                     df_all.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
+                    # === MERGE CLASIFICACION REAL DESDE Base-Clasificacion-Jornada.csv ===
+                    try:
+                        import pathlib as _pl
+                        p_clas = _pl.Path(__file__).parent.resolve() / "Base-Clasificacion-Jornada.csv"
+                        if not p_clas.exists():
+                            p_clas = _pl.Path("Base-Clasificacion-Jornada.csv")
+                        if not p_clas.exists():
+                            p_clas = _pl.Path("/mnt/data/Base-Clasificacion-Jornada.csv")
+                        if p_clas.exists():
+                            df_clas = pd.read_csv(p_clas, encoding='utf-8-sig')
+                            df_clas['Team_norm'] = df_clas['Team'].astype(str).str.upper().str.strip()
+                            df_clas['League_norm'] = df_clas['League'].astype(str).str.upper().str.strip()
+                            df_clas['J_norm'] = df_clas['jornada_num'].astype(str).str.upper().str.strip()
+                            df_all['Home_norm'] = df_all['Home'].astype(str).str.upper().str.strip()
+                            df_all['Away_norm'] = df_all['Away'].astype(str).str.upper().str.strip()
+                            df_all['League_norm'] = df_all['League'].astype(str).str.upper().str.strip()
+                            df_all['J_norm'] = df_all['Jornada_Liga'].astype(str).str.upper().str.strip()
+                            # home
+                            df_all = df_all.merge(df_clas[['League_norm','J_norm','Team_norm','Pos']].rename(columns={'Team_norm':'Home_norm','Pos':'Pos_Home'}), on=['League_norm','J_norm','Home_norm'], how='left')
+                            # away
+                            df_all = df_all.merge(df_clas[['League_norm','J_norm','Team_norm','Pos']].rename(columns={'Team_norm':'Away_norm','Pos':'Pos_Away'}), on=['League_norm','J_norm','Away_norm'], how='left')
+                    except Exception as e:
+                        pass
+
                     if 'PATRON' in df_all.columns:
                         df = df_all[df_all['PATRON'] == patron_buscado].copy()
                     else:
