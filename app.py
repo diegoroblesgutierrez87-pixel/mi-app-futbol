@@ -1700,13 +1700,31 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         try:
                             gh = ast.literal_eval(str(r.get('gols_home','[]')))
                             gh = [int(float(x)) for x in gh]
+                            gt_all = ast.literal_eval(str(r.get('gols_todos','[]')))
+                            gt_all = [int(float(x)) for x in gt_all]
                         except:
                             gh = []
+                            gt_all = []
+                        eq_sel_unico = eq_pat_sel[0] if len(eq_pat_sel)==1 and "TODOS" not in eq_pat_sel else None
                         def fmt(m):
-                            if gh and m in gh:
-                                return f"<b style='color:#000;font-weight:900'>{m}'</b>"
+                            es_home = m in gh
+                            if eq_sel_unico:
+                                es_home_team = r['Home']==eq_sel_unico
+                                es_away_team = r['Away']==eq_sel_unico
+                                if es_home_team:
+                                    if es_home:
+                                        return f"<span style='background:#00C853;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                    else:
+                                        return f"<span style='background:#FF1744;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                elif es_away_team:
+                                    if not es_home:
+                                        return f"<span style='background:#00C853;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                    else:
+                                        return f"<span style='background:#FF1744;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                            if es_home:
+                                return f"<span style='background:#000;color:#fff;font-weight:900;padding:0 3px;border-radius:2px'>{m}'</span>"
                             else:
-                                return f"{m}'"
+                                return f"<span style='color:#666'>{m}'</span>"
                         ht = [m for m in mlist_int if m <= 45]
                         st2 = [m for m in mlist_int if m > 45]
                         if ht and st2:
