@@ -1713,14 +1713,14 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                                 es_away_team = r['Away']==eq_sel_unico
                                 if es_home_team:
                                     if es_home:
-                                        return f"<span style='background:#00C853;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                                     else:
-                                        return f"<span style='background:#FF1744;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                                 elif es_away_team:
                                     if not es_home:
-                                        return f"<span style='background:#00C853;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                                     else:
-                                        return f"<span style='background:#FF1744;color:#fff;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                             if es_home:
                                 return f"<span style='background:#000;color:#fff;font-weight:900;padding:0 3px;border-radius:2px'>{m}'</span>"
                             else:
