@@ -1693,12 +1693,26 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                             mlist_int = [m for m in mlist_int if m>=80]
                         elif tipo_pat == "HT 0-0 + OVER":
                             mlist_int = [m for m in mlist_int if m>45]
-                        else:
-                            mlist_int = mlist_int
                         total_real = int(r.get('FTHG',0)) + int(r.get('FTAG',0))
                         if len(mlist_int) != total_real:
                             mlist_int = mlist_int[:total_real]
-                        mtxt = ",".join([f"{m}'" for m in mlist_int])
+                        # --- NUEVO: split HT | 2T y negrita local si existe gols_home ---
+                        try:
+                            gh = ast.literal_eval(str(r.get('gols_home','[]')))
+                            gh = [int(float(x)) for x in gh]
+                        except:
+                            gh = []
+                        def fmt(m):
+                            if gh and m in gh:
+                                return f"<b style='color:#000;font-weight:900'>{m}'</b>"
+                            else:
+                                return f"{m}'"
+                        ht = [m for m in mlist_int if m <= 45]
+                        st2 = [m for m in mlist_int if m > 45]
+                        if ht and st2:
+                            mtxt = ",".join([fmt(x) for x in ht]) + " | " + ",".join([fmt(x) for x in st2])
+                        else:
+                            mtxt = ",".join([fmt(x) for x in mlist_int])
                     except:
                         mtxt = str(mins)
                     if tipo_pat == "0-0 FINALES":
