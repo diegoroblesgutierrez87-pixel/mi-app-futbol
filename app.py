@@ -1680,12 +1680,12 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     resumen_eq_html += f"<div style='font-family:monospace;font-size:11px;padding:2px 8px;background:#e8ffe8;border-bottom:1px solid #ccc'><b>{eq}</b>: {js} ({len(jornadas)})</div>"
 
         resumen_html = resumen_eq_html
+        def j_num(x):
+            s=str(x).replace('J','')
+            return int(s) if s.isdigit() else 999
         # totales reales por liga/jornada desde el propio CSV si tiene Total_Jornada
         for liga, df_liga in df_f.groupby('League'):
             resumen_html += f"<div style='background:#0A2342;color:#fff;padding:6px 8px;margin-top:10px;font-weight:900;font-family:monospace'>LIGA: {liga}</div>"
-            def j_num(x):
-                s=str(x).replace('J','')
-                return int(s) if s.isdigit() else 999
             for j_liga, df_j in sorted(df_liga.groupby('Jornada_Liga'), key=lambda x: j_num(x[0])):
                 # total real - FIX: si Total_Jornada viene inflado por Túnez, corrige por tamaño real de liga
                 if 'Total_Jornada' in df_j.columns:
