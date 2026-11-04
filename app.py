@@ -1705,7 +1705,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                 for _, r in df_j.sort_values('Date').iterrows():
                     if tipo_pat == "HT 0-0 + OVER":
                         mins = r.get('gols_2t','') or r.get('gols_todos','')
-                    elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"]:
+                    elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT", "0-0 HT + 1 GOL FT"]:
                         mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','') or r.get('gols_80_90','')
                     else:
                         mins = r.get('gols_80_90','') or r.get('gols_todos','')
