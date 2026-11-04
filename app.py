@@ -1551,7 +1551,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15"}
+        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15","1.5 HT + OVER 2.5 FT":"15HT_OVER25FT"}
         patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
         for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
             if p.exists():
@@ -1574,7 +1574,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     pass
         return pd.DataFrame()
 
-    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT"], key="tipo_pat_0_0")
+    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"], key="tipo_pat_0_0")
     mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
     # nuevo desplegable solo para HT 0-0
     over_pat = "TODOS"
