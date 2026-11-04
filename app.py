@@ -1565,7 +1565,25 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     df_all['Date'] = pd.to_datetime(df_all['Date'], errors='coerce')
                     mask_tn = df_all['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False) | df_all['Away'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False)
                     df_all.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
-                    # === MERGE CLASIFICACION REAL DESDE Base-Clasificacion-Jornada.csv ===
+                    # === MERGE CLASIFICACION REAL - DICCIONARIO (no falla) ===
+                    try:
+                        import pathlib as _pl
+                        p_clas = _pl.Path(__file__).parent.resolve() / "Base-Clasificacion-Jornada.csv"
+                        if not p_clas.exists():
+                            p_clas = _pl.Path("Base-Clasificacion-Jornada.csv")
+                        if p_clas.exists():
+                            df_clas = pd.read_csv(p_clas, encoding='utf-8-sig')
+                            # diccionario (LIGA, JORNADA, EQUIPO) -> Pos
+                            dic_pos = {}
+                            for _, cc in df_clas.iterrows():
+                                k = (str(cc['League']).upper().strip(), str(cc['jornada_num']).upper().strip(), str(cc['Team']).upper().strip())
+                                dic_pos[k] = cc['Pos']
+                            def get_pos(liga, jornada, equipo):
+                                return dic_pos.get((str(liga).upper().strip(), str(jornada).upper().strip(), str(equipo).upper().strip()), "")
+                            df_all['Pos_Home'] = df_all.apply(lambda x: get_pos(x['League'], x['Jornada_Liga'], x['Home']), axis=1)
+                            df_all['Pos_Away'] = df_all.apply(lambda x: get_pos(x['League'], x['Jornada_Liga'], x['Away']), axis=1)
+                    except Exception as e:
+                        pass
                     try:
                         import pathlib as _pl
                         p_clas = _pl.Path(__file__).parent.resolve() / "Base-Clasificacion-Jornada.csv"
@@ -1784,18 +1802,11 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                             mtxt = ",".join([fmt(x) for x in mlist_int])
                     except:
                         mtxt = str(mins)
-                    # FIX: no inventar clasificacion - solo si existe columna real Pos_*
                     def _pos_real(v):
-                        if v is None or str(v).strip()=='' or str(v).upper()=='NAN':
+                        if pd.isna(v) or v=='' or str(v).upper()=='NAN':
                             return ""
-                        try:
-                            s=str(v).replace('º','').strip()
-                            if s.isdigit():
-                                return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> "
-                        except:
-                            pass
-                        return ""
-                    # solo usa Pos_Home / Pos_Away si existen en el parquet, si no deja vacio
+                        s=str(v).replace('º','').strip()
+                        return f"<span style='color:#00BFFF;font-weight:900'>{s}º</span> " if s.isdigit() else ""
                     ph = _pos_real(r.get('Pos_Home','')) if 'Pos_Home' in r else ""
                     pa = _pos_real(r.get('Pos_Away','')) if 'Pos_Away' in r else ""
                     if tipo_pat == "0-0 FINALES":
