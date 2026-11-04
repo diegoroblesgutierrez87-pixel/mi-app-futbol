@@ -1725,22 +1725,23 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         except:
                             gh = []
                             gt_all = []
-                        eq_sel_unico = eq_pat_sel[0] if len(eq_pat_sel)==1 and "TODOS" not in eq_pat_sel else None
                         def fmt(m):
                             es_home = m in gh
-                            if eq_sel_unico:
-                                es_home_team = r['Home']==eq_sel_unico
-                                es_away_team = r['Away']==eq_sel_unico
-                                if es_home_team:
+                            if "TODOS" not in eq_pat_sel:
+                                home_sel = r['Home'] in eq_pat_sel
+                                away_sel = r['Away'] in eq_pat_sel
+                                if home_sel or away_sel:
+                                    # si es gol del equipo seleccionado -> verde, rival -> rojo
                                     if es_home:
-                                        return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        if home_sel:
+                                            return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        else:
+                                            return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                                     else:
-                                        return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
-                                elif es_away_team:
-                                    if not es_home:
-                                        return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
-                                    else:
-                                        return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        if away_sel:
+                                            return f"<span style='background:#00E676;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
+                                        else:
+                                            return f"<span style='background:#FF8A80;color:#000;font-weight:900;padding:0 4px;border-radius:3px'>{m}'</span>"
                             if es_home:
                                 return f"<span style='color:#000;font-weight:900;'>{m}'</span>"
                             else:
