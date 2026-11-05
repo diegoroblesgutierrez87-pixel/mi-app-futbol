@@ -4410,6 +4410,9 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         pass
     if not ligas_base:
         ligas_base = ["2 BUNDESLIGA","LIGA 1 TUNEZ","2 LIGA AUSTRIA 2DA","PRIMERA DIVISION"]
+    for _lm in ["2ª Singapur","Ligas random"]:
+        if _lm not in ligas_base:
+            ligas_base.append(_lm)
     if not equipos_base:
         equipos_base = ["1 FC NURNBERG","1 FC KAISERSLAUTERN"]
 
@@ -4430,7 +4433,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
 
     c_bank1, c_bank2, c_bank3 = st.columns(3)
     with c_bank1:
-        banca_inicial = st.number_input("BANCA INICIAL", min_value=1.0, value=346.0, step=10.0, key="banca_inicial_v2")
+        banca_inicial = st.number_input("BANCA INICIAL", min_value=1.0, value=float(banca_inicial_default), step=10.0, key="banca_inicial_v2")
         if st.button("💾 GUARDAR BANCA INICIAL", key="save_banca"):
             pd.DataFrame([{"banca_inicial": banca_inicial, "fecha": datetime.datetime.now().strftime("%d/%m/%Y")}]).to_csv(path_banca, index=False)
             st.success(f"Banca inicial guardada: {banca_inicial}"); st.rerun()
@@ -4444,9 +4447,15 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     with c1:
         liga_ap = st.selectbox("LIGA", ligas_base, key="liga_agenda_v2")
     with c2:
-        eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda_v2")
+        if liga_ap in ["2ª Singapur","Ligas random"]:
+            eq1_ap = st.text_input("EQUIPO 1 (LOCAL)", value="", key="eq1_manual_v2")
+        else:
+            eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda_v2")
     with c3:
-        eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda_v2")
+        if liga_ap in ["2ª Singapur","Ligas random"]:
+            eq2_ap = st.text_input("EQUIPO 2 (VISITANTE)", value="", key="eq2_manual_v2")
+        else:
+            eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda_v2")
 
     c4, c5, c6, c7 = st.columns(4)
     with c4:
