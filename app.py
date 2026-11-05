@@ -3937,7 +3937,9 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
 
         if not eqs_j:
             st.caption("Selecciona equipo(s)")
-            st.stop()
+        else:
+            # SOPORTE MULTI-EQUIPO - muestra los 2/3/4 seleccionados
+            bloques_html=[]
 
         # SOPORTE MULTI-EQUIPO - muestra los 2/3/4 seleccionados
         bloques_html=[]
