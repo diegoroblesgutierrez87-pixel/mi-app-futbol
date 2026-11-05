@@ -4379,15 +4379,24 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
 # 
 # 
 
-# ================= BLOQUE AGENDA APUESTA V1 =================
-# TAG: [AGENDA-APUESTA-V1]
-with st.expander("BLOQUE AGENDA APUESTA", expanded=False):
+# ================= BLOQUE AGENDA APUESTA V2 - CON BANCA =================
+# TAG: [AGENDA-APUESTA-V2-BANCA]
+with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     import pathlib, datetime
     import pandas as pd
 
     path_agenda = pathlib.Path(__file__).parent.resolve() / "agenda_apuestas.csv"
+    path_banca = pathlib.Path(__file__).parent.resolve() / "banca_config.csv"
+
+    # --- CARGA CONFIG BANCA ---
+    banca_inicial_default = 100.0
+    if path_banca.exists():
+        try:
+            df_bc = pd.read_csv(path_banca)
+            banca_inicial_default = float(df_bc['banca_inicial'].iloc[-1])
+        except:
+            pass
     
-    # Cargar ligas y equipos desde tus CSVs base si existen
     ligas_base = []
     equipos_base = []
     try:
@@ -4404,23 +4413,72 @@ with st.expander("BLOQUE AGENDA APUESTA", expanded=False):
     if not equipos_base:
         equipos_base = ["1 FC NURNBERG","1 FC KAISERSLAUTERN"]
 
+    # --- BANCA ACTUAL CALCULADA ---
+    banca_actual = banca_inicial_default
+    beneficio_total = 0
+    if path_agenda.exists():
+        try:
+            df_tmp_ag = pd.read_csv(path_agenda)
+            if 'Beneficio' in df_tmp_ag.columns:
+                beneficio_total = pd.to_numeric(df_tmp_ag['Beneficio'], errors='coerce').fillna(0).sum()
+                banca_actual = banca_inicial_default + beneficio_total
+            elif 'Resultado' in df_tmp_ag.columns:
+                # migra vieja
+                pass
+        except:
+            pass
+
+    c_bank1, c_bank2, c_bank3 = st.columns(3)
+    with c_bank1:
+        banca_inicial = st.number_input("BANCA INICIAL", min_value=1.0, value=float(banca_inicial_default), step=10.0, key="banca_inicial_v2")
+        if st.button("💾 GUARDAR BANCA INICIAL", key="save_banca"):
+            pd.DataFrame([{"banca_inicial": banca_inicial, "fecha": datetime.datetime.now().strftime("%d/%m/%Y")}]).to_csv(path_banca, index=False)
+            st.success(f"Banca inicial guardada: {banca_inicial}"); st.rerun()
+    with c_bank2:
+        st.metric("BANCA ACTUAL", f"{banca_actual:.2f}€", f"{beneficio_total:+.2f}€")
+    with c_bank3:
+        st.metric("BENEFICIO", f"{beneficio_total:.2f}€")
+
+    # --- FORM APUESTA ---
     c1, c2, c3 = st.columns(3)
     with c1:
-        liga_ap = st.selectbox("LIGA", ligas_base, key="liga_agenda")
+        liga_ap = st.selectbox("LIGA", ligas_base, key="liga_agenda_v2")
     with c2:
-        eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda")
+        eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda_v2")
     with c3:
-        eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda")
+        eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda_v2")
 
-    c4, c5 = st.columns(2)
+    c4, c5, c6, c7 = st.columns(4)
     with c4:
-        minuto_ap = st.number_input("MINUTO APUESTA", min_value=0, max_value=120, value=80, key="min_agenda")
+        minuto_ap = st.number_input("MINUTO", min_value=0, max_value=120, value=80, key="min_agenda_v2")
     with c5:
-        cuota_ap = st.number_input("CUOTA", min_value=1.01, max_value=100.0, value=2.10, step=0.05, format="%.2f", key="cuota_agenda")
+        cuota_ap = st.number_input("CUOTA", min_value=1.01, max_value=100.0, value=2.10, step=0.05, format="%.2f", key="cuota_agenda_v2")
+    with c6:
+        importe_ap = st.number_input("IMPORTE €", min_value=0.5, max_value=10000.0, value=10.0, step=1.0, key="importe_agenda_v2")
+    with c7:
+        resultado_ap = st.selectbox("RESULTADO", ["PENDIENTE","GANADA","PERDIDA","NULA"], key="res_agenda_v2")
 
-    texto_ap = st.text_area("QUE METI", placeholder="Ej: GOL 80-90 QPR, OVER 1.5...", key="texto_agenda", height=80)
+    texto_ap = st.text_area("QUE METI", placeholder="Ej: GOL 80-90 QPR, OVER 1.5...", key="texto_agenda_v2", height=70)
 
-    if st.button("💾 GUARDAR APUESTA", key="guardar_agenda"):
+    # calculo preview
+    if resultado_ap == "GANADA":
+        benef_preview = importe_ap * cuota_ap - importe_ap
+    elif resultado_ap == "PERDIDA":
+        benef_preview = -importe_ap
+    else:
+        benef_preview = 0.0
+    st.caption(f"Preview: Si {resultado_ap} -> Beneficio {benef_preview:+.2f}€ -> Nueva banca {banca_actual + benef_preview:.2f}€")
+
+    if st.button("💾 GUARDAR APUESTA CON BANCA", key="guardar_agenda_v2"):
+        if resultado_ap == "GANADA":
+            beneficio = importe_ap * cuota_ap - importe_ap
+        elif resultado_ap == "PERDIDA":
+            beneficio = -importe_ap
+        else:
+            beneficio = 0.0
+        
+        nueva_banca = banca_actual + beneficio if resultado_ap != "PENDIENTE" else banca_actual
+
         nueva = {
             "Fecha": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
             "Liga": liga_ap,
@@ -4428,29 +4486,92 @@ with st.expander("BLOQUE AGENDA APUESTA", expanded=False):
             "Equipo2": eq2_ap,
             "Minuto": minuto_ap,
             "Cuota": cuota_ap,
+            "Importe": importe_ap,
+            "Resultado": resultado_ap,
+            "Beneficio": round(beneficio,2),
+            "Banca": round(nueva_banca,2),
             "Apuesta": texto_ap
         }
         df_new = pd.DataFrame([nueva])
         if path_agenda.exists():
             df_old = pd.read_csv(path_agenda)
+            # migrar columnas viejas si faltan
+            for col in ["Importe","Resultado","Beneficio","Banca"]:
+                if col not in df_old.columns:
+                    df_old[col] = 0 if col!="Resultado" else "PENDIENTE"
             df_all = pd.concat([df_old, df_new], ignore_index=True)
         else:
             df_all = df_new
+        
+        # RECALCULA TODA LA BANCA EN ORDEN PARA NO DESFASE
+        df_all['Beneficio'] = pd.to_numeric(df_all['Beneficio'], errors='coerce').fillna(0)
+        banca_run = banca_inicial
+        bancas = []
+        for _, r in df_all.iterrows():
+            if r['Resultado'] == "PENDIENTE":
+                bancas.append(round(banca_run,2))
+            else:
+                banca_run += float(r['Beneficio'])
+                bancas.append(round(banca_run,2))
+        df_all['Banca'] = bancas
+        
         df_all.to_csv(path_agenda, index=False, encoding='utf-8-sig')
-        st.success(f"Guardada: {eq1_ap} vs {eq2_ap} {minuto_ap}' @{cuota_ap}")
+        st.success(f"Guardada: {eq1_ap} vs {eq2_ap} {resultado_ap} {beneficio:+.2f}€ | Banca {banca_run:.2f}€")
+        st.rerun()
 
-    # Mostrar agenda
+    # --- EDITAR RESULTADO RAPIDO ---
     if path_agenda.exists():
         df_ag = pd.read_csv(path_agenda)
-        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px'>AGENDA: {len(df_ag)} apuestas</div>", unsafe_allow_html=True)
-        for i, r in df_ag.tail(20).sort_index(ascending=False).iterrows():
-            st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b>{r['Fecha']}</b> | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} | {r['Apuesta']}</div>", unsafe_allow_html=True)
-        if st.button("🗑️ BORRAR TODO", key="borrar_agenda"):
-            path_agenda.unlink(missing_ok=True)
-            st.warning("Agenda borrada")
-# ================= FIN BLOQUE AGENDA APUESTA V1 =================
+        if not df_ag.empty:
+            # stats
+            tot = len(df_ag)
+            gan = len(df_ag[df_ag['Resultado']=="GANADA"]) if 'Resultado' in df_ag.columns else 0
+            per = len(df_ag[df_ag['Resultado']=="PERDIDA"]) if 'Resultado' in df_ag.columns else 0
+            pen = len(df_ag[df_ag['Resultado']=="PENDIENTE"]) if 'Resultado' in df_ag.columns else 0
+            stake_tot = pd.to_numeric(df_ag['Importe'], errors='coerce').fillna(0).sum() if 'Importe' in df_ag.columns else 0
+            st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px'>AGENDA: {tot} | G:{gan} P:{per} PEN:{pen} | Stake {stake_tot:.0f}€ | Benef {beneficio_total:+.2f}€ | Banca {banca_actual:.2f}€</div>", unsafe_allow_html=True)
+            
+            # tabla editable - cambia PENDIENTE a GANADA/PERDIDA y recalcula banca
+            for i, r in df_ag.tail(30).sort_index(ascending=False).iterrows():
+                col = "#0f8105" if r.get('Resultado')=="GANADA" else "#f31818" if r.get('Resultado')=="PERDIDA" else "#666"
+                benef = r.get('Beneficio',0)
+                banca_r = r.get('Banca', banca_actual)
+                st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b style='color:{col}'>[{r.get('Resultado','-')}]</b> {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = <b>{benef:+.2f}€</b> | Banca {banca_r}€ | {r['Apuesta'][:30]}</div>", unsafe_allow_html=True)
+            
+            c_edit1, c_edit2, c_edit3 = st.columns([1,1,1])
+            with c_edit1:
+                idx_edit = st.number_input("ID a editar (fila)", min_value=0, max_value=len(df_ag)-1, value=int(len(df_ag)-1), key="idx_edit_banca")
+            with c_edit2:
+                nuevo_res = st.selectbox("Nuevo resultado", ["GANADA","PERDIDA","NULA","PENDIENTE"], key="nuevo_res_banca")
+            with c_edit3:
+                if st.button("✏️ ACTUALIZAR RESULTADO", key="upd_banca"):
+                    df_ag.loc[idx_edit, 'Resultado'] = nuevo_res
+                    imp = float(df_ag.loc[idx_edit, 'Importe'])
+                    cuo = float(df_ag.loc[idx_edit, 'Cuota'])
+                    if nuevo_res == "GANADA":
+                        df_ag.loc[idx_edit, 'Beneficio'] = round(imp*cuo - imp,2)
+                    elif nuevo_res == "PERDIDA":
+                        df_ag.loc[idx_edit, 'Beneficio'] = round(-imp,2)
+                    else:
+                        df_ag.loc[idx_edit, 'Beneficio'] = 0.0
+                    # recalcular banca corrida
+                    banca_run = banca_inicial
+                    bancas = []
+                    for _, rr in df_ag.iterrows():
+                        if rr['Resultado'] == "PENDIENTE":
+                            bancas.append(round(banca_run,2))
+                        else:
+                            banca_run += float(rr['Beneficio'])
+                            bancas.append(round(banca_run,2))
+                    df_ag['Banca'] = bancas
+                    df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig')
+                    st.success(f"Actualizado ID {idx_edit} -> {nuevo_res} | Banca {banca_run:.2f}"); st.rerun()
 
- #######
+            if st.button("🗑 BORRAR TODO + RESET BANCA", key="borrar_agenda_v2"):
+                path_agenda.unlink(missing_ok=True)
+                st.warning("Agenda borrada - Banca vuelve a inicial")
+                st.rerun()
+# ================= FIN BLOQUE AGENDA V2 =================
 ###############
 ###############
 ###########################################################################
