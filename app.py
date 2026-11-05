@@ -4389,7 +4389,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     path_banca = pathlib.Path(__file__).parent.resolve() / "banca_config.csv"
 
     # --- CARGA CONFIG BANCA ---
-    banca_inicial_default = 100.0
+    banca_inicial_default = 346.0
     if path_banca.exists():
         try:
             df_bc = pd.read_csv(path_banca)
