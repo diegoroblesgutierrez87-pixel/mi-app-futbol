@@ -4372,7 +4372,83 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
 ###############
 ###############
 ###############
-###############
+########
+# 
+# 
+# 
+
+# ================= BLOQUE AGENDA APUESTA V1 =================
+# TAG: [AGENDA-APUESTA-V1]
+with st.expander("BLOQUE AGENDA APUESTA", expanded=False):
+    import pathlib, datetime
+    import pandas as pd
+
+    path_agenda = pathlib.Path(__file__).parent.resolve() / "agenda_apuestas.csv"
+    
+    # Cargar ligas y equipos desde tus CSVs base si existen
+    ligas_base = []
+    equipos_base = []
+    try:
+        for p in [pathlib.Path(__file__).parent.resolve() / "Base-Clasificacion-Jornada.csv", pathlib.Path("Base-Clasificacion-Jornada.csv")]:
+            if p.exists():
+                df_tmp = pd.read_csv(p, encoding='utf-8-sig')
+                ligas_base = sorted(df_tmp['League'].dropna().unique().tolist())
+                equipos_base = sorted(df_tmp['Team'].dropna().unique().tolist())
+                break
+    except:
+        pass
+    if not ligas_base:
+        ligas_base = ["2 BUNDESLIGA","LIGA 1 TUNEZ","2 LIGA AUSTRIA 2DA","PRIMERA DIVISION"]
+    if not equipos_base:
+        equipos_base = ["1 FC NURNBERG","1 FC KAISERSLAUTERN"]
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        liga_ap = st.selectbox("LIGA", ligas_base, key="liga_agenda")
+    with c2:
+        eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda")
+    with c3:
+        eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda")
+
+    c4, c5 = st.columns(2)
+    with c4:
+        minuto_ap = st.number_input("MINUTO APUESTA", min_value=0, max_value=120, value=80, key="min_agenda")
+    with c5:
+        cuota_ap = st.number_input("CUOTA", min_value=1.01, max_value=100.0, value=2.10, step=0.05, format="%.2f", key="cuota_agenda")
+
+    texto_ap = st.text_area("QUE METI", placeholder="Ej: GOL 80-90 QPR, OVER 1.5...", key="texto_agenda", height=80)
+
+    if st.button("💾 GUARDAR APUESTA", key="guardar_agenda"):
+        nueva = {
+            "Fecha": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Liga": liga_ap,
+            "Equipo1": eq1_ap,
+            "Equipo2": eq2_ap,
+            "Minuto": minuto_ap,
+            "Cuota": cuota_ap,
+            "Apuesta": texto_ap
+        }
+        df_new = pd.DataFrame([nueva])
+        if path_agenda.exists():
+            df_old = pd.read_csv(path_agenda)
+            df_all = pd.concat([df_old, df_new], ignore_index=True)
+        else:
+            df_all = df_new
+        df_all.to_csv(path_agenda, index=False, encoding='utf-8-sig')
+        st.success(f"Guardada: {eq1_ap} vs {eq2_ap} {minuto_ap}' @{cuota_ap}")
+
+    # Mostrar agenda
+    if path_agenda.exists():
+        df_ag = pd.read_csv(path_agenda)
+        st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px'>AGENDA: {len(df_ag)} apuestas</div>", unsafe_allow_html=True)
+        for i, r in df_ag.tail(20).sort_index(ascending=False).iterrows():
+            st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b>{r['Fecha']}</b> | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} | {r['Apuesta']}</div>", unsafe_allow_html=True)
+        if st.button("🗑️ BORRAR TODO", key="borrar_agenda"):
+            path_agenda.unlink(missing_ok=True)
+            st.warning("Agenda borrada")
+# ================= FIN BLOQUE AGENDA APUESTA V1 =================
+
+ #######
 ###############
 ###############
 ###########################################################################
