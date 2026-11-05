@@ -3055,7 +3055,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = f"{_ht_txt}"
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"{res_txt} {mins_txt}{rival_txt}"
+                            inner = f"{res_txt}{rival_txt} {mins_txt}"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3689,7 +3689,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         elif m1: mins_txt_clean = " ".join(m1) + f"{ht_clean}"
                         elif m2: mins_txt_clean = f"{ht_clean} " + " ".join(m2)
                         else: mins_txt_clean = f"{ht_clean}"
-                        partidos_pred_copy_fix2.append(f"J{int(j_fix2)}|{h} {ft_clean} {a} {mins_txt_clean} {estado}")
+                        # NUEVO ORDEN: [E)]J10([2-2] CLASIFICACION) mins
+                        # saca el texto limpio del rival sin html para el copy
+                        try:
+                            _rival_copy = f" {h} vs {a}"
+                            # si tienes clasificacion, usala
+                            if 'rival_txt' in locals() or 'vs_txt' in locals():
+                                import re
+                                # vs_txt ya lo tienes arriba para huecos, para no huecos usa rival_txt limpio
+                                _rv_clean = re.sub(r'<[^>]+>', '', rival_txt).strip() if 'rival_txt' in locals() else f" {h} vs {a}"
+                                partidos_pred_copy_fix2.append(f"{badge}J{int(j_fix2)}({ft_clean} {_rv_clean}) {mins_txt_clean}")
+                            else:
+                                partidos_pred_copy_fix2.append(f"J{int(j_fix2)}({ft_clean} {_rival_copy}) {mins_txt_clean} {estado}")
+                        except:
+                            partidos_pred_copy_fix2.append(f"J{int(j_fix2)}({ft_clean} {h} vs {a}) {mins_txt_clean} {estado}")
 
                     if st.session_state.get("show_partidos_fix2", False):
                         st.markdown(f"<div style='line-height:1.15;white-space:normal;word-break:break-word;margin:0 0 2px 0;padding:0'>{html_lineas_fix2}</div>", unsafe_allow_html=True)
