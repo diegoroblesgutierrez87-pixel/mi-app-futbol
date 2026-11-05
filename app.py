@@ -4430,7 +4430,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
 
     c_bank1, c_bank2, c_bank3 = st.columns(3)
     with c_bank1:
-        banca_inicial = st.number_input("BANCA INICIAL", min_value=1.0, value=float(banca_inicial_default), step=10.0, key="banca_inicial_v2")
+        banca_inicial = st.number_input("BANCA INICIAL", min_value=1.0, value=346.0, step=10.0, key="banca_inicial_v2")
         if st.button("💾 GUARDAR BANCA INICIAL", key="save_banca"):
             pd.DataFrame([{"banca_inicial": banca_inicial, "fecha": datetime.datetime.now().strftime("%d/%m/%Y")}]).to_csv(path_banca, index=False)
             st.success(f"Banca inicial guardada: {banca_inicial}"); st.rerun()
