@@ -2958,7 +2958,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 pts_opp_html = _pts_gris(r_opp)
                                 if r_opp is not None:
                                     if es_loc:
-                                        rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span>{pts_self_html} <span style='color:#888'>vs</span> {pos_opp_html}{opp_team}{pts_opp_html}</span>"
+                                        rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span>{pts_self_html} <span style='color:#888'>vs</span> {pos_opp_html}<span style='color:#888'>{opp_team}</span>{pts_opp_html}</span>"
                                     else:
                                         rival_txt = f" <span style='font-size:9px;font-weight:400'>{pos_opp_html}<span style='color:#888'>{opp_team}</span>{pts_opp_html} <span style='color:#888'>vs</span> {pos_self_html}<span style='color:#fff;font-weight:900'>{self_team}</span>{pts_self_html}</span>"
                                 else:
