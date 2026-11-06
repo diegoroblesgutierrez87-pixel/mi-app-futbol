@@ -4558,7 +4558,23 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                 col = "#0f8105" if r.get('Resultado')=="GANADA" else "#f31818" if r.get('Resultado')=="PERDIDA" else "#666"
                 benef = r.get('Beneficio',0)
                 banca_r = r.get('Banca', banca_actual)
-                st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px;border-bottom:1px solid #ddd'><b style='color:{col}'>[{r.get('Resultado','-')}]</b> {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = <b>{benef:+.2f}€</b> | Banca {banca_r}€ | {r['Apuesta'][:30]}</div>", unsafe_allow_html=True)
+                c_txt, c_sel, c_btn = st.columns([4,1,1])
+                with c_txt:
+                    st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px'><b style='color:{col}'>[{r.get('Resultado','-')}]</b> ID:{i} {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = <b>{benef:+.2f}€</b> | Banca {banca_r}€ | {r['Apuesta'][:30]}</div>", unsafe_allow_html=True)
+                with c_sel:
+                    nuevo = st.selectbox(" ", ["GANADA","PERDIDA","NULA","PENDIENTE"], index=["GANADA","PERDIDA","NULA","PENDIENTE"].index(r.get('Resultado','PENDIENTE')) if r.get('Resultado') in ["GANADA","PERDIDA","NULA","PENDIENTE"] else 3, key=f"sel_{i}", label_visibility="collapsed")
+                with c_btn:
+                    if st.button("✏️", key=f"upd_{i}"):
+                        df_ag.loc[i, 'Resultado'] = nuevo
+                        imp = float(df_ag.loc[i, 'Importe']); cuo = float(df_ag.loc[i, 'Cuota'])
+                        df_ag.loc[i, 'Beneficio'] = round(imp*cuo-imp,2) if nuevo=="GANADA" else round(-imp,2) if nuevo=="PERDIDA" else 0.0
+                        banca_run = banca_inicial; bancas=[]
+                        for _, rr in df_ag.iterrows():
+                            if rr['Resultado']=="PENDIENTE": bancas.append(round(banca_run,2))
+                            else: banca_run += float(rr['Beneficio']); bancas.append(round(banca_run,2))
+                        df_ag['Banca'] = bancas
+                        df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig')
+                        st.rerun()
             
             c_edit1, c_edit2, c_edit3 = st.columns([1,1,1])
             with c_edit1:
