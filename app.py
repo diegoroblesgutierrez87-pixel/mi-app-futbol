@@ -4556,25 +4556,36 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
             # tabla editable - cambia PENDIENTE a GANADA/PERDIDA y recalcula banca
             for i, r in df_ag.tail(30).sort_index(ascending=False).iterrows():
                 col = "#0f8105" if r.get('Resultado')=="GANADA" else "#f31818" if r.get('Resultado')=="PERDIDA" else "#666"
-                benef = r.get('Beneficio',0)
-                banca_r = r.get('Banca', banca_actual)
-                c_txt, c_sel, c_btn = st.columns([4,1,1])
-                with c_txt:
-                    st.markdown(f"<div style='font-family:monospace;font-size:11px;padding:4px'><b style='color:{col}'>[{r.get('Resultado','-')}]</b> ID:{i} {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = <b>{benef:+.2f}€</b> | Banca {banca_r}€ | {r['Apuesta'][:30]}</div>", unsafe_allow_html=True)
-                with c_sel:
-                    nuevo = st.selectbox(" ", ["GANADA","PERDIDA","NULA","PENDIENTE"], index=["GANADA","PERDIDA","NULA","PENDIENTE"].index(r.get('Resultado','PENDIENTE')) if r.get('Resultado') in ["GANADA","PERDIDA","NULA","PENDIENTE"] else 3, key=f"sel_{i}", label_visibility="collapsed")
-                with c_btn:
-                    if st.button("✏️", key=f"upd_{i}"):
-                        df_ag.loc[i, 'Resultado'] = nuevo
-                        imp = float(df_ag.loc[i, 'Importe']); cuo = float(df_ag.loc[i, 'Cuota'])
-                        df_ag.loc[i, 'Beneficio'] = round(imp*cuo-imp,2) if nuevo=="GANADA" else round(-imp,2) if nuevo=="PERDIDA" else 0.0
-                        banca_run = banca_inicial; bancas=[]
-                        for _, rr in df_ag.iterrows():
-                            if rr['Resultado']=="PENDIENTE": bancas.append(round(banca_run,2))
-                            else: banca_run += float(rr['Beneficio']); bancas.append(round(banca_run,2))
-                        df_ag['Banca'] = bancas
-                        df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig')
-                        st.rerun()
+                benef = r.get('Beneficio',0); banca_r = r.get('Banca', banca_actual)
+                with st.expander(f"[{r.get('Resultado','-')}] ID:{i} {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {benef:+.2f}€", expanded=False):
+                    c_e1, c_e2 = st.columns(2)
+                    with c_e1:
+                        n_liga = st.text_input("LIGA", value=str(r.get('Liga','')), key=f"e_liga_{i}")
+                        n_eq1 = st.text_input("EQUIPO 1", value=str(r.get('Equipo1','')), key=f"e_eq1_{i}")
+                        n_min = st.number_input("MINUTO", min_value=0, max_value=120, value=int(float(r.get('Minuto',80))), key=f"e_min_{i}")
+                        n_imp = st.number_input("IMPORTE €", min_value=0.5, value=float(r.get('Importe',10)), key=f"e_imp_{i}")
+                    with c_e2:
+                        n_eq2 = st.text_input("EQUIPO 2", value=str(r.get('Equipo2','')), key=f"e_eq2_{i}")
+                        n_cuota = st.number_input("CUOTA", min_value=1.01, value=float(r.get('Cuota',2.1)), step=0.05, key=f"e_cuota_{i}")
+                        n_res = st.selectbox("RESULTADO", ["GANADA","PERDIDA","NULA","PENDIENTE"], index=["GANADA","PERDIDA","NULA","PENDIENTE"].index(r.get('Resultado','PENDIENTE')) if r.get('Resultado') in ["GANADA","PERDIDA","NULA","PENDIENTE"] else 3, key=f"e_res_{i}")
+                    n_txt = st.text_input("QUE METI", value=str(r.get('Apuesta','')), key=f"e_txt_{i}")
+                    c_g, c_b = st.columns(2)
+                    with c_g:
+                        if st.button("💾 GUARDAR CAMBIOS", key=f"save_e_{i}", use_container_width=True):
+                            df_ag.loc[i,'Liga']=n_liga; df_ag.loc[i,'Equipo1']=n_eq1; df_ag.loc[i,'Equipo2']=n_eq2; df_ag.loc[i,'Minuto']=n_min; df_ag.loc[i,'Cuota']=n_cuota; df_ag.loc[i,'Importe']=n_imp; df_ag.loc[i,'Resultado']=n_res; df_ag.loc[i,'Apuesta']=n_txt
+                            df_ag.loc[i,'Beneficio']=round(n_imp*n_cuota-n_imp,2) if n_res=="GANADA" else round(-n_imp,2) if n_res=="PERDIDA" else 0.0
+                            banca_run=banca_inicial; bancas=[]
+                            for _, rr in df_ag.iterrows():
+                                if rr['Resultado']=="PENDIENTE": bancas.append(round(banca_run,2))
+                                else: banca_run+=float(rr['Beneficio']); bancas.append(round(banca_run,2))
+                            df_ag['Banca']=bancas; df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig'); st.rerun()
+                    with c_b:
+                        if st.button("🗑 BORRAR ESTA", key=f"del_e_{i}", use_container_width=True):
+                            df_ag = df_ag.drop(index=i); banca_run=banca_inicial; bancas=[]
+                            for _, rr in df_ag.iterrows():
+                                if rr['Resultado']=="PENDIENTE": bancas.append(round(banca_run,2))
+                                else: banca_run+=float(rr['Beneficio']); bancas.append(round(banca_run,2))
+                            df_ag['Banca']=bancas; df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig'); st.rerun()
             
             c_edit1, c_edit2, c_edit3 = st.columns([1,1,1])
             with c_edit1:
