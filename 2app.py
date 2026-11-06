@@ -4046,16 +4046,14 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>{pos_a_html}"
                         _c_h = "#00c800" if hg>0 else "#888"
                         _c_a = "#ff2a2a" if ag>0 else "#888"
-                        res_txt=f"<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {ht_gris}"
-                        teams_txt=f"{h_txt} vs {a_txt}"
+                        res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if hg>ag else "E" if hg==ag else "P"
                     else:
                         h_txt=f"{pos_h_html}<span style='color:#888888;font-weight:700'>{h_team}</span>"
                         a_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{a_team}</span>{pos_a_html}"
                         _c_h = "#ff2a2a" if hg>0 else "#888"
                         _c_a = "#00c800" if ag>0 else "#888"
-                        res_txt=f"<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {ht_gris}"
-                        teams_txt=f"{h_txt} vs {a_txt}"
+                        res_txt=f"{h_txt} <span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {a_txt} {ht_gris}"
                         letra="G" if ag>hg else "E" if ag==hg else "P"
                     badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                     # --- FILTRO BTTS SI/NO ---
@@ -4101,9 +4099,9 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             elif mins_2p: mins_txt=" ".join(mins_2p)
                             else: mins_txt=""
                     if tiene_en_rango and mins_txt:
-                        inner=f"{res_txt} ({teams_txt} {mins_txt}{pos_txt})"
+                        inner=f"{res_txt} {mins_txt}{pos_txt}"
                     elif tiene_en_rango:
-                        inner=f"{res_txt} ({teams_txt}{pos_txt})"
+                        inner=f"{res_txt}{pos_txt}"
                     else:
                         if es_loc:
                             _c_h_f = "#00c800" if hg>0 else "#888"
@@ -4125,7 +4123,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                 except:
                     inner, es_loc = total_por_j[jn]
                     badge = ""
-                todo_list.append(f"{badge}){j_tag} {inner}")
+                todo_list.append(f"{badge}){j_tag}({inner})")
             todo_txt="<br>".join(todo_list) if todo_list else "-"
             filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None or ambos_marcan_fix3 != "-") else total
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>[{todo_txt}]"
