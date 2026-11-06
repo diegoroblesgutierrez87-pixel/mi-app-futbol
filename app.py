@@ -4589,6 +4589,27 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                     df_ag.to_csv(path_agenda, index=False, encoding='utf-8-sig')
                     st.success(f"Actualizado ID {idx_edit} -> {nuevo_res} | Banca {banca_run:.2f}"); st.rerun()
 
+            # --- COPIAR ACERTADAS / FALLADAS ---
+            try:
+                _gan = df_ag[df_ag['Resultado']=="GANADA"]
+                _per = df_ag[df_ag['Resultado']=="PERDIDA"]
+                _txt_gan = "\n".join([f"✅ GANADA | {r['Fecha']} | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _gan.iterrows()]) or "Sin acertadas"
+                _txt_per = "\n".join([f"❌ FALLADA | {r['Fecha']} | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _per.iterrows()]) or "Sin falladas"
+                import html as _html_ag, streamlit.components.v1 as _comp_ag
+                _txt_todo = f"ACERTADAS ({len(_gan)}):\n{_txt_gan}\n\nFALLADAS ({len(_per)}):\n{_txt_per}"
+                _comp_ag.html(f"""
+                <textarea id="txt_gan_ag" style="position:absolute;left:-9999px;">{_html_ag.escape(_txt_gan)}</textarea>
+                <textarea id="txt_per_ag" style="position:absolute;left:-9999px;">{_html_ag.escape(_txt_per)}</textarea>
+                <textarea id="txt_todo_ag" style="position:absolute;left:-9999px;">{_html_ag.escape(_txt_todo)}</textarea>
+                <div style="display:flex;gap:6px">
+                <button onclick="navigator.clipboard.writeText(document.getElementById('txt_gan_ag').value).then(()=>{{this.innerText='✓ COPIADO'}})" style="flex:1;background:#0f8105;color:#fff;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;">📋 COPIAR ACERTADAS ({len(_gan)})</button>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('txt_per_ag').value).then(()=>{{this.innerText='✓ COPIADO'}})" style="flex:1;background:#f31818;color:#fff;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;">📋 COPIAR FALLADAS ({len(_per)})</button>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('txt_todo_ag').value).then(()=>{{this.innerText='✓ COPIADO'}})" style="flex:1;background:#0A2342;color:#fff;border:none;border-radius:6px;padding:10px;font-weight:900;cursor:pointer;">📋 COPIAR TODO</button>
+                </div>
+                """, height=45)
+            except:
+                pass
+
             if st.button("🗑 BORRAR TODO + RESET BANCA", key="borrar_agenda_v2"):
                 path_agenda.unlink(missing_ok=True)
                 st.warning("Agenda borrada - Banca vuelve a inicial")
