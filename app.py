@@ -4085,10 +4085,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             elif mins_1p: mins_txt=" ".join(mins_1p)
                             elif mins_2p: mins_txt=" ".join(mins_2p)
                             else: mins_txt=""
-                    if tiene_en_rango and mins_txt:
-                        inner=f"{res_txt} ({teams_txt} {mins_txt}{pos_txt})"
-                    elif tiene_en_rango:
-                        inner=f"{res_txt} ({teams_txt}{pos_txt})"
+                    if tiene_en_rango:
+                        inner=f"<span style='white-space:nowrap'>{res_txt} ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'>{mins_txt}</span>"
                     else:
                         if es_loc:
                             _c_h_f = "#00c800" if hg>0 else "#888"
@@ -4110,8 +4108,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                 except:
                     inner, es_loc = total_por_j[jn]
                     badge = ""
-                todo_list.append(f"{badge}){j_tag} {inner}")
-            todo_txt="<br>".join(todo_list) if todo_list else "-"
+                todo_list.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0;padding-bottom:2px'>{badge} {j_tag} {inner}</div>")
+            todo_txt="".join(todo_list) if todo_list else "-"
             filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None or ambos_marcan_fix3 != "-") else total
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>[{todo_txt}]"
             bloques_html.append(linea_res2)
@@ -4126,7 +4124,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             except:
                 _resumen_copy = f"FILTROS FIX3 | LIGA={liga_j_sel} | EQUIPOS={eqs_j} | GOLES_PARTE={goles_parte2} | MIN {min_desde_raw_fix3}-{min_hasta_raw_fix3}"
             def _strip_fix3(s):
-                s = s.replace('<br>', '\n').replace('<br/>','\n').replace('<br />','\n')
+                s = s.replace('</div>', '\n').replace('<br>', '\n').replace('<br/>','\n').replace('<br />','\n')
                 return _re_fix3.sub(r'<[^>]+>', '', s).replace('&nbsp;',' ').strip()
             _bloques_clean = "\n\n".join([_strip_fix3(b) for b in bloques_html]) if bloques_html else "SIN DATOS FIX3"
             _texto_final_fix3 = _resumen_copy + "\n\n" + _bloques_clean
