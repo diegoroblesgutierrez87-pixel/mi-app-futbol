@@ -4039,7 +4039,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         a_txt=f"<span style='color:#FFFFFF;font-weight:900;'>{a_team}</span>{pos_a_html}"
                         _c_h = "#ff2a2a" if hg>0 else "#888"
                         _c_a = "#00c800" if ag>0 else "#888"
-                        res_txt=f"<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {ht_gris}"
+                        res_txt=f"[<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span>] {ht_gris}"
                         teams_txt=f"{h_txt} vs {a_txt}"
                         letra="G" if ag>hg else "E" if ag==hg else "P"
                     badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
@@ -4095,7 +4095,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         else:
                             _c_h_f = "#ff2a2a" if hg>0 else "#888"
                             _c_a_f = "#00c800" if ag>0 else "#888"
-                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
+                            ft_solo=f"[<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>]"
                         inner=f"<span style='color:#888'>{h_team} vs {a_team} {ht_gris} {ft_solo}</span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
