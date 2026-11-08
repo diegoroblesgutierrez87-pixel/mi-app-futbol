@@ -4561,7 +4561,29 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
             per = len(df_ag[df_ag['Resultado']=="PERDIDA"]) if 'Resultado' in df_ag.columns else 0
             pen = len(df_ag[df_ag['Resultado']=="PENDIENTE"]) if 'Resultado' in df_ag.columns else 0
             stake_tot = pd.to_numeric(df_ag['Importe'], errors='coerce').fillna(0).sum() if 'Importe' in df_ag.columns else 0
-            st.markdown(f"<div style='font-family:monospace;font-size:11px;background:#0A2342;color:#fff;padding:6px'>AGENDA: {tot} | G:{gan} P:{per} PEN:{pen} | Stake {stake_tot:.0f}€ | Benef {beneficio_total:+.2f}€ | Banca {banca_actual:.2f}€</div>", unsafe_allow_html=True)
+            # --- DONDE GANO / DONDE FALLO ---
+            try:
+                _a = df_ag.copy()
+                _a['Importe'] = pd.to_numeric(_a['Importe'], errors='coerce').fillna(0)
+                _a['Beneficio'] = pd.to_numeric(_a['Beneficio'], errors='coerce').fillna(0)
+                _a['Minuto'] = pd.to_numeric(_a['Minuto'], errors='coerce').fillna(0)
+                _a['Cuota'] = pd.to_numeric(_a['Cuota'], errors='coerce').fillna(0)
+                _a = _a[_a['Resultado'].isin(['GANADA','PERDIDA'])]
+                def _resumen_grupo(d, col):
+                    out=[]
+                    for k, g in d.groupby(col):
+                        n=len(g); gw=(g['Resultado']=='GANADA').sum(); ben=g['Beneficio'].sum(); stak=g['Importe'].sum()
+                        roi=(ben/stak*100) if stak else 0
+                        out.append(f"{k}: {gw}/{n} ({gw/n*100:.0f}%) | {ben:+.0f}€ | ROI {roi:+.0f}%")
+                    return "<br>".join(out) if out else "-"
+                _a['MIN_RANGO'] = pd.cut(_a['Minuto'], [-1,60,75,85,90,200], labels=["0-60'","60-75'","75-85'","85-90'","90'+"])
+                _a['CUOTA_RANGO'] = pd.cut(_a['Cuota'], [0,2,3,4,100], labels=["@1-2","@2-3","@3-4","@4+"])
+                _liga_txt = _resumen_grupo(_a, 'Liga')
+                _min_txt = _resumen_grupo(_a, 'MIN_RANGO')
+                _cuota_txt = _resumen_grupo(_a, 'CUOTA_RANGO')
+                st.markdown(f"<div style='font-family:monospace;font-size:10px;background:#111;color:#fff;padding:8px;border:1px solid #333;border-radius:6px;line-height:1.7'><b style='color:#00E676'>POR LIGA:</b><br>{_liga_txt}<br><br><b style='color:#FFD600'>POR MINUTO:</b><br>{_min_txt}<br><br><b style='color:#00BFFF'>POR CUOTA:</b><br>{_cuota_txt}</div>", unsafe_allow_html=True)
+            except Exception as _e:
+                st.caption(f"Sin stats: {_e}")
             
             # tabla editable - cambia PENDIENTE a GANADA/PERDIDA y recalcula banca
             for i, r in df_ag.tail(30).sort_index(ascending=False).iterrows():
