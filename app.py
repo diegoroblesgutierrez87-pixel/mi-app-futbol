@@ -3051,7 +3051,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = f"{_ht_txt}"
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='white-space:nowrap;font-size:9px'>{res_txt} {_ht_txt}{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px'>{mins_txt}</span>"
+                            inner = f"<span style='white-space:nowrap;font-size:9px'>{res_txt} {rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
