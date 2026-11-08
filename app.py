@@ -3032,26 +3032,20 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 _ht_txt = f"<span style='color:#888'>[</span><span style='color:{_c1};font-weight:900'>{_hthg_fix}</span><span style='color:#888'>-</span><span style='color:{_c2};font-weight:900'>{_htag_fix}</span><span style='color:#888'>]</span>"
                             # HT GRIS SIEMPRE VISIBLE + FINAL COLOREADO SIEMPRE
                             if goles_parte_f == "1ªParte":
-                                if mins_1p:
-                                    mins_txt = f"{_ht_txt} " + " ".join(mins_1p)
-                                else:
-                                    mins_txt = f"{_ht_txt}"
+                                mins_txt = " ".join(mins_1p) if mins_1p else ""
                             elif goles_parte_f == "2ªParte":
-                                if mins_2p:
-                                    mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
-                                else:
-                                    mins_txt = f"{_ht_txt}"
+                                mins_txt = " ".join(mins_2p) if mins_2p else ""
                             else:
                                 if mins_1p and mins_2p:
-                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt} " + " ".join(mins_2p)
-                                elif mins_1p and not mins_2p:
-                                    mins_txt = " ".join(mins_1p) + f" {_ht_txt}"
-                                elif mins_2p and not mins_1p:
-                                    mins_txt = f"{_ht_txt} " + " ".join(mins_2p)
+                                    mins_txt = " ".join(mins_1p) + " <span style='color:#888'>|</span> " + " ".join(mins_2p)
+                                elif mins_1p:
+                                    mins_txt = " ".join(mins_1p)
+                                elif mins_2p:
+                                    mins_txt = " ".join(mins_2p)
                                 else:
-                                    mins_txt = f"{_ht_txt}"
+                                    mins_txt = ""
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='white-space:nowrap;font-size:9px'>{res_txt} {rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px'>{mins_txt}</span>"
+                            inner = f"<span style='white-space:nowrap;font-size:9px'>{res_txt} {_ht_txt}{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
