@@ -4403,6 +4403,12 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     path_agenda = pathlib.Path(__file__).parent.resolve() / "agenda_apuestas.csv"
     path_banca = pathlib.Path(__file__).parent.resolve() / "banca_config.csv"
 
+    def _norm_liga(x):
+        s = str(x or "").strip().upper()
+        if s in ["LIGA 1 INDON", "LIGA 1 INDON."]: s = "LIGA 1 INDONESIA"
+        if s == "SERIE A": s = "SERIE A ITALIA"
+        return s
+
     # --- CARGA CONFIG BANCA ---
     banca_inicial_default = 346.0
     if path_banca.exists():
@@ -4511,6 +4517,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         
         nueva_banca = banca_actual + beneficio if resultado_ap != "PENDIENTE" else banca_actual
 
+        liga_ap = _norm_liga(liga_ap)
         nueva = {
             "Fecha": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
             "Liga": liga_ap,
@@ -4569,6 +4576,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                 _a['Minuto'] = pd.to_numeric(_a['Minuto'], errors='coerce').fillna(0)
                 _a['Cuota'] = pd.to_numeric(_a['Cuota'], errors='coerce').fillna(0)
                 _a = _a[_a['Resultado'].isin(['GANADA','PERDIDA'])]
+                _a['Liga'] = _a['Liga'].apply(_norm_liga)
                 def _resumen_grupo(d, col):
                     rows=[]
                     for k, g in d.groupby(col):
@@ -4613,7 +4621,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                     c_g, c_b = st.columns(2)
                     with c_g:
                         if st.button("💾 GUARDAR CAMBIOS", key=f"save_e_{i}", use_container_width=True):
-                            df_ag.loc[i,'Liga']=n_liga; df_ag.loc[i,'Equipo1']=n_eq1; df_ag.loc[i,'Equipo2']=n_eq2; df_ag.loc[i,'Minuto']=n_min; df_ag.loc[i,'Cuota']=n_cuota; df_ag.loc[i,'Importe']=n_imp; df_ag.loc[i,'Resultado']=n_res; df_ag.loc[i,'Apuesta']=n_txt
+                            df_ag.loc[i,'Liga']=_norm_liga(n_liga); df_ag.loc[i,'Equipo1']=n_eq1; df_ag.loc[i,'Equipo2']=n_eq2; df_ag.loc[i,'Minuto']=n_min; df_ag.loc[i,'Cuota']=n_cuota; df_ag.loc[i,'Importe']=n_imp; df_ag.loc[i,'Resultado']=n_res; df_ag.loc[i,'Apuesta']=n_txt
                             df_ag.loc[i,'Beneficio']=round(n_imp*n_cuota-n_imp,2) if n_res=="GANADA" else round(-n_imp,2) if n_res=="PERDIDA" else 0.0
                             banca_run=banca_inicial; bancas=[]
                             for _, rr in df_ag.iterrows():
