@@ -3051,7 +3051,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = f"{_ht_txt}"
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"{res_txt} {_ht_txt}{rival_txt} {mins_txt}"
+                            inner = f"{res_txt} {_ht_txt}{rival_txt}<br><span style='display:block;margin:2px 0 0 18px;white-space:nowrap'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3183,6 +3183,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     except:
                         _clas_txt = ""
                     linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>{_clas_txt}<br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
+                    linea_res = linea_res.replace(" vs ", " <span style='white-space:nowrap'>vs</span> ")
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
                     try:
@@ -3735,7 +3736,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         try:
             if lista_resumen_fix2:
                 resumen_html = "".join([f"<div style='border:2px solid #FFFFFF; border-radius:10px; padding:10px; margin:14px 0; background:#222; box-shadow:0 0 6px #000;'>{r}</div>" for r in lista_resumen_fix2])
-                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; white-space:pre-wrap; line-height:1.6;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; line-height:1.6; overflow-wrap:break-word;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
         except:
             pass
         try:
