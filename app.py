@@ -4089,8 +4089,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         inner=f"<span style='white-space:nowrap'>{res_txt} ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'>{mins_txt}</span>"
                     else:
                         _teams_gris = teams_txt.replace("#FFFFFF", "#888888").replace("#00BFFF", "#888")
-                        _res_gris = res_txt.replace("#00c800", "#888").replace("#ff2a2a", "#888").replace("#D0D0D0", "#888")
-                        inner=f"<span style='white-space:nowrap'>{_res_gris} ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'></span>"
+                        inner=f"<span style='white-space:nowrap'>{res_txt} ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'></span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
