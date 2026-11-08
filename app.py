@@ -4567,7 +4567,10 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
             for i, r in df_ag.tail(30).sort_index(ascending=False).iterrows():
                 col = "#0f8105" if r.get('Resultado')=="GANADA" else "#f31818" if r.get('Resultado')=="PERDIDA" else "#666"
                 benef = r.get('Beneficio',0); banca_r = r.get('Banca', banca_actual)
-                st.markdown(f"<div style='background:#1a1a1a;color:#fff;font-family:monospace;font-size:11px;font-weight:900;padding:6px;border-radius:6px 6px 0 0'>[<span style='color:{col}'>{r.get('Resultado','-')}</span>] ID:{i} {r['Fecha']} | {r['Liga'][:12]} | {r['Equipo1'][:10]} vs {r['Equipo2'][:10]} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {benef:+.2f}€ | Banca {banca_r}€</div>", unsafe_allow_html=True)
+                _liga_s = str(r.get('Liga','') or '')[:12]
+                _e1_s = str(r.get('Equipo1','') or '')[:10]
+                _e2_s = str(r.get('Equipo2','') or '')[:10]
+                st.markdown(f"<div style='background:#1a1a1a;color:#fff;font-family:monospace;font-size:11px;font-weight:900;padding:6px;border-radius:6px 6px 0 0'>[<span style='color:{col}'>{r.get('Resultado','-')}</span>] ID:{i} {r.get('Fecha','')} | {_liga_s} | {_e1_s} vs {_e2_s} | {r.get('Minuto','')}' | @{r.get('Cuota','')} x {r.get('Importe',0)}€ = {benef:+.2f}€ | Banca {banca_r}€</div>", unsafe_allow_html=True)
                 with st.expander("✏️ EDITAR ESTA APUESTA", expanded=False):
                     c_e1, c_e2 = st.columns(2)
                     with c_e1:
