@@ -3143,7 +3143,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)</span>"
                                 else:
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} vs {_a0}</span>"
-                                _txt = f"{_badge}){j_tag}([{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]){vs_txt}"
+                                _txt = f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0;padding-bottom:2px'>{_badge} {j_tag} <span style='white-space:nowrap;font-size:9px'>[{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]{vs_txt}</span></div>"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
