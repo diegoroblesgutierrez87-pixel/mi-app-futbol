@@ -2409,7 +2409,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     tiene_manuales_fix2 = (len(equipos_manuales_1_fix2) > 0 or len(equipos_manuales_2_fix2) > 0)
 
     if not partidos_sel_fix2 and not tiene_manuales_fix2:
-        st.caption("Selecciona partido futuro o equipo manual FIX2")
+        pass
     else:
         partidos_pred_copy_fix2 = []
         lista_resumen_fix2 = []
