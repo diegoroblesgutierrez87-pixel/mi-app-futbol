@@ -2295,8 +2295,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
         resultados_pred_sel_fix2 = st.multiselect("Resultado 1ªP / 2ªP", opciones_res_fix2, default=[], key="filtro_ht_ft_unico_2026_v9_fix2", placeholder="Ej: 0-0_1ªP")
         # AMBOS MARCAN movido debajo de Overs
-        res_live_tipo_fix2 = st.selectbox("Resultado LIVE", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_live_tipo_fix2")
-        min_live_raw_fix2 = st.text_input("MIN LIVE", key="min_live_fix2", placeholder="Ej: 76")
+        res_live_tipo_fix2 = "TODOS"
+        min_live_raw_fix2 = ""
 
     # --- NUEVO DESPLEGABLE LIGAS PARA FILTRAR EQUIPOS ---
     ligas_hist_fix2 = ["TODAS"] + sorted(df_fix2['League'].dropna().astype(str).unique().tolist()) if not df_fix2.empty and 'League' in df_fix2.columns else ["TODAS"]
