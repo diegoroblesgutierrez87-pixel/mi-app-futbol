@@ -4425,7 +4425,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         pass
     if not ligas_base:
         ligas_base = ["2 BUNDESLIGA","LIGA 1 TUNEZ","2 LIGA AUSTRIA 2DA","PRIMERA DIVISION"]
-    for _lm in ["2ª Singapur","Ligas random"]:
+    for _lm in ["2ª Singapur","Ligas random","Combinadas"]:
         if _lm not in ligas_base:
             ligas_base.append(_lm)
     if not equipos_base:
@@ -4461,16 +4461,24 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     c1, c2, c3 = st.columns(3)
     with c1:
         liga_ap = st.selectbox("LIGA", ligas_base, key="liga_agenda_v2")
-    with c2:
-        if liga_ap in ["2ª Singapur","Ligas random"]:
-            eq1_ap = st.text_input("EQUIPO 1 (LOCAL)", value="", key="eq1_manual_v2")
-        else:
-            eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda_v2")
-    with c3:
-        if liga_ap in ["2ª Singapur","Ligas random"]:
-            eq2_ap = st.text_input("EQUIPO 2 (VISITANTE)", value="", key="eq2_manual_v2")
-        else:
-            eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda_v2")
+    if liga_ap == "Combinadas":
+        liga_manual_ap = st.text_input("LIGA A MANO", value="", key="liga_combi_v2", placeholder="Ej: COMBINADA CHAMPIONS + LIGA")
+        liga_ap = liga_manual_ap.strip() if liga_manual_ap.strip() else "Combinadas"
+        eq_combi_txt = st.text_area("EQUIPOS COMBINADA (1 por línea)", placeholder="QPR\nSTURM GRAZ\nNURNBERG", key="eq_combi_v2", height=70)
+        _eqs_combi = [x.strip() for x in eq_combi_txt.splitlines() if x.strip()]
+        eq1_ap = " + ".join(_eqs_combi) if _eqs_combi else ""
+        eq2_ap = ""
+    else:
+        with c2:
+            if liga_ap in ["2ª Singapur","Ligas random"]:
+                eq1_ap = st.text_input("EQUIPO 1 (LOCAL)", value="", key="eq1_manual_v2")
+            else:
+                eq1_ap = st.selectbox("EQUIPO 1 (LOCAL)", equipos_base, key="eq1_agenda_v2")
+        with c3:
+            if liga_ap in ["2ª Singapur","Ligas random"]:
+                eq2_ap = st.text_input("EQUIPO 2 (VISITANTE)", value="", key="eq2_manual_v2")
+            else:
+                eq2_ap = st.selectbox("EQUIPO 2 (VISITANTE)", equipos_base, key="eq2_agenda_v2")
 
     c4, c5, c6, c7 = st.columns(4)
     with c4:
