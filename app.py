@@ -4031,7 +4031,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         a_txt=f"<span style='color:#888888;font-weight:700'>{a_team}</span>{pos_a_html}"
                         _c_h = "#00c800" if hg>0 else "#888"
                         _c_a = "#ff2a2a" if ag>0 else "#888"
-                        res_txt=f"<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span> {ht_gris}"
+                        res_txt=f"[<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span>] {ht_gris}"
                         teams_txt=f"{h_txt} vs {a_txt}"
                         letra="G" if hg>ag else "E" if hg==ag else "P"
                     else:
@@ -4091,7 +4091,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         if es_loc:
                             _c_h_f = "#00c800" if hg>0 else "#888"
                             _c_a_f = "#ff2a2a" if ag>0 else "#888"
-                            ft_solo=f"<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>"
+                            ft_solo=f"[<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>]"
                         else:
                             _c_h_f = "#ff2a2a" if hg>0 else "#888"
                             _c_a_f = "#00c800" if ag>0 else "#888"
