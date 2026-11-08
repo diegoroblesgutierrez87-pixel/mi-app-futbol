@@ -4505,7 +4505,33 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         benef_preview = -importe_ap
     else:
         benef_preview = 0.0
-    st.caption(f"Preview: Si {resultado_ap} -> Beneficio {benef_preview:+.2f}€ -> Nueva banca {banca_actual + benef_preview:.2f}€")
+    # --- ALARMA PRE-GUARDAR: EDGE / PLANO / ROJO ---
+    try:
+        _hist = pd.read_csv(path_agenda) if path_agenda.exists() else pd.DataFrame()
+        def _veredicto(sub, nombre):
+            if sub.empty or len(sub) < 2:
+                return f"⚪ {nombre}: SIN DATOS ({len(sub)} apuestas)"
+            ben = pd.to_numeric(sub['Beneficio'], errors='coerce').fillna(0).sum()
+            gw = (sub['Resultado']=="GANADA").sum()
+            if ben > 2: return f"🟢 {nombre}: TIENES EDGE | {gw}/{len(sub)} | {ben:+.0f}€"
+            if ben >= -2: return f"🟡 {nombre}: AQUÍ PLANO | {gw}/{len(sub)} | {ben:+.0f}€"
+            return f"🔴 {nombre}: AQUÍ SUELE SER ROJO | {gw}/{len(sub)} | {ben:+.0f}€"
+        _h = _hist[_hist['Resultado'].isin(['GANADA','PERDIDA'])].copy() if not _hist.empty else pd.DataFrame()
+        if not _h.empty:
+            _h['Liga_N'] = _h['Liga'].apply(_norm_liga)
+            _liga_n = _norm_liga(liga_ap)
+            _v_liga = _veredicto(_h[_h['Liga_N']==_liga_n], f"LIGA {_liga_n or '-'}")
+            _v_min = _veredicto(_h[(pd.to_numeric(_h['Minuto'], errors='coerce')>=minuto_ap-5) & (pd.to_numeric(_h['Minuto'], errors='coerce')<=minuto_ap+5)], f"MINUTO ~{minuto_ap}'")
+            _v_cuota = _veredicto(_h[(pd.to_numeric(_h['Cuota'], errors='coerce')>=cuota_ap-0.5) & (pd.to_numeric(_h['Cuota'], errors='coerce')<=cuota_ap+0.5)], f"CUOTA ~@{cuota_ap:.2f}")
+            _rojos = sum(["🔴" in x for x in [_v_liga, _v_min, _v_cuota]])
+            _verdes = sum(["🟢" in x for x in [_v_liga, _v_min, _v_cuota]])
+            if _rojos >= 2: _titulo = "🔴 NO LO METAS - 2 o más en rojo"; _bg = "#3d0a0a"
+            elif _verdes >= 2: _titulo = "🟢 TIENES EDGE - dale"; _bg = "#0a3d24"
+            elif _rojos == 1: _titulo = "🟡 CUIDADO - 1 en rojo"; _bg = "#3d320a"
+            else: _titulo = "🟡 SIN EDGE CLARO"; _bg = "#222"
+            st.markdown(f"<div style='background:{_bg};color:#fff;font-family:monospace;font-size:11px;font-weight:900;padding:8px;border-radius:6px;line-height:1.8'>{_titulo}<br>{_v_liga}<br>{_v_min}<br>{_v_cuota}</div>", unsafe_allow_html=True)
+    except Exception as _e:
+        pass
 
     if st.button("💾 GUARDAR APUESTA CON BANCA", key="guardar_agenda_v2"):
         if resultado_ap == "GANADA":
