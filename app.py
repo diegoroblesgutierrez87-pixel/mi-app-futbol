@@ -4088,15 +4088,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     if tiene_en_rango:
                         inner=f"<span style='white-space:nowrap'>{res_txt} ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'>{mins_txt}</span>"
                     else:
-                        if es_loc:
-                            _c_h_f = "#00c800" if hg>0 else "#888"
-                            _c_a_f = "#ff2a2a" if ag>0 else "#888"
-                            ft_solo=f"[<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>]"
-                        else:
-                            _c_h_f = "#ff2a2a" if hg>0 else "#888"
-                            _c_a_f = "#00c800" if ag>0 else "#888"
-                            ft_solo=f"[<span style='color:{_c_h_f};font-weight:900'>{hg}</span>-<span style='color:{_c_a_f};font-weight:900'>{ag}</span>]"
-                        inner=f"<span style='color:#888'>{h_team} vs {a_team} {ht_gris} {ft_solo}</span>"
+                        inner=f"<span style='white-space:nowrap'>{res_txt} ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'></span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
