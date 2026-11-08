@@ -4669,8 +4669,8 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
             try:
                 _gan = df_ag[df_ag['Resultado']=="GANADA"]
                 _per = df_ag[df_ag['Resultado']=="PERDIDA"]
-                _txt_gan = "\n".join([f"✅ GANADA | {r['Fecha']} | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _gan.iterrows()]) or "Sin acertadas"
-                _txt_per = "\n".join([f"❌ FALLADA | {r['Fecha']} | {r['Liga']} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _per.iterrows()]) or "Sin falladas"
+                _txt_gan = "\n".join([f"✅ GANADA | {r['Fecha']} | {_norm_liga(r['Liga'])} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _gan.iterrows()]) or "Sin acertadas"
+                _txt_per = "\n".join([f"❌ FALLADA | {r['Fecha']} | {_norm_liga(r['Liga'])} | {r['Equipo1']} vs {r['Equipo2']} | {r['Minuto']}' | @{r['Cuota']} x {r.get('Importe',0)}€ = {r.get('Beneficio',0):+.2f}€ | {r['Apuesta']}" for _, r in _per.iterrows()]) or "Sin falladas"
                 import html as _html_ag, streamlit.components.v1 as _comp_ag
                 _txt_todo = f"ACERTADAS ({len(_gan)}):\n{_txt_gan}\n\nFALLADAS ({len(_per)}):\n{_txt_per}"
                 _comp_ag.html(f"""
