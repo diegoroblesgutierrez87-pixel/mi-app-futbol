@@ -4574,7 +4574,11 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                     for k, g in d.groupby(col):
                         n=len(g); gw=(g['Resultado']=='GANADA').sum(); ben=g['Beneficio'].sum(); stak=g['Importe'].sum()
                         roi=(ben/stak*100) if stak else 0
-                        out.append(f"{k}: {gw}/{n} ({gw/n*100:.0f}%) | {ben:+.0f}€ | ROI {roi:+.0f}%")
+                        # VERDE = positivo, AMARILLO = casi plano, ROJO = pierdes
+                        if ben > 2: _c="#00E676"; _bg="#0a3d24"; _tag="🟢 GANO"
+                        elif ben >= -2: _c="#FFD600"; _bg="#3d320a"; _tag="🟡 PLANO"
+                        else: _c="#FF5252"; _bg="#3d0a0a"; _tag="🔴 PIERDO"
+                        out.append(f"<span style='background:{_bg};color:{_c};font-weight:900;padding:1px 5px;border-radius:4px'>{_tag}</span> {k}: {gw}/{n} ({gw/n*100:.0f}%) | <b style='color:{_c}'>{ben:+.0f}€ | ROI {roi:+.0f}%</b>")
                     return "<br>".join(out) if out else "-"
                 _a['MIN_RANGO'] = pd.cut(_a['Minuto'], [-1,60,75,85,90,200], labels=["0-60'","60-75'","75-85'","85-90'","90'+"])
                 _a['CUOTA_RANGO'] = pd.cut(_a['Cuota'], [0,2,3,4,100], labels=["@1-2","@2-3","@3-4","@4+"])
