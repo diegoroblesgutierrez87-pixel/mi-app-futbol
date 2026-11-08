@@ -2286,10 +2286,10 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         if not ligas_fut_fix2:
             ligas_fut_fix2 = ligas_fut_all_fix2
 
-    c_lp1_fix2, c_lp2_fix2, c_lp3_fix2, c_lp4_fix2 = st.columns([2,1,1,1])
+    c_lp4_fix2 = st.columns([1])[0]
     with c_lp4_fix2:
         ver_goleadores_fix2 = st.selectbox("GOLEADOR+ASIST", ["ON","OFF"], index=0 if st.session_state.get("ver_goleadores_fix2","ON")=="ON" else 1, key="ver_goleadores_fix2")
-        cond_loc_pred_fix2 = st.selectbox("Filtro", ["TODOS","equipo local solamente partidos de local","equipo visitante solamente sus partidos de visitante","Local en casa / Visitante fuera"], index=3, key="cond_loc_pred_fix2")
+        cond_loc_pred_fix2 = "TODOS"
         res_1p_tipo_fix2 = st.selectbox("Resultado 1ªP", ["TODOS","EMPATE","GANA","PIERDE","EMPATEGANA","EMPATEPIERDE","GANAPIERDE"], index=0, key="res_1p_tipo_pred_fix2")
         res_ft_tipo_fix2 = st.selectbox("Resultado FINAL FIX2", ["TODOS","GANA","EMPATA","PIERDE","GANAEMPATA","GANAPIERDE","EMPATAPIERDE"], index=0, key="res_ft_tipo_fix2")
         opciones_res_fix2 = [f"{a}-{b}_1ªP" for a in range(5) for b in range(5)] + [f"{a}-{b}_2ªP" for a in range(5) for b in range(5)]
@@ -2365,15 +2365,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
     ambos_marcan_fix2 = st.selectbox("AMBOS MARCAN", ["-","SI","NO"], index=["-","SI","NO"].index(st.session_state.get("ambos_marcan_fix2","-")), key="ambos_marcan_fix2")
 
-    with c_lp1_fix2:
-        ligas_pred_sel_fix2 = st.multiselect("Ligas futuras FIX2", ligas_fut_fix2, default=st.session_state.ligas_pred_fix2, key="ligas_pred_fix2", placeholder="Todas las ligas")
-    with c_lp2_fix2:
-        df_base_pred_fix2 = df_futuro_fix2 if not ligas_pred_sel_fix2 else df_futuro_fix2[df_futuro_fix2['League_CSV'].isin(ligas_pred_sel_fix2)]
-        fechas_pred_fix2 = sorted(df_base_pred_fix2['Date'].dropna().dt.date.unique())
-        fechas_pred_str_fix2 = ["Todas"] + [d.strftime("%d/%m/%Y") for d in fechas_pred_fix2]
-        fecha_pred_sel_fix2 = st.selectbox("Fecha desde FIX2", fechas_pred_str_fix2, index=fechas_pred_str_fix2.index(st.session_state.fecha_pred_fix2) if st.session_state.fecha_pred_fix2 in fechas_pred_str_fix2 else 0, key="fecha_pred_fix2")
-    with c_lp3_fix2:
-        st.caption("")
+    ligas_pred_sel_fix2 = []
+    fecha_pred_sel_fix2 = "Todas"
+    df_base_pred_fix2 = df_futuro_fix2
 
     def _parse_min_pred_fix2(v):
         try:
