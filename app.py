@@ -2405,10 +2405,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         except: continue
 
     partidos_sel_fix2 = []
-    if not opciones_partidos_fix2:
-        st.info("No hay partidos futuros con ese filtro FIX2")
-    else:
-        partidos_sel_fix2 = st.multiselect("Elige partido futuro FIX2 (auto-carga equipos)", opciones_partidos_fix2, key="partidos_pred_sel_fix2", placeholder="Ej: Magdeburg vs Hannover")
+    # DESPLEGABLE PARTIDO FUTURO QUITADO - solo uso manual
 
     partidos_pred_copy_fix2 = []
     tiene_manuales_fix2 = (len(equipos_manuales_1_fix2) > 0 or len(equipos_manuales_2_fix2) > 0)
