@@ -3051,7 +3051,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 else:
                                     mins_txt = f"{_ht_txt}"
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='display:block;white-space:nowrap;font-size:9px;line-height:1.4'>{res_txt} {_ht_txt}{rival_txt}</span><span style='display:block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px;line-height:1.4'>{mins_txt}</span>"
+                            inner = f"<span style='white-space:nowrap;font-size:9px'>{res_txt} {_ht_txt}{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:10px'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3072,9 +3072,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 inner, es_loc = filt_por_j[jn]
                                 badge = ""
                             if es_loc:
-                                lista_loc_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0'>{badge} {j_tag} {inner}</div>")
+                                lista_loc_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0;padding-bottom:2px'>{badge} {j_tag} {inner}</div>")
                             else:
-                                lista_vis_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0'>{badge} {j_tag} {inner}</div>")
+                                lista_vis_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:3px 0;padding-bottom:2px'>{badge} {j_tag} {inner}</div>")
                         else:
                             # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - VERDE FILTRADO ROJO RIVAL 0 GRIS
                             try:
@@ -3157,8 +3157,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 lista_loc_plain.append(_txt)
                             else:
                                 lista_vis_plain.append(_txt)
-                    j_loc_plain_txt = "<br>".join(lista_loc_plain) if lista_loc_plain else "-"
-                    j_vis_plain_txt = "<br>".join(lista_vis_plain) if lista_vis_plain else "-"
+                    j_loc_plain_txt = "".join(lista_loc_plain) if lista_loc_plain else "-"
+                    j_vis_plain_txt = "".join(lista_vis_plain) if lista_vis_plain else "-"
                     try:
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
@@ -3182,7 +3182,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             _clas_txt = ""
                     except:
                         _clas_txt = ""
-                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>{_clas_txt}<br><br>L:{local_filt}/{local_total}<br>[{j_loc_plain_txt}]<br><br>V:{visitante_filt}/{visitante_total}<br>[{j_vis_plain_txt}]"
+                    linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>{_clas_txt}<br><br>L:{local_filt}/{local_total}<br>{j_loc_plain_txt}<br>V:{visitante_filt}/{visitante_total}<br>{j_vis_plain_txt}"
                     linea_res = linea_res.replace(" vs ", " <span style='white-space:nowrap'>vs</span> ")
                     lista_resumen_fix2.append(linea_res)
                 except Exception as e:
