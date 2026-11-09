@@ -1585,11 +1585,16 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     except Exception as e:
                         pass
                     if patron_buscado == "GOL80_FINAL":
-                        df = df_all.copy()
+                        if 'PATRON' in df_all.columns and (df_all['PATRON'] == "GOL80_FINAL").any():
+                            df = df_all[df_all['PATRON'] == "GOL80_FINAL"].copy()
+                        else:
+                            df = df_all.copy()
                     elif 'PATRON' in df_all.columns:
                         df = df_all[df_all['PATRON'] == patron_buscado].copy()
                     else:
                         df = df_all.copy()
+                    if 'fid' in df.columns:
+                        df = df.drop_duplicates(subset=['fid'])
                     return df
                 except:
                     pass
