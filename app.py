@@ -4696,7 +4696,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                         n_imp = st.number_input("IMPORTE €", min_value=0.5, value=float(r.get('Importe',10)), key=f"e_imp_{i}")
                     with c_e2:
                         n_eq2 = st.text_input("EQUIPO 2", value=str(r.get('Equipo2','')), key=f"e_eq2_{i}")
-                        n_cuota = st.number_input("CUOTA", min_value=1.01, value=float(r.get('Cuota',2.1)), step=0.05, key=f"e_cuota_{i}")
+                        n_cuota = st.number_input("CUOTA", min_value=1.01, value=max(1.01, float(pd.to_numeric(r.get('Cuota', 2.1), errors='coerce') or 2.1)), step=0.05, key=f"e_cuota_{i}")
                         n_res = st.selectbox("RESULTADO", ["GANADA","PERDIDA","NULA","PENDIENTE"], index=["GANADA","PERDIDA","NULA","PENDIENTE"].index(r.get('Resultado','PENDIENTE')) if r.get('Resultado') in ["GANADA","PERDIDA","NULA","PENDIENTE"] else 3, key=f"e_res_{i}")
                     n_txt = st.text_input("QUE METI", value=str(r.get('Apuesta','')), key=f"e_txt_{i}")
                     c_g, c_b = st.columns(2)
