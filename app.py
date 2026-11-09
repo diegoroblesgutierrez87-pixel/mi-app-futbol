@@ -3060,9 +3060,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 inner, es_loc = filt_por_j[jn]
                                 badge = ""
                             if es_loc:
-                                lista_loc_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
+                                lista_loc_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
                             else:
-                                lista_vis_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
+                                lista_vis_plain.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
                         else:
                             # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - VERDE FILTRADO ROJO RIVAL 0 GRIS
                             try:
@@ -3137,7 +3137,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} {int(rh.get('Pos',0))}º({int(rh.get('Pts',0))}pts) vs {_a0} {int(ra.get('Pos',0))}º({int(ra.get('Pts',0))}pts)</span>"
                                 else:
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} vs {_a0}</span>"
-                                _txt = f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;border:1px solid #555;border-radius:6px'>{_badge} {j_tag} <span style='white-space:nowrap;font-size:9px'>[{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]{vs_txt}</span></div>"
+                                _txt = f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{_badge} {j_tag} <span style='white-space:nowrap;font-size:9px'>[{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]{vs_txt}</span></div>"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
@@ -3723,8 +3723,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         # --- CABECERA FINAL VISUAL ORDENADA ---
         try:
             if lista_resumen_fix2:
-                resumen_html = "".join([f"<div style='border:2px solid #FFFFFF; border-radius:10px; padding:10px; margin:14px 0; background:#222; box-shadow:0 0 6px #000;'>{r}</div>" for r in lista_resumen_fix2])
-                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; line-height:1.6; overflow-x:auto;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
+                resumen_html = "".join([f"<div style='border:2px solid #FFFFFF; border-radius:10px; padding:10px; margin:14px 0; background:#000; box-shadow:0 0 6px #000;'>{r}</div>" for r in lista_resumen_fix2])
+                st.markdown(f"<div style='font-family:monospace; font-size:10px; color:#e8e8e8; font-weight:900; background:#000; border:1px solid #333; border-radius:8px; padding:10px; margin:12px 0; line-height:1.6; overflow-x:auto;'>🔎 RESUMEN FINAL FIX2<br><br>{resumen_html}</div>", unsafe_allow_html=True)
         except:
             pass
         try:
