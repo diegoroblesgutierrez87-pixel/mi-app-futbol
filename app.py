@@ -1551,7 +1551,7 @@ with st.expander("MOMENTUM LIVE - PEGAR URL Y COPIAR", expanded=False):
 with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False):
     import pathlib
     def cargar_patrones_0_0_80_90(tipo):
-        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15","1.5 HT + OVER 2.5 FT":"15HT_OVER25FT","0-0 HT + 1 GOL FT":"HT00_FT1"}
+        mapa = {"0-0 FINALES":"0-0_FINAL","HT 0-0 + OVER":"HT0-0_FT_OVER","0-0 HASTA 80+ GOL 80-90":"0-0_HASTA80_GOL80-90","1 GOL HT + OVER 1.5 FT":"1GOL_HT_OVER15","1.5 HT + OVER 2.5 FT":"15HT_OVER25FT","0-0 HT + 1 GOL FT":"HT00_FT1","GOL 80' HASTA FINAL":"GOL80_FINAL"}
         patron_buscado = mapa.get(tipo, "0-0_HASTA80_GOL80-90")
         for p in [pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.parquet", pathlib.Path("patrones_0_0_COMBINADO.parquet"), pathlib.Path(__file__).parent.resolve() / "patrones_0_0_COMBINADO.csv", pathlib.Path("patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.parquet"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.csv"), pathlib.Path(f"/mnt/data/patrones_0_0_COMBINADO.pkl")]:
             if p.exists():
@@ -1584,7 +1584,9 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                             df_all['Pos_Away'] = df_all.apply(lambda x: get_pos(x['League'], x['Jornada_Liga'], x['Away']), axis=1)
                     except Exception as e:
                         pass
-                    if 'PATRON' in df_all.columns:
+                    if patron_buscado == "GOL80_FINAL":
+                        df = df_all.copy()
+                    elif 'PATRON' in df_all.columns:
                         df = df_all[df_all['PATRON'] == patron_buscado].copy()
                     else:
                         df = df_all.copy()
@@ -1593,7 +1595,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                     pass
         return pd.DataFrame()
 
-    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT", "0-0 HT + 1 GOL FT"], key="tipo_pat_0_0")
+    tipo_pat = st.selectbox("TIPO PATRON", ["0-0 HASTA 80+ GOL 80-90", "0-0 FINALES", "HT 0-0 + OVER", "1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT", "0-0 HT + 1 GOL FT", "GOL 80' HASTA FINAL"], key="tipo_pat_0_0")
     mostrar_00 = st.selectbox("MOSTRAR 0-0", ["SI", "NO"], key="mostrar_00_pat")
     # nuevo desplegable solo para HT 0-0
     over_pat = "TODOS"
@@ -1664,6 +1666,17 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         if tipo_pat == "1 GOL HT + OVER 1.5 FT":
             # ya filtrado arriba, asegura 1 HT y >1.5 FT
             pass
+        # GOL 80' HASTA FINAL - sea cual sea el resultado previo
+        if tipo_pat == "GOL 80' HASTA FINAL":
+            def _tiene_gol80(row):
+                try:
+                    import ast
+                    gt = ast.literal_eval(str(row.get('gols_todos','[]')))
+                    gt_int = [int(float(str(x).replace("'", "").strip())) for x in gt if str(x).strip()!='']
+                    return any(m >= 80 for m in gt_int)
+                except:
+                    return False
+            df_f = df_f[df_f.apply(_tiene_gol80, axis=1)]
         # MOSTRAR 0-0
         if mostrar_00 == "NO":
             df_f = df_f[~((df_f['FTHG'] == 0) & (df_f['FTAG'] == 0))]
@@ -1728,13 +1741,15 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mins = r.get('gols_2t','') or r.get('gols_todos','')
                     elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT", "0-0 HT + 1 GOL FT"]:
                         mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','') or r.get('gols_80_90','')
+                    elif tipo_pat == "GOL 80' HASTA FINAL":
+                        mins = r.get('gols_todos','') or r.get('gols_80_90','')
                     else:
                         mins = r.get('gols_80_90','') or r.get('gols_todos','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
                         mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
-                        if tipo_pat == "0-0 HASTA 80+ GOL 80-90":
+                        if tipo_pat in ["0-0 HASTA 80+ GOL 80-90", "GOL 80' HASTA FINAL"]:
                             mlist_int = [m for m in mlist_int if m>=80]
                         elif tipo_pat == "HT 0-0 + OVER":
                             mlist_int = [m for m in mlist_int if m>45]
@@ -1842,13 +1857,15 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         mins = r.get('gols_2t','') or r.get('gols_todos','')
                     elif tipo_pat in ["1 GOL HT + OVER 1.5 FT", "1.5 HT + OVER 2.5 FT"]:
                         mins = r.get('gols_todos','') or r.get('mins','') or r.get('gols_2t','') or r.get('gols_80_90','')
+                    elif tipo_pat == "GOL 80' HASTA FINAL":
+                        mins = r.get('gols_todos','') or r.get('gols_80_90','')
                     else:
                         mins = r.get('gols_80_90','') or r.get('gols_todos','')
                     try:
                         import ast
                         mlist = ast.literal_eval(str(mins)) if isinstance(mins, str) and mins.startswith('[') else [mins]
                         mlist_int = [int(float(str(m).replace('[','').replace(']','').replace("'", "").strip())) for m in mlist if str(m).strip()!='']
-                        if tipo_pat == "0-0 HASTA 80+ GOL 80-90":
+                        if tipo_pat in ["0-0 HASTA 80+ GOL 80-90", "GOL 80' HASTA FINAL"]:
                             mlist_int = [m for m in mlist_int if m>=80]
                         elif tipo_pat == "HT 0-0 + OVER":
                             mlist_int = [m for m in mlist_int if m>45]
