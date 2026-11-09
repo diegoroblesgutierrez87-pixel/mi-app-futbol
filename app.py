@@ -4640,7 +4640,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         st.rerun()
 
     # --- EDITAR RESULTADO RAPIDO ---
-    if path_agenda.exists():
+    if path_apuestas.exists() or path_agenda.exists():
         df_ag = _leer_agenda()
         if not df_ag.empty:
             # stats
