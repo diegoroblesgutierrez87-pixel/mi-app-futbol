@@ -1,74 +1,72 @@
-﻿ID_Apuesta,Realizada,Asentada,Tipo,Selecciones,Partidos_Marcador,Cuota_Total,Cantidad_Apostada_EUR,Devoluciones_EUR,Beneficio_EUR,Resultado,Nota
-O/1020851/0012736,2026-11-08 23:11,2026-11-08 23:24,Simple,"Mas 4,5 Goles",Club Football Estrela vs Benfica | 2-3,2.1,5.00,10.50,5.50,Ganada,
-O/1020851/0012735,2026-11-08 22:46,2026-11-08 22:56,Simple,"Mas 2,5 Goles",Cerro Porteno vs Deportivo Recoleta | 1-1,3.05,6.00,0.00,-6.00,Perdida,
-O/1020851/0012734,2026-11-08 22:35,2026-11-08 22:44,Simple,"Mas 4,5 Goles",Fiorentina vs Juventus | 2-2,3.05,6.00,0.00,-6.00,Perdida,
-O/1020851/0012733,2026-11-08 22:16,2026-11-08 22:24,Simple,"Mas 2,5 Goles",Real Murcia vs Algeciras | 1-1,4.25,6.00,0.00,-6.00,Perdida,
-O/1020851/0012732,2026-11-08 21:45,2026-11-08 21:50,Simple,"Mas 4,5 Goles",Athletic Club vs Atletico GO | 2-3,2.7,5.00,13.50,8.50,Ganada,
-O/1020851/0012731,2026-11-08 20:48,2026-11-08 20:58,Simple,"Mas 2,5 Goles",Nublense vs Colo Colo | 1-2,4.0,5.00,20.00,15.00,Ganada,
-O/1020851/0012730,2026-11-08 20:39,2026-11-08 20:49,Simple,"Mas 0,5 Goles 1a mitad",Olympiakos vs PAOK | 1-1 (1a mitad 0-1),3.2,5.00,0.00,-5.00,Perdida,"Goles en la 1.a mitad - 0,5"
-O/1020851/0012728,2026-11-08 19:59,2026-11-08 20:26,4 selecciones,"Mas 1,5 Goles @1.90 | Mas 0,5 Goles @1.65 | Mas 2,5 Goles @1.65 | Mas 0,5 Goles @1.52",Mirandes vs CD Coria 0-2 | Villarreal vs Getafe 2-0 | Sporting Gijon vs Valladolid 1-2 | Celta Vigo vs Levante 0-0,,5.00,5.00,0.00,Devuelta,Se te ha devuelto tu apuesta en efectivo - 3 ganadas 1 perdida
-O/1020851/0012729,2026-11-08 20:20,2026-11-08 20:26,Doble,"Mas 3,5 Goles @4.50 | Mas 0,5 Goles @3.60",Sporting Gijon vs Valladolid 1-2 | Celta Vigo vs Levante 0-0,16.2,5.00,0.00,-5.00,Perdida,
-O/1020851/0012727,2026-11-08 19:26,2026-11-08 19:28,Simple,"Mas 7,5 Goles",Man Utd vs Aston Villa | 4-4,7.0,5.00,35.00,30.00,Ganada,
-O/1020851/0012726,2026-11-08 19:09,2026-11-08 19:25,Simple,"Mas 0,5 Goles",OFI vs Atromitos | 0-0,2.7,5.00,0.00,-5.00,Perdida,
-O/1020851/0012725,2026-11-08 18:15,2026-11-08 18:26,Simple,"Mas 2,5 Goles",Iraklis vs Panathinaikos | 1-2,2.7,10.00,27.00,17.00,Ganada,
-O/1020851/0012723,2026-11-08 17:55,2026-11-08 18:16,Triple,"Mas 0,5 Goles @1.75 | Mas 2,5 Goles @1.62 | Mas 0,5 Goles @1.65",Al-Akhdoud vs Al Jabalain 0-1 | Santa Clara vs Gil Vicente 1-2 | CD Nacional Funchal vs Academico de Viseu 1-0,4.68,5.00,23.39,18.39,Ganada,
-O/1020851/0012724,2026-11-08 18:00,2026-11-08 18:09,Simple,"Mas 1,5 Goles",Sunderland vs Chelsea | 1-0,6.5,5.00,0.00,-5.00,Perdida,
-O/1020851/0012722,2026-11-08 16:55,2026-11-08 17:01,Simple,"Mas 0,5 Goles Visitante",Sunderland vs Chelsea | 1-0,2.05,10.00,0.00,-10.00,Perdida,"Equipo visitante - Mas/menos de 0,5 goles"
-O/1020851/0012720,2026-11-08 16:31,2026-11-08 17:01,Simple,"Mas 3,5 Goles",Ipswich vs Bournemouth | 1-2,3.35,5.00,0.00,-5.00,Perdida,
-O/1020851/0012721,2026-11-08 16:49,2026-11-08 16:57,Simple,"Mas 2,5 Goles",WSG Wattens vs Austria Wien | 1-1,2.5,5.00,0.00,-5.00,Perdida,
-O/1020851/0012719,2026-11-08 16:06,2026-11-08 16:20,Simple,"Mas 2,5 Goles",Dhamk vs Al-Anwar Club | 1-1,4.5,5.00,0.00,-5.00,Perdida,
-O/1020851/0012718,2026-11-08 15:22,2026-11-08 15:30,Simple,"Mas 2,5 Goles",(ver detalle en Betfair - seleccion no expandida en el pegado),2.3,10.00,0.00,-10.00,Perdida,
-O/1020851/0012717,2026-11-08 15:22,2026-11-08 15:30,Simple,"Mas 3,5 Goles",(ver detalle en Betfair - seleccion no expandida en el pegado),2.0,5.00,0.00,-5.00,Perdida,
-O/1020851/0012712,2026-11-08 12:02,2026-11-08 14:48,8 selecciones - Crear Apuesta +,Rayo Vallecano y empate | Si Ambos anotan | Si Ambos anotan | Si Ambos anotan | Las Palmas | Villarreal | Si Ambos anotan | Sabadell,Real Sociedad vs Rayo Vallecano 1-0 | Elche vs Betis 0-2 | Girona vs Almeria 0-1 | Las Palmas vs Eldense (pendiente 20:30) | Villarreal vs Getafe 2-0 (Ganada) | Atletico Madrid vs Barcelona 1-2 (Ganada) | Sabadell vs Sociedad B (pendiente 20:30),389.66,1.00,0.00,-1.00,Perdida,"Apuesta gratuita usada 1,00 EUR"
-O/1020851/0012715,2026-11-08 14:12,2026-11-08 14:24,Doble,"Mas 2,5 Goles @3.30 | Mas 2,5 Goles @3.30",Villarreal B vs Juventud Torremolinos 1-1 | CD Teruel vs Ibiza Eivissa 1-1,10.89,5.00,0.00,-5.00,Perdida,
-O/1020851/0012714,2026-11-08 13:46,2026-11-08 13:57,Simple,"Mas 0,5 Goles",CD Castellon B vs SCR Pena Deportiva | 0-1,8.0,5.00,40.00,35.00,Ganada,
-O/1020851/0012713,2026-11-08 12:57,2026-11-08 12:58,Simple,"Mas 2,5 Goles",Pss Sleman vs Bhayangkara FC | 1-1,4.2,10.00,0.00,-10.00,Perdida,
-O/1020851/0012711,2026-11-08 11:21,2026-11-08 11:28,Simple,"Mas 5,5 Goles",Shandong Taishan vs Chengdu Rongcheng | 3-2,4.0,5.00,0.00,-5.00,Perdida,
-O/1020851/0012709,2026-11-08 10:05,2026-11-08 10:26,Simple,"Mas 4,5 Goles",Gangwon vs Jeonbuk Motors | 3-2,4.25,5.00,21.25,16.25,Ganada,
-O/1020851/0012710,2026-11-08 10:20,2026-11-08 10:25,Doble,"Mas 2,5 Goles @1.72 | Mas 3,5 Goles @1.90",Paju Citizen vs Chungnam Asan 1-1 | Gangwon vs Jeonbuk Motors 3-2,3.27,5.00,0.00,-5.00,Perdida,1a Perdida 2a Ganada - combinada Perdida
-O/1020851/0012708,2026-11-08 10:03,2026-11-08 10:23,5 selecciones,Si Ambos anotan y no hay empate @2.10 | Liverpool @2.40 | Si Ambos anotan @1.46 | Granada @1.75 | Villarreal @1.40,AEK Athens vs Real Madrid 2-3 (Ganada) | Fenerbahce vs Liverpool 3-2 (Perdida) | Dortmund vs Betis 2-1 (Ganada) | Granada vs Tenerife (Nulas) | Villarreal vs Getafe 2-0 (Ganada),,5.00,0.00,-5.00,Perdida,
-O/1020851/0012638,2026-11-04 16:10,2026-11-08 00:02,Simple,"Mas 0,5 Goles",Once Caldas vs Aguilas Doradas | 1-0,3.0,5.00,15.00,10.00,Ganada,
-O/1020851/0012707,2026-11-07 23:47,2026-11-08 00:00,Simple,"Mas 1,5 Goles",Everton De Vina vs Deportes Concepcion | 0-2,2.8,5.00,14.00,9.00,Ganada,
-O/1020851/0012706,2026-11-07 23:17,2026-11-07 23:20,Simple,"Mas 1,5 Goles",Excelsior vs Go Ahead Eagles | 0-1,3.2,5.00,0.00,-5.00,Perdida,
-O/1020851/0012705,2026-11-07 22:43,2026-11-07 22:54,Simple,"Mas 4,5 Goles",Leganes vs Albacete | 1-3,5.25,5.00,0.00,-5.00,Perdida,
-O/1020851/0012704,2026-11-07 20:25,2026-11-07 20:35,6 selecciones,Burgos @1.55 | Si Ambos anotan @1.74 | Leganes @1.83 | Si Ambos anotan @1.58 | Las Palmas @2.15 | Villarreal @1.40,Burgos vs Celta Vigo B 2-1 (Ganada) | Espanyol vs Deportivo 0-0 (Perdida) | Leganes vs Albacete 1-3 (Perdida) | Elche vs Betis 0-2 (Perdida) | Las Palmas vs Eldense (pendiente) | Villarreal vs Getafe 2-0 (Ganada),,2.50,0.00,-2.50,Perdida,Seguro Edge
-O/1020851/0012677,2026-11-06 23:05,2026-11-07 20:35,Simple,"Mas 4,5 Goles",Nottm Forest vs Man City | 3-1,2.3,5.00,0.00,-5.00,Perdida,
-O/1020851/0012701,2026-11-07 19:50,2026-11-07 20:26,Doble,"Mas 4,5 Goles @2.30 | Mas 1,5 Goles @2.90",Leganes vs Albacete 1-3 | Stuttgart vs Werder Bremen 1-0,6.67,5.00,0.00,-5.00,Perdida,
-O/1020851/0012703,2026-11-07 20:15,2026-11-07 20:25,Simple,"Mas 1,5 Goles",Oud-Heverlee Leuven vs Yellow-Red Mechelen | 2-0,3.8,5.00,19.00,14.00,Ganada,
-O/1020851/0012702,2026-11-07 20:01,2026-11-07 20:09,Simple,"Mas 1,5 Goles",Olympiakos Nicosia FC vs Apollon Limassol | 1-0,4.0,5.00,0.00,-5.00,Perdida,
-O/1020851/0012700,2026-11-07 19:47,2026-11-07 19:55,Simple,"Mas 3,5 Goles",Ludogorets vs CSKA 1948 Sofia | 2-2,6.25,5.00,31.25,26.25,Ganada,
-O/1020851/0012699,2026-11-07 19:25,2026-11-07 19:29,Simple,"Mas 2,5 Goles",Gornik Zabrze vs Wieczysta Krakow | 2-1,3.05,5.00,15.25,10.25,Ganada,
-O/1020851/0012698,2026-11-07 19:18,2026-11-07 19:23,Simple,"Mas 2,5 Goles",SC Austria Lustenau vs Grazer AK | 2-1,2.2,10.00,22.00,12.00,Ganada,
-O/1020851/0012697,2026-11-07 18:36,2026-11-07 18:48,Simple,"Mas 0,5 Goles",Pontevedra CF vs UD Ourense | 1-0,2.25,10.00,22.50,12.50,Ganada,
-O/1020851/0012696,2026-11-07 18:18,2026-11-07 18:28,Simple,"Mas 0,5 Goles",Espanyol vs Deportivo | 0-0,3.8,10.00,0.00,-10.00,Perdida,
-O/1020851/0012695,2026-11-07 18:02,2026-11-07 18:09,Simple,"Mas 2,5 Goles",Athletic Bilbao (W) vs Real Madrid FC (W) | 1-1,4.0,10.00,0.00,-10.00,Perdida,
-O/1020851/0012694,2026-11-07 17:54,2026-11-07 18:03,Simple,"Mas 1,5 Goles",Preston vs Southampton | 1-0,2.4,10.00,0.00,-10.00,Perdida,
-O/1020851/0012693,2026-11-07 17:48,2026-11-07 18:00,Simple,"Mas 1,5 Goles",Francs Borains vs Seraing Utd | 1-0,5.0,5.00,0.00,-5.00,Perdida,
-O/1020851/0012691,2026-11-07 17:27,2026-11-07 17:58,Simple,"Mas 0,5 Goles",Fulham vs Newcastle | 1-1,2.0,10.00,20.00,10.00,Ganada,
-O/1020851/0012692,2026-11-07 17:36,2026-11-07 17:42,Simple,"Mas 3,5 Goles",Dortmund vs Elversberg | 2-1,3.05,5.00,0.00,-5.00,Perdida,
-O/1020851/0012690,2026-11-07 17:18,2026-11-07 17:25,Simple,"Mas 2,5 Goles",Torino vs Lecce | 1-1,3.4,5.00,0.00,-5.00,Perdida,
-O/1020851/0012689,2026-11-07 17:02,2026-11-07 17:10,Simple,"Mas 1,5 Goles",Cagliari vs Frosinone | 1-0,3.35,5.00,0.00,-5.00,Perdida,
-O/1020851/0012688,2026-11-07 16:49,2026-11-07 16:53,4 selecciones,Si Ambos anotan y no hay empate @3.00 | Malaga @2.30 | Si Ambos anotan @1.74 | Granada @1.75,Sevilla vs Alaves 0-0 (Perdida) | Malaga vs Racing Santander 1-2 (Perdida) | Espanyol vs Deportivo 0-0 (Perdida) | Granada vs Tenerife (Nulas),,5.00,0.00,-5.00,Perdida,
-O/1020851/0012668,2026-11-06 08:51,2026-11-07 15:57,Simple,"Mas 2,5 Goles",Burgos vs Celta Vigo B | 2-1,3.5,5.00,17.50,12.50,Ganada,
-O/1020851/0012687,2026-11-07 15:43,2026-11-07 15:45,Simple,"Mas 1,5 Goles Local",Burgos vs Celta Vigo B | 2-1,2.0,5.00,10.00,5.00,Ganada,"Equipo local - Mas/menos de 1,5 goles"
-O/1020851/0012686,2026-11-07 15:28,2026-11-07 15:45,Doble,"Mas 0,5 Goles @2.30 | Mas 0,5 Goles @2.20",Leeds vs Tottenham 1-0 | Al-Jndal vs Hajer Club 0-0,5.06,10.00,0.00,-10.00,Perdida,1a Ganada 2a Perdida
-O/1020851/0012685,2026-11-07 15:09,2026-11-07 15:28,Simple,"Mas 3,5 Goles",Persis Solo vs Persiba Balikpapan | 1-2,4.2,5.00,0.00,-5.00,Perdida,
-O/1020851/0012684,2026-11-07 14:50,2026-11-07 14:57,Simple,"Mas 1,5 Goles",Persita Tangerang vs Adhyaksa FC | 0-1,3.0,10.00,0.00,-10.00,Perdida,
-O/1020851/0012683,2026-11-07 14:43,2026-11-07 14:51,Simple,"Mas 2,5 Goles",Korona Kielce vs Radomiak Radom | 0-2,2.4,5.00,0.00,-5.00,Perdida,
-O/1020851/0012682,2026-11-07 14:02,2026-11-07 14:11,Simple,"Mas 2,5 Goles",Pusamania Borneo FC vs PSM Makassar | 1-1,3.0,10.00,0.00,-10.00,Perdida,
-O/1020851/0012681,2026-11-07 11:16,2026-11-07 11:29,Simple,"Mas 5,5 Goles",Seoul E-Land FC vs Jeonnam Dragons | 3-2,3.1,5.00,0.00,-5.00,Perdida,
-O/1020851/0012680,2026-11-07 10:20,2026-11-07 10:27,Simple,"Mas 0,5 Goles",Gimhae City vs Hwaseong FC | 0-1,4.0,5.00,20.00,15.00,Ganada,
-O/1020851/0012679,2026-11-07 10:15,2026-11-07 10:24,Simple,"Mas 0,5 Goles",Famalicao vs Arouca | 1-0,6.0,5.00,30.00,25.00,Ganada,
-O/1020851/0012678,2026-11-07 06:23,2026-11-06 23:39,Simple,"Mas 0,5 Goles",Sevilla vs Alaves | 0-0,2.4,5.00,0.00,-5.00,Perdida,En el pegado aparece Realizada 6 nov 23:32 / Asentadas 23:39
-O/1020851/0012676,2026-11-06 22:37,2026-11-06 22:57,Simple,"Mas 3,5 Goles",Sporting Hasselt vs Patro Eisden Maasmechelen | 1-2,3.3,10.00,0.00,-10.00,Perdida,
-O/1020851/0012675,2026-11-06 21:53,2026-11-06 22:00,Simple,"Mas 2,5 Goles",Arges Pitesti vs Dinamo Bucharest | 2-1,2.3,10.00,23.00,13.00,Ganada,
-O/1020851/0012673,2026-11-06 21:08,2026-11-06 21:23,Simple,"Mas 2,5 Goles",Arges Pitesti vs Dinamo Bucharest | 2-1,4.0,5.00,20.00,15.00,Ganada,"Mismo partido que 0012675, apuesta duplicada"
-O/1020851/0012674,2026-11-06 21:18,2026-11-06 21:23,Simple,"Mas 1,5 Goles",UTA Arad vs ACS Petrolul 52 | 0-1,3.8,5.00,0.00,-5.00,Perdida,
-O/1020851/0012672,2026-11-06 18:19,2026-11-06 18:23,Simple,"Mas 0,5 Goles",Lamphun Warrior vs Sukhothai | 0-0,3.3,5.00,0.00,-5.00,Perdida,
-O/1020851/0012671,2026-11-06 15:56,2026-11-06 16:01,Simple,Si Ambos anotan,Madura Utd vs Arema Cronus | 3-0,2.8,5.00,0.00,-5.00,Perdida,
-O/1020851/0012670,2026-11-06 14:31,2026-11-06 14:54,Simple,"Mas 2,5 Goles",Psim Yogyakarta vs Dewa United FC | 1-2,3.0,5.00,15.00,10.00,Ganada,
-O/1020851/0012669,2026-11-06 11:16,2026-11-06 11:26,Simple,Universidad de Chile Se clasifica,Universidad de Chile vs Antofagasta | 4-0,3.0,5.00,15.00,10.00,Ganada,
-O/1020851/0012667,2026-11-05 23:44,2026-11-06 00:54,Simple,"Mas 1,5 Goles",Leverkusen vs Marseille | 0-1,3.05,5.00,0.00,-5.00,Perdida,
-O/1020851/0012665,2026-11-05 22:48,2026-11-05 22:55,Simple,"Mas 1,5 Goles","(ultima del pegado, sin detalle de partido en el texto)",,5.00,0.00,-5.00,Perdida,Pegado truncado al final
-
-RESUMEN,,,,,,,426.50,505.14,78.64,,71 apuestas | Ganadas 24 | Perdidas 46 | Devueltas 1
+﻿ID_Apuesta,Realizada,Asentada,Tipo,Selecciones,Partidos_Marcador,Cuota_Total,Cantidad_Apostada_EUR,Devoluciones_EUR,Beneficio_EUR,Resultado,Nota,E1,E2,Liga_base_partidos,Match_tipo
+O/1020851/0012736,2026-11-08 23:11,2026-11-08 23:24,Simple,"Mas 4,5 Goles",Club Football Estrela vs Benfica | 2-3,2.1,5.0,10.5,5.5,Ganada,,Club Football Estrela,Benfica,LIGA PORTUGAL,SOLO E2
+O/1020851/0012735,2026-11-08 22:46,2026-11-08 22:56,Simple,"Mas 2,5 Goles",Cerro Porteno vs Deportivo Recoleta | 1-1,3.05,6.0,0.0,-6.0,Perdida,,Cerro Porteno,Deportivo Recoleta,PRIMERA DIVISION PARAGUAY,AMBOS
+O/1020851/0012734,2026-11-08 22:35,2026-11-08 22:44,Simple,"Mas 4,5 Goles",Fiorentina vs Juventus | 2-2,3.05,6.0,0.0,-6.0,Perdida,,Fiorentina,Juventus,SERIE A ITALIA,AMBOS
+O/1020851/0012733,2026-11-08 22:16,2026-11-08 22:24,Simple,"Mas 2,5 Goles",Real Murcia vs Algeciras | 1-1,4.25,6.0,0.0,-6.0,Perdida,,Real Murcia,Algeciras,PRIMERA FEDERACION GRUPO 2,AMBOS
+O/1020851/0012732,2026-11-08 21:45,2026-11-08 21:50,Simple,"Mas 4,5 Goles",Athletic Club vs Atletico GO | 2-3,2.7,5.0,13.5,8.5,Ganada,,Athletic Club,Atletico GO,LALIGA EA SPORTS,SOLO E1-AMBIGUO
+O/1020851/0012731,2026-11-08 20:48,2026-11-08 20:58,Simple,"Mas 2,5 Goles",Nublense vs Colo Colo | 1-2,4.0,5.0,20.0,15.0,Ganada,,Nublense,Colo Colo,PRIMERA DIVISION CHILE,AMBOS
+O/1020851/0012730,2026-11-08 20:39,2026-11-08 20:49,Simple,"Mas 0,5 Goles 1a mitad",Olympiakos vs PAOK | 1-1 (1a mitad 0-1),3.2,5.0,0.0,-5.0,Perdida,"Goles en la 1.a mitad - 0,5",Olympiakos,PAOK,SUPER LEAGUE GRECIA,SOLO E2
+O/1020851/0012728,2026-11-08 19:59,2026-11-08 20:26,4 selecciones,"Mas 1,5 Goles @1.90 | Mas 0,5 Goles @1.65 | Mas 2,5 Goles @1.65 | Mas 0,5 Goles @1.52",Mirandes vs CD Coria 0-2 | Villarreal vs Getafe 2-0 | Sporting Gijon vs Valladolid 1-2 | Celta Vigo vs Levante 0-0,,5.0,5.0,0.0,Devuelta,Se te ha devuelto tu apuesta en efectivo - 3 ganadas 1 perdida,Mirandes,CD Coria,PRIMERA FEDERACION GRUPO 1,AMBOS
+O/1020851/0012729,2026-11-08 20:20,2026-11-08 20:26,Doble,"Mas 3,5 Goles @4.50 | Mas 0,5 Goles @3.60",Sporting Gijon vs Valladolid 1-2 | Celta Vigo vs Levante 0-0,16.2,5.0,0.0,-5.0,Perdida,,Sporting Gijon,Valladolid,LALIGA HYPERMOTION,AMBOS
+O/1020851/0012727,2026-11-08 19:26,2026-11-08 19:28,Simple,"Mas 7,5 Goles",Man Utd vs Aston Villa | 4-4,7.0,5.0,35.0,30.0,Ganada,,Man Utd,Aston Villa,PREMIER LEAGUE,SOLO E2
+O/1020851/0012726,2026-11-08 19:09,2026-11-08 19:25,Simple,"Mas 0,5 Goles",OFI vs Atromitos | 0-0,2.7,5.0,0.0,-5.0,Perdida,,OFI,Atromitos,SUPER LEAGUE GRECIA,AMBOS
+O/1020851/0012725,2026-11-08 18:15,2026-11-08 18:26,Simple,"Mas 2,5 Goles",Iraklis vs Panathinaikos | 1-2,2.7,10.0,27.0,17.0,Ganada,,Iraklis,Panathinaikos,SUPER LEAGUE GRECIA,SOLO E2
+O/1020851/0012723,2026-11-08 17:55,2026-11-08 18:16,Triple,"Mas 0,5 Goles @1.75 | Mas 2,5 Goles @1.62 | Mas 0,5 Goles @1.65",Al-Akhdoud vs Al Jabalain 0-1 | Santa Clara vs Gil Vicente 1-2 | CD Nacional Funchal vs Academico de Viseu 1-0,4.68,5.0,23.39,18.39,Ganada,,Al-Akhdoud,Al Jabalain,SAUDI FIRST DIVISION LEAGUE,SOLO E2
+O/1020851/0012724,2026-11-08 18:00,2026-11-08 18:09,Simple,"Mas 1,5 Goles",Sunderland vs Chelsea | 1-0,6.5,5.0,0.0,-5.0,Perdida,,Sunderland,Chelsea,PREMIER LEAGUE,AMBOS
+O/1020851/0012722,2026-11-08 16:55,2026-11-08 17:01,Simple,"Mas 0,5 Goles Visitante",Sunderland vs Chelsea | 1-0,2.05,10.0,0.0,-10.0,Perdida,"Equipo visitante - Mas/menos de 0,5 goles",Sunderland,Chelsea,PREMIER LEAGUE,AMBOS
+O/1020851/0012720,2026-11-08 16:31,2026-11-08 17:01,Simple,"Mas 3,5 Goles",Ipswich vs Bournemouth | 1-2,3.35,5.0,0.0,-5.0,Perdida,,Ipswich,Bournemouth,PREMIER LEAGUE,AMBOS
+O/1020851/0012721,2026-11-08 16:49,2026-11-08 16:57,Simple,"Mas 2,5 Goles",WSG Wattens vs Austria Wien | 1-1,2.5,5.0,0.0,-5.0,Perdida,,WSG Wattens,Austria Wien,BUNDESLIGA AUSTRIA,SOLO E1
+O/1020851/0012719,2026-11-08 16:06,2026-11-08 16:20,Simple,"Mas 2,5 Goles",Dhamk vs Al-Anwar Club | 1-1,4.5,5.0,0.0,-5.0,Perdida,,Dhamk,Al-Anwar Club,Ligas random,SIN COINCIDENCIA
+O/1020851/0012718,2026-11-08 15:22,2026-11-08 15:30,Simple,"Mas 2,5 Goles",(ver detalle en Betfair - seleccion no expandida en el pegado),2.3,10.0,0.0,-10.0,Perdida,,,,Ligas random,SIN COINCIDENCIA
+O/1020851/0012717,2026-11-08 15:22,2026-11-08 15:30,Simple,"Mas 3,5 Goles",(ver detalle en Betfair - seleccion no expandida en el pegado),2.0,5.0,0.0,-5.0,Perdida,,,,Ligas random,SIN COINCIDENCIA
+O/1020851/0012712,2026-11-08 12:02,2026-11-08 14:48,8 selecciones - Crear Apuesta +,Rayo Vallecano y empate | Si Ambos anotan | Si Ambos anotan | Si Ambos anotan | Las Palmas | Villarreal | Si Ambos anotan | Sabadell,Real Sociedad vs Rayo Vallecano 1-0 | Elche vs Betis 0-2 | Girona vs Almeria 0-1 | Las Palmas vs Eldense (pendiente 20:30) | Villarreal vs Getafe 2-0 (Ganada) | Atletico Madrid vs Barcelona 1-2 (Ganada) | Sabadell vs Sociedad B (pendiente 20:30),389.66,1.0,0.0,-1.0,Perdida,"Apuesta gratuita usada 1,00 EUR",Real Sociedad,Rayo Vallecano,LALIGA EA SPORTS,AMBOS
+O/1020851/0012715,2026-11-08 14:12,2026-11-08 14:24,Doble,"Mas 2,5 Goles @3.30 | Mas 2,5 Goles @3.30",Villarreal B vs Juventud Torremolinos 1-1 | CD Teruel vs Ibiza Eivissa 1-1,10.89,5.0,0.0,-5.0,Perdida,,Villarreal B,Juventud Torremolinos,PRIMERA FEDERACION GRUPO 2,SOLO E2
+O/1020851/0012714,2026-11-08 13:46,2026-11-08 13:57,Simple,"Mas 0,5 Goles",CD Castellon B vs SCR Pena Deportiva | 0-1,8.0,5.0,40.0,35.0,Ganada,,CD Castellon B,SCR Pena Deportiva,Ligas random,SIN COINCIDENCIA
+O/1020851/0012713,2026-11-08 12:57,2026-11-08 12:58,Simple,"Mas 2,5 Goles",Pss Sleman vs Bhayangkara FC | 1-1,4.2,10.0,0.0,-10.0,Perdida,,Pss Sleman,Bhayangkara FC,LIGA 1 INDONESIA,AMBOS
+O/1020851/0012711,2026-11-08 11:21,2026-11-08 11:28,Simple,"Mas 5,5 Goles",Shandong Taishan vs Chengdu Rongcheng | 3-2,4.0,5.0,0.0,-5.0,Perdida,,Shandong Taishan,Chengdu Rongcheng,Ligas random,SIN COINCIDENCIA
+O/1020851/0012709,2026-11-08 10:05,2026-11-08 10:26,Simple,"Mas 4,5 Goles",Gangwon vs Jeonbuk Motors | 3-2,4.25,5.0,21.25,16.25,Ganada,,Gangwon,Jeonbuk Motors,K LEAGUE 1,SOLO E2
+O/1020851/0012710,2026-11-08 10:20,2026-11-08 10:25,Doble,"Mas 2,5 Goles @1.72 | Mas 3,5 Goles @1.90",Paju Citizen vs Chungnam Asan 1-1 | Gangwon vs Jeonbuk Motors 3-2,3.27,5.0,0.0,-5.0,Perdida,1a Perdida 2a Ganada - combinada Perdida,Paju Citizen,Chungnam Asan,K LEAGUE 2,SOLO E1
+O/1020851/0012708,2026-11-08 10:03,2026-11-08 10:23,5 selecciones,Si Ambos anotan y no hay empate @2.10 | Liverpool @2.40 | Si Ambos anotan @1.46 | Granada @1.75 | Villarreal @1.40,AEK Athens vs Real Madrid 2-3 (Ganada) | Fenerbahce vs Liverpool 3-2 (Perdida) | Dortmund vs Betis 2-1 (Ganada) | Granada vs Tenerife (Nulas) | Villarreal vs Getafe 2-0 (Ganada),,5.0,0.0,-5.0,Perdida,,AEK Athens,Real Madrid,LALIGA EA SPORTS,SOLO E2
+O/1020851/0012638,2026-11-04 16:10,2026-11-08 00:02,Simple,"Mas 0,5 Goles",Once Caldas vs Aguilas Doradas | 1-0,3.0,5.0,15.0,10.0,Ganada,,Once Caldas,Aguilas Doradas,Ligas random,SIN COINCIDENCIA
+O/1020851/0012707,2026-11-07 23:47,2026-11-08 00:00,Simple,"Mas 1,5 Goles",Everton De Vina vs Deportes Concepcion | 0-2,2.8,5.0,14.0,9.0,Ganada,,Everton De Vina,Deportes Concepcion,PRIMERA DIVISION CHILE,SOLO E1
+O/1020851/0012706,2026-11-07 23:17,2026-11-07 23:20,Simple,"Mas 1,5 Goles",Excelsior vs Go Ahead Eagles | 0-1,3.2,5.0,0.0,-5.0,Perdida,,Excelsior,Go Ahead Eagles,EREDIVISIE,AMBOS
+O/1020851/0012705,2026-11-07 22:43,2026-11-07 22:54,Simple,"Mas 4,5 Goles",Leganes vs Albacete | 1-3,5.25,5.0,0.0,-5.0,Perdida,,Leganes,Albacete,LALIGA HYPERMOTION,AMBOS
+O/1020851/0012704,2026-11-07 20:25,2026-11-07 20:35,6 selecciones,Burgos @1.55 | Si Ambos anotan @1.74 | Leganes @1.83 | Si Ambos anotan @1.58 | Las Palmas @2.15 | Villarreal @1.40,Burgos vs Celta Vigo B 2-1 (Ganada) | Espanyol vs Deportivo 0-0 (Perdida) | Leganes vs Albacete 1-3 (Perdida) | Elche vs Betis 0-2 (Perdida) | Las Palmas vs Eldense (pendiente) | Villarreal vs Getafe 2-0 (Ganada),,2.5,0.0,-2.5,Perdida,Seguro Edge,Burgos,Celta Vigo B,LALIGA HYPERMOTION,SOLO E1
+O/1020851/0012677,2026-11-06 23:05,2026-11-07 20:35,Simple,"Mas 4,5 Goles",Nottm Forest vs Man City | 3-1,2.3,5.0,0.0,-5.0,Perdida,,Nottm Forest,Man City,Ligas random,SIN COINCIDENCIA
+O/1020851/0012701,2026-11-07 19:50,2026-11-07 20:26,Doble,"Mas 4,5 Goles @2.30 | Mas 1,5 Goles @2.90",Leganes vs Albacete 1-3 | Stuttgart vs Werder Bremen 1-0,6.67,5.0,0.0,-5.0,Perdida,,Leganes,Albacete,LALIGA HYPERMOTION,AMBOS
+O/1020851/0012703,2026-11-07 20:15,2026-11-07 20:25,Simple,"Mas 1,5 Goles",Oud-Heverlee Leuven vs Yellow-Red Mechelen | 2-0,3.8,5.0,19.0,14.0,Ganada,,Oud-Heverlee Leuven,Yellow-Red Mechelen,Ligas random,SIN COINCIDENCIA
+O/1020851/0012702,2026-11-07 20:01,2026-11-07 20:09,Simple,"Mas 1,5 Goles",Olympiakos Nicosia FC vs Apollon Limassol | 1-0,4.0,5.0,0.0,-5.0,Perdida,,Olympiakos Nicosia FC,Apollon Limassol,Ligas random,SIN COINCIDENCIA
+O/1020851/0012700,2026-11-07 19:47,2026-11-07 19:55,Simple,"Mas 3,5 Goles",Ludogorets vs CSKA 1948 Sofia | 2-2,6.25,5.0,31.25,26.25,Ganada,,Ludogorets,CSKA 1948 Sofia,FIRST LEAGUE BULGARIA,SOLO E1
+O/1020851/0012699,2026-11-07 19:25,2026-11-07 19:29,Simple,"Mas 2,5 Goles",Gornik Zabrze vs Wieczysta Krakow | 2-1,3.05,5.0,15.25,10.25,Ganada,,Gornik Zabrze,Wieczysta Krakow,EKSTRAKLASA,AMBOS
+O/1020851/0012698,2026-11-07 19:18,2026-11-07 19:23,Simple,"Mas 2,5 Goles",SC Austria Lustenau vs Grazer AK | 2-1,2.2,10.0,22.0,12.0,Ganada,,SC Austria Lustenau,Grazer AK,BUNDESLIGA AUSTRIA,SOLO E2
+O/1020851/0012697,2026-11-07 18:36,2026-11-07 18:48,Simple,"Mas 0,5 Goles",Pontevedra CF vs UD Ourense | 1-0,2.25,10.0,22.5,12.5,Ganada,,Pontevedra CF,UD Ourense,PRIMERA FEDERACION GRUPO 1,SOLO E2
+O/1020851/0012696,2026-11-07 18:18,2026-11-07 18:28,Simple,"Mas 0,5 Goles",Espanyol vs Deportivo | 0-0,3.8,10.0,0.0,-10.0,Perdida,,Espanyol,Deportivo,LALIGA EA SPORTS,SOLO E1
+O/1020851/0012695,2026-11-07 18:02,2026-11-07 18:09,Simple,"Mas 2,5 Goles",Athletic Bilbao (W) vs Real Madrid FC (W) | 1-1,4.0,10.0,0.0,-10.0,Perdida,,Athletic Bilbao (W),Real Madrid FC (W),Ligas random,SIN COINCIDENCIA
+O/1020851/0012694,2026-11-07 17:54,2026-11-07 18:03,Simple,"Mas 1,5 Goles",Preston vs Southampton | 1-0,2.4,10.0,0.0,-10.0,Perdida,,Preston,Southampton,CHAMPIONSHIP,AMBOS
+O/1020851/0012693,2026-11-07 17:48,2026-11-07 18:00,Simple,"Mas 1,5 Goles",Francs Borains vs Seraing Utd | 1-0,5.0,5.0,0.0,-5.0,Perdida,,Francs Borains,Seraing Utd,CHALLENGER PRO LEAGUE BELGICA 2DA,SOLO E1
+O/1020851/0012691,2026-11-07 17:27,2026-11-07 17:58,Simple,"Mas 0,5 Goles",Fulham vs Newcastle | 1-1,2.0,10.0,20.0,10.0,Ganada,,Fulham,Newcastle,PREMIER LEAGUE,AMBOS
+O/1020851/0012692,2026-11-07 17:36,2026-11-07 17:42,Simple,"Mas 3,5 Goles",Dortmund vs Elversberg | 2-1,3.05,5.0,0.0,-5.0,Perdida,,Dortmund,Elversberg,Ligas random,SIN COINCIDENCIA
+O/1020851/0012690,2026-11-07 17:18,2026-11-07 17:25,Simple,"Mas 2,5 Goles",Torino vs Lecce | 1-1,3.4,5.0,0.0,-5.0,Perdida,,Torino,Lecce,SERIE A ITALIA,AMBOS
+O/1020851/0012689,2026-11-07 17:02,2026-11-07 17:10,Simple,"Mas 1,5 Goles",Cagliari vs Frosinone | 1-0,3.35,5.0,0.0,-5.0,Perdida,,Cagliari,Frosinone,SERIE A ITALIA,AMBOS
+O/1020851/0012688,2026-11-07 16:49,2026-11-07 16:53,4 selecciones,Si Ambos anotan y no hay empate @3.00 | Malaga @2.30 | Si Ambos anotan @1.74 | Granada @1.75,Sevilla vs Alaves 0-0 (Perdida) | Malaga vs Racing Santander 1-2 (Perdida) | Espanyol vs Deportivo 0-0 (Perdida) | Granada vs Tenerife (Nulas),,5.0,0.0,-5.0,Perdida,,Sevilla,Alaves,LALIGA EA SPORTS,AMBOS
+O/1020851/0012668,2026-11-06 08:51,2026-11-07 15:57,Simple,"Mas 2,5 Goles",Burgos vs Celta Vigo B | 2-1,3.5,5.0,17.5,12.5,Ganada,,Burgos,Celta Vigo B,LALIGA HYPERMOTION,SOLO E1
+O/1020851/0012687,2026-11-07 15:43,2026-11-07 15:45,Simple,"Mas 1,5 Goles Local",Burgos vs Celta Vigo B | 2-1,2.0,5.0,10.0,5.0,Ganada,"Equipo local - Mas/menos de 1,5 goles",Burgos,Celta Vigo B,LALIGA HYPERMOTION,SOLO E1
+O/1020851/0012686,2026-11-07 15:28,2026-11-07 15:45,Doble,"Mas 0,5 Goles @2.30 | Mas 0,5 Goles @2.20",Leeds vs Tottenham 1-0 | Al-Jndal vs Hajer Club 0-0,5.06,10.0,0.0,-10.0,Perdida,1a Ganada 2a Perdida,Leeds,Tottenham,PREMIER LEAGUE,AMBOS
+O/1020851/0012685,2026-11-07 15:09,2026-11-07 15:28,Simple,"Mas 3,5 Goles",Persis Solo vs Persiba Balikpapan | 1-2,4.2,5.0,0.0,-5.0,Perdida,,Persis Solo,Persiba Balikpapan,Ligas random,SIN COINCIDENCIA
+O/1020851/0012684,2026-11-07 14:50,2026-11-07 14:57,Simple,"Mas 1,5 Goles",Persita Tangerang vs Adhyaksa FC | 0-1,3.0,10.0,0.0,-10.0,Perdida,,Persita Tangerang,Adhyaksa FC,Ligas random,SIN COINCIDENCIA
+O/1020851/0012683,2026-11-07 14:43,2026-11-07 14:51,Simple,"Mas 2,5 Goles",Korona Kielce vs Radomiak Radom | 0-2,2.4,5.0,0.0,-5.0,Perdida,,Korona Kielce,Radomiak Radom,EKSTRAKLASA,AMBOS
+O/1020851/0012682,2026-11-07 14:02,2026-11-07 14:11,Simple,"Mas 2,5 Goles",Pusamania Borneo FC vs PSM Makassar | 1-1,3.0,10.0,0.0,-10.0,Perdida,,Pusamania Borneo FC,PSM Makassar,LIGA 1 INDONESIA,SOLO E2
+O/1020851/0012681,2026-11-07 11:16,2026-11-07 11:29,Simple,"Mas 5,5 Goles",Seoul E-Land FC vs Jeonnam Dragons | 3-2,3.1,5.0,0.0,-5.0,Perdida,,Seoul E-Land FC,Jeonnam Dragons,K LEAGUE 2,AMBOS
+O/1020851/0012680,2026-11-07 10:20,2026-11-07 10:27,Simple,"Mas 0,5 Goles",Gimhae City vs Hwaseong FC | 0-1,4.0,5.0,20.0,15.0,Ganada,,Gimhae City,Hwaseong FC,K LEAGUE 2,SOLO E1
+O/1020851/0012679,2026-11-07 10:15,2026-11-07 10:24,Simple,"Mas 0,5 Goles",Famalicao vs Arouca | 1-0,6.0,5.0,30.0,25.0,Ganada,,Famalicao,Arouca,LIGA PORTUGAL,AMBOS
+O/1020851/0012678,2026-11-07 06:23,2026-11-06 23:39,Simple,"Mas 0,5 Goles",Sevilla vs Alaves | 0-0,2.4,5.0,0.0,-5.0,Perdida,En el pegado aparece Realizada 6 nov 23:32 / Asentadas 23:39,Sevilla,Alaves,LALIGA EA SPORTS,AMBOS
+O/1020851/0012676,2026-11-06 22:37,2026-11-06 22:57,Simple,"Mas 3,5 Goles",Sporting Hasselt vs Patro Eisden Maasmechelen | 1-2,3.3,10.0,0.0,-10.0,Perdida,,Sporting Hasselt,Patro Eisden Maasmechelen,CHALLENGER PRO LEAGUE BELGICA 2DA,SOLO E1
+O/1020851/0012675,2026-11-06 21:53,2026-11-06 22:00,Simple,"Mas 2,5 Goles",Arges Pitesti vs Dinamo Bucharest | 2-1,2.3,10.0,23.0,13.0,Ganada,,Arges Pitesti,Dinamo Bucharest,LIGA I RUMANIA,SOLO E1
+O/1020851/0012673,2026-11-06 21:08,2026-11-06 21:23,Simple,"Mas 2,5 Goles",Arges Pitesti vs Dinamo Bucharest | 2-1,4.0,5.0,20.0,15.0,Ganada,"Mismo partido que 0012675, apuesta duplicada",Arges Pitesti,Dinamo Bucharest,LIGA I RUMANIA,SOLO E1
+O/1020851/0012674,2026-11-06 21:18,2026-11-06 21:23,Simple,"Mas 1,5 Goles",UTA Arad vs ACS Petrolul 52 | 0-1,3.8,5.0,0.0,-5.0,Perdida,,UTA Arad,ACS Petrolul 52,LIGA I RUMANIA,SOLO E1
+O/1020851/0012672,2026-11-06 18:19,2026-11-06 18:23,Simple,"Mas 0,5 Goles",Lamphun Warrior vs Sukhothai | 0-0,3.3,5.0,0.0,-5.0,Perdida,,Lamphun Warrior,Sukhothai,Ligas random,SIN COINCIDENCIA
+O/1020851/0012671,2026-11-06 15:56,2026-11-06 16:01,Simple,Si Ambos anotan,Madura Utd vs Arema Cronus | 3-0,2.8,5.0,0.0,-5.0,Perdida,,Madura Utd,Arema Cronus,Ligas random,SIN COINCIDENCIA
+O/1020851/0012670,2026-11-06 14:31,2026-11-06 14:54,Simple,"Mas 2,5 Goles",Psim Yogyakarta vs Dewa United FC | 1-2,3.0,5.0,15.0,10.0,Ganada,,Psim Yogyakarta,Dewa United FC,LIGA 1 INDONESIA,SOLO E1
+O/1020851/0012669,2026-11-06 11:16,2026-11-06 11:26,Simple,Universidad de Chile Se clasifica,Universidad de Chile vs Antofagasta | 4-0,3.0,5.0,15.0,10.0,Ganada,,Universidad de Chile,Antofagasta,PRIMERA DIVISION CHILE,SOLO E1
+O/1020851/0012667,2026-11-05 23:44,2026-11-06 00:54,Simple,"Mas 1,5 Goles",Leverkusen vs Marseille | 0-1,3.05,5.0,0.0,-5.0,Perdida,,Leverkusen,Marseille,LIGUE 1,SOLO E2
+O/1020851/0012665,2026-11-05 22:48,2026-11-05 22:55,Simple,"Mas 1,5 Goles","(ultima del pegado, sin detalle de partido en el texto)",,5.0,0.0,-5.0,Perdida,Pegado truncado al final,,,Ligas random,SIN COINCIDENCIA
