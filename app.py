@@ -4427,7 +4427,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                         _p = _part.split(' | ')[0] if ' | ' in _part else _part
                         _e1 = _p.split(' vs ')[0].strip() if ' vs ' in _p else ""
                         _e2 = _p.split(' vs ')[1].strip() if ' vs ' in _p else ""
-                        # liga desde base_partidos.csv por coincidencia directa, si no -> random
+                        # liga desde base_partidos.csv - mapa incrustado, sin leer archivo
                         _liga = "Ligas random"
                         try:
                             if not hasattr(_leer_agenda, "_map_bp"):
@@ -4437,22 +4437,41 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                                     s = ''.join(c for c in _ud_bp.normalize('NFD', s) if _ud_bp.category(c) != 'Mn')
                                     s = _re_bp.sub(r'[^A-Z0-9 ]', ' ', s)
                                     return _re_bp.sub(r'\s+', ' ', s).strip()
-                                _df_bp = pd.read_csv(pathlib.Path(__file__).parent.resolve() / "base_partidos.csv", encoding='utf-8-sig', usecols=['League', 'HomeTeam', 'AwayTeam'])
-                                _m = {}
-                                for _, _rr in _df_bp.iterrows():
-                                    for _tm in [_rr['HomeTeam'], _rr['AwayTeam']]:
-                                        _m.setdefault(_norm_bp(_tm), set()).add(_rr['League'])
-                                _leer_agenda._map_bp = _m
                                 _leer_agenda._norm_bp = _norm_bp
-                            _l1 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e1), set())
-                            _l2 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e2), set())
-                            _inter = _l1 & _l2
-                            if len(_inter) == 1:
-                                _liga = list(_inter)[0]
-                            elif len(_l1) == 1 and not _l2:
-                                _liga = list(_l1)[0]
-                            elif len(_l2) == 1 and not _l1:
-                                _liga = list(_l2)[0]
+                                _leer_agenda._map_bp = {
+                                    "ALAVES": "【entity-LALIGA EA SPORTS¦canonical_name=LALIGA EA SPORTS】", "ALBACETE": "LALIGA HYPERMOTION", "ALGECIRAS": "PRIMERA FEDERACION GRUPO 2",
+                                    "ARGES PITESTI": "LIGA I RUMANIA", "AROUCA": "【entity-LIGA PORTUGAL¦canonical_name=LIGA PORTUGAL】", "ASTON VILLA": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】",
+                                    "ATROMITOS": "SUPER LEAGUE GRECIA", "BENFICA": "【entity-LIGA PORTUGAL¦canonical_name=LIGA PORTUGAL】", "BHAYANGKARA FC": "LIGA 1 INDONESIA",
+                                    "BOURNEMOUTH": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】", "BURGOS": "LALIGA HYPERMOTION", "CAGLIARI": "SERIE A ITALIA",
+                                    "CD CORIA": "PRIMERA FEDERACION GRUPO 1", "CERRO PORTENO": "PRIMERA DIVISION PARAGUAY", "CHELSEA": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】",
+                                    "COLO COLO": "PRIMERA DIVISION CHILE", "DEPORTIVO RECOLETA": "PRIMERA DIVISION PARAGUAY", "ESPANYOL": "【entity-LALIGA EA SPORTS¦canonical_name=LALIGA EA SPORTS】",
+                                    "EVERTON DE VINA": "PRIMERA DIVISION CHILE", "EXCELSIOR": "EREDIVISIE", "FAMALICAO": "【entity-LIGA PORTUGAL¦canonical_name=LIGA PORTUGAL】",
+                                    "【entity-FIORENTINA¦canonical_name=Fiorentina】": "SERIE A ITALIA", "FRANCS BORAINS": "CHALLENGER PRO LEAGUE BELGICA 2DA", "FROSINONE": "SERIE A ITALIA",
+                                    "FULHAM": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】", "GIMHAE CITY": "K LEAGUE 2", "GO AHEAD EAGLES": "EREDIVISIE",
+                                    "GORNIK ZABRZE": "EKSTRAKLASA", "GRAZER AK": "BUNDESLIGA AUSTRIA", "IPSWICH": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】",
+                                    "JEONBUK MOTORS": "K LEAGUE 1", "JEONNAM DRAGONS": "K LEAGUE 2", "JUVENTUD TORREMOLINOS": "PRIMERA FEDERACION GRUPO 2",
+                                    "【entity-JUVENTUS¦canonical_name=Juventus】": "SERIE A ITALIA", "KORONA KIELCE": "EKSTRAKLASA", "LECCE": "SERIE A ITALIA",
+                                    "LEEDS": "【entity-PREMIER LEAGUE¦canonical_name=PREMIER LEAGUE】", "LEGANES": "LALIGA HYPERMOTION", "LUDOGORETS": "FIRST LEAGUE BULGARIA",
+                                    "MARSEILLE": "LIGUE 1", "MIRANDES": "PRIMERA FEDERACION GRUPO 1", "NEWCASTLE": "PREMIER LEAGUE",
+                                    "NUBLENSE": "PRIMERA DIVISION CHILE", "OFI": "SUPER LEAGUE GRECIA", "PAJU CITIZEN": "K LEAGUE 2",
+                                    "PANATHINAIKOS": "SUPER LEAGUE GRECIA", "PAOK": "SUPER LEAGUE GRECIA", "PRESTON": "CHAMPIONSHIP",
+                                    "PSIM YOGYAKARTA": "LIGA 1 INDONESIA", "PSM MAKASSAR": "LIGA 1 INDONESIA", "PSS SLEMAN": "LIGA 1 INDONESIA",
+                                    "RADOMIAK RADOM": "EKSTRAKLASA", "RAYO VALLECANO": "LALIGA EA SPORTS", "REAL MADRID": "LALIGA EA SPORTS",
+                                    "REAL MURCIA": "PRIMERA FEDERACION GRUPO 2", "REAL SOCIEDAD": "LALIGA EA SPORTS", "SEOUL E LAND FC": "K LEAGUE 2",
+                                    "SEVILLA": "LALIGA EA SPORTS", "SOUTHAMPTON": "CHAMPIONSHIP", "SPORTING GIJON": "LALIGA HYPERMOTION",
+                                    "SPORTING HASSELT": "CHALLENGER PRO LEAGUE BELGICA 2DA", "SUNDERLAND": "PREMIER LEAGUE", "TORINO": "SERIE A ITALIA",
+                                    "TOTTENHAM": "PREMIER LEAGUE", "UD OURENSE": "PRIMERA FEDERACION GRUPO 1", "UNIVERSIDAD DE CHILE": "PRIMERA DIVISION CHILE",
+                                    "UTA ARAD": "LIGA I RUMANIA", "VALLADOLID": "LALIGA HYPERMOTION", "WIECZYSTA KRAKOW": "EKSTRAKLASA",
+                                    "WSG WATTENS": "BUNDESLIGA AUSTRIA", "AL JABALAIN": "SAUDI FIRST DIVISION LEAGUE",
+                                }
+                            _l1 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e1))
+                            _l2 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e2))
+                            if _l1 and _l1 == _l2:
+                                _liga = _l1
+                            elif _l1:
+                                _liga = _l1
+                            elif _l2:
+                                _liga = _l2
                         except Exception:
                             pass
                     _res = str(_r.get('Resultado', '')).upper()
