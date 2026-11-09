@@ -3987,14 +3987,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             pts_a_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({int(r_a.get('Pts',0))}pts)</span>"
                         else:
                             pos_a_html=""; pts_a_html=""
-                        if r_h is not None and r_a is not None:
-                            pts_txt=f" {pts_h_html} <span style='color:#888;font-size:9px'>vs</span> {pts_a_html}"
-                        elif r_h is not None:
-                            pts_txt=f" {pts_h_html}"
-                        elif r_a is not None:
-                            pts_txt=f" {pts_a_html}"
-                        else:
-                            pts_txt=""
+                        pts_txt=""
                         pos_txt=pts_txt
                     except:
                         pos_h_html=""; pos_a_html=""; pts_txt=""; pos_txt=""
@@ -4086,10 +4079,10 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             elif mins_2p: mins_txt=" ".join(mins_2p)
                             else: mins_txt=""
                     if tiene_en_rango:
-                        inner=f"<span style='white-space:nowrap'><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                     else:
                         _teams_gris = teams_txt.replace("#FFFFFF", "#888888").replace("#00BFFF", "#888")
-                        inner=f"<span style='white-space:nowrap'><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;white-space:nowrap'></span>"
+                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px'></span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
@@ -4101,7 +4094,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                 except:
                     inner, es_loc = total_por_j[jn]
                     badge = ""
-                todo_list.append(f"<div style='white-space:nowrap;overflow-x:auto;margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
+                todo_list.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
             todo_txt="".join(todo_list) if todo_list else "-"
             filt_show = filt_cnt if (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None or ambos_marcan_fix3 != "-") else total
             linea_res2=f"{eq_j.upper()}: {filt_show}/{total}<br><br>{todo_txt}"
