@@ -4414,9 +4414,15 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                 _raw = _raw[~_raw['ID_Apuesta'].astype(str).str.contains('RESUMEN', na=False)]
                 for _, _r in _raw.iterrows():
                     _part = str(_r.get('Partidos_Marcador', '') or '')
-                    _multi = ' | ' in _part or 'selecciones' in str(_r.get('Tipo', '')).lower()
+                    _tipo = str(_r.get('Tipo', '')).strip().lower()
+                    _multi = _tipo != "simple"
                     if _multi:
-                        _liga, _e1, _e2 = "Combinadas", _part[:60], ""
+                        _liga = "Combinadas"
+                        _first = _part.split(' | ')[0] if ' | ' in _part else _part
+                        _first = _first.split(' (')[0].strip()
+                        _first = _first.rsplit(' ', 1)[0].strip() if ' vs ' in _first and ' ' in _first else _first
+                        _e1 = _first.split(' vs ')[0].strip() if ' vs ' in _first else ""
+                        _e2 = _first.split(' vs ')[1].strip() if ' vs ' in _first else ""
                     else:
                         _liga = "Ligas random"
                         _p = _part.split(' | ')[0] if ' | ' in _part else _part
