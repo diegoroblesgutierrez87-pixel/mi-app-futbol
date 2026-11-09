@@ -968,7 +968,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         ra_act = _get_main(j_max, normaliza(a))
         if rh_act is not None and ra_act is not None:
             txt_actual_main = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
-            clas_html = f"<div style='text-align:center;margin:3px 0;'><span style='background:#000;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:900;'>{txt_actual_main}</span></div>"
+            clas_html = f"<div style='text-align:center;margin:3px 0;'><span style='background:#E8E8E8;color:#000;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:900;'>{txt_actual_main}</span></div>"
     except:
         clas_html = ""
     # --- TODA LA LINEA COLOREADA + SUBRAYADO EQUIPO FILTRO ---
