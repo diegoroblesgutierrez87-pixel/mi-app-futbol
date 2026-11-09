@@ -4424,10 +4424,37 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
                         _e1 = _first.split(' vs ')[0].strip() if ' vs ' in _first else ""
                         _e2 = _first.split(' vs ')[1].strip() if ' vs ' in _first else ""
                     else:
-                        _liga = "Ligas random"
                         _p = _part.split(' | ')[0] if ' | ' in _part else _part
                         _e1 = _p.split(' vs ')[0].strip() if ' vs ' in _p else ""
                         _e2 = _p.split(' vs ')[1].strip() if ' vs ' in _p else ""
+                        # liga desde base_partidos.csv por coincidencia directa, si no -> random
+                        _liga = "Ligas random"
+                        try:
+                            if not hasattr(_leer_agenda, "_map_bp"):
+                                import re as _re_bp, unicodedata as _ud_bp
+                                def _norm_bp(s):
+                                    s = str(s or "").upper()
+                                    s = ''.join(c for c in _ud_bp.normalize('NFD', s) if _ud_bp.category(c) != 'Mn')
+                                    s = _re_bp.sub(r'[^A-Z0-9 ]', ' ', s)
+                                    return _re_bp.sub(r'\s+', ' ', s).strip()
+                                _df_bp = pd.read_csv(pathlib.Path(__file__).parent.resolve() / "base_partidos.csv", encoding='utf-8-sig', usecols=['League', 'HomeTeam', 'AwayTeam'])
+                                _m = {}
+                                for _, _rr in _df_bp.iterrows():
+                                    for _tm in [_rr['HomeTeam'], _rr['AwayTeam']]:
+                                        _m.setdefault(_norm_bp(_tm), set()).add(_rr['League'])
+                                _leer_agenda._map_bp = _m
+                                _leer_agenda._norm_bp = _norm_bp
+                            _l1 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e1), set())
+                            _l2 = _leer_agenda._map_bp.get(_leer_agenda._norm_bp(_e2), set())
+                            _inter = _l1 & _l2
+                            if len(_inter) == 1:
+                                _liga = list(_inter)[0]
+                            elif len(_l1) == 1 and not _l2:
+                                _liga = list(_l1)[0]
+                            elif len(_l2) == 1 and not _l1:
+                                _liga = list(_l2)[0]
+                        except Exception:
+                            pass
                     _res = str(_r.get('Resultado', '')).upper()
                     _res = "GANADA" if _res == "GANADA" else "PERDIDA" if _res == "PERDIDA" else "NULA"
                     _f = pd.to_datetime(_r.get('Realizada'), errors='coerce')
