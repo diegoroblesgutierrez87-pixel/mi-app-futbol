@@ -4032,7 +4032,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         _c_h = "#00c800" if hg>0 else "#888"
                         _c_a = "#ff2a2a" if ag>0 else "#888"
                         res_txt=f"[<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span>] {ht_gris}"
-                        teams_txt=f"{h_txt} vs {a_txt}"
+                        teams_txt=f"{h_txt} <span style='color:#888'>vs</span> {a_txt}"
                         letra="G" if hg>ag else "E" if hg==ag else "P"
                     else:
                         h_txt=f"{pos_h_html}<span style='color:#888888;font-weight:700'>{h_team}</span>"
@@ -4040,7 +4040,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         _c_h = "#ff2a2a" if hg>0 else "#888"
                         _c_a = "#00c800" if ag>0 else "#888"
                         res_txt=f"[<span style='color:{_c_h};font-weight:900'>{hg}</span>-<span style='color:{_c_a};font-weight:900'>{ag}</span>] {ht_gris}"
-                        teams_txt=f"{h_txt} vs {a_txt}"
+                        teams_txt=f"{h_txt} <span style='color:#888'>vs</span> {a_txt}"
                         letra="G" if ag>hg else "E" if ag==hg else "P"
                     badge="<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>G</span>" if letra=="G" else "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>" if letra=="E" else "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
                     # --- FILTRO BTTS SI/NO ---
