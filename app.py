@@ -1116,7 +1116,17 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
         for liga_name in sorted(resumen.keys()):
             header_html += f"<div style='font-weight:900;margin-top:6px;color:#000;text-decoration:underline'>{liga_name}:</div>"
             for team_r, pct_r, ok_r, tot_r, jors_r in sorted(resumen[liga_name], key=lambda x: x[1], reverse=True):
-                j_str = ", ".join([f"J{j}" for j in jors_r]) if jors_r else ""
+                def _j_btts(jj):
+                    try:
+                        _d = df_f[pd.to_numeric(df_f['Jornada'], errors='coerce') == jj]
+                        _d = _d[(_d['HomeTeam'].astype(str).str.upper() == str(team_r).upper()) | (_d['AwayTeam'].astype(str).str.upper() == str(team_r).upper())]
+                        for _, _rr in _d.iterrows():
+                            if int(float(_rr.get('FTHG', 0) or 0)) > 0 and int(float(_rr.get('FTAG', 0) or 0)) > 0:
+                                return f"J{jj}*"
+                    except:
+                        pass
+                    return f"J{jj}"
+                j_str = ", ".join([_j_btts(j) for j in jors_r]) if jors_r else ""
                 header_html += f"<div style='margin-left:10px;color:#000'>{team_r} {ok_r}/{tot_r} -> {j_str} {pct_r:.0f}%</div>"
         header_html += "</div>"
         html_partidos = ""
