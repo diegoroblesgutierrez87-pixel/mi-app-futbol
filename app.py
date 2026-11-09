@@ -3864,7 +3864,19 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         ev={}
         if not df_g.empty:
             df_g['fid_str']=df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['m']=pd.to_numeric(df_g.get('minuto',0), errors='coerce').fillna(0).astype(int)
+            # femenino viene como "45'" / "45'+2'" -> to_numeric lo deja en 0. Usa min_num si hay, si no extrae el numero.
+            def _parse_m(row):
+                try:
+                    if 'min_num' in row and pd.notna(row.get('min_num')):
+                        return int(float(row.get('min_num')))
+                except:
+                    pass
+                try:
+                    m = re.search(r'\d+', str(row.get('minuto', '')))
+                    return int(m.group(0)) if m else 0
+                except:
+                    return 0
+            df_g['m'] = df_g.apply(_parse_m, axis=1).astype(int)
             for fid, sub in df_g.groupby('fid_str'):
                 ev[fid]=[{'m':int(r.get('m',0)), 'team':normaliza(r.get('equipo','')), 'tipo':str(r.get('tipo',''))} for _, r in sub.iterrows()]
         return df_p, ev
