@@ -4399,8 +4399,64 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     import pathlib, datetime
     import pandas as pd
 
-    path_agenda = pathlib.Path(__file__).parent.resolve() / "agenda_apuestas.csv"
+    # --- FUENTE UNICA: CSV DEL REPO ---
+    path_apuestas = pathlib.Path(__file__).parent.resolve() / "apuestas_asentadas.csv"
+    path_agenda = pathlib.Path(__file__).parent.resolve() / "agenda_apuestas.csv"  # solo para tus PENDIENTES a mano
     path_banca = pathlib.Path(__file__).parent.resolve() / "banca_config.csv"
+
+    def _leer_agenda():
+        # Lee apuestas_asentadas.csv del repo y lo convierte al formato que ya usa el bloque
+        # + lo que tengas a mano en agenda_apuestas.csv (PENDIENTE)
+        _rows = []
+        if path_apuestas.exists():
+            try:
+                _raw = pd.read_csv(path_apuestas)
+                _raw = _raw[~_raw['ID_Apuesta'].astype(str).str.contains('RESUMEN', na=False)]
+                for _, _r in _raw.iterrows():
+                    _part = str(_r.get('Partidos_Marcador', '') or '')
+                    _multi = ' | ' in _part or 'selecciones' in str(_r.get('Tipo', '')).lower()
+                    if _multi:
+                        _liga, _e1, _e2 = "Combinadas", _part[:60], ""
+                    else:
+                        _liga = "Ligas random"
+                        _p = _part.split(' | ')[0] if ' | ' in _part else _part
+                        _e1 = _p.split(' vs ')[0].strip() if ' vs ' in _p else ""
+                        _e2 = _p.split(' vs ')[1].strip() if ' vs ' in _p else ""
+                    _res = str(_r.get('Resultado', '')).upper()
+                    _res = "GANADA" if _res == "GANADA" else "PERDIDA" if _res == "PERDIDA" else "NULA"
+                    _f = pd.to_datetime(_r.get('Realizada'), errors='coerce')
+                    _rows.append({
+                        "Fecha": _f.strftime("%d/%m/%Y %H:%M") if pd.notna(_f) else str(_r.get('Realizada', '')),
+                        "Liga": _liga, "Equipo1": _e1, "Equipo2": _e2, "Minuto": 0,
+                        "Cuota": float(pd.to_numeric(_r.get('Cuota_Total'), errors='coerce') or 0) if str(_r.get('Cuota_Total', '')).strip() not in ["", "nan"] else 0.0,
+                        "Importe": float(_r.get('Cantidad_Apostada_EUR', 0) or 0),
+                        "Resultado": _res, "Beneficio": float(_r.get('Beneficio_EUR', 0) or 0), "Banca": 0,
+                        "Apuesta": f"{_r.get('Selecciones', '')} | {_part} | ID:{_r.get('ID_Apuesta', '')}",
+                        "ID_Apuesta": str(_r.get('ID_Apuesta', '')),
+                    })
+            except Exception:
+                pass
+        _df = pd.DataFrame(_rows)
+        # + tus pendientes a mano, si los hay
+        if path_agenda.exists():
+            try:
+                _man = pd.read_csv(path_agenda)
+                if not _man.empty:
+                    _df = pd.concat([_df, _man], ignore_index=True) if not _df.empty else _man
+            except Exception:
+                pass
+        if not _df.empty:
+            _df['_ord'] = pd.to_datetime(_df['Fecha'], format="%d/%m/%Y %H:%M", errors='coerce')
+            _df = _df.sort_values('_ord').drop(columns=['_ord']).reset_index(drop=True)
+            # recalcula Banca en orden
+            _run = float(banca_inicial_default); _b = []
+            for _, _rr in _df.iterrows():
+                if _rr['Resultado'] == "PENDIENTE":
+                    _b.append(round(_run, 2))
+                else:
+                    _run += float(_rr['Beneficio']); _b.append(round(_run, 2))
+            _df['Banca'] = _b
+        return _df
 
     def _norm_liga(x):
         s = str(x or "").strip().upper()
@@ -4439,9 +4495,9 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
     # --- BANCA ACTUAL CALCULADA ---
     banca_actual = banca_inicial_default
     beneficio_total = 0
-    if path_agenda.exists():
+    if path_apuestas.exists() or path_agenda.exists():
         try:
-            df_tmp_ag = pd.read_csv(path_agenda)
+            df_tmp_ag = _leer_agenda()
             if 'Beneficio' in df_tmp_ag.columns:
                 beneficio_total = pd.to_numeric(df_tmp_ag['Beneficio'], errors='coerce').fillna(0).sum()
                 banca_actual = banca_inicial_default + beneficio_total
@@ -4506,7 +4562,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         benef_preview = 0.0
     # --- ALARMA PRE-GUARDAR: EDGE / PLANO / ROJO ---
     try:
-        _hist = pd.read_csv(path_agenda) if path_agenda.exists() else pd.DataFrame()
+        _hist = _leer_agenda() if path_agenda.exists() else pd.DataFrame()
         def _veredicto(sub, nombre):
             if sub.empty or len(sub) < 2:
                 return f"⚪ {nombre}: SIN DATOS ({len(sub)} apuestas)"
@@ -4558,7 +4614,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
         }
         df_new = pd.DataFrame([nueva])
         if path_agenda.exists():
-            df_old = pd.read_csv(path_agenda)
+            df_old = _leer_agenda()
             # migrar columnas viejas si faltan
             for col in ["Importe","Resultado","Beneficio","Banca"]:
                 if col not in df_old.columns:
@@ -4585,7 +4641,7 @@ with st.expander("BLOQUE AGENDA APUESTA - BANCA", expanded=False):
 
     # --- EDITAR RESULTADO RAPIDO ---
     if path_agenda.exists():
-        df_ag = pd.read_csv(path_agenda)
+        df_ag = _leer_agenda()
         if not df_ag.empty:
             # stats
             tot = len(df_ag)
