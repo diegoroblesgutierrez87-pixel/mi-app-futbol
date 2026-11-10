@@ -230,28 +230,14 @@ BASE = get_base()
 
 @st.cache_data(show_spinner=False)
 def cargar_todo_lite():
+    # FILTROS lee UNICAMENTE: base_partidos.parquet + uefa_nations_league_2627.csv
     f_parquet = BASE / "base_partidos.parquet"
-    f_pkl = BASE / "base_partidos.pkl"
-    if f_parquet.exists():
-        df = pd.read_parquet(f_parquet)
-        if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    elif f_pkl.exists():
-        df = pd.read_pickle(f_pkl)
-        if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    else:
-        files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv","asia_4ligas_con_israel_2026.csv"]
-        dfs=[]
-        for fn in files:
-            fp = BASE / fn
-            if fp.exists() and fp.stat().st_size > 100:
-                d = pd.read_csv(fp, on_bad_lines='skip', engine='c')
-                if 'Date' in d.columns:
-                    d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
-                dfs.append(d)
-        df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
-    # Nations League: CSV aparte - dentro del loader, antes del cache
+    if not f_parquet.exists():
+        return pd.DataFrame()
+    df = pd.read_parquet(f_parquet)
+    if 'Date' in df.columns:
+        df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    # Nations League - unico CSV permitido en FILTROS
     try:
         _pn = BASE / "uefa_nations_league_2627.csv"
         _ya_n = bool((df['League'].astype(str) == 'UEFA Nations League').any()) if 'League' in df.columns and not df.empty else False
@@ -266,19 +252,22 @@ def cargar_todo_lite():
     if 'fixture_id' in df.columns and not df.empty:
         df = df.sort_values('Date').drop_duplicates(subset=['fixture_id'], keep='last')
 
-    # FIX DEFINITIVO - SIEMPRE RECALCULA JORNADA POR EQUIPO, AUNQUE EL PARQUET TRAIGA JORNADA VIEJA
+    # NO RECALCULAR Jornada si el parquet ya la trae - la Jornada del parquet es la real
+    # Solo recalcula si Jornada no existe o esta toda a 0 / vacia
     if not df.empty:
-        df = df.sort_values(['League','Season','Date']).copy()
-        df['Jornada'] = 0
-        for (l,s), g in df.groupby(['League','Season'], sort=False):
-            teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
-            for team in teams:
-                mask = (g['HomeTeam'] == team) | (g['AwayTeam'] == team)
-                sub = g[mask].sort_values('Date')
-                if sub.empty:
-                    continue
-                idxs = sub.index.to_numpy()
-                df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
+        _tiene_j = 'Jornada' in df.columns and pd.to_numeric(df['Jornada'], errors='coerce').fillna(0).gt(0).any()
+        if not _tiene_j:
+            df = df.sort_values(['League','Season','Date']).copy()
+            df['Jornada'] = 0
+            for (l,s), g in df.groupby(['League','Season'], sort=False):
+                teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
+                for team in teams:
+                    mask = (g['HomeTeam'] == team) | (g['AwayTeam'] == team)
+                    sub = g[mask].sort_values('Date')
+                    if sub.empty:
+                        continue
+                    idxs = sub.index.to_numpy()
+                    df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
 
     if 'HomeAbbr' not in df.columns and 'HomeTeam' in df.columns:
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -287,22 +276,12 @@ def cargar_todo_lite():
 
 @st.cache_data(show_spinner=False)
 def cargar_goles_lite():
+    # FILTROS lee UNICAMENTE: base_goles.parquet + uefa_nations_league_2627_goles.csv
     f_parquet = BASE / "base_goles.parquet"
-    f_pkl = BASE / "base_goles.pkl"
-    if f_parquet.exists():
-        dg_all = pd.read_parquet(f_parquet)
-    elif f_pkl.exists():
-        dg_all = pd.read_pickle(f_pkl)
-    else:
-        files = ["goles_actual.csv","goles_arabia_actual.csv","goles_sudamerica_actual.csv","goles_asia_4ligas_con_israel_2026.csv"]
-        dfs=[]
-        for fn in files:
-            f = BASE / fn
-            if f.exists() and f.stat().st_size > 100:
-                dfs.append(pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='c'))
-        dg_all = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
-
-    # Nations League goles: CSV aparte - dentro del loader, antes del cache
+    if not f_parquet.exists():
+        return {}
+    dg_all = pd.read_parquet(f_parquet)
+    # Nations League goles - unico CSV permitido en FILTROS
     try:
         _pg = BASE / "uefa_nations_league_2627_goles.csv"
         if _pg.exists():
@@ -629,39 +608,12 @@ if not _df_cal.empty and 'Date' in _df_cal.columns:
 else:
     fechas_cal_str = fechas_str
 
-c_cf1, c_cf2 = filtros.columns(2)
-with c_cf1:
-    coincidir_fecha_sel = st.selectbox("Coincidir fechas (futuro)", ["No"] + fechas_cal_str, key="coincidir_fechas")
-with c_cf2:
-    rival_auto = None
-    if coincidir_fecha_sel != "No" and eq1 != "Ninguno" and not _df_cal.empty:
-        try:
-            _cf_date = pd.to_datetime(coincidir_fecha_sel, dayfirst=True).date()
-            _df_cf = _df_cal[_df_cal['Date'].dt.date == _cf_date]
-            # filtra por liga si hay liga seleccionada
-            if liga_sel != "Todas":
-                _df_cf = _df_cf[_df_cf['League'].astype(str).str.upper() == liga_sel.upper()]
-            _mask_eq1 = (_df_cf['HomeTeam'].astype(str).str.upper() == eq1.upper()) | (_df_cf['AwayTeam'].astype(str).str.upper() == eq1.upper())
-            _match = _df_cf[_mask_eq1]
-            if not _match.empty:
-                _row = _match.iloc[0]
-                _home = str(_row['HomeTeam']).upper()
-                _away = str(_row['AwayTeam']).upper()
-                rival_auto = _away if _home == eq1.upper() else _home
-                st.success(f"Rival futuro: {rival_auto} el {coincidir_fecha_sel}")
-            else:
-                st.caption(f"Sin partido para {eq1} el {coincidir_fecha_sel}")
-        except:
-            rival_auto = None
+# Coincidir fechas (futuro) quitado
 
 c4,c5 = filtros.columns(2)
 with c4:
     lista_eq2 = [e for e in equipos if e.upper() != str(eq1).upper()]
-    if rival_auto and rival_auto in lista_eq2:
-        lista_eq2 = [rival_auto] + [e for e in lista_eq2 if e != rival_auto]
-        default_idx = 1
-    else:
-        default_idx = 0
+    default_idx = 0
     eq2 = st.selectbox("Equipo 2", ["Ninguno"] + lista_eq2, index=default_idx, key="eq2_main")
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
@@ -721,6 +673,23 @@ elif eq2!= "Ninguno":
 else:
     df_mostrar = df_f
     modo_doble = False
+
+# --- MINI RESUMEN FILTROS - para ver si filtra bien ---
+try:
+    _n_base = len(df_f)
+    _n_out = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
+    _min_txt = f"{min_desde_raw or '-'} -> {min_hasta_raw or '-'}"
+    _filtro_txt = f"{filtro_tipo} >= {filtro_pct}%" if filtro_tipo != "Ninguno" else "Ninguno"
+    st.markdown(
+        f"<div style='font-family:monospace;font-size:10px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #0A2342;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word'>"
+        f"FILTROS | Liga={liga_sel} | Desde fecha={fecha_sel_str} | "
+        f"Eq1={eq1} ({eq1_loc}) | Eq2={eq2} ({eq2_loc}) | "
+        f"Filtro%={_filtro_txt} | Stats={modo_stats} | Jugadores={modo_jugadores} | MIN={_min_txt} | "
+        f"Partidos={_n_out}/{_n_base}</div>",
+        unsafe_allow_html=True,
+    )
+except:
+    pass
 
 def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     j = int(r.get('Jornada',0) or 0)
@@ -1275,7 +1244,7 @@ elif st.session_state.show_partidos:
         import html as _html
         safe_html = _html.escape(html)
         # FIX HUECO GIGANTE BLANCO - FILTROS
-        h_dinamica = min(5000, max(600, len(html)//10))
+        h_dinamica = min(20000, max(600, len(html)//8))
         total_partidos_btn = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
         bloque_copy = f"""
         <div>
