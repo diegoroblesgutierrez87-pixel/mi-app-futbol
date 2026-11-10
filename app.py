@@ -251,6 +251,16 @@ def cargar_todo_lite():
                     d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
                 dfs.append(d)
         df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+    # Nations League: CSV aparte - dentro del loader, antes del cache
+    try:
+        _pn = BASE / "uefa_nations_league_2627.csv"
+        _ya_n = bool((df['League'].astype(str) == 'UEFA Nations League').any()) if 'League' in df.columns and not df.empty else False
+        if _pn.exists() and not _ya_n:
+            _dn = pd.read_csv(_pn, on_bad_lines='skip')
+            _dn['Date'] = pd.to_datetime(_dn['Date'], dayfirst=True, errors='coerce')
+            df = pd.concat([df, _dn], ignore_index=True)
+    except:
+        pass
     if 'Season' in df.columns:
         df['Season'] = df['Season'].astype(str)
     if 'fixture_id' in df.columns and not df.empty:
@@ -292,8 +302,21 @@ def cargar_goles_lite():
                 dfs.append(pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='c'))
         dg_all = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
+    # Nations League goles: CSV aparte - dentro del loader, antes del cache
+    try:
+        _pg = BASE / "uefa_nations_league_2627_goles.csv"
+        if _pg.exists():
+            _dg_n = pd.read_csv(_pg, dtype=str, on_bad_lines='skip')
+            if not dg_all.empty and 'fixture_id' in dg_all.columns:
+                _ex = set(dg_all['fixture_id'].astype(str).str.split('.').str[0])
+                _dg_n = _dg_n[~_dg_n['fixture_id'].astype(str).str.split('.').str[0].isin(_ex)]
+            if not _dg_n.empty:
+                dg_all = pd.concat([dg_all, _dg_n], ignore_index=True)
+    except:
+        pass
     ev = {}
     if dg_all.empty:
+        return ev
         return ev
     try:
         for fid, g in dg_all.groupby('fixture_id'):
