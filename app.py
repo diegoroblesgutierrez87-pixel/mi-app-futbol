@@ -1139,24 +1139,17 @@ if st.session_state.show_partidos and filtro_tipo!= "Ninguno":
         for liga_name in sorted(resumen.keys()):
             header_html += f"<div style='font-weight:900;margin-top:6px;color:#000;text-decoration:underline'>{liga_name}:</div>"
             for team_r, pct_r, ok_r, tot_r, jors_r in sorted(resumen[liga_name], key=lambda x: x[1], reverse=True):
-                def _j_chip(jj):
+                def _j_btts(jj):
                     try:
                         _d = df_f[pd.to_numeric(df_f['Jornada'], errors='coerce') == jj]
                         _d = _d[(_d['HomeTeam'].astype(str).str.upper() == str(team_r).upper()) | (_d['AwayTeam'].astype(str).str.upper() == str(team_r).upper())]
-                        if _d.empty:
-                            return f"J{jj}"
-                        _rr = _d.iloc[0]
-                        _hg = int(float(_rr.get('FTHG', 0) or 0)); _ag = int(float(_rr.get('FTAG', 0) or 0))
-                        _es_casa = str(_rr.get('HomeTeam', '')).upper() == str(team_r).upper()
-                        _cv = 'C' if _es_casa else 'V'
-                        _gf, _gc = (_hg, _ag) if _es_casa else (_ag, _hg)
-                        _res = 'G' if _gf > _gc else ('P' if _gf < _gc else 'E')
-                        _star = '*' if (_hg > 0 and _ag > 0) else ''
-                        _color = "#0f8105" if _res == "G" else ("#f31818" if _res == "P" else "#8B4513")
-                        return f"<span style='background:{_color};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin:0 1px;white-space:nowrap'>J{jj} {_cv}·{_res}{_star}</span>"
-                    except Exception:
-                        return f"J{jj}"
-                j_str = " ".join([_j_chip(j) for j in jors_r]) if jors_r else ""
+                        for _, _rr in _d.iterrows():
+                            if int(float(_rr.get('FTHG', 0) or 0)) > 0 and int(float(_rr.get('FTAG', 0) or 0)) > 0:
+                                return f"J{jj}*"
+                    except:
+                        pass
+                    return f"J{jj}"
+                j_str = ", ".join([_j_btts(j) for j in jors_r]) if jors_r else ""
                 header_html += f"<div style='margin-left:10px;color:#000'>{team_r} {ok_r}/{tot_r} -> {j_str} {pct_r:.0f}%</div>"
         header_html += "</div>"
         html_partidos = ""
