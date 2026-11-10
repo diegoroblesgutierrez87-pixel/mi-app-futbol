@@ -252,19 +252,22 @@ def cargar_todo_lite():
     if 'fixture_id' in df.columns and not df.empty:
         df = df.sort_values('Date').drop_duplicates(subset=['fixture_id'], keep='last')
 
-    # FIX DEFINITIVO - SIEMPRE RECALCULA JORNADA POR EQUIPO, AUNQUE EL PARQUET TRAIGA JORNADA VIEJA
+    # NO RECALCULAR Jornada si el parquet ya la trae - la Jornada del parquet es la real
+    # Solo recalcula si Jornada no existe o esta toda a 0 / vacia
     if not df.empty:
-        df = df.sort_values(['League','Season','Date']).copy()
-        df['Jornada'] = 0
-        for (l,s), g in df.groupby(['League','Season'], sort=False):
-            teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
-            for team in teams:
-                mask = (g['HomeTeam'] == team) | (g['AwayTeam'] == team)
-                sub = g[mask].sort_values('Date')
-                if sub.empty:
-                    continue
-                idxs = sub.index.to_numpy()
-                df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
+        _tiene_j = 'Jornada' in df.columns and pd.to_numeric(df['Jornada'], errors='coerce').fillna(0).gt(0).any()
+        if not _tiene_j:
+            df = df.sort_values(['League','Season','Date']).copy()
+            df['Jornada'] = 0
+            for (l,s), g in df.groupby(['League','Season'], sort=False):
+                teams = pd.unique(pd.concat([g['HomeTeam'], g['AwayTeam']]).dropna())
+                for team in teams:
+                    mask = (g['HomeTeam'] == team) | (g['AwayTeam'] == team)
+                    sub = g[mask].sort_values('Date')
+                    if sub.empty:
+                        continue
+                    idxs = sub.index.to_numpy()
+                    df.loc[idxs, 'Jornada'] = range(1, len(idxs)+1)
 
     if 'HomeAbbr' not in df.columns and 'HomeTeam' in df.columns:
         df['HomeAbbr'] = df['HomeTeam'].apply(abreviar_equipo)
@@ -1241,7 +1244,7 @@ elif st.session_state.show_partidos:
         import html as _html
         safe_html = _html.escape(html)
         # FIX HUECO GIGANTE BLANCO - FILTROS
-        h_dinamica = min(5000, max(600, len(html)//10))
+        h_dinamica = min(20000, max(600, len(html)//8))
         total_partidos_btn = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
         bloque_copy = f"""
         <div>
