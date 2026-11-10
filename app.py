@@ -230,28 +230,14 @@ BASE = get_base()
 
 @st.cache_data(show_spinner=False)
 def cargar_todo_lite():
+    # FILTROS lee UNICAMENTE: base_partidos.parquet + uefa_nations_league_2627.csv
     f_parquet = BASE / "base_partidos.parquet"
-    f_pkl = BASE / "base_partidos.pkl"
-    if f_parquet.exists():
-        df = pd.read_parquet(f_parquet)
-        if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    elif f_pkl.exists():
-        df = pd.read_pickle(f_pkl)
-        if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
-    else:
-        files = ["europa_actual.csv","din1_suec1_26_27.csv","asia_actual_j1j2k1k2csl1.csv","arabia_actual.csv","sudamerica_actual.csv","asia_4ligas_con_israel_2026.csv"]
-        dfs=[]
-        for fn in files:
-            fp = BASE / fn
-            if fp.exists() and fp.stat().st_size > 100:
-                d = pd.read_csv(fp, on_bad_lines='skip', engine='c')
-                if 'Date' in d.columns:
-                    d['Date'] = pd.to_datetime(d['Date'], dayfirst=True, errors='coerce')
-                dfs.append(d)
-        df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
-    # Nations League: CSV aparte - dentro del loader, antes del cache
+    if not f_parquet.exists():
+        return pd.DataFrame()
+    df = pd.read_parquet(f_parquet)
+    if 'Date' in df.columns:
+        df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+    # Nations League - unico CSV permitido en FILTROS
     try:
         _pn = BASE / "uefa_nations_league_2627.csv"
         _ya_n = bool((df['League'].astype(str) == 'UEFA Nations League').any()) if 'League' in df.columns and not df.empty else False
@@ -287,22 +273,12 @@ def cargar_todo_lite():
 
 @st.cache_data(show_spinner=False)
 def cargar_goles_lite():
+    # FILTROS lee UNICAMENTE: base_goles.parquet + uefa_nations_league_2627_goles.csv
     f_parquet = BASE / "base_goles.parquet"
-    f_pkl = BASE / "base_goles.pkl"
-    if f_parquet.exists():
-        dg_all = pd.read_parquet(f_parquet)
-    elif f_pkl.exists():
-        dg_all = pd.read_pickle(f_pkl)
-    else:
-        files = ["goles_actual.csv","goles_arabia_actual.csv","goles_sudamerica_actual.csv","goles_asia_4ligas_con_israel_2026.csv"]
-        dfs=[]
-        for fn in files:
-            f = BASE / fn
-            if f.exists() and f.stat().st_size > 100:
-                dfs.append(pd.read_csv(f, dtype=str, on_bad_lines='skip', engine='c'))
-        dg_all = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
-
-    # Nations League goles: CSV aparte - dentro del loader, antes del cache
+    if not f_parquet.exists():
+        return {}
+    dg_all = pd.read_parquet(f_parquet)
+    # Nations League goles - unico CSV permitido en FILTROS
     try:
         _pg = BASE / "uefa_nations_league_2627_goles.csv"
         if _pg.exists():
