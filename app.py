@@ -247,6 +247,18 @@ def cargar_todo_lite():
             df = pd.concat([df, _dn], ignore_index=True)
     except:
         pass
+    # UNIFICAR BRASILEIRAO: 2 nombres distintos para la misma liga -> 1 solo nombre
+    # Si no, FILTROS corta en J4 al elegir solo uno de los 2. Hay que hacerlo ANTES de recalcular Jornada.
+    if 'League' in df.columns:
+        _map_liga = {
+            'BRASILEIRAO SERIE A': 'SERIE A BRASIL',
+            'BRASILEIRAO SERIE B': 'SERIE B BRASIL',
+        }
+        df['League'] = df['League'].astype(str).str.strip().replace(_map_liga)
+        # Unificar tambien Season de Brasileirao: 2026 + 2026/2027 -> 2026
+        # Si no, el recuento de Jornada por League+Season vuelve a partir J1-J4 en 2 trozos
+        _es_br = df['League'].isin(['SERIE A BRASIL', 'SERIE B BRASIL'])
+        df.loc[_es_br, 'Season'] = '2026'
     if 'Season' in df.columns:
         df['Season'] = df['Season'].astype(str)
     if 'fixture_id' in df.columns and not df.empty:
