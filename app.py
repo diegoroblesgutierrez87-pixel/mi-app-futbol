@@ -629,39 +629,12 @@ if not _df_cal.empty and 'Date' in _df_cal.columns:
 else:
     fechas_cal_str = fechas_str
 
-c_cf1, c_cf2 = filtros.columns(2)
-with c_cf1:
-    coincidir_fecha_sel = st.selectbox("Coincidir fechas (futuro)", ["No"] + fechas_cal_str, key="coincidir_fechas")
-with c_cf2:
-    rival_auto = None
-    if coincidir_fecha_sel != "No" and eq1 != "Ninguno" and not _df_cal.empty:
-        try:
-            _cf_date = pd.to_datetime(coincidir_fecha_sel, dayfirst=True).date()
-            _df_cf = _df_cal[_df_cal['Date'].dt.date == _cf_date]
-            # filtra por liga si hay liga seleccionada
-            if liga_sel != "Todas":
-                _df_cf = _df_cf[_df_cf['League'].astype(str).str.upper() == liga_sel.upper()]
-            _mask_eq1 = (_df_cf['HomeTeam'].astype(str).str.upper() == eq1.upper()) | (_df_cf['AwayTeam'].astype(str).str.upper() == eq1.upper())
-            _match = _df_cf[_mask_eq1]
-            if not _match.empty:
-                _row = _match.iloc[0]
-                _home = str(_row['HomeTeam']).upper()
-                _away = str(_row['AwayTeam']).upper()
-                rival_auto = _away if _home == eq1.upper() else _home
-                st.success(f"Rival futuro: {rival_auto} el {coincidir_fecha_sel}")
-            else:
-                st.caption(f"Sin partido para {eq1} el {coincidir_fecha_sel}")
-        except:
-            rival_auto = None
+# Coincidir fechas (futuro) quitado
 
 c4,c5 = filtros.columns(2)
 with c4:
     lista_eq2 = [e for e in equipos if e.upper() != str(eq1).upper()]
-    if rival_auto and rival_auto in lista_eq2:
-        lista_eq2 = [rival_auto] + [e for e in lista_eq2 if e != rival_auto]
-        default_idx = 1
-    else:
-        default_idx = 0
+    default_idx = 0
     eq2 = st.selectbox("Equipo 2", ["Ninguno"] + lista_eq2, index=default_idx, key="eq2_main")
 with c5: eq2_loc = st.selectbox("Eq2 Condición", ["Todos","Local","Visitante"], key="eq2loc")
 
