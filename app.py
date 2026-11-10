@@ -695,6 +695,23 @@ else:
     df_mostrar = df_f
     modo_doble = False
 
+# --- MINI RESUMEN FILTROS - para ver si filtra bien ---
+try:
+    _n_base = len(df_f)
+    _n_out = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
+    _min_txt = f"{min_desde_raw or '-'} -> {min_hasta_raw or '-'}"
+    _filtro_txt = f"{filtro_tipo} >= {filtro_pct}%" if filtro_tipo != "Ninguno" else "Ninguno"
+    st.markdown(
+        f"<div style='font-family:monospace;font-size:10px;color:#000;font-weight:900;background:#f0f0f0;border:1px solid #0A2342;border-radius:6px;padding:6px 8px;margin:8px 0;white-space:pre-wrap;word-break:break-word'>"
+        f"FILTROS | Liga={liga_sel} | Desde fecha={fecha_sel_str} | "
+        f"Eq1={eq1} ({eq1_loc}) | Eq2={eq2} ({eq2_loc}) | "
+        f"Filtro%={_filtro_txt} | Stats={modo_stats} | Jugadores={modo_jugadores} | MIN={_min_txt} | "
+        f"Partidos={_n_out}/{_n_base}</div>",
+        unsafe_allow_html=True,
+    )
+except:
+    pass
+
 def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     j = int(r.get('Jornada',0) or 0)
     h = str(r.get('HomeTeam','')); a = str(r.get('AwayTeam',''))
