@@ -3852,12 +3852,27 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     try: dfs.append(pd.read_parquet(base))
                     except: pass
                     break
+        # Nations League: tu script la guarda en CSV aparte, si no lo sumas aqui nunca aparece
+        for name in ["uefa_nations_league_2627.csv"]:
+            for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                if base.exists():
+                    try: dfs.append(pd.read_csv(base, on_bad_lines='skip'))
+                    except: pass
+                    break
         df_p = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+        if not df_p.empty and 'fixture_id' in df_p.columns:
+            df_p = df_p.drop_duplicates(subset=['fixture_id'], keep='last')
         dfs_g=[]
         for name in ["base_goles_europa.parquet", "base_goles_resto.parquet"]:
             for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
                 if base.exists():
                     try: dfs_g.append(pd.read_parquet(base))
+                    except: pass
+                    break
+        for name in ["uefa_nations_league_2627_goles.csv"]:
+            for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
+                if base.exists():
+                    try: dfs_g.append(pd.read_csv(base, on_bad_lines='skip'))
                     except: pass
                     break
         df_g = pd.concat(dfs_g, ignore_index=True) if dfs_g else pd.DataFrame()
