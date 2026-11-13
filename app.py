@@ -3901,23 +3901,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         return df_p, ev
 
     df_jorn, ev_jorn = cargar_base_jornadas()
-    @st.cache_data(show_spinner=False)
-    def cargar_clas_jorn():
-        for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
-            if p.exists():
-                try: return pd.read_csv(p, on_bad_lines='skip')
-                except: pass
-        return pd.DataFrame()
-    df_clas_j = cargar_clas_jorn()
-    clas_dict_j={}; clas_max_j={}
-    if not df_clas_j.empty:
-        for _, rc in df_clas_j.iterrows():
-            try:
-                k=(normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
-                clas_dict_j[k]=rc
-                ln=normaliza(rc.get('League',''))
-                clas_max_j[ln]=max(clas_max_j.get(ln,0), int(rc.get('jornada_int',0)))
-            except: pass
+    # CLAS: ya viene en el parquet (HomeClasPos/HomeClasPts/AwayClasPos/AwayClasPts)
+    # No se carga Base-Clasificacion-Jornada.csv, no se usa _get_clas_fuzzy
     if df_jorn.empty:
         st.caption("Sin base")
     else:
@@ -4021,31 +4006,24 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     es_loc=str(rr.get('HomeTeam','')).upper().strip()==up_j
                     fid=str(rr.get('fixture_id','')).split('.')[0]
                     h_team=str(rr.get('HomeTeam','')).strip(); a_team=str(rr.get('AwayTeam','')).strip()
-                    lg_norm=normaliza(rr.get('League',''))
                     try:
-                        j_max=clas_max_j.get(lg_norm, 0); j_cand=[j_max] if j_max else [9999]
-                        def _get_clas_fuzzy(team_norm, lg_norm):
-                            for jc in j_cand:
-                                rec=clas_dict_j.get((lg_norm, jc, team_norm))
-                                if rec is not None: return rec
-                            for (l_, j_, n_), rec_ in clas_dict_j.items():
-                                if l_!=lg_norm: continue
-                                if j_ not in j_cand: continue
-                                if team_norm in n_ or n_ in team_norm: return rec_
-                            for (l_, j_, n_), rec_ in clas_dict_j.items():
-                                if l_!=lg_norm: continue
-                                if team_norm in n_ or n_ in team_norm: return rec_
-                            return None
-                        r_h=_get_clas_fuzzy(normaliza(h_team), lg_norm)
-                        r_a=_get_clas_fuzzy(normaliza(a_team), lg_norm)
-                        if r_h is not None:
-                            pos_h_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_h.get('Pos',0))}º</span>"
-                            pts_h_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({int(r_h.get('Pts',0))}pts)</span>"
+                        # CLAS desde parquet: HomeClasPos/HomeClasPts/AwayClasPos/AwayClasPts
+                        # Nations League no tiene clas -> queda "" como antes, no peta
+                        def _clas_num(v):
+                            try:
+                                if pd.isna(v): return None
+                                return int(float(v))
+                            except: return None
+                        _ph=_clas_num(rr.get('HomeClasPos')); _pth=_clas_num(rr.get('HomeClasPts'))
+                        _pa=_clas_num(rr.get('AwayClasPos')); _pta=_clas_num(rr.get('AwayClasPts'))
+                        if _ph is not None:
+                            pos_h_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{_ph}º</span>"
+                            pts_h_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({_pth}pts)</span>" if _pth is not None else ""
                         else:
                             pos_h_html=""; pts_h_html=""
-                        if r_a is not None:
-                            pos_a_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(r_a.get('Pos',0))}º</span>"
-                            pts_a_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({int(r_a.get('Pts',0))}pts)</span>"
+                        if _pa is not None:
+                            pos_a_html=f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{_pa}º</span>"
+                            pts_a_html=f"<span style='color:#888;font-size:9px;font-weight:400'>({_pta}pts)</span>" if _pta is not None else ""
                         else:
                             pos_a_html=""; pts_a_html=""
                         pts_txt=""
