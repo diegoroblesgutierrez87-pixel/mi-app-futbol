@@ -972,8 +972,10 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
         j_max = clas_max_j_main.get(lg_norm, j_act)
         def _get_main(jn, team_norm):
             return clas_dict_main.get((lg_norm, jn, team_norm))
-        rh_act = _get_main(j_max, normaliza(h))
-        ra_act = _get_main(j_max, normaliza(a))
+        _h_norm_clas = hn if 'hn' in locals() else normaliza(h)
+        _a_norm_clas = an if 'an' in locals() else normaliza(a)
+        rh_act = _get_main(j_max, _h_norm_clas)
+        ra_act = _get_main(j_max, _a_norm_clas)
         if rh_act is not None and ra_act is not None:
             txt_actual_main = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
             clas_html = f"<div style='text-align:center;margin:3px 0;'><span style='background:#E8E8E8;color:#000;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:900;'>{txt_actual_main}</span></div>"
