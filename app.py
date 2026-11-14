@@ -2215,15 +2215,12 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         if not df_e.empty:
             df_e['HomeNorm'] = df_e['HomeTeam'].astype(str).str.upper().str.strip()
             df_e['AwayNorm'] = df_e['AwayTeam'].astype(str).str.upper().str.strip()
-            def _parse_fecha_base_fix2(s):
-                try:
-                    d = pd.to_datetime(s, dayfirst=True, errors='coerce')
-                    if pd.isna(d):
-                        d = pd.to_datetime(s, errors='coerce')
-                    return d
-                except:
-                    return pd.NaT
-            df_e['Date'] = df_e['Date'].apply(_parse_fecha_base_fix2)
+            # Fechas en bloque: mismo resultado, sin ir fila a fila
+            _date_orig_fix2 = df_e['Date'].astype(str)
+            df_e['Date'] = pd.to_datetime(_date_orig_fix2, dayfirst=True, errors='coerce')
+            _mask_nat_fix2 = df_e['Date'].isna()
+            if _mask_nat_fix2.any():
+                df_e.loc[_mask_nat_fix2, 'Date'] = pd.to_datetime(_date_orig_fix2[_mask_nat_fix2], errors='coerce')
             df_e = df_e.sort_values(['League','Season','Date']).copy()
             # USA TU jornada_num DEL CSV/PARQUET - NO RECALCULA
             if 'jornada_num' in df_e.columns:
@@ -2242,17 +2239,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
         ev = {}
         ###########BLOQUE GOLES FIX 2 GOLEADOR ASISTENTE
         if not df_g.empty:
-            def _parse_min_fix2(v):
-                try:
-                    s=str(v).strip().replace("'", "")
-                    if "+" in s:
-                        a,b=s.split("+",1)
-                        return int(a)+int(b)
-                    return int(float(s))
-                except:
-                    return 0
+            # Minutos en bloque: mismo resultado, sin ir fila a fila
+            # "45+2" -> 47, "45'" -> 45, "45.0" -> 45, vacío -> 0
             df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
-            df_g['m'] = df_g.get('minuto', 0).apply(_parse_min_fix2)
+            _min_raw_fix2 = df_g.get('minuto', 0).astype(str).str.replace("'", "", regex=False).str.strip()
+            _min_partes_fix2 = _min_raw_fix2.str.split("+", n=1, expand=True)
+            _min_base_fix2 = pd.to_numeric(_min_partes_fix2[0], errors='coerce').fillna(0)
+            if _min_partes_fix2.shape[1] > 1:
+                _min_extra_fix2 = pd.to_numeric(_min_partes_fix2[1], errors='coerce').fillna(0)
+            else:
+                _min_extra_fix2 = 0
+            df_g['m'] = (_min_base_fix2 + _min_extra_fix2).astype(int)
             for fid, sub in df_g.groupby('fid_str'):
                 ev[fid] = [{'m': int(r.get('m', 0)), 'team': str(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
         return df_e, ev
