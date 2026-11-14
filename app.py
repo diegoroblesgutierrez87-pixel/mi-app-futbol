@@ -2254,7 +2254,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             df_g['fid_str'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
             df_g['m'] = df_g.get('minuto', 0).apply(_parse_min_fix2)
             for fid, sub in df_g.groupby('fid_str'):
-                ev[fid] = [{'m': int(r.get('m', 0)), 'team': normaliza(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
+                ev[fid] = [{'m': int(r.get('m', 0)), 'team': str(r.get('equipo','')), 'tipo': str(r.get('tipo','')), 'goleador': str(r.get('goleador','')), 'asistente': str(r.get('asistente',''))} for _, r in sub.iterrows()]
         return df_e, ev
 
     df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2_v2()
@@ -2495,7 +2495,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                 if equipos_manuales_2_fix2: equipos_a_mostrar_fix2.extend(equipos_manuales_2_fix2)
 
             for nombre_eq_fix2 in equipos_a_mostrar_fix2:
-                norm_eq_fix2 = normaliza(nombre_eq_fix2)
+                # SIN normaliza: tu equipo tal cual del parquet, en mayúsculas y sin espacios, igual que los goles
+                norm_eq_fix2 = nombre_eq_fix2.upper().strip()
                 eq_up_fix2 = nombre_eq_fix2.upper().strip()
                 df_team_fix2 = df_fix2[(df_fix2['HomeNorm'] == eq_up_fix2) | (df_fix2['AwayNorm'] == eq_up_fix2)] if 'HomeNorm' in df_fix2.columns else df_fix2[(df_fix2['HomeTeam'].astype(str).str.upper().str.strip() == eq_up_fix2) | (df_fix2['AwayTeam'].astype(str).str.upper().str.strip() == eq_up_fix2)]
 
