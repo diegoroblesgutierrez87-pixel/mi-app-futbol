@@ -2739,26 +2739,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         fid = str(rr.get('fixture_id','')).split('.')[0]
                         evs = eventos_fix2.get(fid, [])
                         if not evs:
-                            try:
-                                import pathlib as _pb
-                                _gb = _pb.Path("/mnt/data/base_goles.csv")
-                                if _gb.exists():
-                                    _dfgb = pd.read_csv(_gb, on_bad_lines='skip')
-                                    _dfgb['fid_str'] = _dfgb['fixture_id'].astype(str).str.split('.').str[0]
-                                    _sub = _dfgb[_dfgb['fid_str']==fid]
-                                    for _, _rg in _sub.iterrows():
-                                        try:
-                                            _ms = str(_rg.get('minuto','0')).replace("'", "")
-                                            _mm = int(_ms.split('+')[0].split('.')[0]) if _ms else 0
-                                        except:
-                                            _mm = 0
-                                        if 'Missed' in str(_rg.get('tipo','')): continue
-                                        if MIN_DESDE_PRED_FIX2 is not None and _mm < MIN_DESDE_PRED_FIX2: continue
-                                        if MIN_HASTA_PRED_FIX2 is not None and _mm > MIN_HASTA_PRED_FIX2: continue
-                                        return True
-                                    return False
-                            except:
-                                pass
+                            # Sin goles cargados = sin gol en ese rango. No releer el CSV.
+                            return False
                         for ev in evs:
                             if 'Missed' in ev.get('tipo',''): continue
                             mm = ev.get('m',-1)
