@@ -3377,10 +3377,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
                         evs_1p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) <= 45]
                         evs_2p_fix2 = [e for e in evs_sorted_fix2 if e.get('m',0) > 45]
-                        g1_data = _agrupa_fix2_con_score(evs_1p_fix2, 0, 0)
-                        if g1_data: g1_data[-1] = (g1_data[-1][0], hthg, htag)
-                        g2_data = _agrupa_fix2_con_score(evs_2p_fix2, hthg, htag)
-                        if g2_data: g2_data[-1] = (g2_data[-1][0], hg, ag)
+                        # Quitado: este calculo se repetia abajo y se tiraba, se usa el de _sub
 
                         try:
                             _fecha_dt_fix2 = pd.to_datetime(r.get('Date'), dayfirst=True, errors='coerce')
