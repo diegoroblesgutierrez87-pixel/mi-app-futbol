@@ -3819,21 +3819,23 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         ev={}
         if not df_g.empty:
             df_g['fid_str']=df_g['fixture_id'].astype(str).str.split('.').str[0]
-            # femenino viene como "45'" / "45'+2'" -> to_numeric lo deja en 0. Usa min_num si hay, si no extrae el numero.
-            def _parse_m(row):
-                try:
-                    if 'min_num' in row and pd.notna(row.get('min_num')):
-                        return int(float(row.get('min_num')))
-                except:
-                    pass
-                try:
-                    m = re.search(r'\d+', str(row.get('minuto', '')))
-                    return int(m.group(0)) if m else 0
-                except:
-                    return 0
-            df_g['m'] = df_g.apply(_parse_m, axis=1).astype(int)
-            for fid, sub in df_g.groupby('fid_str'):
-                ev[fid]=[{'m':int(r.get('m',0)), 'team':normaliza(r.get('equipo','')), 'tipo':str(r.get('tipo',''))} for _, r in sub.iterrows()]
+            # VECTORIZADO: sin apply(axis=1) ni re.search por fila
+            # 1. Si hay min_num, úsalo. Si no, extrae el número de "45'" / "45'+2'" con str.extract (vectorizado)
+            if 'min_num' in df_g.columns:
+                m_num = pd.to_numeric(df_g['min_num'], errors='coerce')
+            else:
+                m_num = pd.Series(np.nan, index=df_g.index)
+            m_txt = df_g['minuto'].astype(str).str.extract(r'(\d+)', expand=False)
+            df_g['m'] = m_num.fillna(pd.to_numeric(m_txt, errors='coerce')).fillna(0).astype(int)
+            # 2. Un solo zip en vez de groupby + iterrows. Mismo resultado, misma forma de ev.
+            _fid_list = df_g['fid_str'].tolist()
+            _m_list = df_g['m'].tolist()
+            _team_list = [normaliza(x) for x in df_g['equipo'].astype(str).tolist()]
+            _tipo_list = df_g['tipo'].astype(str).tolist()
+            for _fid, _mm, _tm, _tp in zip(_fid_list, _m_list, _team_list, _tipo_list):
+                if _fid not in ev:
+                    ev[_fid] = []
+                ev[_fid].append({'m': int(_mm), 'team': _tm, 'tipo': _tp})
         return df_p, ev
 
     df_jorn, ev_jorn = cargar_base_jornadas()
