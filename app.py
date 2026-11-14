@@ -3802,6 +3802,13 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         df_p = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
         if not df_p.empty and 'fixture_id' in df_p.columns:
             df_p = df_p.drop_duplicates(subset=['fixture_id'], keep='last')
+        # CARPETITAS: se calcula UNA SOLA VEZ al cargar, no en cada equipo
+        # HomeNorm/AwayNorm es EXACTAMENTE lo mismo que .upper().strip() que usabas abajo
+        # Date_parsed es EXACTAMENTE lo mismo que pd.to_datetime(..., dayfirst=True) que usabas abajo
+        if not df_p.empty:
+            df_p['HomeNorm'] = df_p['HomeTeam'].astype(str).str.upper().str.strip()
+            df_p['AwayNorm'] = df_p['AwayTeam'].astype(str).str.upper().str.strip()
+            df_p['Date_parsed'] = pd.to_datetime(df_p['Date'], dayfirst=True, errors='coerce')
         dfs_g=[]
         for name in ["base_goles_europa.parquet", "base_goles_resto.parquet"]:
             for base in [pathlib.Path(name), pathlib.Path(__file__).parent.resolve()/name, pathlib.Path("/mnt/data")/name]:
@@ -3927,13 +3934,15 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         bloques_html=[]
         for eq_j in eqs_j:
             norm_j = normaliza(eq_j); up_j = eq_j.upper().strip()
-            df_team = df_l[(df_l['HomeTeam'].astype(str).str.upper().str.strip()==up_j) | (df_l['AwayTeam'].astype(str).str.upper().str.strip()==up_j)].copy()
-            df_team['Date']=pd.to_datetime(df_team['Date'], dayfirst=True, errors='coerce')
+            # Ya no busca entre 7.208 traduciendo: usa HomeNorm/AwayNorm ya calculados
+            df_team = df_l[(df_l['HomeNorm']==up_j) | (df_l['AwayNorm']==up_j)].copy()
+            # Ya no convierte fechas: usa Date_parsed ya calculada
+            df_team['Date']=df_team['Date_parsed']
             df_team=df_team.sort_values('Date').reset_index(drop=True)
             df_team['J_EQ']=range(1, len(df_team)+1)
 
             total=len(df_team)
-            loc_total=int((df_team['HomeTeam'].astype(str).str.upper().str.strip()==up_j).sum())
+            loc_total=int((df_team['HomeNorm']==up_j).sum())
             vis_total=total-loc_total
 
             total_por_j={}
@@ -3941,7 +3950,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             for _, rr in df_team.iterrows():
                 try:
                     jn=int(rr.get('J_EQ',0)); hg=int(float(rr.get('FTHG',0) or 0)); ag=int(float(rr.get('FTAG',0) or 0))
-                    es_loc=str(rr.get('HomeTeam','')).upper().strip()==up_j
+                    es_loc=(rr.get('HomeNorm','')==up_j)
                     fid=str(rr.get('fixture_id','')).split('.')[0]
                     h_team=str(rr.get('HomeTeam','')).strip(); a_team=str(rr.get('AwayTeam','')).strip()
                     try:
