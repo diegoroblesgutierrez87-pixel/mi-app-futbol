@@ -308,27 +308,31 @@ def cargar_goles_lite():
     ev = {}
     if dg_all.empty:
         return ev
-        return ev
     try:
+        # RAPIDO: minuto de una vez para todos, no gol a gol
+        _min_txt = dg_all['minuto'].astype(str).str.split('+', n=1).str[0]
+        dg_all = dg_all.assign(_m=pd.to_numeric(_min_txt, errors='coerce').fillna(0).astype(int))
+        # RAPIDO: cada equipo se normaliza UNA SOLA VEZ, no 20.000 veces
+        _equipos_unicos = dg_all['equipo'].astype(str).unique()
+        _map_team = {e: normaliza(e) for e in _equipos_unicos}
+        _map_abbr = {t: abreviar_equipo(t) for t in set(_map_team.values())}
+        dg_all = dg_all.assign(_team=dg_all['equipo'].astype(str).map(_map_team))
+        dg_all = dg_all[dg_all['_team'].astype(str).str.len() > 0]
+        dg_all = dg_all.assign(_abbr=dg_all['_team'].map(_map_abbr))
+        _gol = dg_all['goleador'].astype(str).str.strip().replace({'nan': '', 'None': ''})
+        _asi = dg_all['asistente'].astype(str).str.strip().replace({'nan': '', 'None': ''})
+        dg_all = dg_all.assign(_gol=_gol, _asi=_asi)
+        _cols = ['_m', '_team', '_gol', '_asi', '_abbr', 'tipo', 'fixture_id']
         for fid, g in dg_all.groupby('fixture_id'):
             fid_c = str(fid).split('.')[0]
-            lista = []
-            for _, r in g.iterrows():
-                try:
-                    m = int(float(str(r.get('minuto','0')).split('+')[0] or 0))
-                    team = normaliza(r.get('equipo',''))
-                    if not team: continue
-                    gol = str(r.get('goleador','')).strip()
-                    asi = str(r.get('asistente','')).strip()
-                    if gol.lower() == 'nan': gol = ""
-                    if asi.lower() == 'nan': asi = ""
-                    abbr = abreviar_equipo(team)
-                    tipo = str(r.get('tipo','Normal Goal')).strip()
-                    lista.append({"m": m, "team": team, "gol": gol, "asi": asi, "abbr": abbr, "tipo": tipo})
-                except: continue
+            # to_numpy() es mucho mas rapido que iterrows()
+            arr = g[_cols].to_numpy()
+            lista = [{"m": int(r[0]), "team": r[1], "gol": r[2], "asi": r[3], "abbr": r[4], "tipo": str(r[5]).strip() if str(r[5]).strip() else "Normal Goal"} for r in arr]
             if lista:
-                ev[fid_c] = sorted(lista, key=lambda x: x['m'])
-    except: pass
+                lista.sort(key=lambda x: x['m'])
+                ev[fid_c] = lista
+    except:
+        pass
     return ev
 
 @st.cache_data(show_spinner=False)
