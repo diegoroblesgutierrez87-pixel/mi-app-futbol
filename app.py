@@ -2238,7 +2238,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     df_e.loc[idxs, 'Jornada'] = (np.arange(len(idxs)) // ppj) + 1
 
         # GOLES: europa + resto + Nations League
-        df_g = _load_concat_goles(["base_goles_europa.parquet", "base_goles_resto.parquet", "base_goles_resto_CORREGIDO.csv", "base_goles.csv", "base_goles_resto.csv", "base_goles_europa.csv", "uefa_nations_league_2627_goles.csv"])
+        df_g = _load_concat_goles(["base_goles_europa.parquet", "base_goles_resto.parquet", "uefa_nations_league_2627_goles.csv"])
         ev = {}
         ###########BLOQUE GOLES FIX 2 GOLEADOR ASISTENTE
         if not df_g.empty:
