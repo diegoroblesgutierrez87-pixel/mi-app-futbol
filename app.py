@@ -2278,27 +2278,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     df_europa_fix2, eventos_europa_fix2 = cargar_base_europa_fix2_v2()
 
-    @st.cache_data(show_spinner=False)
-    def cargar_clasificacion_fix2():
-        for p in [pathlib.Path("/mnt/data/Base-Clasificacion-Jornada.csv"), pathlib.Path(__file__).parent.resolve()/ "Base-Clasificacion-Jornada.csv"]:
-            if p.exists():
-                try:
-                    return pd.read_csv(p, on_bad_lines='skip')
-                except:
-                    pass
-        return pd.DataFrame()
-    df_clas_fix2 = cargar_clasificacion_fix2()
-    clas_dict_fix2 = {}
-    clas_max_j_fix2 = {}
-    if not df_clas_fix2.empty:
-        for _, rc in df_clas_fix2.iterrows():
-            try:
-                k = (normaliza(rc.get('League','')), int(rc.get('jornada_int',0)), normaliza(rc.get('Team','')))
-                clas_dict_fix2[k] = rc
-                ln = normaliza(rc.get('League',''))
-                clas_max_j_fix2[ln] = max(clas_max_j_fix2.get(ln,0), int(rc.get('jornada_int',0)))
-            except:
-                pass
+#
+    # CLAS: ya viene en el parquet (HomeClasPos/HomeClasPts/AwayClasPos/AwayClasPts)
+    # No se carga Base-Clasificacion-Jornada.csv
 
     df_fix2 = df_europa_fix2
     eventos_fix2 = eventos_europa_fix2
@@ -2952,27 +2934,21 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                             opp_norm = normaliza(opp_team)
                             self_team = nombre_eq_fix2.strip()
                             self_norm = norm_eq_fix2
-                            lg_norm_r = normaliza(rr.get('League',''))
-                            def _get_clas_fuzzy(lg_n, team_n, j_list):
-                                for jc in j_list:
-                                    rec = clas_dict_fix2.get((lg_n, jc, team_n))
-                                    if rec is not None:
-                                        return rec
-                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
-                                    if l_ != lg_n: continue
-                                    if j_ not in j_list: continue
-                                    if team_n in n_ or n_ in team_n:
-                                        return rec_
-                                for (l_, n_, j_), rec_ in clas_dict_fix2.items():
-                                    if l_ != lg_n: continue
-                                    if team_n in n_ or n_ in team_n:
-                                        return rec_
-                                return None
                             try:
-                                j_max_liga = clas_max_j_fix2.get(lg_norm_r, 0)
-                                j_cands = [j_max_liga] if j_max_liga else [9999]
-                                r_self = _get_clas_fuzzy(lg_norm_r, self_norm, j_cands)
-                                r_opp = _get_clas_fuzzy(lg_norm_r, opp_norm, j_cands)
+                                # CLAS desde parquet
+                                def _cn(v):
+                                    try:
+                                        if pd.isna(v): return None
+                                        return int(float(v))
+                                    except: return None
+                                if es_loc:
+                                    _ps = _cn(rr.get('HomeClasPos')); _pts_s = _cn(rr.get('HomeClasPts'))
+                                    _po = _cn(rr.get('AwayClasPos')); _pts_o = _cn(rr.get('AwayClasPts'))
+                                else:
+                                    _ps = _cn(rr.get('AwayClasPos')); _pts_s = _cn(rr.get('AwayClasPts'))
+                                    _po = _cn(rr.get('HomeClasPos')); _pts_o = _cn(rr.get('HomeClasPts'))
+                                r_self = {'Pos': _ps, 'Pts': _pts_s} if _ps is not None else None
+                                r_opp = {'Pos': _po, 'Pts': _pts_o} if _po is not None else None
                                 # POS AL LADO DEL NOMBRE: 13ºTEAM
                                 def _pos_celeste(rec):
                                     return f"<span style='color:#00BFFF;font-size:9px;font-weight:900'>{int(rec.get('Pos',0))}º</span>" if rec is not None else ""
@@ -3151,22 +3127,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     _ag_c = f"<span style='color:#00c800;font-weight:900'>{_ag}</span>" if _ag>0 else f"<span style='color:#888;font-weight:900'>{_ag}</span>"
                                     _hthg_c = f"<span style='color:#888;font-weight:900'>{_hthg}</span>"
                                     _htag_c = f"<span style='color:#FFFFFF;font-weight:900'>{_htag}</span>" if _htag>0 else f"<span style='color:#888;font-weight:900'>{_htag}</span>"
-                                def _get_res_hueco(j_, team_n):
-                                    rec = clas_dict_fix2.get((_lg0, j_, team_n))
-                                    if rec is not None:
-                                        return rec
-                                    for (l_, jj_, n_), rc_ in clas_dict_fix2.items():
-                                        if l_ != _lg0: continue
-                                        if jj_ != j_: continue
-                                        if team_n in n_ or n_ in team_n:
-                                            return rc_
-                                    return None
-                                rh = _get_res_hueco(_j0_antes, normaliza(_h0)) if _j0_antes>=1 else None
-                                ra = _get_res_hueco(_j0_antes, normaliza(_a0)) if _j0_antes>=1 else None
-                                if rh is None:
-                                    rh = _get_res_hueco(clas_max_j_fix2.get(_lg0, int(jn)), normaliza(_h0))
-                                if ra is None:
-                                    ra = _get_res_hueco(clas_max_j_fix2.get(_lg0, int(jn)), normaliza(_a0))
+                                # CLAS desde parquet (r_base)
+                                def _cn2(v):
+                                    try:
+                                        if pd.isna(v): return None
+                                        return int(float(v))
+                                    except: return None
+                                _ph2 = _cn2(r_base.get('HomeClasPos')); _pth2 = _cn2(r_base.get('HomeClasPts'))
+                                _pa2 = _cn2(r_base.get('AwayClasPos')); _pta2 = _cn2(r_base.get('AwayClasPts'))
+                                rh = {'Pos': _ph2, 'Pts': _pth2} if _ph2 is not None else None
+                                ra = {'Pos': _pa2, 'Pts': _pta2} if _pa2 is not None else None
                                 if rh is not None and ra is not None:
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} {int(rh.get('Pos',0))}º vs {_a0} {int(ra.get('Pos',0))}º</span>"
                                 else:
@@ -3185,23 +3155,19 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         last_j_fix2 = int(pd.to_numeric(df_team_base_total_fix2['Jornada'], errors='coerce').max())
                     except:
                         last_j_fix2 = 0
-                    # --- CLASIFICACION PROPIA 8º/20(14pts) ---
+                    # --- CLASIFICACION PROPIA desde parquet ---
                     try:
-                        _lg_norm_self = normaliza(df_team_base_total_fix2['League'].iloc[0]) if 'League' in df_team_base_total_fix2.columns and not df_team_base_total_fix2.empty else normaliza("")
-                        _j_max_self = clas_max_j_fix2.get(_lg_norm_self, last_j_fix2)
-                        _rec_self = clas_dict_fix2.get((_lg_norm_self, _j_max_self, norm_eq_fix2))
-                        if _rec_self is None:
-                            for (l_, j_, n_), rec_ in clas_dict_fix2.items():
-                                if l_ != _lg_norm_self: continue
-                                if j_ != _j_max_self: continue
-                                if norm_eq_fix2 in n_ or n_ in norm_eq_fix2:
-                                    _rec_self = rec_; break
-                        if _rec_self is not None:
-                            _pos_self = int(_rec_self.get('Pos',0)); _pts_self = int(_rec_self.get('Pts',0))
-                            _tot_teams = len([k for k in clas_dict_fix2.keys() if k[0]==_lg_norm_self and k[1]==_j_max_self])
-                            _clas_txt = f" <span style='color:#888;font-size:10px;font-weight:400'>{_pos_self}º/{_tot_teams}</span>"
+                        _r0_self = df_team_base_total_fix2.iloc[0]
+                        def _cn3(v):
+                            try:
+                                if pd.isna(v): return None
+                                return int(float(v))
+                            except: return None
+                        if normaliza(_r0_self.get('HomeTeam','')) == norm_eq_fix2:
+                            _pos_self = _cn3(_r0_self.get('HomeClasPos'))
                         else:
-                            _clas_txt = ""
+                            _pos_self = _cn3(_r0_self.get('AwayClasPos'))
+                        _clas_txt = f" <span style='color:#888;font-size:10px;font-weight:400'>{_pos_self}º</span>" if _pos_self is not None else ""
                     except:
                         _clas_txt = ""
                     linea_res = f"{nombre_eq_fix2.upper()}: {filt_fix2}/{total_fix2} <span style='color:#A020F0;font-weight:900'>_Jornada {last_j_fix2}</span>{_clas_txt}<br><br>L:{local_filt}/{local_total}<br>{j_loc_plain_txt}<br>V:{visitante_filt}/{visitante_total}<br>{j_vis_plain_txt}"
@@ -3328,22 +3294,16 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     _badge0 = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>E</span>"
                                 else:
                                     _badge0 = "<span style='background:#ff2a2a;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>P</span>"
-                                def _get_hueco(j_, team_n):
-                                    rec = clas_dict_fix2.get((_lg0, j_, team_n))
-                                    if rec is not None:
-                                        return rec
-                                    for (l_, jj_, n_), rc_ in clas_dict_fix2.items():
-                                        if l_ != _lg0: continue
-                                        if jj_ != j_: continue
-                                        if team_n in n_ or n_ in team_n:
-                                            return rc_
-                                    return None
-                                rh = _get_hueco(_j0_antes, normaliza(_h0)) if _j0_antes>=1 else None
-                                ra = _get_hueco(_j0_antes, normaliza(_a0)) if _j0_antes>=1 else None
-                                if rh is None:
-                                    rh = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_h0))
-                                if ra is None:
-                                    ra = _get_hueco(clas_max_j_fix2.get(_lg0, int(j_fix2)), normaliza(_a0))
+                                # CLAS desde parquet (_r0)
+                                def _cn4(v):
+                                    try:
+                                        if pd.isna(v): return None
+                                        return int(float(v))
+                                    except: return None
+                                _ph4 = _cn4(_r0.get('HomeClasPos')); _pth4 = _cn4(_r0.get('HomeClasPts'))
+                                _pa4 = _cn4(_r0.get('AwayClasPos')); _pta4 = _cn4(_r0.get('AwayClasPts'))
+                                rh = {'Pos': _ph4, 'Pts': _pth4} if _ph4 is not None else None
+                                ra = {'Pos': _pa4, 'Pts': _pta4} if _pa4 is not None else None
                                 if rh is not None and ra is not None:
                                     txt_hueco = f"{_badge0})J{int(j_fix2)}([{_hg0_c}-{_ag0_c}] [{_hthg0_c}-{_htag0_c}]) <span style='color:#00BFFF;font-weight:900'>{int(rh.get('Pos',0))}º</span>{_h0} <span style='color:#888'>({int(rh.get('Pts',0))}pts)</span> vs <span style='color:#00BFFF;font-weight:900'>{int(ra.get('Pos',0))}º</span>{_a0} <span style='color:#888'>({int(ra.get('Pts',0))}pts)</span>"
                                 else:
@@ -3558,22 +3518,17 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         html += f"<div style='font-weight:900; color:#fff; font-size:10px; line-height:1.1; margin:0 0 3px 0;'>J{int(j_fix2)} | <span style='background:{col_main};color:#fff;padding:3px 8px;border-radius:4px;font-size:14px;'>{estado}</span> <span style='color:#aaa;'>({_fecha_str_fix2})</span>{_cuotas_j}</div>"
                         # --- CLASIFICACION ENCIMA DE EQUIPO VS EQUIPO ---
                         try:
-                            lg_norm = normaliza(r.get('League',''))
-                            j_act = int(j_fix2)
-                            j_antes = j_act - 1
-                            j_max = clas_max_j_fix2.get(lg_norm, j_act)
-                            def _get(j, team_norm):
-                                return clas_dict_fix2.get((lg_norm, j, team_norm))
-                            rh_antes = _get(j_antes, h_norm_r) if j_antes>=1 else None
-                            ra_antes = _get(j_antes, a_norm_r) if j_antes>=1 else None
-                            rh_act = _get(j_max, h_norm_r)
-                            ra_act = _get(j_max, a_norm_r)
+                            # CLAS desde parquet (solo actual, no hay "antes" en parquet)
+                            def _cn5(v):
+                                try:
+                                    if pd.isna(v): return None
+                                    return int(float(v))
+                                except: return None
+                            _ph5 = _cn5(r.get('HomeClasPos')); _pth5 = _cn5(r.get('HomeClasPts'))
+                            _pa5 = _cn5(r.get('AwayClasPos')); _pta5 = _cn5(r.get('AwayClasPts'))
                             txt_actual = ""
-                            txt_antes = ""
-                            if rh_act is not None and ra_act is not None:
-                                txt_actual = f"({int(rh_act.get('Pts',0))}pts){int(rh_act.get('Pos',0))}º vs {int(ra_act.get('Pos',0))}º({int(ra_act.get('Pts',0))}pts) actual"
-                            if rh_antes is not None and ra_antes is not None:
-                                txt_antes = f"({int(rh_antes.get('Pts',0))}pts){int(rh_antes.get('Pos',0))}º vs {int(ra_antes.get('Pos',0))}º({int(ra_antes.get('Pts',0))}pts) antes"
+                            if _ph5 is not None and _pa5 is not None:
+                                txt_actual = f"({_pth5}pts){_ph5}º vs {_pa5}º({_pta5}pts) actual"
                             if txt_actual:
                                 html += f"<div style='font-size:10px; color:#fff; text-align:center; margin:2px 0 4px 0;'><span style='background:#000; padding:1px 5px; border-radius:3px;'>{txt_actual}</span></div>"
                         except:
