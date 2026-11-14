@@ -3837,12 +3837,17 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
             # 2. Un solo zip en vez de groupby + iterrows. Mismo resultado, misma forma de ev.
             _fid_list = df_g['fid_str'].tolist()
             _m_list = df_g['m'].tolist()
-            _team_list = [normaliza(x) for x in df_g['equipo'].astype(str).tolist()]
+            # SIN normaliza: el parquet viene de base_partidos, ya viene con 1 solo nombre por equipo
+            # equipo se guarda tal cual, sin traducir
+            _team_list = df_g['equipo'].astype(str).tolist()
             _tipo_list = df_g['tipo'].astype(str).tolist()
             for _fid, _mm, _tm, _tp in zip(_fid_list, _m_list, _team_list, _tipo_list):
                 if _fid not in ev:
                     ev[_fid] = []
                 ev[_fid].append({'m': int(_mm), 'team': _tm, 'tipo': _tp})
+            # ORDENAR 1 VEZ: ya no hay que hacer sorted() en cada partido
+            for _fid in ev:
+                ev[_fid].sort(key=lambda x: x.get('m', 0))
         return df_p, ev
 
     df_jorn, ev_jorn = cargar_base_jornadas()
@@ -3899,7 +3904,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
           }
           setTimeout(fixMin3, 200);
           setTimeout(fixMin3, 800);
-          setInterval(fixMin3, 1200);
+          // Sin setInterval: ya no recoloca los cuadritos cada 1,2 segundos, se acabaron los tirones
         })();
         </script>
         """, height=0)
@@ -3930,7 +3935,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
         # SOPORTE MULTI-EQUIPO - muestra los 2/3/4 seleccionados
         bloques_html=[]
         for eq_j in eqs_j:
-            norm_j = normaliza(eq_j); up_j = eq_j.upper().strip()
+            # SIN normaliza: eq_j ya viene del parquet, mismo nombre que en los goles
+            norm_j = eq_j; up_j = eq_j.upper().strip()
             # Ya no busca entre 7.208 traduciendo: usa HomeNorm/AwayNorm ya calculados
             df_team = df_l[(df_l['HomeNorm']==up_j) | (df_l['AwayNorm']==up_j)].copy()
             # Ya no convierte fechas: usa Date_parsed ya calculada
@@ -3944,7 +3950,15 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
 
             total_por_j={}
             filt_cnt=0
-            for _, rr in df_team.iterrows():
+            # Se define UNA vez, no 35 veces por equipo
+            def _clas_num(v):
+                try:
+                    if pd.isna(v): return None
+                    return int(float(v))
+                except: return None
+            # to_dict('records') = la misma lista de partidos, pero sin el papeleo de iterrows
+            # rr.get('...') funciona EXACTAMENTE igual que antes
+            for rr in df_team.to_dict('records'):
                 try:
                     jn=int(rr.get('J_EQ',0)); hg=int(float(rr.get('FTHG',0) or 0)); ag=int(float(rr.get('FTAG',0) or 0))
                     es_loc=(rr.get('HomeNorm','')==up_j)
@@ -3953,11 +3967,7 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     try:
                         # CLAS desde parquet: HomeClasPos/HomeClasPts/AwayClasPos/AwayClasPts
                         # Nations League no tiene clas -> queda "" como antes, no peta
-                        def _clas_num(v):
-                            try:
-                                if pd.isna(v): return None
-                                return int(float(v))
-                            except: return None
+                        # _clas_num ya está definido fuera del bucle, no se redefine aquí
                         _ph=_clas_num(rr.get('HomeClasPos')); _pth=_clas_num(rr.get('HomeClasPts'))
                         _pa=_clas_num(rr.get('AwayClasPos')); _pta=_clas_num(rr.get('AwayClasPts'))
                         if _ph is not None:
@@ -3979,9 +3989,11 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     except:
                         hthg=0; htag=0
                     # 1 SOLA VUELTA - aquí se apunta todo: descanso + MIN + minutos
-                    _evs_fid = sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0))
+                    # Ya viene ordenado desde cargar_base_jornadas, no se vuelve a ordenar
+                    _evs_fid = ev_jorn.get(fid, [])
                     _c1 = 0; _c2 = 0
-                    _h_norm_once = normaliza(h_team)
+                    # SIN normaliza: h_team ya es el mismo nombre que el equipo del gol
+                    _h_norm_once = h_team
                     _tiene_cand = False
                     _mins_cand_1p = []; _mins_cand_2p = []
                     for _ev in _evs_fid:
