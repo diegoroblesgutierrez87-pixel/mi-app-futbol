@@ -2230,7 +2230,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
             return df_all
 
         # PARTIDOS: europa + resto + Nations League
-        df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet", "base_partidos_resto_CORREGIDO.csv", "base_partidos.csv", "uefa_nations_league_2627.csv"])
+        df_e = _load_concat_partidos(["base_partidos_europa.parquet", "base_partidos_resto.parquet", "uefa_nations_league_2627.csv"])
         if not df_e.empty:
             df_e['HomeNorm'] = df_e['HomeTeam'].astype(str).str.upper().str.strip()
             df_e['AwayNorm'] = df_e['AwayTeam'].astype(str).str.upper().str.strip()
