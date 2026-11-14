@@ -3972,18 +3972,29 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         hthg=int(float(rr.get('HTHG',0) or 0)); htag=int(float(rr.get('HTAG',0) or 0))
                     except:
                         hthg=0; htag=0
+                    # 1 SOLA VUELTA - aquí se apunta todo: descanso + MIN + minutos
+                    _evs_fid = sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0))
+                    _c1 = 0; _c2 = 0
+                    _h_norm_once = normaliza(h_team)
+                    _tiene_cand = False
+                    _mins_cand_1p = []; _mins_cand_2p = []
+                    for _ev in _evs_fid:
+                        if 'Missed' in _ev.get('tipo',''): continue
+                        _mm = _ev.get('m',-1)
+                        if _mm <= 45:
+                            if _ev.get('team','') == _h_norm_once: _c1+=1
+                            else: _c2+=1
+                        if MIN_DESDE_FIX3 is not None and _mm < MIN_DESDE_FIX3: continue
+                        if MIN_HASTA_FIX3 is not None and _mm > MIN_HASTA_FIX3: continue
+                        _tiene_cand = True
+                        _es_mio_c = (_ev.get('team','')==norm_j)
+                        _col_c = "#00c800" if _es_mio_c else "#ff2a2a"
+                        _tag_c = f"<span style='color:{_col_c};font-weight:900'>{_mm}'</span>"
+                        if _mm<=45: _mins_cand_1p.append(_tag_c)
+                        else: _mins_cand_2p.append(_tag_c)
                     if hthg==0 and htag==0:
                         try:
-                            c1=0; c2=0
-                            for ev in ev_jorn.get(fid, []):
-                                if ev.get('m',999)<=45 and 'Missed' not in ev.get('tipo',''):
-                                    t=normaliza(ev.get('team',''))
-                                    if t==normaliza(h_team):
-                                        c1+=1
-                                    else:
-                                        c2+=1
-                            if c1+c2>0:
-                                hthg=c1; htag=c2
+                            if _c1+_c2>0: hthg=_c1; htag=_c2
                         except:
                             pass
                     if es_loc:
@@ -4024,27 +4035,11 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
 
                     tiene_en_rango = btts_pasa
                     if btts_pasa and (MIN_DESDE_FIX3 is not None or MIN_HASTA_FIX3 is not None):
-                        tiene_en_rango = False
-                        for ev in ev_jorn.get(fid, []):
-                            if 'Missed' in ev.get('tipo',''): continue
-                            mm=ev.get('m',-1)
-                            if MIN_DESDE_FIX3 is not None and mm < MIN_DESDE_FIX3: continue
-                            if MIN_HASTA_FIX3 is not None and mm > MIN_HASTA_FIX3: continue
-                            tiene_en_rango = True
-                            break
+                        tiene_en_rango = _tiene_cand
                     if tiene_en_rango:
                         filt_cnt+=1
-                    mins_1p=[]; mins_2p=[]
-                    for ev in sorted(ev_jorn.get(fid, []), key=lambda x: x.get('m',0)):
-                        if 'Missed' in ev.get('tipo',''): continue
-                        mm=ev.get('m',-1)
-                        if MIN_DESDE_FIX3 is not None and mm < MIN_DESDE_FIX3: continue
-                        if MIN_HASTA_FIX3 is not None and mm > MIN_HASTA_FIX3: continue
-                        if not tiene_en_rango: continue
-                        es_mio=(ev.get('team','')==norm_j); col="#00c800" if es_mio else "#ff2a2a"
-                        tag=f"<span style='color:{col};font-weight:900'>{mm}'</span>"
-                        if mm<=45: mins_1p.append(tag)
-                        else: mins_2p.append(tag)
+                    mins_1p = list(_mins_cand_1p) if tiene_en_rango else []
+                    mins_2p = list(_mins_cand_2p) if tiene_en_rango else []
                     if not tiene_en_rango:
                         mins_txt=""
                     else:
