@@ -1262,7 +1262,7 @@ elif st.session_state.show_partidos:
         import html as _html
         safe_html = _html.escape(html)
         # FIX HUECO GIGANTE BLANCO - FILTROS
-        h_dinamica = min(20000, max(600, len(html)//8))
+        h_dinamica = min(3000, max(600, total_partidos_btn * 280))
         total_partidos_btn = (len(df_eq1) + len(df_eq2)) if modo_doble else len(df_mostrar)
         bloque_copy = f"""
         <div>
