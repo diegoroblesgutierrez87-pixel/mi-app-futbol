@@ -2349,7 +2349,6 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
       }
       setTimeout(fixMin, 200);
       setTimeout(fixMin, 800);
-      setInterval(fixMin, 1200);
     })();
     </script>
     """, height=0)
