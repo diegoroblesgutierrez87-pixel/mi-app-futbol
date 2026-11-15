@@ -314,7 +314,7 @@ def cargar_goles_lite():
         dg_all = dg_all.assign(_m=pd.to_numeric(_min_txt, errors='coerce').fillna(0).astype(int))
         # RAPIDO: cada equipo se normaliza UNA SOLA VEZ, no 20.000 veces
         _equipos_unicos = dg_all['equipo'].astype(str).unique()
-        _map_team = {e: normaliza(e) for e in _equipos_unicos}
+        _map_team = {e: str(e).upper().strip() for e in _equipos_unicos}
         _map_abbr = {t: abreviar_equipo(t) for t in set(_map_team.values())}
         dg_all = dg_all.assign(_team=dg_all['equipo'].astype(str).map(_map_team))
         dg_all = dg_all[dg_all['_team'].astype(str).str.len() > 0]
@@ -737,10 +737,10 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     try:
         fid = str(r.get('fixture_id','')).split('.')[0]
         home_abbr_fix = str(r.get('HomeAbbr','')).strip().upper()
+        h_norm = str(r.get('HomeTeam','')).upper().strip(); a_norm = str(r.get('AwayTeam','')).upper().strip()
         for ev in eventos.get(fid, []):
             m = ev['m']; team = ev['team']
             gol = ev.get('gol',''); asi = ev.get('asi','')
-            h_norm = normaliza(r.get('HomeTeam','')); a_norm = normaliza(r.get('AwayTeam',''))
             if team == h_norm:
                 abbr = r.get('HomeAbbr') or abreviar_equipo(r.get('HomeTeam',''))
             elif team == a_norm:
@@ -996,7 +996,7 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
     return f"<div style='font-family:monospace;font-size:11px;padding:8px 6px;border:2px solid #0A2342;border-radius:10px;line-height:1.2;max-width:380px;margin:10px auto;background:#ffffff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,0.15)'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> <span style='background:#0A2342;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900'>Jornada {j}</span> {h_html} vs {a_html}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#E8E8E8;color:#000;padding:2px 10px;border-radius:3px;border:1px solid #0A2342'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
-eq_refs_norm = [normaliza(e) for e in eq_refs_orig]
+eq_refs_norm = [str(e).upper().strip() for e in eq_refs_orig]
 
 html = ""
 
