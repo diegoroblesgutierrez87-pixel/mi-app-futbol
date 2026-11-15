@@ -1582,7 +1582,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
                         df_all = pd.read_pickle(p)
                     else:
                         df_all = pd.read_csv(p, on_bad_lines='skip')
-                    df_all['Date'] = pd.to_datetime(df_all['Date'], errors='coerce')
+                    df_all['Date'] = pd.to_datetime(df_all['Date'], dayfirst=True, errors='coerce')
                     mask_tn = df_all['Home'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False) | df_all['Away'].astype(str).str.contains('ES SAHEL|ES METLAOUI|ES ZARZIS|ES HAMMAM|CA BIZERTIN|AS MARSA|CLUB AFRICAIN|PROGRES SAKIET|CS HAMMAM|US BEN GUERDANE|OLYMPIQUE BEJA|US MONASTIRIENNE|STADE TUNISIEN|CS SFAXIEN|JEUNESSE SPORTIVE OMRANE|ES TUNIS', na=False)
                     df_all.loc[mask_tn, 'League'] = 'LIGA 1 TUNEZ'
                     # === MERGE CLASIFICACION REAL - DICCIONARIO (no falla) ===
@@ -1646,7 +1646,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
             if not eq_pat_sel:
                 eq_pat_sel = ["TODOS"]
         with c_p3:
-            fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(df_l['Date'].dt.date.astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
+            fecha_pat = st.selectbox("DESDE", ["Todas"] + sorted(pd.to_datetime(df_l['Date'], dayfirst=True, errors='coerce').dt.date.dropna().astype(str).unique().tolist(), reverse=True)[:30], key="fecha_pat_0_0")
 
         res_pat = "-"
         if tipo_pat == "0-0 HASTA 80+ GOL 80-90" and "TODOS" not in eq_pat_sel:
