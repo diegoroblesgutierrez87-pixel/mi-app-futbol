@@ -3937,13 +3937,11 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     # Ya viene ordenado desde cargar_base_jornadas, no se vuelve a ordenar
                     _evs_fid = ev_jorn.get(fid, [])
                     # REMONTADA - solo si el SELECCIONADO es el que encaja primero
+                    # OJO: en base_goles, 'equipo' YA es el que marca, tambien en Own Goal. No se le da la vuelta.
                     _rem_txt = ""
                     for _e0 in _evs_fid:
                         if 'Missed' in _e0.get('tipo',''): continue
-                        if 'Own Goal' in _e0.get('tipo',''):
-                            _benef0 = a_team if _e0.get('team','') == h_team else h_team
-                        else:
-                            _benef0 = _e0.get('team','')
+                        _benef0 = _e0.get('team','')
                         _enc0 = a_team if _benef0 == h_team else h_team
                         if _enc0 != norm_j: break
                         _gf0, _ga0 = (hg, ag) if _enc0 == h_team else (ag, hg)
