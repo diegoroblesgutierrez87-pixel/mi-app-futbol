@@ -5037,7 +5037,7 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     # conteo jornadas con algo
                     nj_con = sum(1 for t in tokens_copy if "GOL" in t or "ASIST" in t)
 
-                    html_jug = f"<div style='font-family:monospace;background:#fff;border:1px solid #000;border-radius:8px;padding:8px;margin:8px 0'><div style='font-weight:900;font-size:12px;background:#000;color:#fff;padding:3px 6px;border-radius:4px;display:inline-block'>{nombre_jug.upper()} | G:{goles_tot} A:{asis_tot} | {nj_con}/{max_j}</div><div style='margin-top:6px;line-height:1.9;white-space:normal;word-break:break-word'>{' '.join(tokens)}</div></div>"
+                    html_jug = f"<div style='font-family:monospace;background:#fff;border:1px solid #000;border-radius:8px;padding:4px;margin:4px 0;font-size:9px'><div style='font-weight:900;font-size:9px;background:#000;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block'>{nombre_jug.upper()} | G:{goles_tot} A:{asis_tot} | {nj_con}/{max_j}</div><div style='margin-top:4px;line-height:1.5;white-space:normal;word-break:break-word;font-size:9px'>{' '.join(tokens)}</div></div>"
                     st.markdown(html_jug, unsafe_allow_html=True)
 
                 # --- BLOQUE COPIAR ---
