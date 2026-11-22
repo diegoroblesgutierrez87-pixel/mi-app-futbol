@@ -1630,7 +1630,7 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
     if df_pat.empty:
         st.warning("No encuentro Partidos-0-0-Hasta80-Gol80-90.csv en la carpeta del app.py")
     else:
-        txt_tipo = "0-0 FINALES" if tipo_pat == "0-0 FINALES" else "0-0 hasta 80' + gol 80-90'"
+        txt_tipo = "0-0 FINALES" if tipo_pat == "0-0 FINALES" else ("OVER 0.5 1ª PARTE" if tipo_pat == "OVER 0.5 1ª PARTE" else "0-0 hasta 80' + gol 80-90'")
         st.caption(f"Total patrones: {len(df_pat)} partidos {txt_tipo}")
 
         c_p1, c_p2, c_p3 = st.columns([1,1,1])
