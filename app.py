@@ -4984,8 +4984,20 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
             if not jugadores:
                 st.info(f"{equipo_sel_jug} sin goleadores/asistentes registrados")
             else:
+                # ORDEN: por goles de mayor a menor, luego por asistencias, luego por nombre
+                def _goles_asis_jug(_nom):
+                    _g = 0; _a = 0
+                    for _fid in jornada_map.values():
+                        for _e in ev_jug.get(_fid, []):
+                            if _e['team'] != norm_eq_jug: continue
+                            if 'Missed' in _e.get('tipo',''): continue
+                            if 'Own Goal' in _e.get('tipo',''): continue
+                            if _e['gol'] == _nom: _g += 1
+                            if _e['asi'] == _nom: _a += 1
+                    return _g, _a
+                _orden_jug = sorted(jugadores.keys(), key=lambda _n: (-_goles_asis_jug(_n)[0], -_goles_asis_jug(_n)[1], _n))
                 # para cada jugador construye J1..Jmax
-                for nombre_jug in sorted(jugadores.keys()):
+                for nombre_jug in _orden_jug:
                     # por jornada busca eventos
                     tokens = []
                     tokens_copy = []  # para copiar limpio
@@ -5031,7 +5043,7 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                 # --- BLOQUE COPIAR ---
                 import html as _html
                 txt_copy = ""
-                for nombre_jug in sorted(jugadores.keys()):
+                for nombre_jug in _orden_jug:
                     line=[]
                     for j in range(1, max_j+1):
                         fid=jornada_map.get(j)
