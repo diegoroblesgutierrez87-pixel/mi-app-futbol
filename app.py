@@ -1936,9 +1936,10 @@ with st.expander("BLOQUE PATRONES - 0-0 HASTA 80' + GOL 80-90'", expanded=False)
         import html as _html
         if not st.session_state.ver_lista_pat:
             html_pat = ""
+        txt_pat_copiar = _html.escape(resumen_bar + chr(10) + chr(10) + df_f.to_string())
         components.html(f"""
         <div style='font-family:monospace;max-height:600px;overflow-y:auto;background:#fff;border:1px solid #000;padding:6px'>{html_pat}</div>
-        <textarea id='txt_pat' style='position:absolute;left:-9999px'>{_html.escape(resumen_bar + "\n\n" + df_f.to_string())}</textarea>
+        <textarea id='txt_pat' style='position:absolute;left:-9999px'>{txt_pat_copiar}</textarea>
         <button onclick="navigator.clipboard.writeText(document.getElementById('txt_pat').value).then(()=>{{let b=document.getElementById('btn_pat'); b.innerText='✓ COPIADO';}})" id='btn_pat' style='width:100%;background:#0A2342;color:white;border:none;border-radius:6px;padding:10px;font-weight:900;margin-top:8px'>📋 COPIAR PATRONES ({len(df_f)})</button>
         """, height=700, scrolling=True)
 # ================= FIN BLOQUE PATRONES V1 =================
