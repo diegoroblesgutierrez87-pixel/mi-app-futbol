@@ -3936,17 +3936,22 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     # 1 SOLA VUELTA - aquí se apunta todo: descanso + MIN + minutos
                     # Ya viene ordenado desde cargar_base_jornadas, no se vuelve a ordenar
                     _evs_fid = ev_jorn.get(fid, [])
-                    # REMONTADA - solo si el SELECCIONADO es el que encaja primero
+                    # REMONTADA + INVERSA - solo cuenta el primer gol del partido
                     # OJO: en base_goles, 'equipo' YA es el que marca, tambien en Own Goal. No se le da la vuelta.
                     _rem_txt = ""
                     for _e0 in _evs_fid:
                         if 'Missed' in _e0.get('tipo',''): continue
                         _benef0 = _e0.get('team','')
                         _enc0 = a_team if _benef0 == h_team else h_team
-                        if _enc0 != norm_j: break
-                        _gf0, _ga0 = (hg, ag) if _enc0 == h_team else (ag, hg)
-                        if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
-                        elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                        _gf0, _ga0 = (hg, ag) if norm_j == h_team else (ag, hg)
+                        # Caso 1: le marcan primero al seleccionado
+                        if _enc0 == norm_j:
+                            if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                            elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                        # Caso 2: el seleccionado marca primero y no aguanta
+                        elif _benef0 == norm_j:
+                            if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                            elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
                         break
                     _c1 = 0; _c2 = 0
                     # SIN normaliza: h_team ya es el mismo nombre que el equipo del gol
