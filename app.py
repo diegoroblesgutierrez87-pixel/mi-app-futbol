@@ -3936,6 +3936,19 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     # 1 SOLA VUELTA - aquí se apunta todo: descanso + MIN + minutos
                     # Ya viene ordenado desde cargar_base_jornadas, no se vuelve a ordenar
                     _evs_fid = ev_jorn.get(fid, [])
+                    # REMONTADA - primer gol valido, _evs_fid ya viene ordenado
+                    _rem_txt = ""
+                    for _e0 in _evs_fid:
+                        if 'Missed' in _e0.get('tipo',''): continue
+                        if 'Own Goal' in _e0.get('tipo',''):
+                            _benef0 = a_team if _e0.get('team','') == h_team else h_team
+                        else:
+                            _benef0 = _e0.get('team','')
+                        _enc0 = a_team if _benef0 == h_team else h_team
+                        _gf0, _ga0 = (hg, ag) if _enc0 == h_team else (ag, hg)
+                        if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE</span>"
+                        elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE</span>"
+                        break
                     _c1 = 0; _c2 = 0
                     # SIN normaliza: h_team ya es el mismo nombre que el equipo del gol
                     _h_norm_once = h_team
@@ -4014,10 +4027,10 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             elif mins_2p: mins_txt=" ".join(mins_2p)
                             else: mins_txt=""
                     if tiene_en_rango:
-                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                        inner=f"<span>{_rem_txt} <span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                     else:
                         _teams_gris = teams_txt.replace("#FFFFFF", "#888888").replace("#00BFFF", "#888")
-                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px'></span>"
+                        inner=f"<span>{_rem_txt} <span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px'></span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
