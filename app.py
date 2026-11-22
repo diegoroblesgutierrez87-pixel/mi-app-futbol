@@ -993,7 +993,27 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             h_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{h}</span>"
         elif a_norm_chk == current_eq_norm:
             a_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{a}</span>"
-    return f"<div style='font-family:monospace;font-size:11px;padding:8px 6px;border:2px solid #0A2342;border-radius:10px;line-height:1.2;max-width:380px;margin:10px auto;background:#ffffff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,0.15)'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> <span style='background:#0A2342;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900'>Jornada {j}</span> {h_html} vs {a_html}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#E8E8E8;color:#000;padding:2px 10px;border-radius:3px;border:1px solid #0A2342'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+    # REMONTADA - primer gol del partido. 'equipo' ya es el que marca, tambien en Own Goal. No se le da la vuelta.
+    _rem_txt = ""
+    if current_eq_norm:
+        try:
+            _fid_rem = str(r.get('fixture_id','')).split('.')[0]
+            _sel_n = str(current_eq_norm).upper().strip()
+            for _e0 in sorted(eventos.get(_fid_rem, []), key=lambda x: x.get('m',0)):
+                if 'Missed' in str(_e0.get('tipo','')): continue
+                _benef0 = str(_e0.get('team','')).upper().strip()
+                _enc0 = a_norm_chk if _benef0 == h_norm_chk else h_norm_chk
+                _gf0, _ga0 = (hg, ag) if _sel_n == h_norm_chk else (ag, hg)
+                if _enc0 == _sel_n:
+                    if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                    elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                elif _benef0 == _sel_n:
+                    if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                    elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                break
+        except:
+            _rem_txt = ""
+    return f"<div style='font-family:monospace;font-size:11px;padding:8px 6px;border:2px solid #0A2342;border-radius:10px;line-height:1.2;max-width:380px;margin:10px auto;background:#ffffff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,0.15)'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> <span style='background:#0A2342;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900'>Jornada {j}</span> {h_html} vs {a_html} {_rem_txt}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#E8E8E8;color:#000;padding:2px 10px;border-radius:3px;border:1px solid #0A2342'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [str(e).upper().strip() for e in eq_refs_orig]
