@@ -2999,8 +2999,25 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_txt = " ".join(mins_2p)
                                 else:
                                     mins_txt = ""
+                            # REMONTADA FIX2 - primer gol del partido, equipo ya es el que marca (tambien Own Goal)
+                            _rem_txt = ""
+                            _sel_n = normaliza(nombre_eq_fix2)
+                            _hn_n = normaliza(str(rr.get('HomeTeam','')))
+                            _an_n = normaliza(str(rr.get('AwayTeam','')))
+                            for _e0 in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
+                                if 'Missed' in _e0.get('tipo',''): continue
+                                _benef0 = normaliza(_e0.get('team',''))
+                                _enc0 = _an_n if _benef0 == _hn_n else _hn_n
+                                _gf0, _ga0 = (hg, ag) if _sel_n == _hn_n else (ag, hg)
+                                if _enc0 == _sel_n:
+                                    if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                                    elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                                elif _benef0 == _sel_n:
+                                    if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                                    elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                                break
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                            inner = f"<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt} {_rem_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3460,6 +3477,23 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             pass
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
+                        # REMONTADA FIX2 DETALLE
+                        _rem_txt = ""
+                        _sel_n = normaliza(nombre_eq_fix2)
+                        for _e0 in sorted(eventos_fix2.get(fid, []), key=lambda x: x.get('m',0)):
+                            if 'Missed' in _e0.get('tipo',''): continue
+                            _benef0 = normaliza(_e0.get('team',''))
+                            _enc0 = an if _benef0 == hn else hn
+                            _gf0, _ga0 = (hg, ag) if _sel_n == hn else (ag, hg)
+                            if _enc0 == _sel_n:
+                                if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                                elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                            elif _benef0 == _sel_n:
+                                if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                                elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                            break
+                        if _rem_txt:
+                            html += f"<div style='text-align:center; margin:3px 0;'>{_rem_txt}</div>"
                         ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#FFFFFF;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
