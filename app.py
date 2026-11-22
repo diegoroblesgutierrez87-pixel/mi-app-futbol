@@ -3947,8 +3947,8 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                         _enc0 = a_team if _benef0 == h_team else h_team
                         if _enc0 != norm_j: break
                         _gf0, _ga0 = (hg, ag) if _enc0 == h_team else (ag, hg)
-                        if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE</span>"
-                        elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE</span>"
+                        if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                        elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
                         break
                     _c1 = 0; _c2 = 0
                     # SIN normaliza: h_team ya es el mismo nombre que el equipo del gol
