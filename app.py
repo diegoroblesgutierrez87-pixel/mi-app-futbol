@@ -3079,6 +3079,8 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         jornadas_base = sorted(pd.to_numeric(df_team_base_total_fix2['J_EQ'], errors='coerce').dropna().unique().astype(int).tolist(), reverse=True)
                     except:
                         jornadas_base = sorted(filt_por_j.keys(), reverse=True)
+                    _hay_filtro_fix2 = bool(resultados_pred_sel_fix2 or overs_sel_fix2 or ambos_marcan_fix2 != "-" or res_1p_tipo_fix2 != "TODOS" or res_ft_tipo_fix2 != "TODOS" or MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None or res_live_tipo_fix2 != "TODOS")
+                    _borde_resumen_fix2 = "#FFFFFF" if _hay_filtro_fix2 else "#555"
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
@@ -3088,9 +3090,9 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 inner, es_loc = filt_por_j[jn]
                                 badge = ""
                             if es_loc:
-                                lista_loc_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
+                                lista_loc_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid {_borde_resumen_fix2};border-radius:6px'>{badge} {j_tag} {inner}</div>")
                             else:
-                                lista_vis_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
+                                lista_vis_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid {_borde_resumen_fix2};border-radius:6px'>{badge} {j_tag} {inner}</div>")
                         else:
                             # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - VERDE FILTRADO ROJO RIVAL 0 GRIS
                             try:
