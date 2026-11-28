@@ -3065,7 +3065,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
                                 break
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                            inner = f"<span style='font-size:9px'>{_rem_txt} <span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3081,14 +3081,14 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
                             try:
-                                inner, es_loc, badge, _rem_txt_j = filt_por_j[jn]
+                                inner, es_loc, badge = filt_por_j[jn]
                             except:
                                 inner, es_loc = filt_por_j[jn]
                                 badge = ""
                             if es_loc:
-                                lista_loc_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{_rem_txt_j} {badge} {j_tag} {inner}</div>")
+                                lista_loc_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
                             else:
-                                lista_vis_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{_rem_txt_j} {badge} {j_tag} {inner}</div>")
+                                lista_vis_plain.append(f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{badge} {j_tag} {inner}</div>")
                         else:
                             # HUECO - [E]J9([1-1][0-1]) + EQUIPO vs EQUIPO + PUNTOS - VERDE FILTRADO ROJO RIVAL 0 GRIS
                             try:
@@ -3541,7 +3541,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
                             break
                         if _rem_txt:
-                            html = html.replace("</div>", f" {_rem_txt}</div>", 1)
+                            html += f"<div style='text-align:center; margin:3px 0;'>{_rem_txt}</div>"
                         ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#FFFFFF;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
