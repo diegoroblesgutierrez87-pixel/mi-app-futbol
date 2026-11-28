@@ -993,7 +993,27 @@ def fmt_rapido(r, eq_refs_norm, current_eq_norm, current_eq_orig):
             h_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{h}</span>"
         elif a_norm_chk == current_eq_norm:
             a_html = f"<span style='background:#a0a0a0;color:#000;padding:2px 8px;border-radius:3px;font-weight:900'>{a}</span>"
-    return f"<div style='font-family:monospace;font-size:11px;padding:8px 6px;border:2px solid #0A2342;border-radius:10px;line-height:1.2;max-width:380px;margin:10px auto;background:#ffffff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,0.15)'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> <span style='background:#0A2342;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900'>Jornada {j}</span> {h_html} vs {a_html}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#E8E8E8;color:#000;padding:2px 10px;border-radius:3px;border:1px solid #0A2342'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
+    # REMONTADA - primer gol del partido. 'equipo' ya es el que marca, tambien en Own Goal. No se le da la vuelta.
+    _rem_txt = ""
+    if current_eq_norm:
+        try:
+            _fid_rem = str(r.get('fixture_id','')).split('.')[0]
+            _sel_n = str(current_eq_norm).upper().strip()
+            for _e0 in sorted(eventos.get(_fid_rem, []), key=lambda x: x.get('m',0)):
+                if 'Missed' in str(_e0.get('tipo','')): continue
+                _benef0 = str(_e0.get('team','')).upper().strip()
+                _enc0 = a_norm_chk if _benef0 == h_norm_chk else h_norm_chk
+                _gf0, _ga0 = (hg, ag) if _sel_n == h_norm_chk else (ag, hg)
+                if _enc0 == _sel_n:
+                    if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                    elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                elif _benef0 == _sel_n:
+                    if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                    elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                break
+        except:
+            _rem_txt = ""
+    return f"<div style='font-family:monospace;font-size:11px;padding:8px 6px;border:2px solid #0A2342;border-radius:10px;line-height:1.2;max-width:380px;margin:10px auto;background:#ffffff;color:#000;box-shadow:0 2px 6px rgba(0,0,0,0.15)'><div style='text-align:left;color:{col_line};font-weight:900'><span style='background:{col};color:#fff;padding:1px 5px;border-radius:3px;font-weight:900;margin-right:4px'>{btts_txt}</span> <span style='background:#0A2342;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900'>Jornada {j}</span> {h_html} vs {a_html} {_rem_txt}</div>{clas_html}<div style='text-align:center;font-weight:900;word-break:break-word'>{extra}</div><div style='text-align:center;font-weight:900;margin-top:4px'><span style='background:#E8E8E8;color:#000;padding:2px 10px;border-radius:3px;border:1px solid #0A2342'>Final {hg}-{ag}</span></div><div style='text-align:center;color:#666;font-weight:700;font-size:10px;margin-top:2px'>[1ª parte {hthg}-{htag}]</div><div style='color:#000;white-space:normal;word-break:break-word;line-height:1.1;margin-top:3px'>{txt_mins}</div>{mom_html}</div>"
 
 eq_refs_orig = [e for e in [eq1, eq2] if e!= "Ninguno"]
 eq_refs_norm = [str(e).upper().strip() for e in eq_refs_orig]
@@ -2364,7 +2384,35 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     equipos_manuales_2_fix2 = []
     # EQUIPOS MANUALES 2 QUITADO - solo uso el 1
-    equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
+    # --- EQUIPOS MANUALES 1 FIX2 - CHIPS MOVIL, 1 TOQUE = BORRAR ---
+    if "eq_manual_1_fix2" not in st.session_state:
+        st.session_state.eq_manual_1_fix2 = []
+
+    st.markdown("**Equipos manuales 1 FIX2**")
+
+    nuevo_eq_fix2 = st.selectbox(
+        "Añadir equipo",
+        ["-"] + [e for e in lista_hist_equipos_fix2 if e not in st.session_state.eq_manual_1_fix2],
+        index=0,
+        key="eq_manual_1_add_fix2",
+    )
+
+    if nuevo_eq_fix2 != "-" and nuevo_eq_fix2 not in st.session_state.eq_manual_1_fix2:
+        st.session_state.eq_manual_1_fix2.append(nuevo_eq_fix2)
+        st.rerun()
+
+    equipos_manuales_1_fix2 = list(st.session_state.eq_manual_1_fix2)
+
+    if equipos_manuales_1_fix2:
+        cols_quitar = st.columns(len(equipos_manuales_1_fix2))
+        for i, eq in enumerate(equipos_manuales_1_fix2):
+            with cols_quitar[i]:
+                if st.button(f"❌ {eq}", key=f"del_eq1_fix2_{eq}", use_container_width=True):
+                    st.session_state.eq_manual_1_fix2.remove(eq)
+                    st.rerun()
+    else:
+        st.caption("Sin equipos seleccionados")
+
     goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
     overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
     ambos_marcan_fix2 = st.selectbox("AMBOS MARCAN", ["-","SI","NO"], index=["-","SI","NO"].index(st.session_state.get("ambos_marcan_fix2","-")), key="ambos_marcan_fix2")
@@ -2999,8 +3047,26 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     mins_txt = " ".join(mins_2p)
                                 else:
                                     mins_txt = ""
+                            # REMONTADA FIX2 - primer gol del partido, equipo ya es el que marca (tambien Own Goal)
+                            _rem_txt = ""
+                            _sel_n = normaliza(nombre_eq_fix2)
+                            _hn_n = normaliza(str(rr.get('HomeTeam','')))
+                            _an_n = normaliza(str(rr.get('AwayTeam','')))
+                            for _e0 in sorted(eventos_fix2.get(fid_r, []), key=lambda x: x.get('m',0)):
+                                if 'Missed' in _e0.get('tipo',''): continue
+                                _benef0 = normaliza(_e0.get('team',''))
+                                _enc0 = _an_n if _benef0 == _hn_n else _hn_n
+                                _gf0, _ga0 = (hg, ag) if _sel_n == _hn_n else (ag, hg)
+                                if _enc0 == _sel_n:
+                                    if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                                    elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                                elif _benef0 == _sel_n:
+                                    if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                                    elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                                break
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                            _rem_line = f"<div style='margin:0 0 2px 0'>{_rem_txt}</div>" if _rem_txt else ""
+                            inner = f"{_rem_line}<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3460,6 +3526,23 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                         except:
                             pass
                         html += f"<div style='font-weight:900; font-size:19px; line-height:1.35; margin:0; text-align:center; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;'>{h_txt} {ft_txt} {a_txt}</div>"
+                        # REMONTADA FIX2 DETALLE
+                        _rem_txt = ""
+                        _sel_n = normaliza(nombre_eq_fix2)
+                        for _e0 in sorted(eventos_fix2.get(fid, []), key=lambda x: x.get('m',0)):
+                            if 'Missed' in _e0.get('tipo',''): continue
+                            _benef0 = normaliza(_e0.get('team',''))
+                            _enc0 = an if _benef0 == hn else hn
+                            _gf0, _ga0 = (hg, ag) if _sel_n == hn else (ag, hg)
+                            if _enc0 == _sel_n:
+                                if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                                elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                            elif _benef0 == _sel_n:
+                                if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                                elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                            break
+                        if _rem_txt:
+                            html += f"<div style='text-align:center; margin:3px 0;'>{_rem_txt}</div>"
                         ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#FFFFFF;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
@@ -3936,6 +4019,23 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                     # 1 SOLA VUELTA - aquí se apunta todo: descanso + MIN + minutos
                     # Ya viene ordenado desde cargar_base_jornadas, no se vuelve a ordenar
                     _evs_fid = ev_jorn.get(fid, [])
+                    # REMONTADA + INVERSA - solo cuenta el primer gol del partido
+                    # OJO: en base_goles, 'equipo' YA es el que marca, tambien en Own Goal. No se le da la vuelta.
+                    _rem_txt = ""
+                    for _e0 in _evs_fid:
+                        if 'Missed' in _e0.get('tipo',''): continue
+                        _benef0 = _e0.get('team','')
+                        _enc0 = a_team if _benef0 == h_team else h_team
+                        _gf0, _ga0 = (hg, ag) if norm_j == h_team else (ag, hg)
+                        # Caso 1: le marcan primero al seleccionado
+                        if _enc0 == norm_j:
+                            if _gf0 > _ga0: _rem_txt = "<span style='background:#00c800;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-GANA</span>"
+                            elif _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>RE-EMPATA</span>"
+                        # Caso 2: el seleccionado marca primero y no aguanta
+                        elif _benef0 == norm_j:
+                            if _gf0 == _ga0: _rem_txt = "<span style='background:#ffcc00;color:#000;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-EMPATE</span>"
+                            elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
+                        break
                     _c1 = 0; _c2 = 0
                     # SIN normaliza: h_team ya es el mismo nombre que el equipo del gol
                     _h_norm_once = h_team
@@ -4014,10 +4114,10 @@ with st.expander("JORNADAS - HISTORIAL COMPLETO L/V", expanded=False):
                             elif mins_2p: mins_txt=" ".join(mins_2p)
                             else: mins_txt=""
                     if tiene_en_rango:
-                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({teams_txt}{pos_txt}) {_rem_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                     else:
                         _teams_gris = teams_txt.replace("#FFFFFF", "#888888").replace("#00BFFF", "#888")
-                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt})</span><br><span style='display:inline-block;margin:2px 0 0 18px'></span>"
+                        inner=f"<span><span style='font-size:11px;font-weight:900'>{res_txt}</span> ({_teams_gris}{pos_txt}) {_rem_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px'></span>"
                     total_por_j[jn]=(inner, es_loc, badge)
                 except: continue
             jornadas_ord=sorted(total_por_j.keys(), reverse=True)
@@ -4818,6 +4918,22 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
 
         # goles dict por fixture
         ev = {}
+        # MAPA NOMBRES: A. BAH -> ALEXANDER BAH. Solo si hay 1 completo con mismo apellido + inicial.
+        _MAPA_NOMBRES = {}
+        if not df_g.empty:
+            _todos = set()
+            for _c in ['goleador','scorer','asistente','assist']:
+                if _c in df_g.columns:
+                    _todos.update([str(x).strip().lower() for x in df_g[_c].dropna() if str(x).strip().lower() not in ['','nan','none']])
+            _comp = [n for n in _todos if '.' not in n and len(n.split()) >= 2 and len(n.split()[0]) > 1]
+            for _n in _todos:
+                _t = _n.split()
+                if '.' not in _n and not (len(_t) >= 2 and len(_t[0]) == 1): continue
+                _ini = [x.replace('.','') for x in _t if len(x.replace('.','')) == 1]
+                _ape = [x.replace('.','') for x in _t if len(x.replace('.','')) > 1]
+                if not _ini or not _ape: continue
+                _cands = [f for f in _comp if f.split()[1:] == _ape and f.split()[0][0] == _ini[0]]
+                if len(_cands) == 1: _MAPA_NOMBRES[_n] = _cands[0]
         if not df_g.empty:
             df_g['fid'] = df_g['fixture_id'].astype(str).str.split('.').str[0]
             _col_min = 'minuto' if 'minuto' in df_g.columns else ('min' if 'min' in df_g.columns else 'minuto')
@@ -4845,8 +4961,16 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     if asi in ['t. akimoto','t akimoto']: asi='takahiro akimoto'
                     if gol in ['t. yengi','t yengi']: gol='tete yengi'
                     if asi in ['t. yengi','t yengi']: asi='tete yengi'
+                    if gol in ['j. bellingham','j bellingham']: gol='jude bellingham'
+                    if asi in ['j. bellingham','j bellingham']: asi='jude bellingham'
+                    if gol in ['vinicius']: gol='vinicius junior'
+                    if asi in ['vinicius']: asi='vinicius junior'
+                    if gol in ['t. alexander arnold','t alexander arnold']: gol='trent alexander arnold'
+                    if asi in ['t. alexander arnold','t alexander arnold']: asi='trent alexander arnold'
                     if gol.lower() in ['','nan','none']: gol=""
                     if asi.lower() in ['','nan','none']: asi=""
+                    if gol in _MAPA_NOMBRES: gol = _MAPA_NOMBRES[gol]
+                    if asi in _MAPA_NOMBRES: asi = _MAPA_NOMBRES[asi]
                     lst.append({
                         'm': int(r.get('min_n',0)),
                         'team': normaliza(r.get('equipo', r.get('team', r.get('Team','')))),
@@ -4909,8 +5033,20 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
             if not jugadores:
                 st.info(f"{equipo_sel_jug} sin goleadores/asistentes registrados")
             else:
+                # ORDEN: por goles de mayor a menor, luego por asistencias, luego por nombre
+                def _goles_asis_jug(_nom):
+                    _g = 0; _a = 0
+                    for _fid in jornada_map.values():
+                        for _e in ev_jug.get(_fid, []):
+                            if _e['team'] != norm_eq_jug: continue
+                            if 'Missed' in _e.get('tipo',''): continue
+                            if 'Own Goal' in _e.get('tipo',''): continue
+                            if _e['gol'] == _nom: _g += 1
+                            if _e['asi'] == _nom: _a += 1
+                    return _g, _a
+                _orden_jug = sorted(jugadores.keys(), key=lambda _n: (-_goles_asis_jug(_n)[0], -_goles_asis_jug(_n)[1], _n))
                 # para cada jugador construye J1..Jmax
-                for nombre_jug in sorted(jugadores.keys()):
+                for nombre_jug in _orden_jug:
                     # por jornada busca eventos
                     tokens = []
                     tokens_copy = []  # para copiar limpio
@@ -4950,13 +5086,13 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                     # conteo jornadas con algo
                     nj_con = sum(1 for t in tokens_copy if "GOL" in t or "ASIST" in t)
 
-                    html_jug = f"<div style='font-family:monospace;background:#fff;border:1px solid #000;border-radius:8px;padding:8px;margin:8px 0'><div style='font-weight:900;font-size:12px;background:#000;color:#fff;padding:3px 6px;border-radius:4px;display:inline-block'>{nombre_jug.upper()} | G:{goles_tot} A:{asis_tot} | {nj_con}/{max_j}</div><div style='margin-top:6px;line-height:1.9;white-space:normal;word-break:break-word'>{' '.join(tokens)}</div></div>"
+                    html_jug = f"<div style='font-family:monospace;background:#fff;border:1px solid #000;border-radius:8px;padding:4px;margin:4px 0;font-size:9px'><div style='font-weight:900;font-size:9px;background:#000;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block'>{nombre_jug.upper()} | G:{goles_tot} A:{asis_tot} | {nj_con}/{max_j}</div><div style='margin-top:4px;line-height:1.5;white-space:normal;word-break:break-word;font-size:9px'>{' '.join(tokens)}</div></div>"
                     st.markdown(html_jug, unsafe_allow_html=True)
 
                 # --- BLOQUE COPIAR ---
                 import html as _html
                 txt_copy = ""
-                for nombre_jug in sorted(jugadores.keys()):
+                for nombre_jug in _orden_jug:
                     line=[]
                     for j in range(1, max_j+1):
                         fid=jornada_map.get(j)
@@ -4985,4 +5121,14 @@ with st.expander("JUGADORES - GOLES Y ASISTENCIAS", expanded=False):
                 """, height=55)
           
           
+          ##################################################### ##################################################### ##################################################### ########################################################################################################## ##################################################### ##################################################### #####################################################
           ##################################################### ##################################################### ##################################################### #####################################################
+          ##################################################### ##################################################### ##################################################### #####################################################
+          ##################################################### ##################################################### ##################################################### #####################################################
+          ##################################################### ##################################################### ##################################################### #####################################################
+          ##################################################### ##################################################### ##################################################### #####################################################
+          ##################################################### ##################################################### ##################################################### #####################################################
+##################################################### ##################################################### ##################################################### #####################################################
+##################################################### ##################################################### ##################################################### #####################################################
+##################################################### ##################################################### ##################################################### #####################################################
+          
