@@ -3080,7 +3080,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                     except:
                         jornadas_base = sorted(filt_por_j.keys(), reverse=True)
                     _hay_filtro_fix2 = bool(resultados_pred_sel_fix2 or overs_sel_fix2 or ambos_marcan_fix2 != "-" or res_1p_tipo_fix2 != "TODOS" or res_ft_tipo_fix2 != "TODOS" or MIN_DESDE_PRED_FIX2 is not None or MIN_HASTA_PRED_FIX2 is not None or res_live_tipo_fix2 != "TODOS")
-                    _borde_resumen_fix2 = "#FFFFFF" if _hay_filtro_fix2 else "#555"
+                    _borde_resumen_fix2 = "#FFFFFF" if _hay_filtro_fix2 else "none"
                     for jn in jornadas_base:
                         j_tag = f"<span style='color:#A020F0;font-weight:900'>J{jn}</span>"
                         if jn in filt_por_j:
@@ -3161,7 +3161,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} {int(rh.get('Pos',0))}º vs {_a0} {int(ra.get('Pos',0))}º</span>"
                                 else:
                                     vs_txt = f" <span style='color:#888;font-size:9px;font-weight:400'>{_h0} vs {_a0}</span>"
-                                _txt = f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:1px solid #555;border-radius:6px'>{_badge} {j_tag} <span style='font-size:9px'>[{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]{vs_txt}</span></div>"
+                                _txt = f"<div style='margin:4px 0;padding:5px 6px;background:#000;border:none;border-radius:6px'>{_badge} {j_tag} <span style='font-size:9px'>[{_hg_c}-{_ag_c}] [{_hthg_c}-{_htag_c}]{vs_txt}</span></div>"
                             except:
                                 es_loc_base = True
                                 _txt = f"{j_tag}(<span style='color:#888;font-weight:900'>_</span>)"
