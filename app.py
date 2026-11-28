@@ -2384,7 +2384,35 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
 
     equipos_manuales_2_fix2 = []
     # EQUIPOS MANUALES 2 QUITADO - solo uso el 1
-    equipos_manuales_1_fix2 = st.multiselect("Equipos manuales 1 FIX2", lista_hist_equipos_fix2, default=[], key="eq_manual_1_fix2", placeholder="Ej: Cartagena, Burgos...")
+    # --- EQUIPOS MANUALES 1 FIX2 - CHIPS MOVIL, 1 TOQUE = BORRAR ---
+    if "eq_manual_1_fix2" not in st.session_state:
+        st.session_state.eq_manual_1_fix2 = []
+
+    st.markdown("**Equipos manuales 1 FIX2**")
+
+    nuevo_eq_fix2 = st.selectbox(
+        "Añadir equipo",
+        ["-"] + [e for e in lista_hist_equipos_fix2 if e not in st.session_state.eq_manual_1_fix2],
+        index=0,
+        key="eq_manual_1_add_fix2",
+    )
+
+    if nuevo_eq_fix2 != "-" and nuevo_eq_fix2 not in st.session_state.eq_manual_1_fix2:
+        st.session_state.eq_manual_1_fix2.append(nuevo_eq_fix2)
+        st.rerun()
+
+    equipos_manuales_1_fix2 = list(st.session_state.eq_manual_1_fix2)
+
+    if equipos_manuales_1_fix2:
+        cols_quitar = st.columns(len(equipos_manuales_1_fix2))
+        for i, eq in enumerate(equipos_manuales_1_fix2):
+            with cols_quitar[i]:
+                if st.button(f"❌ {eq}", key=f"del_eq1_fix2_{eq}", use_container_width=True):
+                    st.session_state.eq_manual_1_fix2.remove(eq)
+                    st.rerun()
+    else:
+        st.caption("Sin equipos seleccionados")
+
     goles_parte_fix2 = st.selectbox("GOLES PARTE", ["Todo","1ªParte","2ªParte"], index=0, key="goles_parte_fix2")
     overs_sel_fix2 = st.multiselect("Overs / Unders por parte", ["1P >0.5","1P >1.5","1P >2.5","2P >0.5","2P >1.5","2P >2.5"], default=[], key="overs_unders_pred_fix2", placeholder="Ej: 1P >0.5")
     ambos_marcan_fix2 = st.selectbox("AMBOS MARCAN", ["-","SI","NO"], index=["-","SI","NO"].index(st.session_state.get("ambos_marcan_fix2","-")), key="ambos_marcan_fix2")
@@ -3037,7 +3065,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                     elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
                                 break
                             # res_txt ya es el FINAL coloreado, siempre se muestra
-                            inner = f"<span style='font-size:9px'><span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt} {_rem_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
+                            inner = f"<span style='font-size:9px'>{_rem_txt} <span style='font-size:11px;font-weight:900'>{res_txt} {_ht_txt}</span>{rival_txt}</span><br><span style='display:inline-block;margin:2px 0 0 18px;font-size:11px;font-weight:900'>{mins_txt}</span>"
                             filt_por_j[jn] = (inner, es_loc, badge)
                             continue
                             
@@ -3513,7 +3541,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
                                 elif _gf0 < _ga0: _rem_txt = "<span style='background:#ff0000;color:#fff;padding:0 4px;border-radius:3px;font-size:9px;font-weight:900'>LE REMONTAN-PIERDE</span>"
                             break
                         if _rem_txt:
-                            html += f"<div style='text-align:center; margin:3px 0;'>{_rem_txt}</div>"
+                            html = html.replace("</div>", f" {_rem_txt}</div>", 1)
                         ####
                         if norm_eq_fix2 == h_norm_r:
                             hthg_c = f"<span style='color:#FFFFFF;font-weight:900'>{hthg}</span>" if hthg>0 else f"<span style='color:#888;font-weight:900'>{hthg}</span>"
