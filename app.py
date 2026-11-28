@@ -2453,6 +2453,7 @@ with st.expander("PREDICCION - PARTIDOS FUTUROS + HISTORIAL FIX 2", expanded=Fal
     # DESPLEGABLE PARTIDO FUTURO QUITADO - solo uso manual
 
     partidos_pred_copy_fix2 = []
+    equipos_a_mostrar_fix2 = []
     tiene_manuales_fix2 = (len(equipos_manuales_1_fix2) > 0 or len(equipos_manuales_2_fix2) > 0)
 
     if not partidos_sel_fix2 and not tiene_manuales_fix2:
